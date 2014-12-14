@@ -73,8 +73,9 @@ class sReset:
         session.kill()
         return ""
 
+
 class MyApplication(web.application):
-    def run(self, port=80, *middleware):
+    def run(self, port=8080, *middleware):
         func = self.wsgifunc(*middleware)
         return web.httpserver.runsimple(func, ('0.0.0.0', port))
 
@@ -86,4 +87,10 @@ c4 = d.connectfour()
 
 if __name__ == "__main__":
     app.internalerror = web.debugerror
-    app.run()
+    #app.run()
+    import os
+    port = int(os.environ.get('PORT', 8080))
+    print port
+    #app.run(host='0.0.0.0', port=port)
+    app.run(port=port)
+    
