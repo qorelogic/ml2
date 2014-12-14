@@ -14,23 +14,10 @@ urls = (
     '/scount',   'sCount',
 )
 
-app = web.application(urls, globals())
-render = web.template.render('templates/')
-session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={'count': 0})
-c4 = d.connectfour()
-
 class index:
     def GET(self):
-#        return render.base(view.listing())
-        """
-        c4.play(4)
-        c4.play(3)
-        c4.play(5)
-        c4.playRandom()
-        c4.play(3)
-        c4.resetBoard()	
-        """
-        return c4.grid.to_html()
+        #return render.base(view.listing())
+        return render.base('qwe123')
 
 class games1:
     def GET(self):
@@ -85,6 +72,17 @@ class sReset:
     def GET(self):
         session.kill()
         return ""
+
+class MyApplication(web.application):
+    def run(self, port=80, *middleware):
+        func = self.wsgifunc(*middleware)
+        return web.httpserver.runsimple(func, ('0.0.0.0', port))
+
+#app = web.application(urls, globals())
+app = MyApplication(urls, globals())
+render = web.template.render('templates/')
+session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={'count': 0})
+c4 = d.connectfour()
 
 if __name__ == "__main__":
     app.internalerror = web.debugerror
