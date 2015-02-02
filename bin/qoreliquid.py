@@ -468,6 +468,9 @@ def toCurrency(n):
 def normalizeme(dfr):
     return ((dfr - mean(dfr))/std(dfr))
 
+#def normalizeme(dfr):
+#    return ((dfr - mean(dfr))/std(dfr))
+
 def sigmoidme(dfr):
     return 1.0 / (1 + pow(e,-dfr))
 
@@ -708,14 +711,17 @@ def getDataFromQuandlBNP(pa, curr): # curr = EUR || USD, etc.
             print 'equal 0 days'
             d = da
     except IOError, e:
-        print 'getting from quandl..'
-        d = q.get(tk, authtoken=authtoken)
-        #d = q.get(tk, returns="numpy")
-        #d = q.get(["NSE/OIL.4","WIKI/AAPL.1"])
-        #d = q.get("NSE/OIL", trim_start="yyyy-mm-dd", trim_end="yyyy-mm-dd")
-        #print d
-        d.to_csv('data/quandl/BNP.'+curr+'.csv')
-        print e
+        try:
+		print 'getting from quandl..'
+		d = q.get(tk, authtoken=authtoken)
+		#d = q.get(tk, returns="numpy")
+		#d = q.get(["NSE/OIL.4","WIKI/AAPL.1"])
+		#d = q.get("NSE/OIL", trim_start="yyyy-mm-dd", trim_end="yyyy-mm-dd")
+		#print d
+		d.to_csv('data/quandl/BNP.'+curr+'.csv')
+		print e
+	except:
+		print 'something went wrong. maybe inet connection.'
         
     #plot(d.ix[:,tl])
     
