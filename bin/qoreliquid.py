@@ -12,6 +12,20 @@ def toCurrency(n):
 def normalizeme(dfr):
     return ((dfr - n.mean(dfr))/n.std(dfr))
 
+def normalizeme2(ds, index=None, columns=None):
+    if type(ds) == type(p.DataFrame([])):
+        dss = ds.get_values()
+    else:
+        dss = ds
+    #print type(dss)
+    #import sys
+    #sys.exit()
+    #print ds[0]
+    # call fillna(method='bfill') on dataset before calling this method
+    
+    dss = p.DataFrame(dss / dss[0], index=index, columns=columns)
+    return dss
+
 def sigmoidme(dfr):
     return 1.0 / (1 + pow(n.e,-dfr))
 
