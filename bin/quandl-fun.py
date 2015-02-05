@@ -35,6 +35,20 @@ show()
 
 # <codecell>
 
+dr = dr.fillna(method='bfill')
+drdiff = n.diff(dr)
+#drdiff = normalizeme(drdiff)
+drdiff = normalizeme2(drdiff, index=dr.index, columns=dr.columns[0:5])
+drdiff = sigmoidme(drdiff)
+drdiff = p.DataFrame(drdiff, index=dr.index, columns=dr.columns[0:5])
+#print drdiff.tail(2)
+#print drdiff
+plot(drdiff)
+legend(dr.columns,3)
+show()
+
+# <codecell>
+
 pa = ''
 # 2
 pa += 'EURUSD EURJPY EURGBP EURCHF EURCAD EURAUD EURNZD EURSEK EURNOK EURBRL EURCNY EURRUB EURINR EURTRY EURTHB EURIDR EURMYR EURMXN EURARS EURDKK EURILS EURPHP'
