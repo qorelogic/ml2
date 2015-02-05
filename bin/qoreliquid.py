@@ -5,6 +5,8 @@ import Quandl as q
 import datetime as dd
 import urllib2 as u
 import html2text
+import os, errno
+import re, sys
 
 def toCurrency(n):
     return '%2d' % n
@@ -46,14 +48,40 @@ def sharpe(dfr):
     ''
 """
 
+def fetchFromQuandlSP500():
+    sp = p.read_csv('data/quandl/SP500.csv')
+    #for i in list(sp.sort(columns='Name').ix[0:10,['Code']].get_values().reshape(1,15)[0]):
+    for i in range(0, len(sp)):
+        getDataFromQuandl(sp.ix[i,'Code'])
+
+def getDataFromQuandl(tk):
+    print 'fetching '+tk
+    mt = re.match(re.compile(r'(.*)\/(.*)_(.*)', re.S), tk).groups()
+    path = 'data/quandl/SP500/'+mt[0]+'/'+mt[1]
+    mkdir_p(path) # alternative python3: os.makedirs(path, exist_ok=True)
+    fname = path+'/'+mt[0]+'-'+mt[1]+'_'+mt[2]+'.csv'
+    #fname = path+'/'+mt[2]+'.csv'
+    
+    df = p.DataFrame([])
+    
+    try:
+        df = p.read_csv(fname)
+    except IOError, e:
+        try:
+            df = q.get(tk)
+            df.to_csv(fname)
+        except q.DatasetNotFound, f:
+            print f
+    return df
+    
 # source: https://www.quandl.com/c/markets/exchange-rates-versus-eur
 # quandl js parser: for (var i = 2; i<=15; i++) {var buff = ''; $($x('//*[@id="ember894"]/div['+i+']/table/tbody/tr/td[3]/a/@href')).each(function(e,o) {buff += ' '+o.value.replace(/\/CURRFX\//g, '');}); console.log('# '+i); console.log('pa += \''+buff+'\'');}
 
 # source: https://www.quandl.com/c/usa/usa-currency-exchange-rate
 # quandl js parser: for (var i = 2; i<=15; i++) {var buff = ''; $($x('//*[@id="ember894"]/div['+i+']/table/tbody/tr/td[3]/a/@href')).each(function(e,o) {buff += ' '+o.value.replace(/\/CURRFX\//g, '');}); console.log('# '+i); console.log('pa += \''+buff+'\'');}
 
-# getDataFromQuandl(pa, curr)
-def getDataFromQuandl(pa, curr): # curr = EUR || USD, etc.
+# getDataFromQuandlBNP(pa, curr)
+def getDataFromQuandlBNP(pa, curr): # curr = EUR || USD, etc.
     pa = pa.split(' ')
     
     tk = []
@@ -123,3 +151,10 @@ def lynxDump2(url):
     html = html.decode('utf-8')
     return html2text.html2text(html)
 
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc: # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else: raise
