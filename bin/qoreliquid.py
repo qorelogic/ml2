@@ -17,6 +17,8 @@ def normalizeme(dfr):
 def normalizeme2(ds, index=None, columns=None):
     if type(ds) == type(p.DataFrame([])):
         dss = ds.get_values()
+        index = ds.index
+        columns = ds.columns
     else:
         dss = ds
     #print type(dss)
@@ -52,24 +54,32 @@ def fetchFromQuandlSP500():
     sp = p.read_csv('data/quandl/SP500.csv')
     #for i in list(sp.sort(columns='Name').ix[0:10,['Code']].get_values().reshape(1,15)[0]):
     for i in range(0, len(sp)):
-        getDataFromQuandl(sp.ix[i,'Code'])
+        getDataFromQuandl(sp.ix[i,'Code'], dataset='SP500')
 
-def getDataFromQuandl(tk):
+def getDataFromQuandl(tk, dataset, index_col=None):
     print 'fetching '+tk
-    mt = re.match(re.compile(r'(.*)\/(.*)_(.*)', re.S), tk).groups()
-    path = 'data/quandl/SP500/'+mt[0]+'/'+mt[1]
+    try:
+        mt = re.match(re.compile(r'(.*)\/(.*)_(.*)', re.S), tk).groups()
+        path = 'data/quandl/'+dataset+'/'+mt[0]+'/'+mt[1]
+        fname = path+'/'+mt[0]+'-'+mt[1]+'_'+mt[2]+'.csv'
+        #fname = path+'/'+mt[2]+'.csv'
+    except:
+        mt = re.match(re.compile(r'(.*)\/(.*)', re.S), tk).groups()
+        path = 'data/quandl/'+dataset+'/'+mt[0]+'/'+mt[1]
+        fname = path+'/'+mt[0]+'-'+mt[1]+'.csv'
+    #print path
+    #sys.exit()
     mkdir_p(path) # alternative python3: os.makedirs(path, exist_ok=True)
-    fname = path+'/'+mt[0]+'-'+mt[1]+'_'+mt[2]+'.csv'
-    #fname = path+'/'+mt[2]+'.csv'
     
     df = p.DataFrame([])
     
     try:
-        df = p.read_csv(fname)
+        df = p.read_csv(fname, index_col=index_col)
     except IOError, e:
         try:
             df = q.get(tk)
             df.to_csv(fname)
+            print 'saved to: '+fname
         except q.DatasetNotFound, f:
             print f
     return df
