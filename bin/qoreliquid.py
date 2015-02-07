@@ -8,6 +8,10 @@ import html2text
 import os, errno
 import re, sys
 
+def debug(str, verbosity):
+    if verbosity == 9:
+        print str
+
 def toCurrency(n):
     return '%2d' % n
 
@@ -56,33 +60,62 @@ def fetchFromQuandlSP500():
     for i in range(0, len(sp)):
         getDataFromQuandl(sp.ix[i,'Code'], dataset='SP500')
 
-def getDataFromQuandl(tk, dataset, index_col=None):
-    print 'fetching '+tk
-    try:
-        mt = re.match(re.compile(r'(.*)\/(.*)_(.*)', re.S), tk).groups()
-        path = 'data/quandl/'+dataset+'/'+mt[0]+'/'+mt[1]
-        fname = path+'/'+mt[0]+'-'+mt[1]+'_'+mt[2]+'.csv'
-        #fname = path+'/'+mt[2]+'.csv'
-    except:
-        mt = re.match(re.compile(r'(.*)\/(.*)', re.S), tk).groups()
-        path = 'data/quandl/'+dataset+'/'+mt[0]+'/'+mt[1]
-        fname = path+'/'+mt[0]+'-'+mt[1]+'.csv'
-    #print path
-    #sys.exit()
-    mkdir_p(path) # alternative python3: os.makedirs(path, exist_ok=True)
-    
-    df = p.DataFrame([])
-    
-    try:
-        df = p.read_csv(fname, index_col=index_col)
-    except IOError, e:
+def getDataFromQuandl(tk, dataset, index_col=None, verbosity=1):
+    # if string
+    if type(tk) == type(''):
+        debug('fetching '+tk, verbosity=verbosity)
         try:
-            df = q.get(tk)
-            df.to_csv(fname)
-            print 'saved to: '+fname
-        except q.DatasetNotFound, f:
-            print f
-    return df
+            mt = re.match(re.compile(r'(.*)\/(.*)_(.*)', re.S), tk).groups()
+            path = 'data/quandl/'+dataset+'/'+mt[0]+'/'+mt[1]
+            fname = path+'/'+mt[0]+'-'+mt[1]+'_'+mt[2]+'.csv'
+            #fname = path+'/'+mt[2]+'.csv'
+        except:
+            mt = re.match(re.compile(r'(.*)\/(.*)', re.S), tk).groups()
+            path = 'data/quandl/'+dataset+'/'+mt[0]+'/'+mt[1]
+            fname = path+'/'+mt[0]+'-'+mt[1]+'.csv'
+        #print path
+        #sys.exit()
+        mkdir_p(path) # alternative python3: os.makedirs(path, exist_ok=True)
+        
+        df = p.DataFrame([])
+        
+        try:
+            df = p.read_csv(fname, index_col=index_col)
+        except IOError, e:
+            try:
+                #sys.exit('stopped preget')
+                df = q.get(tk)
+                df.to_csv(fname)
+                print 'saved to: '+fname
+            except q.DatasetNotFound, f:
+                print f
+        return df
+    
+    # if list
+    if type(tk) == type([]):
+        #print 'list'
+        """
+        dfs = []
+        for i in tk:
+            debug(i, verbosity=verbosity)
+            df = getDataFromQuandl(i, dataset, 0, verbosity=verbosity)
+            dfs.append(df)
+        mdf = p.DataFrame(n.zeros(len(dfs[1])), index=dfs[1].index)
+        """
+        
+        # concatenate ticker code to column value
+        dfs = []
+        mfs = p.DataFrame()
+        for i in range(0, len(tk)):
+            dfs.append(getDataFromQuandl(tk[i], index_col=0, dataset='', verbosity=8))
+            r1 = n.array([tk[i]+' '], dtype=object)
+            r2 = n.array(list(dfs[i].columns), dtype=object)
+            dfs[i].columns = r1+r2
+            #print list(dfs[i].columns)    
+        for i in range(0, len(dfs)):
+            #print i
+            mfs = mfs.combine_first(dfs[i])
+        return mfs
     
 # source: https://www.quandl.com/c/markets/exchange-rates-versus-eur
 # quandl js parser: for (var i = 2; i<=15; i++) {var buff = ''; $($x('//*[@id="ember894"]/div['+i+']/table/tbody/tr/td[3]/a/@href')).each(function(e,o) {buff += ' '+o.value.replace(/\/CURRFX\//g, '');}); console.log('# '+i); console.log('pa += \''+buff+'\'');}
@@ -168,3 +201,6 @@ def mkdir_p(path):
         if exc.errno == errno.EEXIST and os.path.isdir(path):
             pass
         else: raise
+
+if __name__ == "__main__":
+    print 'stub'
