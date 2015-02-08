@@ -60,21 +60,29 @@ def fetchFromQuandlSP500():
     for i in range(0, len(sp)):
         getDataFromQuandl(sp.ix[i,'Code'], dataset='SP500')
 
+def quandlCode2DatasetCode(tk, hdir='./', include_path=True, suffix='.csv'):
+    try:
+        mt = re.match(re.compile(r'(.*)\/(.*)_(.*)', re.S), tk).groups()
+        path = hdir+'/'+mt[0]+'/'+mt[1]
+        if include_path:
+            fname = path+'/'+mt[0]+'-'+mt[1]+'_'+mt[2]+suffix
+        else:
+            fname = mt[0]+'-'+mt[1]+'_'+mt[2]+suffix            
+        #fname = path+'/'+mt[2]+'.csv'
+    except:
+        mt = re.match(re.compile(r'(.*)\/(.*)', re.S), tk).groups()
+        path = hdir+'/'+mt[0]+'/'+mt[1]
+        if include_path:
+            fname = path+'/'+mt[0]+'-'+mt[1]+suffix
+        else:
+            fname = mt[0]+'-'+mt[1]+suffix
+    return [fname,path]
+        
 def getDataFromQuandl(tk, dataset, index_col=None, verbosity=1):
     # if string
     if type(tk) == type(''):
         debug('fetching '+tk, verbosity=verbosity)
-        try:
-            mt = re.match(re.compile(r'(.*)\/(.*)_(.*)', re.S), tk).groups()
-            path = 'data/quandl/'+dataset+'/'+mt[0]+'/'+mt[1]
-            fname = path+'/'+mt[0]+'-'+mt[1]+'_'+mt[2]+'.csv'
-            #fname = path+'/'+mt[2]+'.csv'
-        except:
-            mt = re.match(re.compile(r'(.*)\/(.*)', re.S), tk).groups()
-            path = 'data/quandl/'+dataset+'/'+mt[0]+'/'+mt[1]
-            fname = path+'/'+mt[0]+'-'+mt[1]+'.csv'
-        #print path
-        #sys.exit()
+        [fname, path] = quandlCode2DatasetCode(tk, hdir='data/quandl/'+dataset, include_path=True, suffix='.csv')
         mkdir_p(path) # alternative python3: os.makedirs(path, exist_ok=True)
         
         df = p.DataFrame([])
@@ -83,7 +91,6 @@ def getDataFromQuandl(tk, dataset, index_col=None, verbosity=1):
             df = p.read_csv(fname, index_col=index_col)
         except IOError, e:
             try:
-                #sys.exit('stopped preget')
                 df = q.get(tk)
                 df.to_csv(fname)
                 print 'saved to: '+fname
@@ -93,27 +100,17 @@ def getDataFromQuandl(tk, dataset, index_col=None, verbosity=1):
     
     # if list
     if type(tk) == type([]):
-        #print 'list'
-        """
-        dfs = []
-        for i in tk:
-            debug(i, verbosity=verbosity)
-            df = getDataFromQuandl(i, dataset, 0, verbosity=verbosity)
-            dfs.append(df)
-        mdf = p.DataFrame(n.zeros(len(dfs[1])), index=dfs[1].index)
-        """
-        
         # concatenate ticker code to column value
         dfs = []
         mfs = p.DataFrame()
         for i in range(0, len(tk)):
             dfs.append(getDataFromQuandl(tk[i], index_col=0, dataset='', verbosity=8))
+            #tk[i] = quandlCode2DatasetCode(tk[i], include_path=False, suffix='')[0]
             r1 = n.array([tk[i]+' '], dtype=object)
             r2 = n.array(list(dfs[i].columns), dtype=object)
             dfs[i].columns = r1+r2
             #print list(dfs[i].columns)    
         for i in range(0, len(dfs)):
-            #print i
             mfs = mfs.combine_first(dfs[i])
         return mfs
     
