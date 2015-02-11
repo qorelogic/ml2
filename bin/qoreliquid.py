@@ -15,6 +15,117 @@ def debug(str, verbosity):
 def toCurrency(n):
     return '%2d' % n
 
+
+"""
+Created on Thu Nov 13 21:52:25 2014
+
+@author: qore2
+"""
+
+import numpy as n
+import pandas as p
+from matplotlib.pylab import *
+
+class FinancialModel:
+    """The summary line for a class docstring should fit on one line.
+
+    If the class has public attributes, they should be documented here
+    in an ``Attributes`` section and follow the same formatting as a
+    function's ``Args`` section.
+
+    Attributes:
+      attr1 (str): Description of `attr1`.
+      attr2 (list of str): Description of `attr2`.
+      attr3 (int): Description of `attr3`.
+
+    """    
+    def getRateFromProjectedAccruedment(from_capital, to_capital, period):
+        """Example of docstring on the __init__ method.
+
+        The __init__ method may be documented in either the class level
+        docstring, or as a docstring on the __init__ method itself.
+
+        Either form is acceptable, but the two should not be mixed. Choose one
+        convention to document the __init__ method and be consistent with it.
+
+        Note:
+          Do not include the `self` parameter in the ``Args`` section.
+
+        Args:
+          param1 (str): Description of `param1`.
+          param2 (list of str): Description of `param2`. Multiple
+            lines are supported.
+          param3 (int, optional): Description of `param3`, defaults to 0.
+
+        """
+        """
+        vc = 100 * pow(1+50.0/100,2)
+        vc = 1e9
+        print vc
+        period = 500
+        print period
+        """
+        return 100 * (pow(float(to_capital)/from_capital, 1.0/period)-1)
+    
+    def compoundedPercentageIntegral(self, compoundedRate, period_integrals):
+        return 100 * (pow(pow(1 + float(compoundedRate) / 100,1), 1 / float(period_integrals)) - 1)
+        
+    # wrapper for compoundedPercentageIntegral()
+    def segmentCompundingPeriod(self, from_rate, intra_periods):
+        return compoundedPercentageIntegral(from_rate, intra_periods)
+    
+    # 50, 1 => 50
+    # 50, 2 => 125
+    # 50, 3 => 237.5
+    def rateToCompoundedPercentage(self, rate, period):
+        return 100 * (pow(pow(1 + float(rate) / 100, period),float(1) / 1) - 1)
+        
+    def compoundVestedCapital(self, rate, period):
+        rate   = n.array(rate, dtype=float64)
+        period = n.array(period)    
+        #return 100 * pow(1 + rate / 100, period)
+        #res =  100 * n.power(1 + rate / 100, period.reshape(size(period), 1))
+        return 100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
+        
+    def mdrange(self, initial, space, end):
+        return n.linspace(initial,end,(1.0/space)*end+1)
+        
+    def rateSpectra(self):
+        rate   = self.mdrange(0, 0.1, 10)
+        period = range(0, 200 + 1)
+        plot(self.compoundVestedCapital(rate, period))
+       
+    def test(self):
+        print self.compoundVestedCapital(50,2)
+        print self.compoundVestedCapital(1,n.array([1,2,3]))
+        print self.compoundVestedCapital(1,[1,2,3])
+        print self.compoundVestedCapital(1,range(0,10))
+        print self.compoundVestedCapital(range(0,10),range(0,10))
+        #print self.rateCompoundedToPercentage(1,20)
+        #print self.compoundedPercentageIntegral(rateCompoundedToPercentage(1,20), 20)
+        #print self.compoundedPercentageIntegral(12, 20)
+
+        r_day = fm.rateToCompoundedPercentage(1, 20)       
+        vc = ic * pow(1+float(r_day)/100,20)
+        print vc
+        vc = fm.rateToCompoundedPercentage(r_day, 20)
+        print vc
+        r_month = 12
+        vc = ic * pow(1+float(r_month)/100,1)
+        print vc
+        vc = fm.compoundVestedCapital(r_month, 1)[0][0]
+        print vc
+
+        n.linspace(0,1,100).T
+        rate = range(0,23)
+        period = range(0,100)
+        rate   = n.array(rate, dtype=float64)
+        period = n.array(period)    
+        #res =  100 * n.power(1 + rate / 100, period.reshape(size(period), 1))
+        res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
+        print res
+
+
 def normalizeme(dfr):
     return ((dfr - n.mean(dfr))/n.std(dfr))
 
@@ -199,5 +310,57 @@ def mkdir_p(path):
             pass
         else: raise
 
+def testMicrofinance():
+    fm = FinancialModel()
+    #fm.test()
+    
+    years    = 4
+    months   = 12 * years + 1
+    days     = 250 * years + 1
+    ic       = 100
+    myrates  = []
+    
+    # 12% monthly
+    myrates.append(12)
+    # 1% daily, monthly equivalent
+    myrates.append(fm.rateToCompoundedPercentage(1, 20))
+    # 7% APR monthly equivalent
+    myrates.append(fm.rateToCompoundedPercentage(fm.compoundedPercentageIntegral(7, 250), 20))
+    
+    myratetitles = []
+    
+    periods = n.array(range(0,months))
+    df = p.DataFrame(periods)
+    myratetitles.append('period')
+    for i in xrange(0,len(myrates)):
+        myratetitles.append('vested_'+str(int(myrates[i]))+'_monthly')
+        df[myratetitles[i]] = fm.compoundVestedCapital(myrates[i], periods)[0]
+    
+    print df
+    
+    plot(df)
+    print myratetitles
+    legend(myratetitles, 2)
+    
+    """
+    plot(vc)
+    title('Vested Capital')
+    show()
+    """
+
+def testGetDataFromQuandl():
+    tks = []
+    tks.append('LBMA/GOLD') # Gold
+    tks.append('DOE/RBRTE') # Europe Brent Crude Oil Spot Price FOB
+    tks.append('CHRIS/CME_CL1') # Crude Oil Futures, Continuous Contract #1 (CL1) (Front Month)
+    tks.append('BAVERAGE/USD') # USD/BITCOIN Weighted Price
+    #d = q.get(tks)
+    d8 = getDataFromQuandl(tks, index_col=0, dataset='', verbosity=8)
+    #d8.plot()
+    #show()
+    print d8.bfill().ffill()
+
 if __name__ == "__main__":
     print 'stub'
+    #testMicrofinance()
+    #testGetDataFromQuandl()
