@@ -92,7 +92,7 @@ class FinancialModel:
         
         # shift code
         try:        
-            period = list(n.zeros(shift, dtype=int)) + list(period[0:len(period)-(shift+1)])
+            period = list(n.zeros(shift, dtype=int)) + list(period[0:len(period)-shift])
         except:
             ''
         
@@ -375,4 +375,3 @@ if __name__ == "__main__":
     print 'stub'
     #testMicrofinance()
     #testGetDataFromQuandl()
-    
