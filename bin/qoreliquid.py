@@ -6,6 +6,7 @@ import datetime as dd
 import urllib2 as u
 import html2text
 import os, errno
+import exceptions as ex
 import re, sys
 
 def debug(str, verbosity):
@@ -80,12 +81,22 @@ class FinancialModel:
     def rateToCompoundedPercentage(self, rate, period):
         return 100 * (pow(pow(1 + float(rate) / 100, period),float(1) / 1) - 1)
         
-    def compoundVestedCapital(self, rate, period):
+    def compoundVestedCapital(self, rate, period, initial_capital=100, shift=0):
         rate   = n.array(rate, dtype=float64)
         period = n.array(period)    
-        #return 100 * pow(1 + rate / 100, period)
-        #res =  100 * n.power(1 + rate / 100, period.reshape(size(period), 1))
-        return 100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
+        
+        if shift < 0:
+            raise ex.IndexError('shift should be greater than 0. shift: '+str(shift))
+        if shift > len(period):
+            raise ex.IndexError('shift should be smaller than period length. shift: '+str(shift)+', period length: '+str(len(period)))
+        
+        # shift code
+        try:        
+            period = list(n.zeros(shift, dtype=int)) + list(period[0:len(period)-(shift+1)])
+        except:
+            ''
+        
+        return initial_capital * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
         
     def mdrange(self, initial, space, end):
         return n.linspace(initial,end,(1.0/space)*end+1)
@@ -364,3 +375,4 @@ if __name__ == "__main__":
     print 'stub'
     #testMicrofinance()
     #testGetDataFromQuandl()
+    
