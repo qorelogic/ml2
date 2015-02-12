@@ -1,31 +1,25 @@
 #from numpy import *
+from qore import *
+from matplotlib.pylab import *
+
 import numpy as n
 import pandas as p
 import Quandl as q
 import datetime as dd
 import urllib2 as u
+import json as j
 import html2text
-import os, errno
 import exceptions as ex
 import re, sys
 
-def debug(str, verbosity):
-    if verbosity == 9:
-        print str
-
 def toCurrency(n):
     return '%2d' % n
-
 
 """
 Created on Thu Nov 13 21:52:25 2014
 
 @author: qore2
 """
-
-import numpy as n
-import pandas as p
-from matplotlib.pylab import *
 
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
@@ -184,6 +178,60 @@ def sharpe(dfr):
     ''
 """
 
+#quickPlot('GOOG/AMEX_OFI')
+#quickPlot('BAVERAGE/USD')
+def quickPlot(tks, headers=None):
+    d = getDataFromQuandl(tks, index_col=0, dataset='', verbosity=3)
+    print p.DataFrame(list(d.columns))
+    d = d.bfill().ffill()
+    d = normalizeme(d)
+    d = sigmoidme(d)
+    
+    if type(headers) == type([]):
+        d = d.ix[:, headers] #.transpose()
+    
+    d.plot(logy=False)
+    show()
+    return d
+
+def searchQuandl(query, mode='manifest', headers=None, returndataset=False):
+    res = q.search(query, verbose=False)
+    tks = []
+    ds = None
+    for i in res:
+        #print i.keys()
+        #print i
+        tk = i['code']
+        
+        if mode == 'manifest':
+            print tk
+            print i['name']
+            print i['desc']
+            print '---------'
+            print
+            """
+            try:
+                dsg = getDataFromQuandl(tk, dataset='')
+            except e:
+                print e
+            """
+            #print i['freq']
+            #print i['name']
+            #print i['desc']
+            #print
+        if mode == 'plot':
+            print tk
+            #print i['desc']
+            ds = quickPlot(str(tk.strip()))
+        if mode == 'combineplot':
+            tks.append(str(tk))
+    if mode == 'combineplot':
+        ds = quickPlot(tks, headers=headers)
+    if returndataset == True:
+        return ds
+    else:
+        return len(res)
+
 def fetchFromQuandlSP500():
     sp = p.read_csv('data/quandl/SP500.csv')
     #for i in list(sp.sort(columns='Name').ix[0:10,['Code']].get_values().reshape(1,15)[0]):
@@ -314,21 +362,6 @@ def getDataFromQuandlBNP(pa, curr): # curr = EUR || USD, etc.
     
     return d
 
-# getWebContentToText
-def lynxDump2(url):
-    response = u.urlopen(url)
-    html = response.read()
-    html = html.decode('utf-8')
-    return html2text.html2text(html)
-
-def mkdir_p(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc: # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else: raise
-
 def testMicrofinance():
     fm = FinancialModel()
     #fm.test()
@@ -386,6 +419,13 @@ if __name__ == "__main__":
     #print normalizeme2([1423,2342,2343,23441,1235,1236,7123,8123,913])
     #print normalizeme2([3345,3422,3453,344,345,635,7345,8234,2349])
     #print list(normalizeme2([9,8,7,6,5,4,3,2,1]).transpose().get_values()[0])
-    nnn = normalizeme2([1423,2342,2343,23441,1235,1236,7123,8123,913])
-    print list(nnn.transpose().get_values()[0])
+    #nnn = normalizeme2([1423,2342,2343,23441,1235,1236,7123,8123,913])
+    #print list(nnn.transpose().get_values()[0])
     #import doctest; print doctest.testmod()
+    #debug('test', 9)
+    
+    #qu = 'Building Permits canada'
+    #qu = 'argentina inflation'
+    qu = 'non farm'
+    searchQuandl(qu)
+    
