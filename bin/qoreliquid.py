@@ -188,12 +188,14 @@ class FinancialModel:
 def prefilter(ds):
     """
     if type(ds) == type(p.DataFrame([])):
+    #    print '0'
         dss = ds.get_values()
         index = ds.index
         columns = ds.columns
-    else:
+    if type(ds) == type(n.array([])):
+    #    print 't1'
         dss = ds
-    """
+   """
     if type(ds) == type(p.DataFrame([])):
         dss = ds.bfill().ffill().get_values()
         index = ds.index
@@ -201,6 +203,9 @@ def prefilter(ds):
     else:
         ds = p.DataFrame(ds).bfill().ffill().get_values()
         dss = ds
+    if type(ds) == type([]):
+    #    print 't2'
+        dss = n.array(ds)
     #print type(dss)
     #print ds[0]
     # call fillna(method='bfill') on dataset before calling this method
@@ -208,13 +213,13 @@ def prefilter(ds):
 
 def normalizeme2(ds, index, columns):
     dss = prefilter(ds)
-    dss = p.DataFrame(dss / dss[0], index=index, columns=columns)
-    #print dss
+    dss = dss / dss[0]
+    dss = p.DataFrame(dss, index=index, columns=columns)
     return dss
 
 def normalizeme(ds, index, columns):
-    dss = prefilter(ds)
-    return p.DataFrame((dss - n.mean(dss))/n.std(dss), index=index, columns=columns)
+   dss = prefilter(ds)
+   return p.DataFrame((dss - n.mean(dss))/n.std(dss), index=index, columns=columns)
 
 def sigmoidme(dfr):
     return 1.0 / (1 + pow(n.e,-dfr))
@@ -443,3 +448,9 @@ if __name__ == "__main__":
     #ps = PriceStudy()
     #ps.bitcoinStudy()
     #print ps.getPrices()
+    #print normalizeme2([1423,2342,2343,23441,1235,1236,7123,8123,913])
+    #print normalizeme2([3345,3422,3453,344,345,635,7345,8234,2349])
+    #print list(normalizeme2([9,8,7,6,5,4,3,2,1]).transpose().get_values()[0])
+    nnn = normalizeme2([1423,2342,2343,23441,1235,1236,7123,8123,913])
+    print list(nnn.transpose().get_values()[0])
+    #import doctest; print doctest.testmod()
