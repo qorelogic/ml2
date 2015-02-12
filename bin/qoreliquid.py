@@ -138,22 +138,30 @@ class FinancialModel:
 
 
 def normalizeme(dfr):
-    return ((dfr - n.mean(dfr))/n.std(dfr))
+    return (dfr - n.mean(dfr))/n.std(dfr)
 
 def normalizeme2(ds, index=None, columns=None):
+    #print type(ds)
+    ds = n.array(ds, dtype=float)
     if type(ds) == type(p.DataFrame([])):
+    #    print '0'
         dss = ds.get_values()
         index = ds.index
         columns = ds.columns
-    else:
+    if type(ds) == type(n.array([])):
+    #    print 't1'
         dss = ds
+    if type(ds) == type([]):
+    #    print 't2'
+        dss = n.array(ds)
     #print type(dss)
     #import sys
     #sys.exit()
     #print ds[0]
     # call fillna(method='bfill') on dataset before calling this method
     
-    dss = p.DataFrame(dss / dss[0], index=index, columns=columns)
+    dss = dss / dss[0]
+    dss = p.DataFrame(dss, index=index, columns=columns)
     return dss
 
 def sigmoidme(dfr):
@@ -375,3 +383,9 @@ if __name__ == "__main__":
     print 'stub'
     #testMicrofinance()
     #testGetDataFromQuandl()
+    #print normalizeme2([1423,2342,2343,23441,1235,1236,7123,8123,913])
+    #print normalizeme2([3345,3422,3453,344,345,635,7345,8234,2349])
+    #print list(normalizeme2([9,8,7,6,5,4,3,2,1]).transpose().get_values()[0])
+    nnn = normalizeme2([1423,2342,2343,23441,1235,1236,7123,8123,913])
+    print list(nnn.transpose().get_values()[0])
+    #import doctest; print doctest.testmod()
