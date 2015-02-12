@@ -27,6 +27,54 @@ import numpy as n
 import pandas as p
 from matplotlib.pylab import *
 
+class PriceStudy:
+    def __init__(self):
+        self.tks = []
+        
+    def getPrices(self):
+        self.tks = []
+        self.tks.append('LBMA/GOLD') # Gold
+        self.tks.append('DOE/RBRTE') # Europe Brent Crude Oil Spot Price FOB
+        self.tks.append('CHRIS/CME_CL1') # Crude Oil Futures, Continuous Contract #1 (CL1) (Front Month)
+        self.tks.append('BAVERAGE/USD') # USD/BITCOIN Weighted Price
+        self.tks.append('BCHAIN/NTRAN')
+        self.tks.append('BCHAIN/MKTCP')
+        self.tks.append('BCHAIN/TOTBC')
+        self.tks.append('BCHAIN/NTRAT')
+        self.tks.append('BCHAIN/HRATE')
+        self.tks.append('BCHAIN/ETRVU')
+        self.tks.append('BCHAIN/NADDU')
+        self.tks.append('BCHAIN/AVBLS')
+        self.tks.append('BCHAIN/MIREV')
+        d8 = getDataFromQuandl(self.tks, index_col=None, dataset='', verbosity=8)
+        return d8
+    
+    def bitcoinStudy(self):
+        d8 = self.getPrices()
+        fig = plt.figure()
+        #fig.add_subplot(111)
+        
+        d = normalizeme(d8.copy())
+        d.plot(logy=False)
+        
+        d8.plot(logy=False)
+        
+        d8.plot(logy=True)
+        
+        d = normalizeme(d8.copy())
+        d = sigmoidme(d)
+        d.plot(logy=False)
+        
+        d = normalizeme(d8.copy())
+        d = sigmoidme(d)
+        d.plot(logy=False, style='.')
+        
+        d = normalizeme(d8.copy())
+        d.plot(logy=True)
+        
+        show()
+
+
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
 
@@ -137,24 +185,36 @@ class FinancialModel:
         print res
 
 
-def normalizeme(dfr):
-    return ((dfr - n.mean(dfr))/n.std(dfr))
-
-def normalizeme2(ds, index=None, columns=None):
+def prefilter(ds):
+    """
     if type(ds) == type(p.DataFrame([])):
         dss = ds.get_values()
         index = ds.index
         columns = ds.columns
     else:
         dss = ds
+    """
+    if type(ds) == type(p.DataFrame([])):
+        dss = ds.bfill().ffill().get_values()
+        index = ds.index
+        columns = ds.columns
+    else:
+        ds = p.DataFrame(ds).bfill().ffill().get_values()
+        dss = ds
     #print type(dss)
-    #import sys
-    #sys.exit()
     #print ds[0]
     # call fillna(method='bfill') on dataset before calling this method
-    
-    dss = p.DataFrame(dss / dss[0], index=index, columns=columns)
     return dss
+
+def normalizeme2(ds, index, columns):
+    dss = prefilter(ds)
+    dss = p.DataFrame(dss / dss[0], index=index, columns=columns)
+    #print dss
+    return dss
+
+def normalizeme(ds, index, columns):
+    dss = prefilter(ds)
+    return p.DataFrame((dss - n.mean(dss))/n.std(dss), index=index, columns=columns)
 
 def sigmoidme(dfr):
     return 1.0 / (1 + pow(n.e,-dfr))
@@ -353,6 +413,11 @@ def testMicrofinance():
     print myratetitles
     legend(myratetitles, 2)
     
+    fm = FinancialModel()
+    r = fm.compoundVestedCapital(1, range(0,10), initial_capital=1, shift=3)
+    #r = fm.compoundVestedCapital(1, range(0,10), initial_capital=1, shift=-4)
+    #r = fm.compoundVestedCapital(1, range(0,10), initial_capital=1, shift=40)
+    print p.DataFrame(r).transpose()
     """
     plot(vc)
     title('Vested Capital')
@@ -372,6 +437,9 @@ def testGetDataFromQuandl():
     print d8.bfill().ffill()
 
 if __name__ == "__main__":
-    print 'stub'
+    #print 'stub'
     #testMicrofinance()
     #testGetDataFromQuandl()
+    #ps = PriceStudy()
+    #ps.bitcoinStudy()
+    #print ps.getPrices()
