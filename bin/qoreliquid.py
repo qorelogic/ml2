@@ -190,7 +190,9 @@ def quickPlot(tks, headers=None, listcolumns=False):
     if type(headers) == type([]):
         d = d.ix[:, headers] #.transpose()
     
-    d.plot(logy=False)    
+    d.plot(logy=False)
+    if type(headers) == type([]):
+        legend(headers, 2)
     show()
     return d
 
