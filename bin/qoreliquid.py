@@ -130,7 +130,6 @@ class FinancialModel:
         res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
         print res
 
-
 def normalizeme(dfr):
     return (dfr - n.mean(dfr))/n.std(dfr)
 
@@ -180,9 +179,10 @@ def sharpe(dfr):
 
 #quickPlot('GOOG/AMEX_OFI')
 #quickPlot('BAVERAGE/USD')
-def quickPlot(tks, headers=None):
+def quickPlot(tks, headers=None, listcolumns=False):
     d = getDataFromQuandl(tks, index_col=0, dataset='', verbosity=3)
-    print p.DataFrame(list(d.columns))
+    if listcolumns:
+        print p.DataFrame(list(d.columns))
     d = d.bfill().ffill()
     d = normalizeme(d)
     d = sigmoidme(d)
@@ -190,12 +190,46 @@ def quickPlot(tks, headers=None):
     if type(headers) == type([]):
         d = d.ix[:, headers] #.transpose()
     
-    d.plot(logy=False)
+    d.plot(logy=False)    
     show()
     return d
 
-def searchQuandl(query, mode='manifest', headers=None, returndataset=False):
-    res = q.search(query, verbose=False)
+def writeQuandlSearchLog(stri):
+    suffix='.csv'
+    path='data/quandl'
+    fname = path+'/searches'+suffix    
+    fp = open(fname,'a')
+    fp.write(stri+"\n")
+    fp.close()    
+    #fp = open(fname)
+    #print fp.read()
+    #fp.close()
+    
+def searchQuandl(query, mode='manifest', headers=None, returndataset=False, cache=True, listcolumns=False):
+    debug('searching: '+query, verbosity=9)
+    suffix='.csv'
+    path='data/quandl/searches/'
+    mkdir_p(path)
+    fname = path+query+suffix
+    import time as t
+    tt = t.time()
+    try:
+        if cache == False:
+            raise IOError
+        fp = open(fname, 'r')
+        res = j.loads(fp.read())
+        fp.close()
+        writeQuandlSearchLog(str(tt)+':cached:'+str(query))
+    except IOError, e:
+        try:
+            writeQuandlSearchLog(str(tt)+':searched:'+str(query))
+            res = q.search(query, verbose=False)
+            fp = open(fname, 'w')
+            fp.write(j.dumps(res))
+            fp.close()
+            print 'saved to: '+fname
+        except q.DatasetNotFound, f:
+            print f
     tks = []
     ds = None
     for i in res:
@@ -222,11 +256,11 @@ def searchQuandl(query, mode='manifest', headers=None, returndataset=False):
         if mode == 'plot':
             print tk
             #print i['desc']
-            ds = quickPlot(str(tk.strip()))
+            ds = quickPlot(str(tk.strip()), listcolumns=listcolumns)
         if mode == 'combineplot':
             tks.append(str(tk))
     if mode == 'combineplot':
-        ds = quickPlot(tks, headers=headers)
+        ds = quickPlot(tks, headers=headers, listcolumns=listcolumns)
     if returndataset == True:
         return ds
     else:
