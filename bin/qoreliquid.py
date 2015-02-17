@@ -179,10 +179,12 @@ def sharpe(dfr):
 
 #quickPlot('GOOG/AMEX_OFI')
 #quickPlot('BAVERAGE/USD')
-def quickPlot(tks, headers=None, listcolumns=False):
+def quickPlot(tks, headers=None, listcolumns=False, title=None):
     d = getDataFromQuandl(tks, index_col=0, dataset='', verbosity=3)
     if listcolumns:
-        print p.DataFrame(list(d.columns))
+        #print p.DataFrame(list(d.columns))
+        for i in enumerate(list(d.columns)):
+            print i
     d = d.bfill().ffill()
     d = normalizeme(d)
     d = sigmoidme(d)
@@ -192,7 +194,18 @@ def quickPlot(tks, headers=None, listcolumns=False):
     
     d.plot(logy=False)
     if type(headers) == type([]):
-        legend(headers, 2)
+        #hdrs = d.columns[headers]
+        #hdrs = list(d.columns[headers])
+        try:        
+            hdrs = list(d.columns[[headers]])
+            legend(hdrs, 2)
+        except:
+            ''
+    #else:
+    #    legend(None, 2)
+    #print type(title)
+    #if title:
+    #    title(title)
     show()
     return d
 
@@ -258,11 +271,11 @@ def searchQuandl(query, mode='manifest', headers=None, returndataset=False, cach
         if mode == 'plot':
             print tk
             #print i['desc']
-            ds = quickPlot(str(tk.strip()), listcolumns=listcolumns)
+            ds = quickPlot(str(tk.strip()), listcolumns=listcolumns, title=query)
         if mode == 'combineplot':
             tks.append(str(tk))
     if mode == 'combineplot':
-        ds = quickPlot(tks, headers=headers, listcolumns=listcolumns)
+        ds = quickPlot(tks, headers=headers, listcolumns=listcolumns, title=query)
     if returndataset == True:
         return ds
     else:
@@ -567,6 +580,9 @@ if __name__ == "__main__":
     
     #qu = 'Building Permits canada'
     #qu = 'argentina inflation'
-    qu = 'non farm'
-    searchQuandl(qu)
+    #qu = 'non farm'
+    #searchQuandl(qu)
     
+    #headers = [0,1]
+    headers = None
+    searchQuandl('tesla', mode='combineplot', returndataset=False, headers=headers, listcolumns=True)
