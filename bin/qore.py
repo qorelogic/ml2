@@ -15,13 +15,21 @@ def debug(str, verbosity=8):
 
         return str
 
+hdir = '/ml.live/bin/data/cache'
+def fetchFromCache(url):
+    # from cache file
+    #mkdir_p(hdir)
+    fp = open(hdir+'/'+u.quote(url,''), 'r')
+    r = fp.read()
+    fp.close()
+    return r
+
 def fetchURL(url, mode='json', cachemode='w'):
     # mode = json | html
     response = u.urlopen(url)
     ret = response.read()
     
     # cache to file
-    hdir = '/ml.live/bin/data/cache'
     mkdir_p(hdir)
     fp = open(hdir+'/'+u.quote(url,''), cachemode)
     fp.write(ret+'\n')

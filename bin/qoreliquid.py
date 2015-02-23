@@ -734,11 +734,7 @@ Peercoin	PPC	6	3600
         debug('Ending getDepth:'+code)
         return r
 
-    def getTrades(self, code, doPlot=True):
-        debug('Starting getTrades: '+code)
-        # eg. code = btc_usd
-        url = 'https://btc-e.com/api/3/trades/'+code
-        r = fetchURL(url, mode='json', cachemode='a')
+    def parseTrades(self, r, code, doPlot=True):
         #print r
         ky = r[code][0].keys()
         #print ky
@@ -758,12 +754,21 @@ Peercoin	PPC	6	3600
         #r = r.ix[:,[]]
         """
         r1 = r
-#        r1 = normalizeme(r1)
-#        r1 = sigmoidme(r1)
+    #    r1 = normalizeme(r1)
+    #    r1 = sigmoidme(r1)
         if doPlot == True:
             r1 = r1.ix[:,['price']]
             plot(r1); title(code+' trades'); legend(r1.columns,2); show()
         debug('Ending getTrades:'+code)
+        return ro
+    
+    def getTrades(self, code, doPlot=True):
+        debug('Starting getTrades: '+code)
+        # eg. code = btc_usd
+        url = 'https://btc-e.com/api/3/trades/'+code
+        r = fetchURL(url, mode='json', cachemode='a')
+        #r = fetchFromCache(url)
+        ro = self.parseTrades(r, code, doPlot)
         return ro
 
     def getArbTable(self, pk):
