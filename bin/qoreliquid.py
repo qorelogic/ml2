@@ -11,6 +11,8 @@ import json as j
 import html2text
 import exceptions as ex
 import re, sys
+import StringIO as sio
+import threading,time
 
 def toCurrency(n):
     return '%2d' % n
@@ -565,6 +567,307 @@ def getDataAUD():
     
     da = getDataFromQuandlBNP(pa, 'AUD')
 
+class btce:
+    def getTicker(self, code):
+        # eg. code = btc_usd
+        url = 'https://btc-e.com/api/3/ticker/'+code
+        r = fetchURL(url, mode='json')
+        #print r
+        ky = r[code].keys()
+        #print ky
+        #print r[code].values()
+        r = p.DataFrame(r[code].values(), index=ky, columns=[code]).transpose()
+        return r.ix[:,['sell','buy','last','vol','vol_cur']].transpose()
+    
+    def getFastestCryptoCoins(self):
+        t = """Coin	Symbol	Confirmations Required	Transaction Speed (in seconds)
+Fastcoin	FST	4	48
+Worldcoin	WDC	4	60
+Krugercoin	KGC	6	90
+Richcoin	RCH	3	90
+Realcoin	REC	3	90
+Digitalcoin	DGC	5	100
+Emerald	EMD	5	100
+Xencoin	XNC	5	100
+Asiccoin	ASC	4	120
+Infinitecoin	IFC	4	120
+Alphacoin	ALP	5	150
+Elephantcoin	ELP	5	150
+Quarkcoin	QRK	5	150
+Valuecoin	VLC	5	150
+Argentum	ARG	5	160
+Hypercoin	HYC	4	160
+Colossuscoin	COL	7	175
+Casinocoin	CSC	6	180
+Franko	FRK	6	180
+Orbitcoin	ORB	6	180
+Florincoin	FLO	5	200
+Stablecoin	SBC	5	200
+Galaxycoin	GLX	7	210
+Zetacoin	ZET	7	210
+Anoncoin	ANC	6	240
+Novacoin	NVC	4	240
+Yacoin	YAC	4	240
+Globalcoin	GLC	7	280
+Bbqcoin	BQC	5	300
+Elacoin	ELC	5	300
+Ezcoin	EZC	5	300
+Grandcoin	GDC	7	315
+Spots	SPT	5	350
+Diamond	DMD	6	360
+Datacoin	DTC	6	360
+Lebowskis	LBW	6	360
+Redcoin	RED	6	360
+Primecoin	XPM	6	360
+Netcoin	NET	7	420
+Nanotoken	NAN	5	450
+Powercoin	PWC	10	450
+Cryptogenicbullion	CGB	8	480
+Terracoin	TRC	4	480
+Americancoin	AMC	4	600
+Litecoin	LTC	4	600
+Nibble	NIB	4	600
+Feathercoin	FTC	5	750
+Megacoin	MEC	5	750
+Nucoin	NUC	5	750
+Phenixcoin	PXC	5	750
+Deutsche eMark	DEM	7	840
+Noirbits	NRB	7	840
+Cosmoscoin	CMC	5	1050
+Betacoin	BET	5	1200
+Tagcoin	TAG	5	1200
+Weedcoin	WEC	5	1200
+Unobtanium	UNO	7	1260
+Cinnamoncoin	CIN	5	1500
+Craftcoin	CRC	5	1500
+Protoshares	PTS	6	1800
+Bitbar	BTB	4	2400
+Bitcoin	BTC	4	2400
+Bitgem	BTG	4	2400
+Peercoin	PPC	6	3600
+"""
+        tis = p.read_csv(sio.StringIO(t), delimiter='\t', index_col=0).ix[:,[0,1,2]]
+        tis = tis.sort('Transaction Speed (in seconds)', ascending=True)
+        #print tis.ix[0:3,[0,2]]
+        #print tis
+        tis = list(tis.ix[:,[0]].transpose().get_values()[0])
+        """
+        for i in list(n.array(self.pk, dtype=string0)):
+            print i.split('_')
+            for j in range(0,len(fastestCoins)):
+                #print type(fastestCoins[j])
+                try:
+                    fc = fastestCoins[j].lower()
+                    #print 'fastest:'+fc
+                    #if i[0:3] == fc:
+                    #    print i[0:3]
+                    #if i[4:7] == fc:
+                    #    print i[4:7]
+                except:
+                    ''
+        """
+        return tis
+    
+    def __init__(self):
+        self.pk = []
+        self.exchanges = ['ex1','ex2','ex3','ex4']; #print exchanges;
+        self.check()
+
+    def check(self):
+        if len(self.pk) == 0: self.getCurrencies()
+    
+    def getCurrencies(self):
+        url = 'https://btc-e.com/api/3/info'
+        r = fetchURL(url, mode='json')
+        #print p.DataFrame(list(r['pairs']['ltc_gbp']))
+        pk = r['pairs'].keys()
+        pv = r['pairs'].values()
+        #print pk
+        li = []
+        for i in pv:
+            li.append(i.values())
+        li = p.DataFrame(li, index=pk, columns=pv[0].keys())
+        self.pk = pk
+        return li
+        #pk = p.DataFrame(pk, index=pk, columns=['pair'])
+        #print pk
+        #print pk.combine_first(li)
+        #print r
+    
+    def getRatesOnExchange(self):
+        self.check()
+        pc = p.DataFrame()
+        for i in self.pk:
+            debug(i)
+            try:
+                ti = self.getTicker(i); #print ti.transpose()
+                pc = pc.combine_first(ti)
+            except:
+                ''
+        #print pc
+        return pc.transpose()
+    
+    def getDepth(self, code, doPlot=True):
+        debug('Starting getTDepth: '+code)
+        # eg. code = btc_usd
+        url = 'https://btc-e.com/api/3/depth/'+code
+        r = fetchURL(url, mode='json')
+        #print r
+        ky = r[code].keys()    
+        #print ky
+        rb = p.DataFrame(r[code]['bids'], columns=['bp','ba'])
+        ra = p.DataFrame(r[code]['asks'], columns=['ap','aa'])
+        #print rb
+        #print ra
+        r = rb.combine_first(ra)
+        #r = r.ix[:,[]]
+        if doPlot == True:
+            r1 = r
+            r1 = r1.ix[:,['ap','bp']]
+            plot(r1); title(code+' orders'); legend(r1.columns,2); show()
+    
+            r2 = r
+            r2 = normalizeme(r2)
+            r2 = sigmoidme(r2)
+            r2 = r2.ix[:,:]
+            plot(r2); title(code+' orders'); legend(r2.columns,2); show()
+        debug('Ending getDepth:'+code)
+        return r
+
+    def getTrades(self, code, doPlot=True):
+        debug('Starting getTrades: '+code)
+        # eg. code = btc_usd
+        url = 'https://btc-e.com/api/3/trades/'+code
+        r = fetchURL(url, mode='json', cachemode='a')
+        #print r
+        ky = r[code][0].keys()
+        #print ky
+        li = []
+        for i in r[code]:
+            li.append(i.values())
+        ro = p.DataFrame(li, columns=ky)
+        r = ro.ix[:,['price','amount']]
+        #print r
+        """
+        rb = p.DataFrame(r[code]['bids'], columns=['bp','ba'])
+        ra = p.DataFrame(r[code]['asks'], columns=['ap','aa'])
+        print rb
+        print ra
+        r = rb.combine_first(ra)
+        print r
+        #r = r.ix[:,[]]
+        """
+        r1 = r
+#        r1 = normalizeme(r1)
+#        r1 = sigmoidme(r1)
+        if doPlot == True:
+            r1 = r1.ix[:,['price']]
+            plot(r1); title(code+' trades'); legend(r1.columns,2); show()
+        debug('Ending getTrades:'+code)
+        return ro
+
+    def getArbTable(self, pk):
+        self.check()
+        arbtable1 = n.random.randn(len(pk)*len(self.exchanges)).reshape(len(pk),len(self.exchanges));
+        return arbtable1
+
+    def getArbRates(self, doPlot=False):
+        #print pk
+        arbtable1 = self.getArbTable(self.pk)
+        rarb = p.DataFrame(arbtable1, index=self.pk, columns=self.exchanges);
+        #print rarb; print;
+        
+        ms = []
+        arbHdr = ['sell','buy','arbitrageRate']
+        arbRates = p.DataFrame([])
+        for i in range(0,len(self.pk)):
+        #for i in range(0,2):
+            ind = i
+            debug(self.pk[ind])
+            m = rarb.ix[self.pk[ind]]
+            debug(m)
+            m = p.DataFrame(n.array(m).reshape(len(m),1) / n.array(m) * 100 - 100, index=self.exchanges, columns=self.exchanges); 
+            debug(m); debug('');
+            m1 = n.max(m,0); #print m1;
+            exhds = list(m1.index)
+            #print (n.nonzero(m == m1))
+            #print (n.nonzero(m1 == n.max(m1)))
+            maxIndx = n.max(n.nonzero(m1 == n.max(m1)))
+            maxNum = n.max(m1,0); #print maxNum;
+            indx = (n.nonzero(n.array(m == maxNum, dtype=int)))
+            arbRate = p.DataFrame([exhds[indx[0][0]], exhds[indx[1][0]], maxNum], index=arbHdr, columns=[self.pk[ind]])
+            arbRates = arbRates.combine_first(arbRate)
+            debug(arbRate.transpose())
+            #m = normalizeme(m)
+            if doPlot == True:
+                plot(m,'-')
+                #scatter(m)
+                title(self.pk[ind]); legend(m.columns,2); show();
+            ms.append(m.get_values().tolist())
+        #print ms
+        #scatter(ms[0],ms[1]); show();
+        debug(arbRates.transpose())
+        return arbRates
+        
+    def getFastestCryptoCoinArbitrage(self):
+        # show the fastest coin to arbitrage
+        try:
+            arr
+        except:
+            arr = self.getMostProfitablePair()
+        arrSortedAR = arr.sort('arbitrageRate', ascending=False)
+        print p.DataFrame(arrSortedAR.ix[list(arrSortedAR.ix[:,'p1']).index(self.p1), :]).transpose(); print
+        print p.DataFrame(arrSortedAR.ix[list(arrSortedAR.ix[:,'p2']).index(self.p2), :]).transpose()
+    
+    def getMostProfitablePair(self):
+        fastestCoins = self.getFastestCryptoCoins()
+        fcs = []
+        try:
+            arbRates
+        except:
+            arbRates = self.getArbRates()
+        arr = arbRates.transpose()
+        po1 = []; po2 = []
+        for row in (n.array(arr.index, dtype=string0)):
+            po1.append(row[0:3])
+            po2.append(row[4:7])
+        arr['p1'] = po1
+        arr['p2'] = po2
+        for i in range(0,len(arr)):
+            #if arr.ix[i,'p1']
+            try: arr.ix[i,'p11'] = fastestCoins.index(arr.ix[i,'p1'].upper())
+            except: ''
+            try: arr.ix[i,'p22'] = fastestCoins.index(arr.ix[i,'p2'].upper())
+            except: ''
+        arr1 = arr.sort('p11', ascending=True);
+        arr2 = arr.sort('p22', ascending=True);
+        self.p1 = arr1.ix[0,'p1']; debug(self.p1)
+        self.p2 = arr2.ix[0,'p2']; debug(self.p2)
+        debug(arr)
+        return arr
+    
+    def updateData(self):
+        # Create threads
+        # source: http://pymotw.com/2/threading/
+        try:
+            for i in self.pk:                
+                t0 = threading.Thread(target=self.getCurrencies)
+                t0.daemon = False
+                t0.start()
+                t1 = threading.Thread(target=self.getRatesOnExchange)
+                t1.daemon = False
+                t1.start()
+                t2 = threading.Thread(target=self.getTrades, args=(i, False,))
+                t2.daemon = False
+                t2.start()
+                t3 = threading.Thread(target=self.getDepth, args=(i, False,))
+                t3.daemon = False
+                t3.start()
+        except e:
+            print e
+           #print "Error: unable to start thread"
+        #while 1:
+        #   pass
 
 if __name__ == "__main__":
     print 'stub'

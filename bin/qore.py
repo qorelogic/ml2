@@ -2,16 +2,33 @@
 import urllib2 as u
 import json as j
 import os, errno
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='(%(threadName)-10s) %(message)s',
+                    )
 
-def debug(str, verbosity):
-    if verbosity == 9:
-        print str
+def debug(str, verbosity=8):
+    #if verbosity == 9:
+    if verbosity == 8:
+        #print str
+        logging.debug(str)
+
         return str
 
-def fetchURL(url, mode='json'):
+def fetchURL(url, mode='json', cachemode='w'):
+    # mode = json | html
     response = u.urlopen(url)
-    html = response.read()
-    ret = j.loads(html)
+    ret = response.read()
+    
+    # cache to file
+    hdir = '/ml.live/bin/data/cache'
+    mkdir_p(hdir)
+    fp = open(hdir+'/'+u.quote(url,''), cachemode)
+    fp.write(ret+'\n')
+    fp.close()
+    
+    if mode == 'json':
+        ret = j.loads(ret)
     return ret
 
 # getWebContentToText
