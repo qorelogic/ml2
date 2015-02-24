@@ -3,9 +3,9 @@ import urllib2 as u
 import json as j
 import os, errno
 import logging
-logging.basicConfig(level=logging.DEBUG,
-                    format='(%(threadName)-10s) %(message)s',
-                    )
+
+#logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
+logging.basicConfig(filename='/tmp/qore.log', level=logging.DEBUG)
 
 def debug(str, verbosity=8):
     #if verbosity == 9:
@@ -26,18 +26,25 @@ def fetchFromCache(url):
 
 def fetchURL(url, mode='json', cachemode='w'):
     # mode = json | html
-    response = u.urlopen(url)
-    ret = response.read()
-    
-    # cache to file
-    mkdir_p(hdir)
-    fp = open(hdir+'/'+u.quote(url,''), cachemode)
-    fp.write(ret+'\n')
-    fp.close()
-    
-    if mode == 'json':
-        ret = j.loads(ret)
-    return ret
+    debug('fetchURL(): '+url)
+    try:
+        response = u.urlopen(url)
+        ret = response.read()
+        
+        # cache to file
+        mkdir_p(hdir)
+        fname = hdir+'/'+u.quote(url,'')
+        debug('fetchURL(): caching to file: '+fname)
+        fp = open(fname, cachemode)
+        fp.write(ret+'\n')
+        fp.close()
+        
+        if mode == 'json':
+            debug('fetchURL(): json format: '+url)
+            ret = j.loads(ret)
+        return ret
+    except u.URLError, e:
+        debug(e)
 
 # getWebContentToText
 def lynxDump2(url):

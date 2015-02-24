@@ -13,6 +13,7 @@ import exceptions as ex
 import re, sys
 import StringIO as sio
 import threading,time
+import itertools as it
 
 def toCurrency(n):
     return '%2d' % n
@@ -567,7 +568,12 @@ def getDataAUD():
     
     da = getDataFromQuandlBNP(pa, 'AUD')
 
-class btce:
+class CryptoCoinBaseClass:
+    
+    def __init__(self):
+        ''
+
+class btce(CryptoCoinBaseClass):
     def getTicker(self, code):
         # eg. code = btc_usd
         url = 'https://btc-e.com/api/3/ticker/'+code
@@ -582,7 +588,7 @@ class btce:
     def getRarestCryptoCoins(self):
         # linked from: http://crypt.la/2013/12/14/list-of-the-fastest-cryptocurrencies/
         # source: http://crypt.la/2013/12/16/list-of-the-top-25-rarest-cryptocurrencies/
-        t = """Currency	Code	Total Circulation ▾
+        t = """Currency	Code	Total Circulation 
 Onecoin	ONC	1
 Bestcoin	BEST	1,000,000
 Cryptogenic Bullion	CGB	1,000,000
@@ -712,20 +718,24 @@ Peercoin	PPC	6	3600
     def getCurrencies(self):
         url = 'https://btc-e.com/api/3/info'
         r = fetchURL(url, mode='json')
-        #print p.DataFrame(list(r['pairs']['ltc_gbp']))
-        pk = r['pairs'].keys()
-        pv = r['pairs'].values()
-        #print pk
-        li = []
-        for i in pv:
-            li.append(i.values())
-        li = p.DataFrame(li, index=pk, columns=pv[0].keys())
-        self.pk = pk
-        return li
-        #pk = p.DataFrame(pk, index=pk, columns=['pair'])
-        #print pk
-        #print pk.combine_first(li)
-        #print r
+
+        try:
+            #print p.DataFrame(list(r['pairs']['ltc_gbp']))
+            pk = r['pairs'].keys()
+            pv = r['pairs'].values()
+            #print pk
+            li = []
+            for i in pv:
+                li.append(i.values())
+            li = p.DataFrame(li, index=pk, columns=pv[0].keys())
+            self.pk = pk
+            return li
+            #pk = p.DataFrame(pk, index=pk, columns=['pair'])
+            #print pk
+            #print pk.combine_first(li)
+            #print r
+        except TypeError, e:
+            debug(e)
     
     def getRatesOnExchange(self):
         self.check()
@@ -746,54 +756,60 @@ Peercoin	PPC	6	3600
         url = 'https://btc-e.com/api/3/depth/'+code
         r = fetchURL(url, mode='json')
         #print r
-        ky = r[code].keys()    
-        #print ky
-        rb = p.DataFrame(r[code]['bids'], columns=['bp','ba'])
-        ra = p.DataFrame(r[code]['asks'], columns=['ap','aa'])
-        #print rb
-        #print ra
-        r = rb.combine_first(ra)
-        #r = r.ix[:,[]]
-        if doPlot == True:
-            r1 = r
-            r1 = r1.ix[:,['ap','bp']]
-            plot(r1); title(code+' orders'); legend(r1.columns,2); show()
-    
-            r2 = r
-            r2 = normalizeme(r2)
-            r2 = sigmoidme(r2)
-            r2 = r2.ix[:,:]
-            plot(r2); title(code+' orders'); legend(r2.columns,2); show()
-        debug('Ending getDepth:'+code)
-        return r
+        try:        
+            ky = r[code].keys()    
+            #print ky
+            rb = p.DataFrame(r[code]['bids'], columns=['bp','ba'])
+            ra = p.DataFrame(r[code]['asks'], columns=['ap','aa'])
+            #print rb
+            #print ra
+            r = rb.combine_first(ra)
+            #r = r.ix[:,[]]
+            if doPlot == True:
+                r1 = r
+                r1 = r1.ix[:,['ap','bp']]
+                plot(r1); title(code+' orders'); legend(r1.columns,2); show()
+        
+                r2 = r
+                r2 = normalizeme(r2)
+                r2 = sigmoidme(r2)
+                r2 = r2.ix[:,:]
+                plot(r2); title(code+' orders'); legend(r2.columns,2); show()
+            debug('Ending getDepth:'+code)
+            return r
+        except TypeError, e:
+            debug(e)
 
     def parseTrades(self, r, code, doPlot=True):
         #print r
-        ky = r[code][0].keys()
-        #print ky
-        li = []
-        for i in r[code]:
-            li.append(i.values())
-        ro = p.DataFrame(li, columns=ky)
-        r = ro.ix[:,['price','amount']]
-        #print r
-        """
-        rb = p.DataFrame(r[code]['bids'], columns=['bp','ba'])
-        ra = p.DataFrame(r[code]['asks'], columns=['ap','aa'])
-        print rb
-        print ra
-        r = rb.combine_first(ra)
-        print r
-        #r = r.ix[:,[]]
-        """
-        r1 = r
-    #    r1 = normalizeme(r1)
-    #    r1 = sigmoidme(r1)
-        if doPlot == True:
-            r1 = r1.ix[:,['price']]
-            plot(r1); title(code+' trades'); legend(r1.columns,2); show()
-        debug('Ending getTrades:'+code)
-        return ro
+        try:
+            ky = r[code][0].keys()
+            #print ky
+            li = []
+            for i in r[code]:
+                li.append(i.values())
+            ro = p.DataFrame(li, columns=ky)
+            r = ro.ix[:,['price','amount']]
+            #print r
+            """
+            rb = p.DataFrame(r[code]['bids'], columns=['bp','ba'])
+            ra = p.DataFrame(r[code]['asks'], columns=['ap','aa'])
+            print rb
+            print ra
+            r = rb.combine_first(ra)
+            print r
+            #r = r.ix[:,[]]
+            """
+            r1 = r
+        #    r1 = normalizeme(r1)
+        #    r1 = sigmoidme(r1)
+            if doPlot == True:
+                r1 = r1.ix[:,['price']]
+                plot(r1); title(code+' trades'); legend(r1.columns,2); show()
+            debug('Ending getTrades:'+code)
+            return ro
+        except TypeError, e:
+            debug(e)
     
     def getTrades(self, code, doPlot=True):
         debug('Starting getTrades: '+code)
@@ -887,26 +903,188 @@ Peercoin	PPC	6	3600
     def updateData(self):
         # Create threads
         # source: http://pymotw.com/2/threading/
-        try:
-            for i in self.pk:                
-                t0 = threading.Thread(target=self.getCurrencies)
-                t0.daemon = False
-                t0.start()
-                t1 = threading.Thread(target=self.getRatesOnExchange)
-                t1.daemon = False
-                t1.start()
-                t2 = threading.Thread(target=self.getTrades, args=(i, False,))
-                t2.daemon = False
-                t2.start()
-                t3 = threading.Thread(target=self.getDepth, args=(i, False,))
-                t3.daemon = False
-                t3.start()
-        except e:
-            print e
+        for i in self.pk:                
+            t0 = threading.Thread(target=self.getCurrencies)
+            t0.daemon = False
+            t0.start()
+            t1 = threading.Thread(target=self.getRatesOnExchange)
+            t1.daemon = False
+            t1.start()
+            t2 = threading.Thread(target=self.getTrades, args=(i, False,))
+            t2.daemon = False
+            t2.start()
+            t3 = threading.Thread(target=self.getDepth, args=(i, False,))
+            t3.daemon = False
+            t3.start()
            #print "Error: unable to start thread"
         #while 1:
         #   pass
 
+class CryptoCoin:
+    
+    def __init__(self):
+        ''
+    
+    def updateData(self):
+        
+        b = btce()
+        b.updateData()
+        
+        sh = ShapeShift()
+        sh.updateData()
+
+class ShapeShift(CryptoCoinBaseClass):
+    def __init__(self):
+        ''
+    
+    def updateData(self):
+        urls = 'btc, ltc, ppc, drk, doge, nmc, ftc, blk, nxt, btcd, qrk, rdd, nbt'
+        url = re.sub(re.compile(r',', re.S), '', urls).split(' ')
+            
+        """
+        abc = 'a b c d e f g h i j k l m n o p q r s t u v w x y z'.split(' ')
+        #rin = p.DataFrame(n.int0(n.abs(n.random.randn(26)*10)))
+        abc = list(it.permutations(abc, 3))
+        abc = n.array(abc).tolist()
+        li = []
+        for i in abc[0:10]:
+            li.append(''.join(i))
+        """
+        
+        def fetchURLThread(url):
+            try:
+                debug('fetching:'+url)
+                fetchURL(url, cachemode='a')
+            except:
+                ''
+        
+        li = url
+        li = list(it.permutations(li, 2))
+        li = n.array(li).tolist()
+        lis = []
+        for i in li:
+            lis.append('_'.join(i))
+        for i in lis:
+            # doc source: https://shapeshift.io/api.html#rate
+            """
+            url: shapeshift.io/rate/<pair>
+            method: GET
+            
+            <pair> is any valid coin pair such as btc_ltc or ltc_btc
+            
+            Success Output:
+              
+                {
+                    "pair" : "btc_ltc",
+                    "rate" : "70.1234"
+                }
+            """
+            url = 'http://shapeshift.io/rate/'+i
+            t = threading.Thread(target=fetchURLThread, args=[url])
+            t.daemon = False
+            t.start()
+            
+    def depositLimit():
+        # source: https://shapeshift.io/api.html#deposit-limit
+        """
+        url: shapeshift.io/limit/<pair>
+        method: GET
+        
+        <pair> is any valid coin pair such as btc_ltc or ltc_btc
+        
+        Success Output:
+            {
+                "pair" : "btc_ltc",
+                "limit" : "1.2345"
+            }
+        """
+        ''
+        
+    def recentTransactionsList(self):
+        # source: https://shapeshift.io/api.html#recent-list
+        """
+        url: shapeshift.io/recenttx/<max>
+        method: GET
+        
+        <max> is an optional maximum number of transactions to return.
+        If <max> is not specified this will return 5 transactions.
+        Also, <max> must be a number between 1 and 50 (inclusive).
+        
+        Success Output:
+            [
+                {
+                curIn : <currency input>,
+                curOut: <currency output>,
+                amount: <amount>,
+                timestamp: <time stamp>     //in seconds
+                },
+                ...
+            ]
+        """
+        ''
+        
+    def statusOfDepositToAddress(self):
+        # source: https://shapeshift.io/api.html#status-deposit
+        """
+        url: shapeshift.io/txStat/<address>
+        method: GET
+        
+        <address> is the deposit address to look up.
+        
+        Success Output:  (various depending on status)
+        
+        Status: No Deposits Received
+            {
+                status:"no_deposits",
+                address:<address>           //matches address submitted
+            }
+        
+        Status: Received (we see a new deposit but have not finished processing it)
+            {
+                status:"received",
+                address:<address>           //matches address submitted
+            }
+        
+        Status: Complete
+        {
+            status : "complete",
+            address: <address>,
+            withdraw: <withdrawal address>,
+            incomingCoin: <amount deposited>,
+            incomingType: <coin type of deposit>,
+            outgoingCoin: <amount sent to withdrawal address>,
+            outgoingType: <coin type of withdrawal>,
+            transaction: <transaction id of coin sent to withdrawal address>
+        }
+        
+        Status: Failed
+        {
+            status : "failed",
+            error: <Text describing failure>
+        }
+        
+        *Note: this can still get the normal style error returned. For example if request is made without an address.
+        """
+    
+    def timeRemainingOnFixedAmountTransaction(self):
+        # source: https://shapeshift.io/api.html#timeremaining
+        """
+        url: shapeshift.io/timeremaining/<address>
+        method: GET
+        
+        <address> is the deposit address to look up.
+        
+        Success Output:
+        
+            {
+                status:"pending",
+                seconds_remaining: 600
+            }
+        
+        The status can be either "pending" or "expired".
+        If the status is expired then seconds_remaining will show 0.
+        """
+    
 if __name__ == "__main__":
     print 'stub'
     #testMicrofinance()
@@ -925,5 +1103,6 @@ if __name__ == "__main__":
     #searchQuandl(qu)
     
     #headers = [0,1]
-    headers = None
-    searchQuandl('tesla', mode='combineplot', returndataset=False, headers=headers, listcolumns=True)
+    #headers = None
+    #searchQuandl('tesla', mode='combineplot', returndataset=False, headers=headers, listcolumns=True)
+    
