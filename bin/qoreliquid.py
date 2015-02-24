@@ -579,6 +579,7 @@ class CoinMarketCap:
         ''
 
     def updateData(self):
+        # source: http://coinmarketcap-nexuist.rhcloud.com/
         t = fetchURL('http://coinmarketcap-nexuist.rhcloud.com/api/all', cachemode='a', fromCache=False, mode='json')
 
 class btce(CryptoCoinBaseClass):
