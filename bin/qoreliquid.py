@@ -1118,4 +1118,3 @@ if __name__ == "__main__":
     #headers = [0,1]
     #headers = None
     #searchQuandl('tesla', mode='combineplot', returndataset=False, headers=headers, listcolumns=True)
-    
