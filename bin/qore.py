@@ -3,9 +3,12 @@ import urllib2 as u
 import json as j
 import os, errno
 import logging
+import re
 
 #logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
-logging.basicConfig(filename='/tmp/qore.log', level=logging.DEBUG)
+logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
+
+hdir = '/ml.live/bin/data/cache'
 
 def debug(str, verbosity=8):
     #if verbosity == 9:
@@ -15,7 +18,9 @@ def debug(str, verbosity=8):
 
         return str
 
-hdir = '/ml.live/bin/data/cache'
+def cleanJsonContent(t):
+    return re.sub(re.compile(r'[\s]+'), ' ', ''.join(t.split('\n')))
+
 def fetchFromCache(url):
     # from cache file
     #mkdir_p(hdir)
@@ -24,26 +29,34 @@ def fetchFromCache(url):
     fp.close()
     return r
 
-def fetchURL(url, mode='json', cachemode='w'):
+def fetchURL(url, mode='json', cachemode='w', fromCache=False):
     # mode = json | html
-    debug('fetchURL(): '+url)
     try:
-        response = u.urlopen(url)
-        ret = response.read()
-        
-        # cache to file
-        mkdir_p(hdir)
-        fname = hdir+'/'+u.quote(url,'')
-        debug('fetchURL(): caching to file: '+fname)
-        fp = open(fname, cachemode)
-        fp.write(ret+'\n')
-        fp.close()
+        if fromCache == True:
+            debug('fetchURL(): '+url)
+            ret = fetchFromCache(url)
+        else:
+            debug('fetchURL(fetchedFromCache): '+url)
+            response = u.urlopen(url)
+            ret = response.read()
+            
+            # cache to file
+            mkdir_p(hdir)
+            fname = hdir+'/'+u.quote(url,'')
+            debug('fetchURL(): caching to file: '+fname)
+            fp = open(fname, cachemode)
+            if mode == 'json':
+                ret = cleanJsonContent(ret)
+            fp.write(ret+'\n')
+            fp.close()
         
         if mode == 'json':
             debug('fetchURL(): json format: '+url)
             ret = j.loads(ret)
         return ret
     except u.URLError, e:
+        debug(e)        
+    except NameError, e:
         debug(e)
 
 # getWebContentToText
