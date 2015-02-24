@@ -572,6 +572,14 @@ class CryptoCoinBaseClass:
     
     def __init__(self):
         ''
+        
+class CoinMarketCap:
+    
+    def __init__(self):
+        ''
+
+    def updateData(self):
+        t = fetchURL('http://coinmarketcap-nexuist.rhcloud.com/api/all', cachemode='a', fromCache=False, mode='json')
 
 class btce(CryptoCoinBaseClass):
     def getTicker(self, code):
@@ -932,6 +940,10 @@ class CryptoCoin:
         
         sh = ShapeShift()
         sh.updateData()
+        
+        # coinmarket updater
+        c = CoinMarketCap()
+        c.updateData()
 
 class ShapeShift(CryptoCoinBaseClass):
     def __init__(self):
