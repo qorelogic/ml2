@@ -579,7 +579,40 @@ class btce:
         r = p.DataFrame(r[code].values(), index=ky, columns=[code]).transpose()
         return r.ix[:,['sell','buy','last','vol','vol_cur']].transpose()
     
+    def getRarestCryptoCoins(self):
+        # linked from: http://crypt.la/2013/12/14/list-of-the-fastest-cryptocurrencies/
+        # source: http://crypt.la/2013/12/16/list-of-the-top-25-rarest-cryptocurrencies/
+        t = """Currency	Code	Total Circulation ▾
+Onecoin	ONC	1
+Bestcoin	BEST	1,000,000
+Cryptogenic Bullion	CGB	1,000,000
+GoldPressedLatinum	GPL	1,000,000
+Peoplecoin	PPL	1,440,000
+CryptoBuck	BUK	10,000,000
+Mincoin	MNC	10,000,000
+Ecocoin	ECO	10,200,000
+CrimeCoin	CRM	100,000
+ProtoShares	PTS	2,000,000
+Sauron Rings	SAU	20,000
+BitGem	BTG	23,000
+Unobtanium	UNO	250,000
+Jupitercoin	JPC	3,700,000
+Cryptobits	CYB	4,000,000
+Anoncoin	ANC	4,200,000
+Diamond	DMD	4,300,000
+ExtremeCoin	EXC	5,000,000
+Basecoin	BAC	6,000,000
+Frozen	FZ	7,700,000
+Doubloons	DBL	8,000,000
+Bitbar	BTB	8,500
+PhilosopherStone	PHS	8,891,840
+Lovercoin	LVC	9,000,000
+"""
+        print t
+    
     def getFastestCryptoCoins(self):
+        # linked from: http://bitcoin.stackexchange.com/questions/24636/fastest-cryptocurrency
+        # source: http://crypt.la/2013/12/14/list-of-the-fastest-cryptocurrencies/
         t = """Coin	Symbol	Confirmations Required	Transaction Speed (in seconds)
 Fastcoin	FST	4	48
 Worldcoin	WDC	4	60
