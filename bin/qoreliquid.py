@@ -1,3 +1,6 @@
+
+from qore_qstk import *
+
 #from numpy import *
 from qore import *
 from matplotlib.pylab import *
