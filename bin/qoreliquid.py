@@ -1,8 +1,7 @@
 
-from qore_qstk import *
-
 #from numpy import *
 from qore import *
+from qore_qstk import *
 from matplotlib.pylab import *
 
 import numpy as n

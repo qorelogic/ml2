@@ -217,10 +217,210 @@ def calculateEfficientFrontier(ls_symbols, days=100, updatePrices=False):
     
     return ret
 
+def getEfficientFrontierCharts(howMany):
+    sp500 = p.read_csv('data/quandl/SP500.csv')
+    tiks = list(sp500.ix[:,'Ticker'][0:20])
+    print tiks
+    out = calculateEfficientFrontier(tiks, days=365*5)
+    #print out
+    #df9 = list(out.index[[0,len(out.index)-25]])
+    #print df9
+    
+    efficientFrontier = out.ix[0:howMany,:]
+    #print list(efficientFrontier.index)
+    #df9 = getDataSymbols(df9, search=False, updatePrice=True)
+    #print df9
+    #print sharpe(df9.ix[:,0])
+    #df9c = getDataSymbols(df9, search=False, updatePrice=False)
+    #print sharpe(df9c.ix[:,'ACE'])
+    #plotSymbols(list(efficientFrontier.index), normalize=True)
+    
+    #out2 = calculateEfficientFrontier(list(efficientFrontier.index), days=365*5)
+    #print out2
+    
+    out2List = list(efficientFrontier.index)
+    #out2List.append('MSFT')
+    #print out2List
+    out2 = efficientFrontier.copy()
+    #out2['alloc'] = out2.ix[:,'na_std']/n.sum(out2.ix[:,'na_std'])
+    out2['alloc'] = (1-out2.ix[:,'na_std'])/n.sum(1-out2.ix[:,'na_std'])
+    print len(out2)
+    print out2
+    fname = 'tutorial3portfolio.csv'
+    print out2.ix[:,'alloc'].to_csv(fname)
+    
+    #plotSymbols(out2List, normalize=True)
+    
+    """
+    # Test calculateEfficientFrontier() with sample tickers    
+    srch = ['AMD', 'MS', 'APL', 'NVD']
+    #tiks = searchSymbols(srch)
+    #tiks    
+    #print list(tiks)
+    
+    #tiks = searchSymbols(srch)
+    #df1_close = getDataSymbols(srch)
+    #plotSymbols(srch, normalize=True, sigmoid=True)
+    
+    #sdf = getDataSymbols(list(tiks), mode='test', days=10)
+    #print sdf['df_close']
+    #print sdf['df_close_test']
+    
+    #out = calculateEfficientFrontier(list(tiks), days=365)
+    
+    srch = searchSymbols(srch)
+    #df1_close = getDataSymbols(srch)
+    #plotSymbols(srch, normalize=True, sigmoid=True)
+    #print (srch)
+    out = calculateEfficientFrontier(srch)
+    print out
+    """
 
 
+def portfolioBacktester():
+    # Portfolio Backtester
+    # Tips for accessing historical data via DataAccess + a quick and dirty portfolio back test
+    # source: http://wiki.quantsoftware.org/index.php?title=QSTK_Tutorial_3
+    
+    import QSTK.qstkutil.qsdateutil as du
+    import QSTK.qstkutil.tsutil as tsu
+    import QSTK.qstkutil.DataAccess as da
+    import datetime as dt
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    import numpy as np
+    
+    """
+    csv = " ""symbol, allocation
+    SPY,0.3
+    GABBABOOM,0.2
+    GLD,0.3
+    7ABBA, 0.2
+    " ""
+    fname = 'tutorial3portfolio.csv'
+    fp = open(fname, 'w')
+    fp.write(csv)
+    fp.close()
+    """
+    #print df_alloc.ix[len(df_alloc)-1,:].to_csv(fname)
+    
+    #Reading in the portfolio description
+    
+    #NumPy provides a nice utility, loadtxt() for reading in CSV formatted data files. 
+    #Here's the code for reading in the portfolio:
+    skiprows = 0
+    na_portfolio = np.loadtxt(fname, dtype='S5,f4', delimiter=',', comments="#", skiprows=skiprows)
+    #os.remove(fname)
+    print p.DataFrame(na_portfolio)
+    
+    #The second line (dtype=) defines the format for each column. I think the other arguments are self explanatory. 
+    #Now let's take a look at what we get back from this read:
+    #[('SPY', 0.30000001192092896) ('GABBA', 0.20000000298023224),('GLD', 0.30000001192092896) ('7ABBA', 0.20000000298023224)]
+    #Later on it will be helpful if our data is sorted by symbol name, so we'll do that next:
+    na_portfolio = sorted(na_portfolio, key=lambda x: x[0])
+    #print p.DataFrame(na_portfolio)
+    #Which prints out:
+    #[('7ABBA', 0.20000000298023224), ('GABBA', 0.20000000298023224), ('GLD', 0.30000001192092896), ('SPY', 0.30000001192092896)]
+    #Now we build two lists, one that contains the symbols and one that contains the allocations:
+    ls_port_syms = []
+    lf_port_alloc = []
+    for port in na_portfolio:
+        ls_port_syms.append(port[0])
+        lf_port_alloc.append(port[1])
+    #Checking for spurious symbols and removing them
+    #
+    #Now we're going to benefit from the horsepower of our DataAccess class and Python's set operations. 
+    #First step is to see which symbols are available, then intersect that list with the symbols in our portfolio:
+    c_dataobj = da.DataAccess('Yahoo')
+    ls_all_syms = c_dataobj.get_all_symbols()
+    ls_bad_syms = list(set(ls_port_syms) - set(ls_all_syms))
+    #The second line above returns a list of all symbols available to us in the "Yahoo" data store. 
+    #On the third line above we convert the list of all symbols, and the list of symbols in our portfolio into sets, 
+    #then remove the symbols not present in the ls_all_syms but present in the ls_port_syms. These are the bad symbols.
+    
+    if len(ls_bad_syms) != 0:
+            print "Portfolio contains bad symbols : ", ls_bad_syms
+    #The above code results in the following print out:
+    #Portfolio contains bad symbols : ['7ABBA', 'GABBA']
+    #Now we'll remove those bad symbols from our portfolio:
+    for s_sym in ls_bad_syms:
+        i_index = ls_port_syms.index(s_sym)
+        ls_port_syms.pop(i_index)
+        lf_port_alloc.pop(i_index)
+    #Configuring times and reading the data
+    #
+    #The list portsyms now contains the proper list of valid symbols, so we can ask DataAccess to return them 
+    #for us with out blowing up. First we must set up the time boundaries as below:
+    #dt_end = dt.datetime(2015, 1, 1)
+    dt_end = dt.datetime.now()
+    dt_start = dt_end - dt.timedelta(days=1095)  # Three years
+    dt_timeofday = dt.timedelta(hours=16)
+    
+    ldt_timestamps = du.getNYSEdays(dt_start, dt_end, dt_timeofday)
+    
+    ls_keys = ['open', 'high', 'low', 'close', 'volume', 'actual_close']
+    
+    ldf_data = c_dataobj.get_data(ldt_timestamps, ls_port_syms, ls_keys)
+    d_data = dict(zip(ls_keys, ldf_data))
+    #The code above reads in the data for the symbols in our portfolio between the dates of Jan 1, 2011, 
+    #back to 1095 days before that (3 years).
+    #Now, a quick and dirty back test
+    #
+    #Note: this example computes portfolio returns assuming daily rebalancing. For coursera homework 1, 
+    #you should not assume daily rebalancing.
+    #The first step is to prep the data. We make a copy of our closing prices in to "rets", 
+    #fill the data forward, then convert it into daily returns:
+    df_rets = d_data['close'].copy()
+    df_rets = df_rets.fillna(method='ffill')
+    df_rets = df_rets.fillna(method='bfill')
+    
+    na_rets = df_rets.values
+    na_rets = p.DataFrame(na_rets).fillna(0).get_values()
+    #print 'na_rets'; print p.DataFrame(na_rets)
+    tsu.returnize0(na_rets)
+    # fixes the portfolio nan issue
+    na_rets = p.DataFrame(na_rets).fillna(0).get_values()
+    #print 'na_rets2'; print p.DataFrame(na_rets)
+    #Note that we extracted an ndarray from "close" (a pandas DataFrame), so we're now no longer benefitting 
+    #from DataFrame features. You should consult other locations on this site for details on fill forward 
+    #and converting into daily returns. For our combined portfolio we'll assume the combined return for each day 
+    #is a sum of the returns for each equity weighted by the allocation. We can quickly compute the daily returns 
+    #and the cumulative returns as follows:
+    na_portrets = np.sum(na_rets * lf_port_alloc, axis=1)
+    #print 'na_portrets'; print na_portrets
+    na_port_total = np.cumprod(na_portrets + 1)
+    #print 'na_port_total'; print na_port_total
+    #In a similar manner we can compute the returns of the individual components as follows:
+    na_component_total = np.cumprod(na_rets + 1, axis=0)
+    #That's it for the "back test." porttot contains the total returns for our combined portfolio.
+    #Plotting the results
+    
+    #Our combined portfolio (and component equities).
+    plt.clf()
+    fig = plt.figure()
+    fig.add_subplot(111)
+    plt.plot(ldt_timestamps, na_component_total, alpha=0.4)
+    plt.plot(ldt_timestamps, na_port_total)
+    ls_names = ls_port_syms
+    ls_names.append('Portfolio')
+    plt.title('Portfolio Allocations incl. assets');
+    plt.legend(ls_names,2)
+    plt.ylabel('Cumulative Returns')
+    plt.xlabel('Date'); plt.show();
+    fig.autofmt_xdate(rotation=45);
+    plt.plot(ldt_timestamps, na_port_total); 
+    plt.title('Portfolio Allocations ex. assets');
+    plt.legend('Portfolio',2); plt.show();
+    #plt.savefig('tutorial3.pdf', format='pdf')
 
-
+def getDatasetSymbol(symbol, dt_end=dt.datetime.now(), days=365*2, hours=16):
+    c_dataobj = da.DataAccess('Yahoo', verbose=True)
+    dt_timeofday = dt.timedelta(hours=hours)
+    dt_end = dt.datetime(2010, 2, 20)
+    dt_start = dt_end - dt.timedelta(days=days)
+    ldt_timestamps = du.getNYSEdays(dt_start, dt_end, dt_timeofday)
+    ret = c_dataobj.get_data(ldt_timestamps, [symbol], "close")
+    return ret
 
 # -----------------------------------------
 
@@ -316,6 +516,15 @@ def update_my_data():
     # Making a second call for symbols that failed to double check
     get_yahoo_data(s_path, ls_missed_syms)
     return
+    
+def generateQstkSymbolsTxt():
+    # generate qstools/symbols.txt (required for the yahoo pull prices script)
+    #fname = '/usr/local/lib/python2.7/dist-packages/QSTK-0.2.8-py2.7.egg/QSTK/qstktools/symbols.txt'
+    fname = '/home/qore2/Desktop/qstk-data/symbols.txt'
+    df9 = p.DataFrame(c_dataobj.get_all_symbols(), index=None).transpose()
+    df9 = list(df9.get_values()[0])
+    n.savetxt(fname, df9, fmt='%s', delimiter=',', )
+
 
 def main():
     '''Main Function'''
