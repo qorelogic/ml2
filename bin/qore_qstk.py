@@ -78,6 +78,13 @@ def searchSymbols(symbols):
     #print
     return mtc
 
+def updatePrices(symbols):
+    print 'updating symbols..'+str(symbols)
+    #path = '/home/qore2/Desktop/qstk-data/data/'
+    path = '/usr/local/lib/python2.7/dist-packages/QSTK-0.2.8-py2.7.egg/QSTK/QSData/Yahoo/'
+    #ls_symbols = read_symbols('symbols.txt')
+    get_yahoo_data(path, symbols)
+
 def getDataSymbols(symbols, mode='normal', days=365 , dt_end=dt.datetime.now(), search=True, updatePrice=True):
     """
     mode = normal | testforward
@@ -89,14 +96,10 @@ def getDataSymbols(symbols, mode='normal', days=365 , dt_end=dt.datetime.now(), 
         srcht = symbols
     
     if updatePrice == True:
-        print 'updating symbols..'
-        #path = '/home/qore2/Desktop/qstk-data/data/'
-        path = '/usr/local/lib/python2.7/dist-packages/QSTK-0.2.8-py2.7.egg/QSTK/QSData/Yahoo/'
-        #ls_symbols = read_symbols('symbols.txt')
-        get_yahoo_data(path, symbols)
+        updatePrices(symbols)
     
     # Start and End date of the charts    
-    #dt_end = dt.datetime(2010, 1, 1)
+    dt_end = dt.datetime(2010, 1, 1)
     dt_start = dt_end - dt.timedelta(days=days)
     dt_test = dt_end + dt.timedelta(days=days)
     
@@ -110,16 +113,16 @@ def getDataSymbols(symbols, mode='normal', days=365 , dt_end=dt.datetime.now(), 
     sdf = {}
     #sdf = c_dataobj.get_data_hardread(ldt_timestamps, srcht, ['close'])[0]    
     #print srcht
-    sdf['df_close']      = c_dataobj.get_data(ldt_timestamps, srcht, "close")
-    sdf['df_close']      = sdf['df_close'].bfill().ffill()
+    print 'Fetching '+str(days)+' days data prior to '+str(dt_end)
+    sdf['df_close'] = c_dataobj.get_data(ldt_timestamps, srcht, "close")
+    sdf['df_close'] = sdf['df_close'].bfill().ffill()
 
     if mode == 'normal':
         return sdf['df_close']
 
     if mode == 'testforward':
-        print 'getting past data from..'+str(dt_end)
+        print 'Fetching '+str(days)+' days data after '+str(dt_end)
         sdf['df_close_test'] = c_dataobj.get_data(ldt_timestamps_test, srcht, "close")
-        print 'getting future data from..'+str(dt_end)
         sdf['df_close_test'] = sdf['df_close_test'].bfill().ffill()
         return sdf
 
@@ -131,18 +134,40 @@ def plotSymbols(symbols, normalize=False, sigmoid=False, search=False, updatePri
         sdf = sigmoidme(sdf)
     sdf.plot(); plt.legend(list(sdf.columns), 2); plt.show();
 
-def calculateEfficientFrontier(ls_symbols, days=100, updatePrices=False):
-    #print ls_symbols
+def calculateEfficientFrontier(ls_symbols, dt_end, days=100, updatePrices=False):
+
+    # Creating an object of the dataaccess class with Yahoo as the source.
+    c_dataobj = da.DataAccess('Yahoo')
+
+    ls_all_syms = c_dataobj.get_all_symbols()
+    # Bad symbols are symbols present in portfolio but not in all syms
+    ls_bad_syms = list(set(ls_symbols) - set(ls_all_syms))
+    for s_sym in ls_bad_syms:
+        i_index = ls_symbols.index(s_sym)
+        ls_symbols.pop(i_index)
+
+    # Start and End date of the charts
+    dt_end = dt.datetime(2010, 1, 1)
+    dt_start = dt_end - dt.timedelta(days=365)
+    dt_test = dt_end + dt.timedelta(days=365)
+
+    # We need closing prices so the timestamp should be hours=16.
+    dt_timeofday = dt.timedelta(hours=16)
+
+    # Get a list of trading days between the start and the end.
+    ldt_timestamps = du.getNYSEdays(dt_start, dt_end, dt_timeofday)
+    ldt_timestamps_test = du.getNYSEdays(dt_end, dt_test, dt_timeofday)
+
     # Reading just the close prices
     #df_close = c_dataobj.get_data(ldt_timestamps, ls_symbols, "close")
     #df_close_test = c_dataobj.get_data(ldt_timestamps_test, ls_symbols, "close")
-    sdf = getDataSymbols(ls_symbols, mode='testforward', days=days, search=False, updatePrice=updatePrices)
+    sdf = getDataSymbols(ls_symbols, mode='testforward', days=days, search=False, updatePrice=updatePrices, dt_end=dt_end)
 
     df_close = sdf['df_close']
     df_close_test = sdf['df_close_test']
     #df_close = getDataSymbols(ls_symbols)
     #df_close_test = getDataSymbols(ls_symbols)
-    
+
     # Filling the data for missing NAN values
     #df_close = df_close.fillna(method='ffill')
     #df_close = df_close.fillna(method='bfill')
@@ -217,11 +242,13 @@ def calculateEfficientFrontier(ls_symbols, days=100, updatePrices=False):
     
     return ret
 
-def getEfficientFrontierCharts(howMany):
+def getEfficientFrontierCharts(howMany, dt_end, fname='tutorial3portfolio.csv', days=365):
     sp500 = p.read_csv('data/quandl/SP500.csv')
-    tiks = list(sp500.ix[:,'Ticker'][0:20])
+    print len(sp500)
+    tiks = list(sp500.ix[:,'Ticker'])
+    print len(tiks)
     print tiks
-    out = calculateEfficientFrontier(tiks, days=365*5)
+    out = calculateEfficientFrontier(tiks, dt_end, days=days)
     #print out
     #df9 = list(out.index[[0,len(out.index)-25]])
     #print df9
@@ -246,7 +273,6 @@ def getEfficientFrontierCharts(howMany):
     out2['alloc'] = (1-out2.ix[:,'na_std'])/n.sum(1-out2.ix[:,'na_std'])
     print len(out2)
     print out2
-    fname = 'tutorial3portfolio.csv'
     print out2.ix[:,'alloc'].to_csv(fname)
     
     #plotSymbols(out2List, normalize=True)
@@ -277,7 +303,7 @@ def getEfficientFrontierCharts(howMany):
     """
 
 
-def portfolioBacktester():
+def portfolioBacktester(fname='tutorial3portfolio.csv', dt_end=dt.datetime.now(), days=1095):
     # Portfolio Backtester
     # Tips for accessing historical data via DataAccess + a quick and dirty portfolio back test
     # source: http://wiki.quantsoftware.org/index.php?title=QSTK_Tutorial_3
@@ -327,6 +353,8 @@ def portfolioBacktester():
     for port in na_portfolio:
         ls_port_syms.append(port[0])
         lf_port_alloc.append(port[1])
+    print ls_port_syms
+    updatePrices(ls_port_syms)
     #Checking for spurious symbols and removing them
     #
     #Now we're going to benefit from the horsepower of our DataAccess class and Python's set operations. 
@@ -352,8 +380,8 @@ def portfolioBacktester():
     #The list portsyms now contains the proper list of valid symbols, so we can ask DataAccess to return them 
     #for us with out blowing up. First we must set up the time boundaries as below:
     #dt_end = dt.datetime(2015, 1, 1)
-    dt_end = dt.datetime.now()
-    dt_start = dt_end - dt.timedelta(days=1095)  # Three years
+    #dt_end = dt.datetime.now()
+    dt_start = dt_end - dt.timedelta(days=days)
     dt_timeofday = dt.timedelta(hours=16)
     
     ldt_timestamps = du.getNYSEdays(dt_start, dt_end, dt_timeofday)
@@ -407,10 +435,38 @@ def portfolioBacktester():
     plt.legend(ls_names,2)
     plt.ylabel('Cumulative Returns')
     plt.xlabel('Date'); plt.show();
-    fig.autofmt_xdate(rotation=45);
-    plt.plot(ldt_timestamps, na_port_total); 
+    fig.autofmt_xdate(rotation=45);    
+    plt.plot(ldt_timestamps, na_port_total);
     plt.title('Portfolio Allocations ex. assets');
-    plt.legend('Portfolio',2); plt.show();
+    plt.legend(['SP 500','Portfolio'],2);
+    plt.show();
+    
+    # show the S&P500 and VIX
+    dt_start0  = dt.datetime.strftime(dt_start, '%Y-%m-%d')
+    dt_end0    = dt.datetime.strftime(dt_end, '%Y-%m-%d')
+    #dt_start0  = dt.datetime.strftime(dt.datetime(2012,01,01), '%Y-%m-%d')
+    #dt_end0    = dt.datetime.strftime(dt.datetime(2015,01,01), '%Y-%m-%d')
+    #dt_start = dt.datetime.strptime(dt_start0, "%Y-%m-%d")
+    #dt_end   = dt.datetime.strptime(dt_end0, "%Y-%m-%d")
+    ldt_timestamps = du.getNYSEdays(dt_start, dt_end, dt.timedelta(hours=16))
+    #print ldt_timestamps
+    print len(ldt_timestamps)
+    #z = getDataFromQuandl('YAHOO/INDEX_GSPC', dataset='').set_index('Date').ix[dt_start0:dt_end0,['Close']]
+    z = getDataFromQuandl(['YAHOO/INDEX_GSPC','YAHOO/INDEX_VIX'], dataset='').bfill().ffill().ix[dt_start0:dt_end0,['YAHOO/INDEX_GSPC Close', 'YAHOO/INDEX_VIX Close']]  #.set_index('Date')
+    z['Portfolio'] = na_port_total
+    #print z
+    print len(z)
+    z = normalizeme(z)
+    #z = sigmoidme(z)
+    plot(ldt_timestamps, z)
+    #legend(['Portfolio',z.columns[0], z.columns[1]],2)
+    legend(z.columns,2)
+    #z = getDataFromQuandl('YAHOO/INDEX_VIX', dataset='').set_index('Date').ix[dt_start0:dt_end0,['Close']]
+    #print len(z)
+    #z = normalizeme(z)
+    #z = sigmoidme(z)
+    #plot(ldt_timestamps, z)
+    
     #plt.savefig('tutorial3.pdf', format='pdf')
 
 def getDatasetSymbol(symbol, dt_end=dt.datetime.now(), days=365*2, hours=16):
@@ -421,6 +477,22 @@ def getDatasetSymbol(symbol, dt_end=dt.datetime.now(), days=365*2, hours=16):
     ldt_timestamps = du.getNYSEdays(dt_start, dt_end, dt_timeofday)
     ret = c_dataobj.get_data(ldt_timestamps, [symbol], "close")
     return ret
+
+def trollPlots():
+    print out
+    lsstk = []
+    for i in out.index:
+        lsstk.append(i)
+        #print lsstk
+        plotSymbols((lsstk), normalize=True)
+    
+    #df9 = list(out.index[[0,len(out.index)-25]])
+    #df9 = list(out.index[lsstk])
+    #df9 = getDataSymbols(df9, search=False, updatePrice=True)
+    #print df9
+    #print sharpe(df9.ix[:,0])
+    #plotSymbols(list(out.index[[0,len(out.index)-25]]), normalize=True)
+    #plotSymbols(list(out.index[lsstk]), normalize=True)
 
 # -----------------------------------------
 
