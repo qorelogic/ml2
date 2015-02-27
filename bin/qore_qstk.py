@@ -78,7 +78,7 @@ def searchSymbols(symbols):
     #print
     return mtc
 
-def getDataSymbols(symbols, mode='normal', days=365 , search=True):
+def getDataSymbols(symbols, mode='normal', days=365 , dt_end=dt.datetime.now(), search=True, updatePrice=True):
     """
     mode = normal | testforward
     """
@@ -88,9 +88,15 @@ def getDataSymbols(symbols, mode='normal', days=365 , search=True):
     else:
         srcht = symbols
     
+    if updatePrice == True:
+        print 'updating symbols..'
+        #path = '/home/qore2/Desktop/qstk-data/data/'
+        path = '/usr/local/lib/python2.7/dist-packages/QSTK-0.2.8-py2.7.egg/QSTK/QSData/Yahoo/'
+        #ls_symbols = read_symbols('symbols.txt')
+        get_yahoo_data(path, symbols)
+    
     # Start and End date of the charts    
     #dt_end = dt.datetime(2010, 1, 1)
-    dt_end = dt.datetime(2010, 2, 20)
     dt_start = dt_end - dt.timedelta(days=days)
     dt_test = dt_end + dt.timedelta(days=days)
     
@@ -117,20 +123,20 @@ def getDataSymbols(symbols, mode='normal', days=365 , search=True):
         sdf['df_close_test'] = sdf['df_close_test'].bfill().ffill()
         return sdf
 
-def plotSymbols(symbols, normalize=False, sigmoid=False, search=False):
-    sdf = getDataSymbols(symbols, search=search)
+def plotSymbols(symbols, normalize=False, sigmoid=False, search=False, updatePrices=False):
+    sdf = getDataSymbols(symbols, search=search, updatePrice=updatePrices)
     if normalize:
         sdf = normalizeme(sdf)
     if sigmoid:
         sdf = sigmoidme(sdf)
     sdf.plot(); plt.legend(list(sdf.columns), 2); plt.show();
 
-def calculateEfficientFrontier(ls_symbols, days=100):
+def calculateEfficientFrontier(ls_symbols, days=100, updatePrices=False):
     #print ls_symbols
     # Reading just the close prices
     #df_close = c_dataobj.get_data(ldt_timestamps, ls_symbols, "close")
     #df_close_test = c_dataobj.get_data(ldt_timestamps_test, ls_symbols, "close")
-    sdf = getDataSymbols(ls_symbols, mode='testforward', days=days, search=False)
+    sdf = getDataSymbols(ls_symbols, mode='testforward', days=days, search=False, updatePrice=updatePrices)
 
     df_close = sdf['df_close']
     df_close_test = sdf['df_close_test']
@@ -210,3 +216,112 @@ def calculateEfficientFrontier(ls_symbols, days=100):
     plt.xlabel('StDev')
     
     return ret
+
+
+
+
+
+
+# -----------------------------------------
+
+'''
+Pulling Yahoo CSV Data
+from: YahooDataPull.py
+'''
+
+import urllib2
+import urllib
+import datetime
+import os
+import QSTK.qstkutil.DataAccess as da
+
+def get_yahoo_data(data_path, ls_symbols):
+    '''Read data from Yahoo
+    @data_path : string for where to place the output files
+    @ls_symbols: list of symbols to read from yahoo
+    '''
+    # Create path if it doesn't exist
+    if not (os.access(data_path, os.F_OK)):
+        os.makedirs(data_path)
+
+    ls_missed_syms = []
+    # utils.clean_paths(data_path)   
+
+    _now = datetime.datetime.now()
+    # Counts how many symbols we could not get
+    miss_ctr = 0
+    for symbol in ls_symbols:
+        # Preserve original symbol since it might
+        # get manipulated if it starts with a "$"
+        symbol_name = symbol
+        if symbol[0] == '$':
+            symbol = '^' + symbol[1:]
+
+        symbol_data = list()
+        # print "Getting {0}".format(symbol)
+
+        try:
+            params = urllib.urlencode ({'a':0, 'b':1, 'c':2000, 'd':_now.month-1, 'e':_now.day, 'f':_now.year, 's': symbol})
+            url = "http://ichart.finance.yahoo.com/table.csv?%s" % params
+            url_get = urllib2.urlopen(url)
+            
+            header = url_get.readline()
+            symbol_data.append (url_get.readline())
+            while (len(symbol_data[-1]) > 0):
+                symbol_data.append(url_get.readline())
+
+            # The last element is going to be the string of length zero. 
+            # We don't want to write that to file.
+            symbol_data.pop(-1)
+            #now writing data to file
+            f = open (data_path + symbol_name + ".csv", 'w')
+
+            #Writing the header
+            f.write (header)
+
+            while (len(symbol_data) > 0):
+                f.write (symbol_data.pop(0))
+
+            f.close()
+
+        except urllib2.HTTPError:
+            miss_ctr += 1
+            ls_missed_syms.append(symbol_name)
+            print "Unable to fetch data for stock: {0} at {1}".format(symbol_name, url)
+        except urllib2.URLError:
+            miss_ctr += 1
+            ls_missed_syms.append(symbol_name)
+            print "URL Error for stock: {0} at {1}".format(symbol_name, url)
+
+    print "All done. Got {0} stocks. Could not get {1}".format(len(ls_symbols) - miss_ctr, miss_ctr)
+    return ls_missed_syms
+
+def read_symbols(s_symbols_file):
+    '''Read a list of symbols'''
+    ls_symbols = []
+    ffile = open(s_symbols_file, 'r')
+    for line in ffile.readlines():
+        str_line = str(line)
+        if str_line.strip(): 
+            ls_symbols.append(str_line.strip())
+    ffile.close()
+    return ls_symbols 
+
+def update_my_data():
+    '''Update the data in the root dir'''
+    c_dataobj = da.DataAccess('Yahoo', verbose=True)
+    s_path = c_dataobj.rootdir
+    ls_symbols = c_dataobj.get_all_symbols()
+    ls_missed_syms = get_yahoo_data(s_path, ls_symbols)
+    # Making a second call for symbols that failed to double check
+    get_yahoo_data(s_path, ls_missed_syms)
+    return
+
+def main():
+    '''Main Function'''
+    path = './'
+    ls_symbols = read_symbols('symbols.txt')
+    get_yahoo_data(path, ls_symbols)
+
+#if __name__ == '__main__':
+#    main()
