@@ -227,8 +227,9 @@ def searchQuandl(query, mode='manifest', headers=None, returndataset=False, cach
     debug('searching: '+query, verbosity=9)
     suffix='.csv'
     path='data/quandl/searches/'
+    fquery = re.sub(re.compile(r'\/'),'-',query)
+    fname = path+fquery+suffix
     mkdir_p(path)
-    fname = path+query+suffix
     import time as t
     tt = t.time()
     try:
@@ -237,10 +238,10 @@ def searchQuandl(query, mode='manifest', headers=None, returndataset=False, cach
         fp = open(fname, 'r')
         res = j.loads(fp.read())
         fp.close()
-        writeQuandlSearchLog(str(tt)+':cached:'+str(query))
+        writeQuandlSearchLog(str(tt)+':cached:'+str(query)+' to '+fname)
     except IOError, e:
         try:
-            writeQuandlSearchLog(str(tt)+':searched:'+str(query))
+            writeQuandlSearchLog(str(tt)+':searched:'+str(query)+' to '+fname)
             res = q.search(query, verbose=False)
             fp = open(fname, 'w')
             fp.write(j.dumps(res))
