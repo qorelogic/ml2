@@ -337,7 +337,7 @@ def portfolioBacktester(fname='tutorial3portfolio.csv', dt_end=dt.datetime.now()
     skiprows = 0
     na_portfolio = np.loadtxt(fname, dtype='S5,f4', delimiter=',', comments="#", skiprows=skiprows)
     #os.remove(fname)
-    print p.DataFrame(na_portfolio)
+    print pd.DataFrame(na_portfolio)
     
     #The second line (dtype=) defines the format for each column. I think the other arguments are self explanatory. 
     #Now let's take a look at what we get back from this read:
@@ -453,12 +453,14 @@ def portfolioBacktester(fname='tutorial3portfolio.csv', dt_end=dt.datetime.now()
     print len(ldt_timestamps)
     #z = getDataFromQuandl('YAHOO/INDEX_GSPC', dataset='').set_index('Date').ix[dt_start0:dt_end0,['Close']]
     z = getDataFromQuandl(['YAHOO/INDEX_GSPC','YAHOO/INDEX_VIX'], dataset='').bfill().ffill().ix[dt_start0:dt_end0,['YAHOO/INDEX_GSPC Close', 'YAHOO/INDEX_VIX Close']]  #.set_index('Date')
-    z['Portfolio'] = na_port_total
-    #print z
-    print len(z)
+    #z['Portfolio'] = na_port_total
+    dt_timeofday_na_port_total = dt.timedelta(hours=0)
+    ldt_timestamps_na_port_total = du.getNYSEdays(dt_start, dt_end, dt_timeofday_na_port_total)
+    z2 = p.DataFrame(na_port_total, index=ldt_timestamps_na_port_total, columns=['Portfolio'])
+    z = z.combine_first(z2).bfill().ffill()
     z = normalizeme(z)
     #z = sigmoidme(z)
-    plot(ldt_timestamps, z)
+    plot(z.index, z)
     #legend(['Portfolio',z.columns[0], z.columns[1]],2)
     legend(z.columns,2)
     #z = getDataFromQuandl('YAHOO/INDEX_VIX', dataset='').set_index('Date').ix[dt_start0:dt_end0,['Close']]
