@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import re
+import shutil as shu
 
 # Creating an object of the dataaccess class with Yahoo as the source.
 c_dataobj = da.DataAccess('Yahoo')
@@ -242,10 +243,12 @@ def calculateEfficientFrontier(ls_symbols, dt_end, days=100, updatePrices=False)
     
     return ret
 
-def getEfficientFrontierCharts(howMany, dt_end, fname='tutorial3portfolio.csv', days=365):
+def getEfficientFrontierCharts(dt_end, calculateHowMany=None, printHowMany=None, fname='tutorial3portfolio.csv', days=365):
     sp500 = p.read_csv('data/quandl/SP500.csv')
     print len(sp500)
-    tiks = list(sp500.ix[:,'Ticker'])
+    if calculateHowMany == None:
+        calculateHowMany = len(sp500)
+    tiks = list(sp500.ix[:,'Ticker'][0:calculateHowMany])
     print len(tiks)
     print tiks
     out = calculateEfficientFrontier(tiks, dt_end, days=days)
@@ -253,7 +256,9 @@ def getEfficientFrontierCharts(howMany, dt_end, fname='tutorial3portfolio.csv', 
     #df9 = list(out.index[[0,len(out.index)-25]])
     #print df9
     
-    efficientFrontier = out.ix[0:howMany,:]
+    if printHowMany == None:
+        printHowMany = len(out)
+    efficientFrontier = out.ix[0:printHowMany,:]
     #print list(efficientFrontier.index)
     #df9 = getDataSymbols(df9, search=False, updatePrice=True)
     #print df9
@@ -267,13 +272,23 @@ def getEfficientFrontierCharts(howMany, dt_end, fname='tutorial3portfolio.csv', 
     
     out2List = list(efficientFrontier.index)
     #out2List.append('MSFT')
-    #print out2List
+    print out2List
     out2 = efficientFrontier.copy()
     #out2['alloc'] = out2.ix[:,'na_std']/n.sum(out2.ix[:,'na_std'])
     out2['alloc'] = (1-out2.ix[:,'na_std'])/n.sum(1-out2.ix[:,'na_std'])
     print len(out2)
     print out2
+    
+    # copy previous allocation file to archive
+    tct = os.path.getmtime(fname)
+    dtnow = dt.datetime.fromtimestamp(tct)
+    tstm = dt.datetime.strftime(dtnow, '%Y%m%d-%H%M%S')
+    fname2 = fname+'.'+tstm+'.csv'
+    shu.copy2(fname, fname2)
+
     print out2.ix[:,'alloc'].to_csv(fname)
+    
+    return out2
     
     #plotSymbols(out2List, normalize=True)
     
