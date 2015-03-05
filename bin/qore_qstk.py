@@ -100,7 +100,6 @@ def getDataSymbols(symbols, mode='normal', days=365 , dt_end=dt.datetime.now(), 
         updatePrices(symbols)
     
     # Start and End date of the charts    
-    dt_end = dt.datetime(2010, 1, 1)
     dt_start = dt_end - dt.timedelta(days=days)
     dt_test = dt_end + dt.timedelta(days=days)
     
@@ -148,7 +147,6 @@ def calculateEfficientFrontier(ls_symbols, dt_end, days=100, updatePrices=False,
         ls_symbols.pop(i_index)
 
     # Start and End date of the charts
-    dt_end = dt.datetime(2010, 1, 1)
     dt_start = dt_end - dt.timedelta(days=365)
     dt_test = dt_end + dt.timedelta(days=365)
 
