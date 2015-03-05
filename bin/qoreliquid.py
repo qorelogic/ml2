@@ -1,5 +1,7 @@
+
 #from numpy import *
 from qore import *
+from qore_qstk import *
 from matplotlib.pylab import *
 
 import numpy as n
@@ -309,14 +311,14 @@ def quandlCode2DatasetCode(tk, hdir='./', include_path=True, suffix='.csv'):
             fname = mt[0]+'-'+mt[1]+suffix
     return [fname,path]
         
-def getDataFromQuandl(tk, dataset, index_col=None, verbosity=1):
+def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False):
     # if string
+    df = p.DataFrame([])
+    
     if type(tk) == type(''):
         debug('fetching '+tk, verbosity=verbosity)
         [fname, path] = quandlCode2DatasetCode(tk, hdir='data/quandl/'+dataset, include_path=True, suffix='.csv')
         mkdir_p(path) # alternative python3: os.makedirs(path, exist_ok=True)
-        
-        df = p.DataFrame([])
         
         try:
             df = p.read_csv(fname, index_col=index_col)
@@ -327,13 +329,13 @@ def getDataFromQuandl(tk, dataset, index_col=None, verbosity=1):
                 print 'saved to: '+fname
             except q.DatasetNotFound, f:
                 print f
-        return df
+        if index_col == None:
+            df = df.set_index(df.columns[0])
     
     # if list
     if type(tk) == type([]):
         # concatenate ticker code to column value
         dfs = []
-        mfs = p.DataFrame()
         for i in range(0, len(tk)):
             dfs.append(getDataFromQuandl(tk[i], index_col=0, dataset='', verbosity=8))
             #tk[i] = quandlCode2DatasetCode(tk[i], include_path=False, suffix='')[0]
@@ -342,8 +344,11 @@ def getDataFromQuandl(tk, dataset, index_col=None, verbosity=1):
             dfs[i].columns = r1+r2
             #print list(dfs[i].columns)    
         for i in range(0, len(dfs)):
-            mfs = mfs.combine_first(dfs[i])
-        return mfs
+            df = df.combine_first(dfs[i])
+    
+    if plot == True:
+        df.plot(); show();
+    return df
     
 # source: https://www.quandl.com/c/markets/exchange-rates-versus-eur
 # quandl js parser: for (var i = 2; i<=15; i++) {var buff = ''; $($x('//*[@id="ember894"]/div['+i+']/table/tbody/tr/td[3]/a/@href')).each(function(e,o) {buff += ' '+o.value.replace(/\/CURRFX\//g, '');}); console.log('# '+i); console.log('pa += \''+buff+'\'');}
