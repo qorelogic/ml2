@@ -135,7 +135,7 @@ def plotSymbols(symbols, normalize=False, sigmoid=False, search=False, updatePri
         sdf = sigmoidme(sdf)
     sdf.plot(); plt.legend(list(sdf.columns), 2); plt.show();
 
-def calculateEfficientFrontier(ls_symbols, dt_end, days=100, updatePrices=False):
+def calculateEfficientFrontier(ls_symbols, dt_end, days=100, updatePrices=False, annotate=False):
 
     # Creating an object of the dataaccess class with Yahoo as the source.
     c_dataobj = da.DataAccess('Yahoo')
@@ -226,6 +226,18 @@ def calculateEfficientFrontier(ls_symbols, dt_end, days=100, updatePrices=False)
     for i, f_ret in enumerate(na_avgrets):
         plt.plot(na_std[i], f_ret, 'g+')
     plt.plot(na_std, na_avgrets, '.')
+    # annotation -------------
+    # source: http://stackoverflow.com/questions/5147112/matplotlib-how-to-put-individual-tags-for-a-scatter-plot
+    if annotate == True:
+        labels = [ls_symbols[i].format(i) for i in range(len(na_avgrets))]
+        for label, x, y in zip(labels, na_std, na_avgrets):
+            plt.annotate(
+                label, 
+                xy = (x, y), xytext = (-20, 20),
+                textcoords = 'offset points', ha = 'right', va = 'bottom',
+                bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.25),
+                arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+    # end annotation -------------
     
     # # Plot some arrows showing transistion of efficient frontier
     for i in range(0, 101, 10):
@@ -243,7 +255,7 @@ def calculateEfficientFrontier(ls_symbols, dt_end, days=100, updatePrices=False)
     
     return ret
 
-def getEfficientFrontierCharts(dt_end, calculateHowMany=None, printHowMany=None, fname='tutorial3portfolio.csv', days=365):
+def getEfficientFrontierCharts(dt_end, calculateHowMany=None, printHowMany=None, fname='tutorial3portfolio.csv', days=365, annotate=False):
     sp500 = p.read_csv('data/quandl/SP500.csv')
     print len(sp500)
     if calculateHowMany == None:
@@ -251,7 +263,7 @@ def getEfficientFrontierCharts(dt_end, calculateHowMany=None, printHowMany=None,
     tiks = list(sp500.ix[:,'Ticker'][0:calculateHowMany])
     print len(tiks)
     print tiks
-    out = calculateEfficientFrontier(tiks, dt_end, days=days)
+    out = calculateEfficientFrontier(tiks, dt_end, days=days, annotate=annotate)
     #print out
     #df9 = list(out.index[[0,len(out.index)-25]])
     #print df9
