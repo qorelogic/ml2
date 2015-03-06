@@ -14,6 +14,8 @@ import html2text
 import exceptions as ex
 import re, sys
 
+hdirDataSources = 'data/quandl/data-sources/'
+
 def toCurrency(n):
     return '%2d' % n
 
@@ -415,6 +417,66 @@ def getDataFromQuandlBNP(pa, curr): # curr = EUR || USD, etc.
     #plot(d.ix[:,tl])
     
     return d
+    
+
+def quandlGetDatasetSourceList(source_code, pg=1):
+    pdocs = p.DataFrame()
+    def saveDatasetSourceListPage(dsets):
+        #print dsets.keys()
+        #print dsets['sources']    
+        #print dsets.keys()
+        #print p.DataFrame(dsets['docs'])
+        return p.DataFrame(dsets['docs']).ix[:,['code','source_code','column_names','description']].set_index('code')
+        #print p.DataFrame(dsets['highlighting'])
+    
+    def saveManifest(pdocs, hdirDataSources):
+        manifestfname = hdirDataSources+'manifest'+'.csv'
+        try:
+            pdocs = pdocs.combine_first(p.read_csv(manifestfname, index_col=0))
+        except:
+            pdocs = pdocs.combine_first(p.DataFrame())
+        pdocs.to_csv(manifestfname, encoding='utf-8')
+    
+    purl = "http://www.quandl.com/api/v2/datasets.json?query=*&source_code={0}&per_page=300&page={1}&auth_token=WVsyCxwHeYZZyhf5RHs2"
+    url = purl.format(source_code, pg)
+    print url
+    try:
+        dsets = fetchURL(url)
+        datasets_count = dsets['sources'][0]['datasets_count']
+        docs = saveDatasetSourceListPage(dsets)
+        pdocs = pdocs.combine_first(docs)
+        print len(pdocs)
+        mkdir_p(hdirDataSources)
+        pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
+        saveManifest(pdocs, hdirDataSources)
+        
+        for i in range(2, int(ceil(datasets_count/300.0))+1):
+            url = purl.format(source_code, i)
+            #print url
+            dsets = fetchURL(url)
+            docs = saveDatasetSourceListPage(dsets)
+            pdocs = pdocs.combine_first(docs)
+            print 'page: '+str(i)+' '+str(len(pdocs))
+            pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
+            saveManifest(pdocs, hdirDataSources)
+    except urllib2.HTTPError, e:
+        print e
+        print 'Reached the Quandl API limit'
+
+def quandlGetAllDatasetSources():
+    # https://www.quandl.com/resources/data-sources
+    #cmd = "curl -s https://www.quandl.com/resources/data-sources | lynx -dump -stdin | grep 'quandl.com'  | grep  'http://quandl' | cut -d'/' -f4 | uniq"
+    cmd = "cat /tmp/data-sources.quandl | lynx -dump -stdin | grep 'quandl.com'  | grep  'http://quandl' | cut -d'/' -f4 | uniq"
+    sources = subprocess.check_output(cmd, shell=True)
+    sources = sources.split('\n')
+    sources = p.DataFrame(sources)
+    sources.to_csv(hdirDataSources+'data-sources'+'.csv')
+    #for i in sources.ix[1]:
+    #    print quandlGetDatasetSourceList(i)
+    
+    # https://www.quandl.com/resources/data-sources-minor
+    # https://www.quandl.com/community/data-requests
+ 
 
 def testMicrofinance():
     fm = FinancialModel()
@@ -590,4 +652,4 @@ if __name__ == "__main__":
     
     #headers = [0,1]
     headers = None
-    searchQuandl('tesla', mode='combineplot', returndataset=False, headers=headers, listcolumns=True)
+    #searchQuandl('tesla', mode='combineplot', returndataset=False, headers=headers, listcolumns=True)
