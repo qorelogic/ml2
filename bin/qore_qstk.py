@@ -360,9 +360,14 @@ def portfolioBacktester(fname='tutorial3portfolio.csv', dt_end=dt.datetime.now()
     #NumPy provides a nice utility, loadtxt() for reading in CSV formatted data files. 
     #Here's the code for reading in the portfolio:
     skiprows = 0
-    na_portfolio = np.loadtxt(fname, dtype='S5,f4', delimiter=',', comments="#", skiprows=skiprows)
+    fname = 'tutorial3portfolio.csv.20150305-081304.csv'
+    #na_portfolio = np.loadtxt(fname, dtype='S5,f4', delimiter=',', comments="#", skiprows=skiprows)
+    na_portfolio0 = p.read_csv(fname, header=None)
+    na_portfolio0 = pd.DataFrame(na_portfolio0).fillna(0)
+    na_portfolio = na_portfolio0.get_values()
     #os.remove(fname)
-    print pd.DataFrame(na_portfolio)
+    print na_portfolio0 #.set_index(0)
+    #print pd.DataFrame(na_portfolio).fillna(0).get_values()
     
     #The second line (dtype=) defines the format for each column. I think the other arguments are self explanatory. 
     #Now let's take a look at what we get back from this read:
