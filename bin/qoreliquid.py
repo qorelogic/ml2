@@ -426,7 +426,7 @@ def quandlGetDatasetSourceList(source_code, pg=1):
         #print dsets['sources']    
         #print dsets.keys()
         #print p.DataFrame(dsets['docs'])
-        return p.DataFrame(dsets['docs']).ix[:,['code','source_code','column_names','description']].set_index('code')
+        return p.DataFrame(dsets['docs']).ix[:,['code','source_code','column_names']].set_index('code')
         #print p.DataFrame(dsets['highlighting'])
     
     def saveManifest(pdocs, hdirDataSources):
@@ -441,23 +441,29 @@ def quandlGetDatasetSourceList(source_code, pg=1):
     url = purl.format(source_code, pg)
     #print url
     try:
-        dsets = fetchURL(url)
+        jdsets = fetchURL(url, mode='txt')
+        dsets = j.loads(jdsets)
         datasets_count = dsets['sources'][0]['datasets_count']
         docs = saveDatasetSourceListPage(dsets)
         pdocs = pdocs.combine_first(docs)
         print 'page: '+str(pg)+' '+str(len(pdocs))
         mkdir_p(hdirDataSources)
         pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
+        #pdocs.to_csv(hdirDataSources+source_code+'.json')
+        saveJson(jdsets+'\n', hdirDataSources+source_code+'.json')
+
         #saveManifest(pdocs, hdirDataSources)
         
         for i in range(2, int(ceil(datasets_count/300.0))+1):
             url = purl.format(source_code, i)
             #print url
-            dsets = fetchURL(url)
+            jdsets = fetchURL(url, mode='txt')
+            dsets = j.loads(jdsets)
             docs = saveDatasetSourceListPage(dsets)
             pdocs = pdocs.combine_first(docs)
             print 'page: '+str(i)+' '+str(len(pdocs))
             pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
+            saveJson(jdsets+'\n', hdirDataSources+source_code+'.json')
             #saveManifest(pdocs, hdirDataSources)
     except urllib2.HTTPError, e:
         print e
