@@ -100,6 +100,7 @@ def getDataSymbols(symbols, mode='normal', days=365 , dt_end=dt.datetime.now(), 
         updatePrices(symbols)
     
     # Start and End date of the charts    
+    dt_end = dt.datetime(2010, 1, 1)
     dt_start = dt_end - dt.timedelta(days=days)
     dt_test = dt_end + dt.timedelta(days=days)
     
@@ -147,6 +148,7 @@ def calculateEfficientFrontier(ls_symbols, dt_end, days=100, updatePrices=False,
         ls_symbols.pop(i_index)
 
     # Start and End date of the charts
+    dt_end = dt.datetime(2010, 1, 1)
     dt_start = dt_end - dt.timedelta(days=365)
     dt_test = dt_end + dt.timedelta(days=365)
 
@@ -360,14 +362,9 @@ def portfolioBacktester(fname='tutorial3portfolio.csv', dt_end=dt.datetime.now()
     #NumPy provides a nice utility, loadtxt() for reading in CSV formatted data files. 
     #Here's the code for reading in the portfolio:
     skiprows = 0
-    fname = 'tutorial3portfolio.csv.20150305-081304.csv'
-    #na_portfolio = np.loadtxt(fname, dtype='S5,f4', delimiter=',', comments="#", skiprows=skiprows)
-    na_portfolio0 = p.read_csv(fname, header=None)
-    na_portfolio0 = pd.DataFrame(na_portfolio0).fillna(0)
-    na_portfolio = na_portfolio0.get_values()
+    na_portfolio = np.loadtxt(fname, dtype='S5,f4', delimiter=',', comments="#", skiprows=skiprows)
     #os.remove(fname)
-    print na_portfolio0 #.set_index(0)
-    #print pd.DataFrame(na_portfolio).fillna(0).get_values()
+    print pd.DataFrame(na_portfolio)
     
     #The second line (dtype=) defines the format for each column. I think the other arguments are self explanatory. 
     #Now let's take a look at what we get back from this read:
