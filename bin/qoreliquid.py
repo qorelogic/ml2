@@ -477,6 +477,54 @@ def quandlGetAllDatasetSources():
     # https://www.quandl.com/resources/data-sources-minor
     # https://www.quandl.com/community/data-requests
  
+ 
+ # Grid Matrix of percentage rise/decline
+# open/close grid matrix
+# get the close percentage price increase/drop for every pair (multi-timeframe)
+def currencyGridCalculate(a7, t0=None, t1=None, c0=None, c1=None, save=False):
+    if t0 == None:
+        t0 = 0
+    if t1 == None:
+        t1 = len(a7)
+    if c0 == None:
+        c0 = 0
+    if c1 == None:
+        c1 = len(a7.columns)
+
+    a7x1 = a7.ix[t0:t1-1,c0:c1].get_values()
+    a7x2 = a7.ix[t0+1:t1,c0:c1].get_values()
+    #print p.DataFrame(a7x1)
+    #print p.DataFrame(a7x2)
+    #print a7.columns
+    a7grid =  p.DataFrame(((n.divide(a7x2, a7x1))*100)-100, index=a7.index[t0+1:t1], columns=a7.columns)
+    #a7grid.plot(); show();
+    return a7grid
+
+# currency grid
+def currencyGridRun(de):
+    gde = currencyGridCalculate(de)
+    gde['higher'] = gde.ix[:,gde.columns[0]] > 0
+    print len(gde)
+    gshift = 1; gde.ix[0:len(gde)-gshift,'higher'] = n.array(gde.ix[gshift:len(gde),'higher'].get_values(), dtype=int)
+    gde.tail(100).to_csv('/tmp/grid-eur.csv')
+    print gde.ix[:,[gde.columns[0],'higher']]
+    #print gde
+    #print gde.plot()
+    #scatter(gde.ix[:,0], gde.ix[:,1])
+    """
+    labels = [gde.index[i].format(i) for i in range(len(gde.index))]
+    for label, x, y in zip(labels, na_std, na_avgrets):
+        plt.annotate(
+            label, 
+            xy = (x, y), xytext = (-20, 20),
+            textcoords = 'offset points', ha = 'right', va = 'bottom',
+            bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.25),
+            arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+    """
+    #gde = normalizeme(gde)
+    #gde = sigmoidme(gde)
+    #gde.plot(); legend(gde.columns,2); show();
+
 
 def testMicrofinance():
     fm = FinancialModel()
