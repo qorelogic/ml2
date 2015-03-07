@@ -439,16 +439,16 @@ def quandlGetDatasetSourceList(source_code, pg=1):
     
     purl = "http://www.quandl.com/api/v2/datasets.json?query=*&source_code={0}&per_page=300&page={1}&auth_token=WVsyCxwHeYZZyhf5RHs2"
     url = purl.format(source_code, pg)
-    print url
+    #print url
     try:
         dsets = fetchURL(url)
         datasets_count = dsets['sources'][0]['datasets_count']
         docs = saveDatasetSourceListPage(dsets)
         pdocs = pdocs.combine_first(docs)
-        print len(pdocs)
+        print 'page: '+str(pg)+' '+str(len(pdocs))
         mkdir_p(hdirDataSources)
         pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
-        saveManifest(pdocs, hdirDataSources)
+        #saveManifest(pdocs, hdirDataSources)
         
         for i in range(2, int(ceil(datasets_count/300.0))+1):
             url = purl.format(source_code, i)
@@ -458,7 +458,7 @@ def quandlGetDatasetSourceList(source_code, pg=1):
             pdocs = pdocs.combine_first(docs)
             print 'page: '+str(i)+' '+str(len(pdocs))
             pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
-            saveManifest(pdocs, hdirDataSources)
+            #saveManifest(pdocs, hdirDataSources)
     except urllib2.HTTPError, e:
         print e
         print 'Reached the Quandl API limit'
