@@ -59,6 +59,11 @@ def fetchURL(url, mode='json', cachemode='w', fromCache=False):
     except NameError, e:
         debug(e)
 
+def saveJson(jsoncontent, fname):
+    fp = open(fname, 'a')
+    fp.write(jsoncontent)
+    fp.close()
+
 # getWebContentToText
 def lynxDump2(url):
     response = u.urlopen(url)

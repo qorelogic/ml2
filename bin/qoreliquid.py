@@ -439,7 +439,6 @@ def quandlGetDatasetSourceList(source_code, pg=1):
     
     purl = "http://www.quandl.com/api/v2/datasets.json?query=*&source_code={0}&per_page=300&page={1}&auth_token=WVsyCxwHeYZZyhf5RHs2"
     url = purl.format(source_code, pg)
-    #print url
     try:
         jdsets = fetchURL(url, mode='txt')
         dsets = j.loads(jdsets)
@@ -449,9 +448,7 @@ def quandlGetDatasetSourceList(source_code, pg=1):
         print 'page: '+str(pg)+' '+str(len(pdocs))
         mkdir_p(hdirDataSources)
         pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
-        #pdocs.to_csv(hdirDataSources+source_code+'.json')
         saveJson(jdsets+'\n', hdirDataSources+source_code+'.json')
-
         #saveManifest(pdocs, hdirDataSources)
         
         for i in range(2, int(ceil(datasets_count/300.0))+1):
