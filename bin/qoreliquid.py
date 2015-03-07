@@ -447,25 +447,33 @@ def quandlGetDatasetSourceList(source_code, pg=1):
         jdsets = fetchURL(url, mode='txt')
         dsets = j.loads(jdsets)
         datasets_count = dsets['sources'][0]['datasets_count']
-        docs = saveDatasetSourceListPage(dsets)
-        pdocs = pdocs.combine_first(docs)
-        print 'page: '+str(pg)+' '+str(len(pdocs))
         mkdir_p(hdirDataSources)
-        pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
-        saveJson(jdsets+'\n', hdirDataSources+source_code+'.json')
-        #saveManifest(pdocs, hdirDataSources)
         
-        for i in range(2, int(ceil(datasets_count/300.0))+1):
-            url = purl.format(source_code, i)
-            #print url
-            jdsets = fetchURL(url, mode='txt')
+        #docs = saveDatasetSourceListPage(dsets)
+        #pdocs = pdocs.combine_first(docs)
+        #print 'page: '+str(pg)+' '+str(len(pdocs))
+        #pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
+        #saveManifest(pdocs, hdirDataSources)        
+        
+        saveJson(jdsets+'\n', hdirDataSources+source_code+'.json')
+        
+        def saveSourceCode(source_code, i):
+            jdsets = fetchURL(purl.format(source_code, i), mode='txt')
             dsets = j.loads(jdsets)
-            docs = saveDatasetSourceListPage(dsets)
-            pdocs = pdocs.combine_first(docs)
-            print 'page: '+str(i)+' '+str(len(pdocs))
-            pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
-            saveJson(jdsets+'\n', hdirDataSources+source_code+'.json')
+            
+            #docs = saveDatasetSourceListPage(dsets)
+            #pdocs = pdocs.combine_first(docs)
+            print 'page: '+str(i) #+' '+str(len(pdocs))
+            #pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
             #saveManifest(pdocs, hdirDataSources)
+            
+            saveJson(jdsets+'\n', hdirDataSources+source_code+'.json')
+            
+        for i in range(2, int(ceil(datasets_count/300.0))+1):
+            t0 = threading.Thread(target=saveSourceCode, args=[source_code, i])
+            t0.daemon = False
+            t0.start()
+            
     except urllib2.HTTPError, e:
         print e
         print 'Reached the Quandl API limit'
