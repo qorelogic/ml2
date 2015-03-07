@@ -17,6 +17,8 @@ import StringIO as sio
 import threading,time
 import itertools as it
 
+hdirDataSources = 'data/quandl/data-sources/'
+
 def toCurrency(n):
     return '%2d' % n
 
