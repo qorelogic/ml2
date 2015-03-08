@@ -4,6 +4,7 @@ import json as j
 import os, errno
 import logging
 import re
+import numpy as n
 
 #logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
 logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
@@ -78,3 +79,29 @@ def mkdir_p(path):
         if exc.errno == errno.EEXIST and os.path.isdir(path):
             pass
         else: raise
+
+def isRange(a, rangeHasMissingIntegers=False):
+    """
+    Is the given array a valid integer range between its min and max
+    """
+    a = n.array(a, dtype=int)
+    ar = n.array(range(n.min(a), n.max(a)+1))
+    au = n.unique(a)
+    #print ar
+    #print au
+
+    if rangeHasMissingIntegers:
+        """
+        If the given array of integers has missing integers
+        ie. not a valid integer range, output zero for every missing integer in the range
+        a = [1,4,7]
+        outpus [1,0,0,4,0,0,7]
+        """
+        ar = ar.reshape(len(ar),1)
+        elm = ar * n.array(n.equal(ar, n.unique(a)), dtype=int)
+        return list(n.array(n.dot(elm, n.ones(len(au)).reshape(len(au),1)).transpose()[0], dtype=int))
+    
+    if n.sum(ar) == n.sum(au):
+        return True
+    else:
+        return False

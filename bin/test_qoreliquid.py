@@ -1,23 +1,9 @@
 # sudo pip install pytest
 # sudo pip install nose
 from nose.tools import *
+from test_qore import *
 from qoreliquid import *
 import numpy as n
-
-def assertSequenceEqual(it1, it2):
-    # source: http://stackoverflow.com/questions/17779526/python-nameerror-global-name-assertequal-is-not-defined
-    #assertEqual(tuple(it1), tuple(it2)) # Python 2.7
-    assert_equals(tuple(it1), tuple(it2))
-
-def assertDatasetEqual(it1, it2):
-    print type(it1)
-    it1 =  it1.transpose().get_values()[0]
-    print list(it1)
-    print list(it2)
-    #raise
-    #print type(it2)
-    assert_equals(tuple(it1), tuple(it2))
-    #.transpose().get_values()
 
 def test_answer():    
     """normalizeme x.

@@ -421,7 +421,37 @@ def getDataFromQuandlBNP(pa, curr): # curr = EUR || USD, etc.
     #plot(d.ix[:,tl])
     
     return d
-    
+
+
+import ujson as uj
+def validateQuandlDataSource():
+    try:
+        #def checkPage(pg):
+        fname = 'data/quandl/data-sources/YAHOO.json'
+        #fname = 'data/quandl/data-sources/BITCOIN.json'
+        fp = open(fname, "r")
+        #jc0 = fp.read().split('\n')
+        #print len(jc0)
+        #with open(fname, "r", encoding="utf-8") as f_chunk:
+        #with fp as f_chunk:
+        lns = []
+        for f_chunk in fp.xreadlines():
+            #print type(f_chunk)
+            #f_chunk = f_chunk.readline()
+        #for i in range(len(jc0)):
+            try:
+        #        f_chunk = jc0[i]
+                #jc = j.loads(f_chunk)
+                jc = uj.loads(f_chunk)
+                #print type(f_chunk)
+                lns.append(jc['current_page'])
+            except:
+                ''
+        fp.close()
+        #print p.DataFrame(lns).sort(0)
+        print isRange(lns, rangeHasMissingIntegers=True)
+    except ValueError, e:
+        print e
 
 def quandlGetDatasetSourceList(source_code, pg=1):
     pdocs = p.DataFrame()
