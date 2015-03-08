@@ -6,7 +6,7 @@ import logging
 import re
 
 #logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
-logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
+logging.basicConfig(filename='/tmp/qore.live.log', level=logging.DEBUG)
 
 hdir = '/ml.live/bin/data/cache'
 
