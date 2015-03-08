@@ -11,6 +11,7 @@ import datetime as dd
 import urllib2 as u
 #import json as j
 import ujson as j
+import ujson as uj
 
 import html2text
 import exceptions as ex
@@ -426,17 +427,18 @@ def getDataFromQuandlBNP(pa, curr): # curr = EUR || USD, etc.
     return d
 
 
-import ujson as uj
-def validateQuandlDataSource(source_code):
+def validateQuandlDataSource(source_code, savejson=False, savemanifest=True):
     try:
-        #def checkPage(pg):
         #source_code = 'YAHOO'
-        fname = "data/quandl/data-sources/{0}.json".format(source_code)
-        #fname = 'data/quandl/data-sources/BITCOIN.json'
+        if savejson == True:
+            suffix = 'json'
+        else:
+            suffix = 'csv'
+        fname = "data/quandl/data-sources/{0}.{1}".format(source_code, suffix)
         try:
             fp = open(fname, "r")
         except:
-            quandlGetDatasetSourceList(source_code)
+            quandlGetDatasetSourceList(source_code, savejson=savejson, savemanifest=savemanifest)
             return False
             
         #jc0 = fp.read().split('\n')
@@ -444,6 +446,7 @@ def validateQuandlDataSource(source_code):
         #with open(fname, "r", encoding="utf-8") as f_chunk:
         #with fp as f_chunk:
         lns = []
+        isr = []
         for f_chunk in fp.xreadlines():
             #print type(f_chunk)
             #f_chunk = f_chunk.readline()
@@ -452,13 +455,13 @@ def validateQuandlDataSource(source_code):
                 #jc = j.loads(f_chunk)
                 jc = uj.loads(f_chunk)
                 lns.append(jc['current_page'])
+                lns.append(0)
+                lns.append(int(ceil(float(jc['total_count']) / jc['per_page'])))
+                isr = isRange(lns, rangeHasMissingIntegers=True)
             except:
                 ''
                 print 'json error'
         fp.close()
-        lns.append(0)
-        lns.append(int(ceil(float(jc['total_count']) / jc['per_page'])))
-        isr = isRange(lns, rangeHasMissingIntegers=True)
         #print isr
         missingPgs = []
         for i, ii in enumerate(isr):
@@ -467,7 +470,7 @@ def validateQuandlDataSource(source_code):
                 #print i
                 missingPgs.append(i)
         print "missingPgs:"; print n.array(missingPgs)
-        quandlGetDatasetSourceList(source_code, pg=missingPgs)
+        quandlGetDatasetSourceList(source_code, pg=missingPgs, savejson=savejson, savemanifest=savemanifest)
         if len(missingPgs) > 0:
             return False
         
@@ -478,10 +481,10 @@ def validateQuandlDataSource(source_code):
     except ValueError, e:
         print e
 
-def quandlGetAllDataSourceCodes(source_code):
-    while validateQuandlDataSource(source_code) == False: 'stub'
+def quandlGetAllDataSourceCodes(source_code, savejson=False, savemanifest=True):
+    while validateQuandlDataSource(source_code, savejson=savejson, savemanifest=savemanifest) == False: 'stub'
     
-def quandlGetDatasetSourceList(source_code, pg=None):
+def quandlGetDatasetSourceList(source_code, pg=None, savejson=False, savemanifest=True):
     pdocs = p.DataFrame()
     def saveDatasetSourceListPage(dsets):
         #print dsets.keys()
@@ -490,22 +493,28 @@ def quandlGetDatasetSourceList(source_code, pg=None):
         #print p.DataFrame(dsets['docs'])
         return p.DataFrame(dsets['docs']).ix[:,['code','source_code','column_names']].set_index('code')
         #print p.DataFrame(dsets['highlighting'])
-    
-    def saveManifest(pdocs, hdirDataSources):
+    def logCsv(cline, fname):
+        f =  open(fname, 'a')
+        f.write(cline+'\n')
+        f.close()
+        
+    def saveManifest(dsets, hdirDataSources):
         """
         # called as below
-        #docs = saveDatasetSourceListPage(dsets)
-        #pdocs = pdocs.combine_first(docs)
-        #print('page: {0} source: {2}'.format(i, source_code)) #+str(len(pdocs))
-        #pdocs.to_csv(hdirDataSources+source_code+'.csv', encoding='utf-8')
-        #saveManifest(pdocs, hdirDataSources)
+        #print('page: {0} source: {2}'.format(i, source_code)) #+str(len(dsets))
         """
-        manifestfname = hdirDataSources+'manifest'+'.csv'
+        
+        for i in dsets['docs']:
+            manifestfname = hdirDataSources+'.csv'
+            logCsv(i['code']+','+i['source_code'], manifestfname)
+        
+        """
         try:
-            pdocs = pdocs.combine_first(p.read_csv(manifestfname, index_col=0))
+            dsets = dsets.combine_first(p.read_csv(manifestfname, index_col=0))
         except:
-            pdocs = pdocs.combine_first(p.DataFrame())
-        pdocs.to_csv(manifestfname, encoding='utf-8')
+            dsets = dsets.combine_first(p.DataFrame())
+        dsets.to_csv(manifestfname, encoding='utf-8')
+        """
     
     purl = "http://www.quandl.com/api/v2/datasets.json?query=*&source_code={0}&per_page=300&page={1}&auth_token=WVsyCxwHeYZZyhf5RHs2"
     if pg == None:
@@ -515,13 +524,17 @@ def quandlGetDatasetSourceList(source_code, pg=None):
             jdsets = fetchURL(url, mode='txt')
             try:
                 dsets = j.loads(jdsets)
-                datasets_count = dsets['sources'][0]['datasets_count']
+                #datasets_count = dsets['sources'][0]['datasets_count']
+                #datasets_count = dsets['total_count']
+                #per_page = dsets['per_page']
                 mkdir_p(hdirDataSources)
-                saveJson(jdsets+'\n', hdirDataSources+source_code+'.json')
+                if savejson == True:
+                    saveJson(jdsets+'\n', hdirDataSources+source_code+'.json')
+                if savemanifest == True:
+                    saveManifest(dsets, hdirDataSources+source_code)
             except TypeError, e:
                 print 'pg: {0}'.format(pg)
-                print e
-                #print jdsets
+                print e                
             
         except urllib2.HTTPError, e:
             print e
@@ -533,7 +546,10 @@ def quandlGetDatasetSourceList(source_code, pg=None):
                 url = purl.format(source_code, i)
                 jdsets = fetchURL(url, mode='txt')
                 dsets = j.loads(jdsets)
-                saveJson(jdsets+'\n', hdirDataSources+source_code+'.json')
+                if savejson == True:
+                    saveJson(jdsets+'\n', hdirDataSources+source_code+'.json')
+                if savemanifest == True:
+                    saveManifest(dsets, hdirDataSources+source_code)
                 
                 """
                 except IndexError, e:
@@ -550,7 +566,7 @@ def quandlGetDatasetSourceList(source_code, pg=None):
                     debug(err)
                 """
                     
-            #for i in range(2, int(ceil(datasets_count/300.0))+1):
+            #for i in range(2, int(ceil(datasets_count/float(per_page)))+1):
             if type(pg) == type([]):
                 for i in pg[0:40]:
                     #try:
@@ -564,7 +580,7 @@ def quandlGetDatasetSourceList(source_code, pg=None):
             print e
             print 'Reached the Quandl API limit'
     
-def quandlGetAllDatasetSources():
+def quandlGetAllDatasetSources(savejson=False, savemanifest=True):
     # https://www.quandl.com/resources/data-sources
     #cmd = "curl -s https://www.quandl.com/resources/data-sources | lynx -dump -stdin | grep 'quandl.com'  | grep  'http://quandl' | cut -d'/' -f4 | uniq"
     cmd = "cat /tmp/data-sources.quandl | lynx -dump -stdin | grep 'quandl.com'  | grep  'http://quandl' | cut -d'/' -f4 | uniq"
@@ -574,7 +590,7 @@ def quandlGetAllDatasetSources():
     sources.to_csv(hdirDataSources+'data-sources'+'.csv')
     for i in sources.ix[:,0]:
         print i
-        quandlGetAllDataSourceCodes(i)
+        quandlGetAllDataSourceCodes(i, savejson=savejson, savemanifest=savemanifest)
     
     # https://www.quandl.com/resources/data-sources-minor
     # https://www.quandl.com/community/data-requests
