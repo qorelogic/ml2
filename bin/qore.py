@@ -1,6 +1,7 @@
 
 import urllib2 as u
-import json as j
+#import json as j
+import ujson as j
 import os, errno
 import logging
 import re
@@ -61,6 +62,7 @@ def fetchURL(url, mode='json', cachemode='w', fromCache=False):
         debug(e)
 
 def saveJson(jsoncontent, fname):
+    print 'saving json to {0}'.format(fname)
     fp = open(fname, 'a')
     fp.write(jsoncontent)
     fp.close()
