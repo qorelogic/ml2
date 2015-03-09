@@ -311,7 +311,7 @@ def quandlCode2DatasetCode(tk, hdir='./', include_path=True, suffix='.csv'):
             fname = mt[0]+'-'+mt[1]+suffix
     return [fname,path]
         
-def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False):
+def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False, style='-'):
     # if string
     df = p.DataFrame([])
     
@@ -347,7 +347,7 @@ def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False):
             df = df.combine_first(dfs[i])
     
     if plot == True:
-        df.plot(); show();
+        df.plot(style=style); show();
     return df
     
 # source: https://www.quandl.com/c/markets/exchange-rates-versus-eur
