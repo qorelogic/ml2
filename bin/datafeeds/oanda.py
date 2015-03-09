@@ -37,10 +37,10 @@ class MyStreamer(oandapy.Streamer):
     def on_success(self, data):
         self.ticks += 1
         try:
-            print data['tick']
+            pair = data['tick']['instrument']
             print p.DataFrame(data['tick'], index=[0]).to_string(index=False).split('\n')[1]
             csv = ",".join(n.array(p.DataFrame(data['tick'], index=[0]).ix[:,[2,0,1,3]].get_values()[0], dtype=str))
-            fp = open('{0}/{1}.csv'.format(self.hdir, sys.argv[1]), 'a')
+            fp = open('{0}/{1}.csv'.format(self.hdir, pair), 'a')
             fp.write(csv+'\n')
             fp.close()
         except KeyError, e:
@@ -54,15 +54,13 @@ class MyStreamer(oandapy.Streamer):
         
 stream = MyStreamer(environment=env2, access_token=access_token2)
 try:
-    pair = sys.argv[1]
-    #pairs = "EUR_USD,USD_CAD"
-    #pairs = list(n.array(p.DataFrame(oanda2.get_instruments(accid)['instruments']).ix[:,'instrument'].get_values(), dtype=string0))
-    stream.start(accountId=accid, instruments=pair)
-    #stream.start(accountId=<accoundid>, instruments=pairs)
+    pairs = ",".join(list(n.array(p.DataFrame(oanda2.get_instruments(accid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
+    stream.start(accountId=accid, instruments=pairs)
 except NameError, e:
     ''
 except IndexError, e:
-    print 'usage: python oanda.py <pair>   ..  eg. pair = EUR_USD'
+    #print 'usage: python oanda.py'
+    ''
 except ConnectionError, e:
     print e
 except KeyboardInterrupt, e:
