@@ -84,6 +84,8 @@ def do_work( forever = True):
             #print 'usage: python oanda.py'
             ''
             #print e
+        except requests.exceptions.ChunkedEncodingError, e:
+            print e
         except requests.ConnectionError, e:
             print e
             stream.disconnect()
