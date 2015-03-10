@@ -11,6 +11,9 @@ import oandapy
 import pandas as p
 import numpy as n
 import datetime as dd
+import time
+# error classes
+import requests
 
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -31,6 +34,7 @@ def oandaToTimestamp(ptime):
     dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
     return (dt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
 
+#------------------------------
 # tick streamer (data feed)
 class MyStreamer(oandapy.Streamer):
     def __init__(self, *args, **kwargs):
@@ -51,29 +55,50 @@ class MyStreamer(oandapy.Streamer):
             fp = open('{0}/{1}.csv'.format(self.hdir, pair), 'a')
             fp.write(csv+'\n')
             fp.close()
+        except requests.ConnectionError, e:
+            ''
+            #print e
         except KeyError, e:
             ''
             #print e
 
     def on_error(self, data):
         self.disconnect()
+
+# source: http://www.digi.com/wiki/developer/index.php/Handling_Socket_Error_and_Keepalive
+def do_work( forever = True):
+    while True:
+        print 'receiving feed..'
+        try:
+            stream = MyStreamer(environment=env2, access_token=access_token2)
+            pairs = ",".join(list(n.array(p.DataFrame(oanda2.get_instruments(accid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
+            stream.start(accountId=accid, instruments=pairs)
+        except TypeError, e:
+            ''
+            #print e
+        except NameError, e:
+            ''
+            print e
+        except IndexError, e:
+            #print 'usage: python oanda.py'
+            ''
+            #print e
+        except requests.ConnectionError, e:
+            print e
+            stream.disconnect()
+        except KeyboardInterrupt, e:
+            'disconnecting'
+            stream.disconnect()
         
-stream = MyStreamer(environment=env2, access_token=access_token2)
-try:
-    pairs = ",".join(list(n.array(p.DataFrame(oanda2.get_instruments(accid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
-    stream.start(accountId=accid, instruments=pairs)
-except TypeError, e:
-    ''
-    #print e
-except NameError, e:
-    ''
-    #print e
-except IndexError, e:
-    #print 'usage: python oanda.py'
-    ''
-    #print e
-except ConnectionError, e:
-    print e
-except KeyboardInterrupt, e:
-    'disconnecting'
-    stream.disconnect()
+        #------------------------------
+        
+        try:
+            #time.sleep(1)
+            print 'connection error'
+            print 'attempting disconnect before reconnecting'
+            stream.disconnect()
+        except:
+            pass
+         
+if __name__ == '__main__':
+    do_work( True)
