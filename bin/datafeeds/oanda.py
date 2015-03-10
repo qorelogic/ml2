@@ -33,12 +33,12 @@ class MyStreamer(oandapy.Streamer):
         self.ticks = 0
         self.hdir = '/ml.dev/bin/data/oanda/datafeed'
         mkdir_p(self.hdir)
-
+        
     def on_success(self, data):
-        self.ticks += 1
+        #self.ticks += 1
         try:
             pair = data['tick']['instrument']
-            print p.DataFrame(data['tick'], index=[0]).to_string(index=False).split('\n')[1]
+            #print p.DataFrame(data['tick'], index=[0]).to_string(index=False).split('\n')[1]
             csv = ",".join(n.array(p.DataFrame(data['tick'], index=[0]).ix[:,[2,0,1,3]].get_values()[0], dtype=str))
             fp = open('{0}/{1}.csv'.format(self.hdir, pair), 'a')
             fp.write(csv+'\n')
