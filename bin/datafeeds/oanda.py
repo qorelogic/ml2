@@ -10,6 +10,7 @@ from qore import *
 import oandapy
 import pandas as p
 import numpy as n
+import requests
 import datetime as dd
 
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -72,7 +73,7 @@ except IndexError, e:
     #print 'usage: python oanda.py'
     ''
     #print e
-except ConnectionError, e:
+except requests.ConnectionError, e:
     print e
 except KeyboardInterrupt, e:
     'disconnecting'
