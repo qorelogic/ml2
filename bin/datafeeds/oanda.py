@@ -38,7 +38,7 @@ class MyStreamer(oandapy.Streamer):
         self.ticks = 0
         self.hdir = '/ml.dev/bin/data/oanda/datafeed'
         mkdir_p(self.hdir)
-
+        
     def on_success(self, data):
         #self.ticks += 1
         #if self.ticks == 2: self.disconnect()
