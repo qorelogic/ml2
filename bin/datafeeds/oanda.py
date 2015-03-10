@@ -16,6 +16,9 @@ import time
 # error classes
 import requests
 
+# import celery message-queue tasks
+from mqtasks import *
+
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 co = p.read_csv('config.csv', header=None)
@@ -53,9 +56,10 @@ class MyStreamer(oandapy.Streamer):
             tick = p.DataFrame(data['tick'], index=[0])
             tick['timestamp'] = oandaToTimestamp(tick['time'].ix[0])
             csv = ",".join(n.array(tick.ix[:,[2,0,1,3,4]].get_values()[0], dtype=str))
-            fp = open('{0}/{1}.csv'.format(self.hdir, pair), 'a')
-            fp.write(csv+'\n')
-            fp.close()
+            appendCsv.delay(csv, '{0}/{1}.csv'.format(self.hdir, pair))
+            #fp = open('{0}/{1}.csv'.format(self.hdir, pair), 'a')
+            #fp.write(csv+'\n')
+            #fp.close()
         except requests.ConnectionError, e:
             ''
             #print e
