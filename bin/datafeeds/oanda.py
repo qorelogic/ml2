@@ -10,6 +10,7 @@ from qore import *
 import oandapy
 import pandas as p
 import numpy as n
+import requests
 import datetime as dd
 import time
 # error classes
@@ -89,7 +90,6 @@ def do_work( forever = True):
         except KeyboardInterrupt, e:
             'disconnecting'
             stream.disconnect()
-        
         #------------------------------
         
         try:
