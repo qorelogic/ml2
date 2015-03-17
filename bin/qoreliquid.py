@@ -1192,6 +1192,10 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
         
         lss = []
         
+        # bias
+        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/strong'
+        lss.append(self.find_elements_by_xpath_return_list(xp, 'bias'))
+
         # currency pair
         xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/a'
         lss.append(self.find_elements_by_xpath_return_list(xp, 'pair'))
