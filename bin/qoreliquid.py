@@ -1143,6 +1143,23 @@ class Etoro():
         
         self.driver = driver
         
+    def etoroLogin(self, username, passwd):
+        python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
+        python_link.click()
+        
+        # Enter some text!
+        text_area = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/input[1]')[0]
+        print text_area
+        text_area.send_keys(username)
+        
+        text_area = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/input[2]')[0]
+        print text_area
+        text_area.send_keys(passwd)
+        
+        # Submit the form!
+        submit_button = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/div[1]/div/input')[0]
+        #submit_button = driver.find_element_by_name('submit')
+        submit_button.click()    
         
     def quit(self):
         # Close the browser!
@@ -1273,6 +1290,41 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
         
         return df
         
+    # get target portfolio from etoro user
+    def getTargetPortfolio(self, username=None):
+        fname = self.fname_trader_positions
+        fp = open(fname, 'r')
+        em = fp.read()
+        em = j.loads(em)
+        #for i in em:
+        #    print p.DataFrame(em[i])
+        target = p.DataFrame([])
+        if username == None:
+            for i in em:
+                emi = p.DataFrame(em[i])
+                #print emi
+                target['pair'] = emi['pair']
+                target['bias'] = emi['bias']
+                target['take profit'] = emi['take profit']
+                target['stop loss'] = emi['stop loss']
+                target['amount'] = emi['stop loss']
+                print target
+                print
+        if type(username) == type(''):
+            try:
+                emi = p.DataFrame(em[username])
+                #print emi
+                target['pair'] = emi['pair']
+                target['bias'] = emi['bias']
+                target['take profit'] = emi['take profit']
+                target['stop loss'] = emi['stop loss']
+                target['amount'] = emi['stop loss']
+                return target
+            except KeyError, e:
+                print 'No username {0} found.'.format(e)
+
+
+
 
 class Bancor:
     def getBancorYear(self, fname):    
