@@ -26,6 +26,61 @@ Created on Thu Nov 13 21:52:25 2014
 @author: qore2
 """
 
+# -*- coding: utf-8 -*-
+"""Example Google style docstrings.
+
+This module demonstrates documentation as specified by the `Google Python
+Style Guide`_. Docstrings may extend over multiple lines. Sections are created
+with a section header and a colon followed by a block of indented text.
+
+Example:
+  Examples can be given using either the ``Example`` or ``Examples``
+  sections. Sections support any reStructuredText formatting, including
+  literal blocks::
+
+      $ python example_google.py
+
+Section breaks are created by simply resuming unindented text. Section breaks
+are also implicitly created anytime a new section starts.
+
+Attributes:
+  module_level_variable (int): Module level variables may be documented in
+    either the ``Attributes`` section of the module docstring, or in an
+    inline docstring immediately following the variable.
+
+    Either form is acceptable, but the two should not be mixed. Choose
+    one convention to document module level variables and be consistent
+    with it.
+
+.. _Google Python Style Guide:
+   http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
+
+"""
+class QoreQuant():
+    """
+    targetPortfolio = [['AAPL', 'BAC', 'BOA', 'DAL'], [1032, 123, 98, 9812]]
+    livePortfolio = [['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]]
+    """
+    def toTrade(self, livePortfolio, targetPortfolio, returnList=False):
+        print 'target portfolio'
+        print targetPortfolio
+        if type(targetPortfolio) != type(p.DataFrame([])):
+            targetPortfolio = p.DataFrame(targetPortfolio).transpose()
+        #print type(targetPortfolio)
+        print 'live portfolio'
+        print livePortfolio    
+        if type(livePortfolio) != type(p.DataFrame([])):
+            livePortfolio = p.DataFrame(livePortfolio).transpose()
+        #print type(livePortfolio)
+        
+        print 'to trade'
+        tt = p.DataFrame([list(targetPortfolio.ix[:,0].get_values()), list((targetPortfolio.ix[:,1] - livePortfolio.ix[:,1]).get_values())]).transpose()
+        if returnList == True:
+            [list(tt.transpose().get_values()[0]), list(tt.transpose().get_values()[1])]    
+        else:
+            return tt    
+    #assert toTrade([['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]], [['AAPL', 'BAC', 'BOA', 'DAL'], [1032, 123, 98, 9812]], returnList=True) == [['AAPL', 'BAC', 'BOA', 'DAL'], [102, -107, -11, 7682]]
+
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
 
