@@ -1126,6 +1126,7 @@ import pandas as p
 class Etoro():
     def __init__(self):
         self.driver = None        
+        self.fname_trader_positions = 'etoro-trader-positions.json'            
         
     def start(self):
         """
@@ -1242,7 +1243,6 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
                 ''
         
         if save == True:
-            self.fname_trader_positions = 'etoro-trader-positions.json'            
             try:
                 allPositions2 = p.read_json(self.fname_trader_positions)
                 #print allPositions2
