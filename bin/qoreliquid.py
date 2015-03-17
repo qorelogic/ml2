@@ -1125,6 +1125,9 @@ import pandas as p
 
 class Etoro():
     def __init__(self):
+        self.driver = None        
+        
+    def start(self):
         # iPhone
         #driver = webdriver.Remote(browser_name="iphone", command_executor='http://172.24.101.36:3001/hub')
         # Android
@@ -1135,6 +1138,7 @@ class Etoro():
         driver = webdriver.Firefox()
         
         self.driver = driver
+        
         
     def find_elements_by_xpath_return_list(self, xp, column):
         els = []
@@ -1171,7 +1175,15 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
             df[i.columns[0]] = i
         return df
     
+    def check(self):
+        if type(self.driver) == type(None): 
+            self.start()
+        else:
+            return True
+        
     def getEtoroTraderPositions(self, username, save=True):
+        
+        self.check()
         
         self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
         
