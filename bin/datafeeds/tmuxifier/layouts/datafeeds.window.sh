@@ -26,7 +26,7 @@ qrun_cmd USD_CAD 3
 
 send_keys "watch -n1 'ls -lt /ml.dev/bin/data/oanda/datafeed'" 4
 #send_keys "cd /ml.dev/bin/datafeeds/ && celery worker -A mqtasks -l INFO" 5
-send_keys "cd /ml.dev/bin/datafeeds/ && python oanda.py" 5
+send_keys "cd /ml.live/bin/datafeeds/ && python oanda.py" 5
 
 # Paste text
 #send_keys "top"    # paste into active pane
