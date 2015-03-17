@@ -1104,6 +1104,148 @@ class ShapeShift(CryptoCoinBaseClass):
         If the status is expired then seconds_remaining will show 0.
         """
     
+######
+
+# source: https://gist.github.com/hugs/830011
+# To install the Python client library:
+# pip install -U selenium
+ 
+# Import the Selenium 2 namespace (aka "webdriver")
+from selenium import webdriver
+from selenium.selenium import selenium
+import pandas as p
+
+class Etoro():
+    def __init__(self):
+        # iPhone
+        #driver = webdriver.Remote(browser_name="iphone", command_executor='http://172.24.101.36:3001/hub')
+        # Android
+        #driver = webdriver.Remote(browser_name="android", command_executor='http://127.0.0.1:8080/hub')
+        # Google Chrome 
+        #driver = webdriver.Chrome()
+        # Firefox 
+        driver = webdriver.Firefox()
+        
+        self.driver = driver
+        
+    def find_elements_by_xpath_return_list(self, xp, column):
+        els = []
+        for i in self.driver.find_elements_by_xpath(xp):
+            #print i.text
+            els.append(i.text)
+        try:
+            return p.DataFrame(els, columns=[column])
+        except:
+            ''
+    
+    def getEtoroDiscoverPeople(self, driver=None):
+        if driver != None:
+            self.driver = driver
+        lss = []
+        
+        xps = """username /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[1]/div/div[2]/div[1]/a
+name /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[1]/div/div[2]/div[2]
+country /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[1]/div/div[2]/div[3]/div[2]
+copiers /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[2]
+weeklyDrawdown /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[3]
+dailyDrawdown /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[4]
+profitableWeeks /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[5]
+gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
+        ##########
+        xps = xps.split('\n')
+        for i in xrange(len(xps)):
+            iss = xps[i].split(' ')
+            lss.append(self.find_elements_by_xpath_return_list(iss[1], iss[0]))
+            
+        # combine all into a dataframe
+        df = p.DataFrame(range(len(lss[0])))
+        for i in lss:
+            df[i.columns[0]] = i
+        return df
+    
+    def getEtoroTraderPositions(self, username, save=True):
+        
+        self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
+        
+        lss = []
+        
+        # currency pair
+        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/a'
+        lss.append(self.find_elements_by_xpath_return_list(xp, 'pair'))
+        
+        # stop loss
+        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/div/span[1]'
+        lss.append(self.find_elements_by_xpath_return_list(xp, 'stop loss'))
+        
+        # take profit
+        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/div/span[2]'
+        res = self.find_elements_by_xpath_return_list(xp, 'take profit')
+        lss.append(res)
+        
+        # time (since opening trade)
+        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[3]/div/span'
+        lss.append(self.find_elements_by_xpath_return_list(xp, 'time'))
+        
+        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-row {0}"]/div[3]'.format(username)
+        lss.append(self.find_elements_by_xpath_return_list(xp, 'open'))
+        
+        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-row {0}"]/div[4]'.format(username)
+        lss.append(self.find_elements_by_xpath_return_list(xp, 'gain'))
+        
+        # combine all into a dataframe
+        df = p.DataFrame(range(len(lss[0])))
+        for i in lss:
+            df[i.columns[0]] = i
+        
+        # remove the extra table column
+        df = df.ix[:,list(df.columns[1:])]
+        
+        # cleanup tables
+        for i in range(len(df.ix[:,0])):
+            col = 'take profit'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
+            col = 'stop loss';   df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
+            col = 'gain';        df.ix[i,col] = re.match(re.compile(r'(-?[\d\.]+)%'), df.ix[i,col]).groups()[0]
+            try:
+                col = 'time';    df.ix[i,col] = re.match(re.compile(r'(-?[\d\.]+) days ago'), df.ix[i,col]).groups()[0]
+            except:
+                ''
+        
+        if save == True:
+            fname = 'etoro-trader-positions.json'            
+            try:
+                allPositions2 = p.read_json(fname)
+                #print allPositions2
+            except ValueError, e:
+                allPositions2 = p.DataFrame()
+                allPositions2.to_json(fname)
+                #print allPositions2
+                #print e
+                
+            fp = open(fname, 'r')
+            allPositions2 = j.loads(fp.read())
+            fp.close()
+            
+            #print allPositions2
+            #print
+            
+            positions = df            
+            #print positions
+            #print positions.to_dict()
+            allPositions2[username] = positions.to_dict()
+            #allPositions2.to_json(fname)
+            allPositions2 = convertDictKeysToString(allPositions2)
+            #print j.dumps(allPositions2)
+            
+            fp = open(fname, 'w')
+            fp.write(j.dumps(allPositions2))
+            fp.close()        
+        
+        return df
+    
+    def quit(self):
+        # Close the browser!
+        self.driver.quit()
+    
 if __name__ == "__main__":
     print 'stub'
     #testMicrofinance()
