@@ -1,0 +1,1 @@
+/home/qore/qorelogic/etc/tmuxifier/layouts/qorelogic.window.sh

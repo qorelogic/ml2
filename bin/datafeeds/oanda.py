@@ -7,6 +7,7 @@ except:
     sys.path.append('/ml.dev/bin')
     
 from qore import *
+from qoreliquid import *
 import oandapy
 import pandas as p
 import numpy as n

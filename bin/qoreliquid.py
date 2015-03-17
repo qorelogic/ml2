@@ -311,7 +311,7 @@ def quandlCode2DatasetCode(tk, hdir='./', include_path=True, suffix='.csv'):
             fname = mt[0]+'-'+mt[1]+suffix
     return [fname,path]
         
-def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False, style='-'):
+def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False, style='-', columns=['Close'], tail=False):
     # if string
     df = p.DataFrame([])
     
@@ -345,7 +345,15 @@ def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False, s
             #print list(dfs[i].columns)    
         for i in range(0, len(dfs)):
             df = df.combine_first(dfs[i])
+    #if type(columns) == type([]):
+    cols = []
+    if type(tk) == type([]):
+        for i in xrange(len(tk)):
+            cols.append("{0} {1}".format(tk[i], columns))
+        df = df.ix[:,cols]
     
+    if tail > 0:
+        df = df.ix[:,:].tail(tail)
     if plot == True:
         df.plot(style=style); show();
     return df
