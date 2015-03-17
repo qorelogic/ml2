@@ -1143,6 +1143,10 @@ class Etoro():
         self.driver = driver
         
         
+    def quit(self):
+        # Close the browser!
+        self.driver.quit()
+    
     def find_elements_by_xpath_return_list(self, xp, column):
         els = []
         for i in self.driver.find_elements_by_xpath(xp):
@@ -1347,11 +1351,7 @@ class Bancor:
         print '==========================================================================================='
         print '==========================================================================================='
 
-        
     
-    def quit(self):
-        # Close the browser!
-        self.driver.quit()
     
 if __name__ == "__main__":
     print 'stub'
