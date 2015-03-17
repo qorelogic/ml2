@@ -1128,6 +1128,9 @@ class Etoro():
         self.driver = None        
         
     def start(self):
+        """
+        checks whether the browser is running, returns boolean
+        """
         # iPhone
         #driver = webdriver.Remote(browser_name="iphone", command_executor='http://172.24.101.36:3001/hub')
         # Android
@@ -1231,17 +1234,17 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
                 ''
         
         if save == True:
-            fname = 'etoro-trader-positions.json'            
+            self.fname_trader_positions = 'etoro-trader-positions.json'            
             try:
-                allPositions2 = p.read_json(fname)
+                allPositions2 = p.read_json(self.fname_trader_positions)
                 #print allPositions2
             except ValueError, e:
                 allPositions2 = p.DataFrame()
-                allPositions2.to_json(fname)
+                allPositions2.to_json(self.fname_trader_positions)
                 #print allPositions2
                 #print e
                 
-            fp = open(fname, 'r')
+            fp = open(self.fname_trader_positions, 'r')
             allPositions2 = j.loads(fp.read())
             fp.close()
             
@@ -1252,11 +1255,11 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
             #print positions
             #print positions.to_dict()
             allPositions2[username] = positions.to_dict()
-            #allPositions2.to_json(fname)
+            #allPositions2.to_json(self.fname_trader_positions)
             allPositions2 = convertDictKeysToString(allPositions2)
             #print j.dumps(allPositions2)
             
-            fp = open(fname, 'w')
+            fp = open(self.fname_trader_positions, 'w')
             fp.write(j.dumps(allPositions2))
             fp.close()        
         
