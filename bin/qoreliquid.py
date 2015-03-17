@@ -1201,6 +1201,86 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
         for i in lss:
             df[i.columns[0]] = i
         return df
+        
+
+class Bancor:
+    def getBancorYear(self, fname):    
+        return int(re.match(re.compile(r'(.*)_([\d]{4}).*'), fname).groups()[1])
+    
+    def cleanBancorDate(self, dat, year):
+        dat = re.match(re.compile(r'([\d]{2})\/([\d]{2})'), dat).groups()
+        return dd.datetime(year, int(dat[1]), int(dat[0]))
+    
+    def cleanBancorNumber(self, n):
+        try:
+            #print n
+            n = re.sub(re.compile(r'(.*)\,([\d]{2})'), '\\1_\\2', n)
+            #print n
+            n = re.sub(re.compile(r'\.'), '', n)
+            n = re.sub(re.compile(r'\,'), '', n)
+            #print n
+            n = re.sub(re.compile(r'\_'), '.', n)
+            #print n
+            return float(n)
+        #float(str(n).replace(',', ''))
+        except:
+            return n
+        #return n
+    
+    # requires pdf conversion to text via pdftotext -raw <fname.pdf>
+    def parseBancorStatments(self, fname, mode=2, idx=[[15,76,137,198,259], [45,106,167,228,262]]):
+        """
+        mode = 1 # manifest
+        mode = 2 # manifest
+        """
+        print fname
+        res = open(fname, 'r').read().split('\n')
+        if mode == 4:
+            for i in res:
+                print i
+        idx = p.DataFrame(idx)
+        p0 = p.DataFrame()
+        if mode == 1:
+            print idx.transpose().get_values()
+            print n.diff(idx)
+            print idx[0]
+            for [i, j] in enumerate(res):
+                print "{0} {1}".format(i,j)
+        for i in idx:
+            p0 = p0.combine_first(p.DataFrame(res).ix[idx[i][0]:idx[i][1],:])
+        ms = []
+        for i in list(p0.get_values()):
+            if mode == 4:
+                print i[0]
+            try:
+                #m = re.match(re.compile(r'([\d\/]+)[\s]+([\w\s\.\%\d]+?)[\s]+([\d\,^%]+)(.*)'), i[0]).groups()
+                #m = re.match(re.compile(r'([\d\/]+)[\s]+(.+?)[\s]+([\.\d\,^\%]+)(.*)'), i[0]).groups()
+                #m = re.match(re.compile(r'([\d\/]+)[\s]+(.+)[\s]+([\.\d\,^\%]+)[\s]+([\d\,]+)'), i[0]).groups()
+                m = re.match(re.compile(r'([\d\/]+)[\s]+(.+)[\s]([\.\d\,^\%]+)[\s]([\d\,]+)'), i[0]).groups()
+                if mode == 3:
+                    #print i[0]
+                    print m
+                ms.append(m)
+            except AttributeError, e:
+                if mode == 1:
+                    print i[0]
+                #print e
+                ''
+        ms = p.DataFrame(ms, columns=['Fecha', 'Concepto/Empresa', 'Debito/Credito', 'Saldo'])
+        for i in range(len(ms.ix[:,2])):
+            ms.ix[i,0] = self.cleanBancorDate(ms.ix[i,0], self.getBancorYear(fname))
+            ms.ix[i,2] = self.cleanBancorNumber(ms.ix[i,2])
+            ms.ix[i,3] = self.cleanBancorNumber(ms.ix[i,3])
+        #print ms
+        pres = p.DataFrame(res).ix[:,:]
+        ms = ms.set_index('Fecha')
+        #ms.ix[:,'Saldo'].plot(); show();
+        #print ms
+        return ms
+        print '==========================================================================================='
+        print '==========================================================================================='
+
+        
     
 if __name__ == "__main__":
     print 'stub'
