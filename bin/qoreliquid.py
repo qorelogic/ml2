@@ -1258,6 +1258,55 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
         """        
         self.check()
 
+        def xpathsSplitAndCombine(xps):
+            """
+            xps = xps.split('\n')
+            for i in xrange(len(xps)):
+                iss = xps[i].split(' ')
+                iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
+                #print iss
+                try:
+                    ilss = self.find_elements_by_xpath_return_list(iss[1], iss[0])
+                    print len(ilss)
+                    lss.append(ilss)
+                except:
+                    ''
+            """
+            xps = xps.split('\n')
+            for i in xrange(len(xps)):
+                iss = xps[i].split(' ')
+                iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
+                print iss
+                try:
+                    ilss = self.find_elements_by_xpath_return_list(iss[1], iss[0])
+                    print len(ilss)
+                    lss.append(ilss)
+                except IndexError, e:
+                    print e
+            return lss
+
+        def combineAllListsIntoPandasDataframe(lss):
+            """
+            # combine all into a dataframe
+            #print lss
+            df = None
+            try:
+                df = p.DataFrame(range(len(lss[0])))
+                for i in lss:
+                    df[i.columns[0]] = i
+            except TypeError, e:
+                print e
+            """
+            # combine all lists into a dataframe
+            #print lss
+            df = p.DataFrame(range(len(lss[0])))
+            for i in lss:
+                try:
+                    df[i.columns[0]] = i
+                except AttributeError, e:
+                    print "{0}: {1}".format(i, e)
+            return df
+        
         if mode == 2:
             
             self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
@@ -1274,27 +1323,8 @@ username //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[2]/a
 open //*[contains(@class,<space>"user-table-cell<space>uttc-4")]
 netprofit //*[contains(@class,<space>"user-table-cell<space>uttc-5")]
 gain //*[contains(@class,<space>"user-table-cell<space>uttc-5")]"""
-            xps = xps.split('\n')
-            for i in xrange(len(xps)):
-                iss = xps[i].split(' ')
-                iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
-                print iss
-                try:
-                    lss.append(self.find_elements_by_xpath_return_list(iss[1], iss[0]))
-                except IndexError, e:
-                    print e
-            
-            # combine all into a dataframe
-            #print lss
-            df = p.DataFrame(range(len(lss[0])))
-            for i in lss:
-                try:
-                    df[i.columns[0]] = i
-                except AttributeError, e:
-                    print "{0}: {1}".format(i, e)
-            
-            # remove the extra header
-            df = df.ix[1:,:]
+            lss = xpathsSplitAndCombine(xps)
+            df  = combineAllListsIntoPandasDataframe(lss)
             
         if mode == 1:
             self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
@@ -1308,25 +1338,8 @@ stop_loss //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div
 time //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[3]/div/span
 open //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-row<space>{0}"]/div[3]
 gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-row<space>{0}"]/div[4]""".format(username)
-            xps = xps.split('\n')
-            for i in xrange(len(xps)):
-                iss = xps[i].split(' ')
-                iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
-                #print iss
-                try:
-                    lss.append(self.find_elements_by_xpath_return_list(iss[1], iss[0]))
-                except:
-                    ''
-            
-            # combine all into a dataframe
-            #print lss
-            df = None
-            try:
-                df = p.DataFrame(range(len(lss[0])))
-                for i in lss:
-                    df[i.columns[0]] = i
-            except TypeError, e:
-                print e
+            lss = xpathsSplitAndCombine(xps)
+            df  = combineAllListsIntoPandasDataframe(lss)
                 
         # cleanup tables
         for i in range(len(df.ix[:,0])):
