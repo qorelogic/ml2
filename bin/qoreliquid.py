@@ -1315,7 +1315,7 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
 
         if mode == 2:
             
-            #self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
+            self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
             
             lss = []
 
