@@ -1395,26 +1395,42 @@ gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-
                 #print emi
                 target['pair'] = emi['pair']
                 target['bias'] = emi['bias']
-                target['take profit'] = emi['take profit']
-                target['stop loss'] = emi['stop loss']
-                target['amount'] = emi['stop loss']
+                target['take_profit'] = emi['take_profit']
+                target['stop_loss'] = emi['stop_loss']
+                target['amount'] = emi['amount']
                 print target
                 print
         if type(username) == type(''):
+            #print username
+            #for i in em:
+            #    print i
+            emi = p.DataFrame(em[username])
+            #print emi
             try:
-                emi = p.DataFrame(em[username])
-                #print emi
                 target['pair'] = emi['pair']
-                target['bias'] = emi['bias']
-                target['take profit'] = emi['take profit']
-                target['stop loss'] = emi['stop loss']
-                target['amount'] = emi['stop loss']
-                return target
             except KeyError, e:
-                print 'No username {0} found.'.format(e)
-
-
-
+                print e
+            try:
+                target['bias'] = emi['bias']
+            except KeyError, e:
+                print e
+            try:
+                target['take_profit'] = emi['take_profit']
+            except KeyError, e:
+                print e
+            try:
+                target['stop_loss'] = emi['stop_loss']
+            except KeyError, e:
+                print e
+            try:
+                target['amount'] = emi['amount']
+            except KeyError, e:
+                print e
+            return target
+            #except KeyError, e:
+            #    #print 'No username {0} found.'.format(username)
+            #    print e
+            #    ''
 
 class Bancor:
     def getBancorYear(self, fname):    
