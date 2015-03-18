@@ -1154,7 +1154,10 @@ class Etoro():
         except:
             return False
     
-    def etoroLogin(self, username, passwd):
+    def etoroLogin(self):
+        co = p.read_csv('config.csv', header=None)
+        username = co.ix[3,1]
+        passwd = co.ix[3,2]
         self.check()
         try:
             # find element in loggedout template
@@ -1166,31 +1169,29 @@ class Etoro():
                 # find element in loggedin template        
                 python_link = self.driver.find_elements_by_xpath('//span[@class="ob-crown-user-name ob-drop-icon"]')[0]
                 #python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div[1]/span')[0]
-                #print 3
+            #    print 3
             except IndexError, f:
-                #print 4
+            #    print 4
                 self.driver.get('https://openbook.etoro.com/manapana/portfolio/open-trades/')
-            try:
-                #print 5
-                python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
-                python_link.click()
-                
-                # Enter some text!
-                text_area = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/input[1]')[0]
-                print text_area
-                text_area.send_keys(username)
-                
-                text_area = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/input[2]')[0]
-                print text_area
-                text_area.send_keys(passwd)
-                
-                # Submit the form!
-                submit_button = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/div[1]/div/input')[0]
-                #submit_button = driver.find_element_by_name('submit')
-                submit_button.click()
-            except:
-                #print 6
-                ''
+        try:
+            #print 5
+            python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
+            python_link.click()
+            
+            # Enter some text!
+            text_area = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/input[1]')[0]
+            text_area.send_keys(username)
+            
+            text_area = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/input[2]')[0]
+            text_area.send_keys(passwd)
+            
+            # Submit the form!
+            submit_button = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/div[1]/div/input')[0]
+            #submit_button = driver.find_element_by_name('submit')
+            submit_button.click()
+        except:
+            #print 6
+            ''
         #print 7
         
     def quit(self):
@@ -1262,31 +1263,35 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
             #self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
             
             lss = []
-            
-            xps = """
-pair //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/a
+
+            xps = """pair //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/a
 bias //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/strong
-amount //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[3]
+amount //*[contains(@class,<space>"user-table-cell<space>uttc-3")]
 take_profit //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/span[2]
 stop_loss //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/span[1]
 time //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[3]/div/span
 username //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[2]/a
-open //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[4]
-netprofit //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[5]
-gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[6]"""
+open //*[contains(@class,<space>"user-table-cell<space>uttc-4")]
+netprofit //*[contains(@class,<space>"user-table-cell<space>uttc-5")]
+gain //*[contains(@class,<space>"user-table-cell<space>uttc-5")]"""
             xps = xps.split('\n')
             for i in xrange(len(xps)):
                 iss = xps[i].split(' ')
-                #print iss
-                #try:
-                lss.append(self.find_elements_by_xpath_return_list(iss[1], iss[0]))
-                #except:
-                #    ''
+                iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
+                print iss
+                try:
+                    lss.append(self.find_elements_by_xpath_return_list(iss[1], iss[0]))
+                except IndexError, e:
+                    print e
             
             # combine all into a dataframe
+            #print lss
             df = p.DataFrame(range(len(lss[0])))
             for i in lss:
-                df[i.columns[0]] = i
+                try:
+                    df[i.columns[0]] = i
+                except AttributeError, e:
+                    print "{0}: {1}".format(i, e)
             
             # remove the extra header
             df = df.ix[1:,:]
@@ -1424,6 +1429,18 @@ gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-
                 print e
             try:
                 target['amount'] = emi['amount']
+            except KeyError, e:
+                print e
+            try:
+                target['open'] = emi['open']
+            except KeyError, e:
+                print e
+            try:
+                target['gain'] = emi['gain']
+            except KeyError, e:
+                print e
+            try:
+                target['username'] = emi['username']
             except KeyError, e:
                 print e
             return target
