@@ -1180,6 +1180,13 @@ import pandas as p
 
 class Etoro():
     def __init__(self):
+        self.driver = None        
+        self.fname_trader_positions = 'etoro-trader-positions.json'            
+        
+    def start(self):
+        """
+        checks whether the browser is running, returns boolean
+        """
         # iPhone
         #driver = webdriver.Remote(browser_name="iphone", command_executor='http://172.24.101.36:3001/hub')
         # Android
@@ -1191,12 +1198,78 @@ class Etoro():
         
         self.driver = driver
         
+    def isLoggedIn(self):
+        from selenium.common.exceptions import NoSuchElementException
+        try:
+            et.driver.find_element_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')
+            return False
+        except NoSuchElementException, e:
+            return True
+            #print e
+        except:
+            return False
+    
+    def etoroLogin(self, username, passwd):
+        self.check()
+        try:
+            # find element in loggedout template
+            python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
+            #print 1
+        except IndexError, e:
+            #print 2
+            try:
+                # find element in loggedin template        
+                python_link = self.driver.find_elements_by_xpath('//span[@class="ob-crown-user-name ob-drop-icon"]')[0]
+                #python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div[1]/span')[0]
+                #print 3
+            except IndexError, f:
+                #print 4
+                self.driver.get('https://openbook.etoro.com/manapana/portfolio/open-trades/')
+            try:
+                #print 5
+                python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
+                python_link.click()
+                
+                # Enter some text!
+                text_area = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/input[1]')[0]
+                print text_area
+                text_area.send_keys(username)
+                
+                text_area = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/input[2]')[0]
+                print text_area
+                text_area.send_keys(passwd)
+                
+                # Submit the form!
+                submit_button = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/div[1]/div/input')[0]
+                #submit_button = driver.find_element_by_name('submit')
+                submit_button.click()
+            except:
+                #print 6
+                ''
+        #print 7
+        
+    def quit(self):
+        # Close the browser!
+        try:
+            self.driver.quit()
+            self.driver = None
+            
+        except:
+            self.driver = None
+        if self.driver == None:
+            return True
+        else:
+            return False
+    
     def find_elements_by_xpath_return_list(self, xp, column):
         els = []
         for i in self.driver.find_elements_by_xpath(xp):
             #print i.text
             els.append(i.text)
-        return p.DataFrame(els, columns=[column])
+        try:
+            return p.DataFrame(els, columns=[column])
+        except:
+            ''
     
     def getEtoroDiscoverPeople(self, driver=None):
         if driver != None:
@@ -1223,40 +1296,180 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
             df[i.columns[0]] = i
         return df
     
-    def getEtoroTraderPositions(self, username):
+    def check(self):        
+        if type(self.driver) == type(None): 
+            self.start()
+            return True
+        else:
+            return True
         
-        self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
-        
-        lss = []
-        
-        # currency pair
-        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/a'
-        lss.append(self.find_elements_by_xpath_return_list(xp, 'pair'))
-        
-        # stop loss
-        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/div/span[1]'
-        lss.append(self.find_elements_by_xpath_return_list(xp, 'stop loss'))
-        
-        # take profit
-        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/div/span[2]'
-        lss.append(self.find_elements_by_xpath_return_list(xp, 'take profit'))
-        
-        # time (since opening trade)
-        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[3]/div/span'
-        lss.append(self.find_elements_by_xpath_return_list(xp, 'time'))
-        
-        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-row {0}"]/div[3]'.format(username)
-        lss.append(self.find_elements_by_xpath_return_list(xp, 'open'))
-        
-        xp = '//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-row {0}"]/div[4]'.format(username)
-        lss.append(self.find_elements_by_xpath_return_list(xp, 'gain'))
-        
-        # combine all into a dataframe
-        df = p.DataFrame(range(len(lss[0])))
-        for i in lss:
-            df[i.columns[0]] = i
+    def getEtoroTraderPositions(self, username, save=True, mode=1):
+        """
+        mode= 1 or 2
+        mode=1 OpenBook mode, able to obtain position trade data from all traders 
+               within the OpenBook system. Does not include trade size (amount)
+        mode=2 Copy trader mode, as mode=1 with the addition of trade size (amount)
+        """        
+        self.check()
+
+        if mode == 2:
+            
+            #self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
+            
+            lss = []
+            
+            xps = """
+pair //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/a
+bias //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/strong
+amount //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[3]
+take_profit //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/span[2]
+stop_loss //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/span[1]
+time //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[3]/div/span
+username //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[2]/a
+open //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[4]
+netprofit //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[5]
+gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[6]"""
+            xps = xps.split('\n')
+            for i in xrange(len(xps)):
+                iss = xps[i].split(' ')
+                #print iss
+                #try:
+                lss.append(self.find_elements_by_xpath_return_list(iss[1], iss[0]))
+                #except:
+                #    ''
+            
+            # combine all into a dataframe
+            df = p.DataFrame(range(len(lss[0])))
+            for i in lss:
+                df[i.columns[0]] = i
+            
+            # remove the extra header
+            df = df.ix[1:,:]
+            
+        if mode == 1:
+            self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
+            
+            lss = []
+
+            xps = """pair //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/a
+bias //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/strong
+take_profit //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/div/span[2]
+stop_loss //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/div/span[1]
+time //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[3]/div/span
+open //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-row<space>{0}"]/div[3]
+gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-row<space>{0}"]/div[4]""".format(username)
+            xps = xps.split('\n')
+            for i in xrange(len(xps)):
+                iss = xps[i].split(' ')
+                iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
+                #print iss
+                try:
+                    lss.append(self.find_elements_by_xpath_return_list(iss[1], iss[0]))
+                except:
+                    ''
+            
+            # combine all into a dataframe
+            #print lss
+            df = None
+            try:
+                df = p.DataFrame(range(len(lss[0])))
+                for i in lss:
+                    df[i.columns[0]] = i
+            except TypeError, e:
+                print e
+                
+        # cleanup tables
+        for i in range(len(df.ix[:,0])):
+            try:
+                col = 'take_profit'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
+            except:
+                ''
+            try:
+                col = 'stop_loss'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
+            except:
+                ''
+            try:
+                col = 'amount'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
+            except:
+                ''
+            try:
+                col = 'netprofit'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
+            except:
+                ''
+            try:
+                col = 'gain'; df.ix[i,col] = re.match(re.compile(r'(-?[\d\.]+).*'), df.ix[i,col]).groups()[0]
+            except:
+                ''
+            
+        # remove the extra table column
+        df = df.ix[:,list(df.columns[1:])]            
+            
+        if save == True:
+            try:
+                allPositions2 = p.read_json(self.fname_trader_positions)
+                #print allPositions2
+            except ValueError, e:
+                allPositions2 = p.DataFrame()
+                allPositions2.to_json(self.fname_trader_positions)
+                #print allPositions2
+                #print e
+                
+            fp = open(self.fname_trader_positions, 'r')
+            allPositions2 = j.loads(fp.read())
+            fp.close()
+            
+            #print allPositions2
+            #print
+            
+            positions = df            
+            #print positions
+            #print positions.to_dict()
+            allPositions2[username] = positions.to_dict()
+            #allPositions2.to_json(self.fname_trader_positions)
+            allPositions2 = convertDictKeysToString(allPositions2)
+            #print j.dumps(allPositions2)
+            
+            fp = open(self.fname_trader_positions, 'w')
+            fp.write(j.dumps(allPositions2))
+            fp.close()        
+            
         return df
         
+    # get target portfolio from etoro user
+    def getTargetPortfolio(self, username=None):
+        fname = self.fname_trader_positions
+        fp = open(fname, 'r')
+        em = fp.read()
+        em = j.loads(em)
+        #for i in em:
+        #    print p.DataFrame(em[i])
+        target = p.DataFrame([])
+        if username == None:
+            for i in em:
+                emi = p.DataFrame(em[i])
+                #print emi
+                target['pair'] = emi['pair']
+                target['bias'] = emi['bias']
+                target['take profit'] = emi['take profit']
+                target['stop loss'] = emi['stop loss']
+                target['amount'] = emi['stop loss']
+                print target
+                print
+        if type(username) == type(''):
+            try:
+                emi = p.DataFrame(em[username])
+                #print emi
+                target['pair'] = emi['pair']
+                target['bias'] = emi['bias']
+                target['take profit'] = emi['take profit']
+                target['stop loss'] = emi['stop loss']
+                target['amount'] = emi['stop loss']
+                return target
+            except KeyError, e:
+                print 'No username {0} found.'.format(e)
+
+
+
 
 class Bancor:
     def getBancorYear(self, fname):    
@@ -1335,7 +1548,7 @@ class Bancor:
         print '==========================================================================================='
         print '==========================================================================================='
 
-        
+    
     
 if __name__ == "__main__":
     print 'stub'
