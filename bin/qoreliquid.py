@@ -1121,6 +1121,7 @@ class ShapeShift(CryptoCoinBaseClass):
 # Import the Selenium 2 namespace (aka "webdriver")
 from selenium import webdriver
 from selenium.selenium import selenium
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 import pandas as p
 
 class Etoro():
@@ -1128,6 +1129,19 @@ class Etoro():
         self.driver = None        
         self.fname_trader_positions = 'etoro-trader-positions.json'            
         
+    def disableImages(self):
+        ## get the Firefox profile object
+        firefoxProfile = FirefoxProfile()
+        ## Disable CSS
+        #firefoxProfile.set_preference('permissions.default.stylesheet', 2)
+        ## Disable images
+        firefoxProfile.set_preference('permissions.default.image', 2)
+        ## Disable Flash
+        firefoxProfile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')
+        ## Set the modified profile while creating the browser object 
+        #self.browserHandle = webdriver.Firefox(firefoxProfile)
+        return firefoxProfile
+
     def start(self):
         """
         checks whether the browser is running, returns boolean
@@ -1139,7 +1153,12 @@ class Etoro():
         # Google Chrome 
         #driver = webdriver.Chrome()
         # Firefox 
-        driver = webdriver.Firefox()
+        #FirefoxProfile fp = new FirefoxProfile();
+        #fp.setPreference("webdriver.load.strategy", "unstable");
+        #WebDriver driver = new FirefoxDriver(fp);
+        
+        driver = webdriver.Firefox(firefox_profile=self.disableImages())
+        #driver = webdriver.Firefox()
         
         self.driver = driver
         
@@ -1276,12 +1295,13 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
             for i in xrange(len(xps)):
                 iss = xps[i].split(' ')
                 iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
-                print iss
                 try:
                     ilss = self.find_elements_by_xpath_return_list(iss[1], iss[0])
-                    print len(ilss)
+                    print "{1} {0}".format(iss, len(ilss))
                     lss.append(ilss)
                 except IndexError, e:
+                    print e
+                except TypeError, e:
                     print e
             return lss
 
