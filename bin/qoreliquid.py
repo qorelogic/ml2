@@ -1157,8 +1157,8 @@ class Etoro():
         #fp.setPreference("webdriver.load.strategy", "unstable");
         #WebDriver driver = new FirefoxDriver(fp);
         
-        driver = webdriver.Firefox(firefox_profile=self.disableImages())
-        #driver = webdriver.Firefox()
+        #driver = webdriver.Firefox(firefox_profile=self.disableImages())
+        driver = webdriver.Firefox()
         
         self.driver = driver
         
@@ -1173,27 +1173,42 @@ class Etoro():
         except:
             return False
     
-    def etoroLogin(self):
+    def etoroLogout():
+        link = self.driver.find_elements_by_xpath('//*[contains(@class, "ob-crown-user-drop-logout-a")]')[0]
+        link.click()
+    
+    def etoroLogin(self, verbose=False):
+        """
+        flow:
+         logged in: 2, 3, 5, 6, 7
+         logged out: 1, 5, 7
+         logged in on remote page: 2, 4, 5, 6, 7
+         logged out on remote page: 2, 4, 5, 7
+        """
+        flow = []
         co = p.read_csv('config.csv', header=None)
         username = co.ix[3,1]
         passwd = co.ix[3,2]
+        print username
+        print passwd
         self.check()
         try:
             # find element in loggedout template
             python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
-            #print 1
+            if verbose == True: print 1; flow.append(1);
         except IndexError, e:
-            #print 2
+            if verbose == True: print 2; flow.append(2);
             try:
                 # find element in loggedin template        
-                python_link = self.driver.find_elements_by_xpath('//span[@class="ob-crown-user-name ob-drop-icon"]')[0]
+                #python_link = self.driver.find_elements_by_xpath('//span[@class="ob-crown-user-name ob-drop-icon"]')[0]
+                self.driver.find_elements_by_xpath('//*[contains(@class, "ob-crown-user-drop-logout-a")]')[0]
                 #python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div[1]/span')[0]
-            #    print 3
+                if verbose == True: print 3; flow.append(3);
             except IndexError, f:
-            #    print 4
+                if verbose == True: print 4; flow.append(4);
                 self.driver.get('https://openbook.etoro.com/manapana/portfolio/open-trades/')
         try:
-            #print 5
+            if verbose == True: print 5; flow.append(5);
             python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
             python_link.click()
             
@@ -1209,9 +1224,10 @@ class Etoro():
             #submit_button = driver.find_element_by_name('submit')
             submit_button.click()
         except:
-            #print 6
+            if verbose == True: print 6; flow.append(6);
             ''
-        #print 7
+        if verbose == True: print 7; flow.append(7);
+        return flow
         
     def quit(self):
         # Close the browser!
@@ -1328,7 +1344,7 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
             return df
         
         if mode == 2:
-            
+            self.etoroLogin(verbose=True)
             self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
             
             lss = []
