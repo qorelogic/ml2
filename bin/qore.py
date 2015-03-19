@@ -121,3 +121,49 @@ def convertDictKeysToString(dt, depth=2):
 #print alp
 
 #positions = et.getEtoroTraderPositions('noasnoas', )
+
+
+def prepTestDataFrame(df, verbose=0):
+    """Prepares a pandas DataFrame for the test suite. Converts the 2D matrix to a 1D vector
+returning a one-line python list that can be copy/pasted to the assertion line.
+
+Parameters:
+-----------
+df : a pandas DataFrame
+verbose : accepts int
+          Set the verbosity level to 0 or 1. This prints the assertion string to stdout
+           so that you can copy the assertion to a test file.
+               
+Examples:
+---------
+>>> df = p.DataFrame([['a','b','c'],['buy','sell','sell'],[1,2,3]], index=['pair', 'bias', 'amount']).transpose()
+>>> prepTestDataFrame(df, verbose=1)
+DataFrame=
+  pair  bias amount
+0    a   buy      1
+1    b  sell      2
+2    c  sell      3
+
+Copy assertion line and example DataFrame to a test file:
+assert prepTestDataFrame(df) == ['a', 'buy', 1, 'b', 'sell', 2, 'c', 'sell', 3]
+
+Pasting the following lines 
+to test_example.py:
+
+df = p.DataFrame([['a','b','c'],['buy','sell','sell'],[1,2,3]], index=['pair', 'bias', 'amount']).transpose()
+assert prepTestDataFrame(df) == ['a', 'buy', 1, 'b', 'sell', 2, 'c', 'sell', 3]
+"""
+    h = len(df.index)
+    w = len(df.columns)
+    forAssertion = list((df.get_values().reshape(1, h * w))[0])
+    
+    if verbose == 1:
+        print
+        print 'DataFrame='
+        print df
+        print
+        print 'Copy assertion line and example DataFrame to your test file:'
+        print "assert prepTestDataFrame(df) == {0}".format(forAssertion)
+    
+    return forAssertion
+

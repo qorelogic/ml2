@@ -305,6 +305,46 @@ class FinancialModel:
         res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
         print res
 
+def polarizePortfolio(df, fromCol, toCol, biasCol):
+    """Adds an extra polarization column that separates fromCol between positive and negative
+according to the status of the given bias column, the new values are placed ino toCol.
+
+Parameters
+----------
+df : pandas DataFrame
+fromCol : The originating column values to copy
+toCol : The column to paste values into. 
+        The values are converted to +ive or -ive (negative or positive) 
+        according to the bias value of the respective row.
+biasCol : The column to check for bias
+
+Example
+-------
+>>> df = p.DataFrame([['a','b','c'],['buy','sell','sell'],[1,2,3]], index=['pair', 'bias', 'amount']).transpose()
+>>> print df
+  pair  bias amount
+0    a   buy      1
+1    b  sell      2
+2    c  sell      3
+
+>>> print polarizePortfolio(df, 'amount', 'amountPol', 'bias')
+  pair  bias amount  amountPol
+0    a   buy      1          1
+1    b  sell      2         -2
+2    c  sell      3         -3
+
+
+Applications
+------------
+This function can be called to generate a polarized target portfolio.
+"""
+    for i in range(len(df[biasCol])):
+        if df.ix[i, biasCol].lower() == 'sell':
+            df.ix[i, toCol] = df.ix[i, fromCol] * -1
+        elif df.ix[i, biasCol].lower() == 'buy':
+            df.ix[i, toCol] = df.ix[i, fromCol] * 1
+    return df
+
 def normalizeme(dfr):
     return (dfr - n.mean(dfr))/n.std(dfr)
 
@@ -1291,6 +1331,7 @@ class ShapeShift(CryptoCoinBaseClass):
 # Import the Selenium 2 namespace (aka "webdriver")
 from selenium import webdriver
 from selenium.selenium import selenium
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 import pandas as p
 
 class Etoro():
@@ -1298,6 +1339,19 @@ class Etoro():
         self.driver = None        
         self.fname_trader_positions = 'etoro-trader-positions.json'            
         
+    def disableImages(self):
+        ## get the Firefox profile object
+        firefoxProfile = FirefoxProfile()
+        ## Disable CSS
+        #firefoxProfile.set_preference('permissions.default.stylesheet', 2)
+        ## Disable images
+        firefoxProfile.set_preference('permissions.default.image', 2)
+        ## Disable Flash
+        firefoxProfile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')
+        ## Set the modified profile while creating the browser object 
+        #self.browserHandle = webdriver.Firefox(firefoxProfile)
+        return firefoxProfile
+
     def start(self):
         """
         checks whether the browser is running, returns boolean
@@ -1309,6 +1363,11 @@ class Etoro():
         # Google Chrome 
         #driver = webdriver.Chrome()
         # Firefox 
+        #FirefoxProfile fp = new FirefoxProfile();
+        #fp.setPreference("webdriver.load.strategy", "unstable");
+        #WebDriver driver = new FirefoxDriver(fp);
+        
+        #driver = webdriver.Firefox(firefox_profile=self.disableImages())
         driver = webdriver.Firefox()
         
         self.driver = driver
@@ -1324,27 +1383,42 @@ class Etoro():
         except:
             return False
     
-    def etoroLogin(self):
+    def etoroLogout():
+        link = self.driver.find_elements_by_xpath('//*[contains(@class, "ob-crown-user-drop-logout-a")]')[0]
+        link.click()
+    
+    def etoroLogin(self, verbose=False):
+        """
+        flow:
+         logged in: 2, 3, 5, 6, 7
+         logged out: 1, 5, 7
+         logged in on remote page: 2, 4, 5, 6, 7
+         logged out on remote page: 2, 4, 5, 7
+        """
+        flow = []
         co = p.read_csv('config.csv', header=None)
         username = co.ix[3,1]
         passwd = co.ix[3,2]
+        print username
+        print passwd
         self.check()
         try:
             # find element in loggedout template
             python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
-            #print 1
+            if verbose == True: print 1; flow.append(1);
         except IndexError, e:
-            #print 2
+            if verbose == True: print 2; flow.append(2);
             try:
                 # find element in loggedin template        
-                python_link = self.driver.find_elements_by_xpath('//span[@class="ob-crown-user-name ob-drop-icon"]')[0]
+                #python_link = self.driver.find_elements_by_xpath('//span[@class="ob-crown-user-name ob-drop-icon"]')[0]
+                self.driver.find_elements_by_xpath('//*[contains(@class, "ob-crown-user-drop-logout-a")]')[0]
                 #python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div[1]/span')[0]
-            #    print 3
+                if verbose == True: print 3; flow.append(3);
             except IndexError, f:
-            #    print 4
+                if verbose == True: print 4; flow.append(4);
                 self.driver.get('https://openbook.etoro.com/manapana/portfolio/open-trades/')
         try:
-            #print 5
+            if verbose == True: print 5; flow.append(5);
             python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
             python_link.click()
             
@@ -1360,9 +1434,10 @@ class Etoro():
             #submit_button = driver.find_element_by_name('submit')
             submit_button.click()
         except:
-            #print 6
+            if verbose == True: print 6; flow.append(6);
             ''
-        #print 7
+        if verbose == True: print 7; flow.append(7);
+        return flow
         
     def quit(self):
         # Close the browser!
@@ -1428,8 +1503,58 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
         """        
         self.check()
 
+        def xpathsSplitAndCombine(xps):
+            """
+            xps = xps.split('\n')
+            for i in xrange(len(xps)):
+                iss = xps[i].split(' ')
+                iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
+                #print iss
+                try:
+                    ilss = self.find_elements_by_xpath_return_list(iss[1], iss[0])
+                    print len(ilss)
+                    lss.append(ilss)
+                except:
+                    ''
+            """
+            xps = xps.split('\n')
+            for i in xrange(len(xps)):
+                iss = xps[i].split(' ')
+                iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
+                try:
+                    ilss = self.find_elements_by_xpath_return_list(iss[1], iss[0])
+                    print "{1} {0}".format(iss, len(ilss))
+                    lss.append(ilss)
+                except IndexError, e:
+                    print e
+                except TypeError, e:
+                    print e
+            return lss
+
+        def combineAllListsIntoPandasDataframe(lss):
+            """
+            # combine all into a dataframe
+            #print lss
+            df = None
+            try:
+                df = p.DataFrame(range(len(lss[0])))
+                for i in lss:
+                    df[i.columns[0]] = i
+            except TypeError, e:
+                print e
+            """
+            # combine all lists into a dataframe
+            #print lss
+            df = p.DataFrame(range(len(lss[0])))
+            for i in lss:
+                try:
+                    df[i.columns[0]] = i
+                except AttributeError, e:
+                    print "{0}: {1}".format(i, e)
+            return df
+        
         if mode == 2:
-            
+            self.etoroLogin(verbose=True)
             self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
             
             lss = []
@@ -1444,27 +1569,8 @@ username //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[2]/a
 open //*[contains(@class,<space>"user-table-cell<space>uttc-4")]
 netprofit //*[contains(@class,<space>"user-table-cell<space>uttc-5")]
 gain //*[contains(@class,<space>"user-table-cell<space>uttc-5")]"""
-            xps = xps.split('\n')
-            for i in xrange(len(xps)):
-                iss = xps[i].split(' ')
-                iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
-                print iss
-                try:
-                    lss.append(self.find_elements_by_xpath_return_list(iss[1], iss[0]))
-                except IndexError, e:
-                    print e
-            
-            # combine all into a dataframe
-            #print lss
-            df = p.DataFrame(range(len(lss[0])))
-            for i in lss:
-                try:
-                    df[i.columns[0]] = i
-                except AttributeError, e:
-                    print "{0}: {1}".format(i, e)
-            
-            # remove the extra header
-            df = df.ix[1:,:]
+            lss = xpathsSplitAndCombine(xps)
+            df  = combineAllListsIntoPandasDataframe(lss)
             
         if mode == 1:
             self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
@@ -1478,25 +1584,8 @@ stop_loss //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div
 time //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[3]/div/span
 open //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-row<space>{0}"]/div[3]
 gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-row<space>{0}"]/div[4]""".format(username)
-            xps = xps.split('\n')
-            for i in xrange(len(xps)):
-                iss = xps[i].split(' ')
-                iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
-                #print iss
-                try:
-                    lss.append(self.find_elements_by_xpath_return_list(iss[1], iss[0]))
-                except:
-                    ''
-            
-            # combine all into a dataframe
-            #print lss
-            df = None
-            try:
-                df = p.DataFrame(range(len(lss[0])))
-                for i in lss:
-                    df[i.columns[0]] = i
-            except TypeError, e:
-                print e
+            lss = xpathsSplitAndCombine(xps)
+            df  = combineAllListsIntoPandasDataframe(lss)
                 
         # cleanup tables
         for i in range(len(df.ix[:,0])):
