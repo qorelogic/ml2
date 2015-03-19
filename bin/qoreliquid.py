@@ -135,6 +135,46 @@ class FinancialModel:
         res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
         print res
 
+def polarizePortfolio(df, fromCol, toCol, biasCol):
+    """Adds an extra polarization column that separates fromCol between positive and negative
+according to the status of the given bias column, the new values are placed ino toCol.
+
+Parameters
+----------
+df : pandas DataFrame
+fromCol : The originating column values to copy
+toCol : The column to paste values into. 
+        The values are converted to +ive or -ive (negative or positive) 
+        according to the bias value of the respective row.
+biasCol : The column to check for bias
+
+Example
+-------
+>>> df = p.DataFrame([['a','b','c'],['buy','sell','sell'],[1,2,3]], index=['pair', 'bias', 'amount']).transpose()
+>>> print df
+  pair  bias amount
+0    a   buy      1
+1    b  sell      2
+2    c  sell      3
+
+>>> print polarizePortfolio(df, 'amount', 'amountPol', 'bias')
+  pair  bias amount  amountPol
+0    a   buy      1          1
+1    b  sell      2         -2
+2    c  sell      3         -3
+
+
+Applications
+------------
+This function can be called to generate a polarized target portfolio.
+"""
+    for i in range(len(df[biasCol])):
+        if df.ix[i, biasCol].lower() == 'sell':
+            df.ix[i, toCol] = df.ix[i, fromCol] * -1
+        elif df.ix[i, biasCol].lower() == 'buy':
+            df.ix[i, toCol] = df.ix[i, fromCol] * 1
+    return df
+
 def normalizeme(dfr):
     return (dfr - n.mean(dfr))/n.std(dfr)
 

@@ -46,3 +46,7 @@ def test_answer():
     assertDatasetEqual(normalizeme2([1423,2342,2343,23441,1235,1236,7123,8123,913]), [1.0, 1.6458186929023191, 1.646521433591005, 16.472944483485595, 0.86788475052705549, 0.86858749121574141, 5.0056219255094874, 5.7083626141953623, 0.64160224877020378])
 
     assert searchQuandl('non farm') == 20
+    
+    # test etoro
+    df = p.DataFrame([['a','b','c'],['buy','sell','sell'],[1,2,3]], index=['pair', 'bias', 'amount']).transpose()
+    assert prepTestDataFrame(polarizePortfolio(df, 'amount', 'amountPol', 'bias')) == ['a', 'buy', 1, 1.0, 'b', 'sell', 2, -2.0, 'c', 'sell', 3, -3.0]
