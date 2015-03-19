@@ -17,6 +17,8 @@ import StringIO as sio
 import threading,time
 import itertools as it
 
+import oandapy
+
 def toCurrency(n):
     return '%2d' % n
 
@@ -57,6 +59,23 @@ Attributes:
 
 """
 class QoreQuant():
+
+    def __init__(self):
+
+        co = p.read_csv('config.csv', header=None)
+        
+        env1=co.ix[0,1]
+        access_token1=co.ix[0,2]
+        self.oanda1 = oandapy.API(environment=env1, access_token=access_token1)
+        
+        env2=co.ix[1,1]
+        access_token2=co.ix[1,2]
+        self.oanda2 = oandapy.API(environment=env2, access_token=access_token2)
+        
+        self.accid = self.oanda1.get_accounts()['accounts'][6]['accountId']
+        self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
+        print 'using account: {0}'.format(self.accid)
+        
     """
     targetPortfolio = [['AAPL', 'BAC', 'BOA', 'DAL'], [1032, 123, 98, 9812]]
     livePortfolio = [['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]]
@@ -80,6 +99,102 @@ class QoreQuant():
         else:
             return tt    
     #assert toTrade([['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]], [['AAPL', 'BAC', 'BOA', 'DAL'], [1032, 123, 98, 9812]], returnList=True) == [['AAPL', 'BAC', 'BOA', 'DAL'], [102, -107, -11, 7682]]
+
+    def prepTargetPortfolio(self):
+        """
+        test
+        """
+        et = Etoro()
+        tarp = et.getTargetPortfolio('manapana')
+        # source: http://pandas.pydata.org/pandas-docs/dev/indexing.html#the-where-method-and-masking
+        tarp = tarp.query('username == "noasnoas"')
+        #print tarp
+        tarp2 = [list(n.array(tarp.ix[:,'pair'].get_values(), dtype=str)), list(n.array(tarp.ix[:,'amount'].get_values(), dtype=str))]
+        #print tarp
+        #tarp = p.DataFrame(tarp).transpose()
+        
+        balance = 100
+        
+        # oanda account info
+        self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
+        self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
+        self.balance1 = self.oanda1.get_account(self.accid1)['balance']
+        self.balance2 = self.oanda2.get_account(self.accid2)['balance']
+        
+        for i in range(0,len(tarp.ix[:,1])):
+            tarp.ix[i,'amount'] = float(str(tarp.ix[i,'amount']).replace('$', ''))
+            #tarp.ix[i,2] = float(str(tarp.ix[i,1])) / balance
+            tarp.ix[i,'units0'] = float(str(tarp.ix[i,'amount'])) * 25
+            tarp.ix[i,'instrument'] = tarp.ix[i,'pair'].replace('/', '_')
+            tarp.ix[i,'risk0'] = float(str(tarp.ix[i,'amount'])) * 25 / balance * 100
+            tarp.ix[i,'risk1'] = ceil(float(str(tarp.ix[i,'risk0'])) / 100 * self.balance1)
+            tarp.ix[i,'risk2'] = ceil(float(str(tarp.ix[i,'risk0'])) / 100 * self.balance2)
+        #print tarp
+        #print
+        targetPortfolio1 = tarp.ix[:,['instrument','bias','risk1','take_profit','stop_loss']]
+        targetPortfolio2 = tarp.ix[:,['instrument','bias','risk2','take_profit','stop_loss']]
+        
+        #print "Account: {0}".format(accid1)
+        #print targetPortfolio1
+        #print
+        #print "Account: {0}".format(accid2)
+        #print targetPortfolio2
+        
+        return targetPortfolio2
+    
+    
+    def generateTargetPortfolio(self, targetPortfolio2):
+        #print "Account: {0}".format(accid1); print targetPortfolio1; print
+        print "Account: {0}".format(self.accid2); #print targetPortfolio2; print
+        targetPortfolio2.ix[:,'take_profit'] = n.array(targetPortfolio2.ix[:,'take_profit'], dtype=float)
+        targetPortfolio2.ix[:,'stop_loss']   = n.array(targetPortfolio2.ix[:,'stop_loss'],   dtype=float)
+        targetPortfolio2 = polarizePortfolio(targetPortfolio2, 'risk2', 'amount', 'bias')
+        
+        # group positions by aggregate pairs
+        # 
+        # source: http://pandas.pydata.org/pandas-docs/dev/reshaping.html
+        #print df.stack() #.groupby(level=1, axis=2)
+        # source: http://bconnelly.net/2013/10/summarizing-data-in-python-with-pandas/
+        df = targetPortfolio2.groupby('instrument')
+        d0 = df['amount'].aggregate(n.sum)
+        d1 = df['take_profit'].aggregate(n.mean)
+        d2 = df['stop_loss'].aggregate(n.mean)
+        print
+        #print df.describe()
+        df = p.DataFrame([d0, d1, d2]).transpose()
+        return p.DataFrame(df)
+        
+    def sendToMarket(df):
+        pp0 = list(targetPortfolio2.ix[:,'instrument'].get_values())
+        pp1 = list(targetPortfolio2.ix[:,'amount'].get_values())
+        #print pp0;
+        #print pp1; print
+        
+        print df
+        #print df.index
+        print
+        
+        for i in df.index:
+            dfi = df.ix[i,:]
+            instrument = i
+            amount     = int(ceil(n.abs(dfi['amount'])))
+            if dfi['amount'] > 0:
+                side = 'buy'
+            elif dfi['amount'] < 0:
+                side = 'sell'
+            
+            # send order to market
+            #"""
+            #instrument:* Required Instrument to open the order on.
+            #units: Required The number of units to open order for.
+            #side: Required Direction of the order, either 'buy' or 'sell'.
+            #type: Required The type of the order 'limit', 'stop', 'marketIfTouched' or 'market'.
+            #expiry: Required If order type is 'limit', 'stop', or 'marketIfTouched'. The order expiration time in UTC. The value specified must be in a valid datetime format.
+            #price: Required If order type is 'limit', 'stop', or 
+            #"""
+            print "order = oanda1.create_order({0}, type='market', instrument='{1}', side='{2}', units='{3}')".format(self.accid2, instrument, side, amount)
+            #order = self.oanda2.create_order(self.accid2, type='market', instrument=instrument, side=side, units=amount)
+        print
 
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
