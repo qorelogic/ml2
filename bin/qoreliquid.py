@@ -76,6 +76,21 @@ class QoreQuant():
         self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
         print 'using account: {0}'.format(self.accid)
         
+        #from selenium import webdriver
+        #driver = webdriver.Chrome()
+        self.et = Etoro()
+        
+    def synchonizeTrades(self):
+        # send to market works
+        print self.et.getEtoroTraderPositions('manapana', save=True, mode=2)
+        #%prun print self.et.getEtoroTraderPositions('manapana', save=True, mode=2)
+        targetPortfolio2 = self.prepTargetPortfolio()
+        df = self.generateTargetPortfolio(targetPortfolio2)
+        df0 = self.prepSendToMarket(df)
+        self.sendToMarket(df0, df)
+        #self.et.etoroLogout()
+        self.et.quit()
+    
     """
     targetPortfolio = [['AAPL', 'BAC', 'BOA', 'DAL'], [1032, 123, 98, 9812]]
     livePortfolio = [['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]]
@@ -104,8 +119,7 @@ class QoreQuant():
         """
         test
         """
-        et = Etoro()
-        tarp = et.getTargetPortfolio('manapana')
+        tarp = self.et.getTargetPortfolio('manapana')
         # source: http://pandas.pydata.org/pandas-docs/dev/indexing.html#the-where-method-and-masking
         #tarp = tarp.query('username == "noasnoas"')
         #print tarp
@@ -134,17 +148,17 @@ class QoreQuant():
         targetPortfolio1 = tarp.ix[:,['instrument','bias','risk1','take_profit','stop_loss']]
         targetPortfolio2 = tarp.ix[:,['instrument','bias','risk2','take_profit','stop_loss']]
         
-        #print "Account: {0}".format(accid1)
+        #print "Account: {0}".format(self.accid1)
         #print targetPortfolio1
         #print
-        #print "Account: {0}".format(accid2)
+        #print "Account: {0}".format(self.accid2)
         #print targetPortfolio2
         
         return targetPortfolio2
     
     
     def generateTargetPortfolio(self, targetPortfolio2):
-        #print "Account: {0}".format(accid1); print targetPortfolio1; print
+        #print "Account: {0}".format(self.accid1); print targetPortfolio1; print
         print "Account: {0}".format(self.accid2); #print targetPortfolio2; print
         targetPortfolio2.ix[:,'take_profit'] = n.array(targetPortfolio2.ix[:,'take_profit'], dtype=float)
         targetPortfolio2.ix[:,'stop_loss']   = n.array(targetPortfolio2.ix[:,'stop_loss'],   dtype=float)
@@ -164,15 +178,35 @@ class QoreQuant():
         df = p.DataFrame([d0, d1, d2]).transpose()
         return p.DataFrame(df)
         
-    def sendToMarket(self, df):
+
+    def prepSendToMarket(self, df):
+        df2 = self.oanda2.get_positions(self.accid2)
+        df2 = p.DataFrame(df2['positions']).sort('instrument', ascending=True).ix[:,['instrument','side','units']]
+        polarizePortfolio(df2, 'units', 'amount', 'side')
+        
+        df2 = df2.set_index('instrument').ix[:,['amount']] 
+        df2 = df2.convert_objects(convert_numeric=True)
+        df1 = df.ix[:,['amount']]
+        #print df1
+        #print
+        #print df2
+        #print type(df)
+        #print type(df2)
+        df0 =  df1 - df2
+        #print df0
+        #print df
+        df0 = df0.combine_first(df)
+        return df0
+
+    def sendToMarket(self, df, dryrun=True):
         #pp0 = list(df.ix[:,'instrument'].get_values())
         #pp1 = list(df.ix[:,'amount'].get_values())
         #print pp0;
         #print pp1; print
         
-        print df
+        #print df
         #print df.index
-        print
+        #print
         
         for i in df.index:
             dfi = df.ix[i,:]
@@ -192,8 +226,12 @@ class QoreQuant():
             #expiry: Required If order type is 'limit', 'stop', or 'marketIfTouched'. The order expiration time in UTC. The value specified must be in a valid datetime format.
             #price: Required If order type is 'limit', 'stop', or 
             #"""
-            print "order = oanda1.create_order({0}, type='market', instrument='{1}', side='{2}', units='{3}')".format(self.accid2, instrument, side, amount)
-            order = self.oanda2.create_order(self.accid2, type='market', instrument=instrument, side=side, units=amount)
+            if amount > 0:
+                print "order = self.oanda2.create_order({0}, type='market', instrument='{1}', side='{2}', units='{3}')".format(self.accid2, instrument, side, amount)
+                if dryrun == False:
+                    order = self.oanda2.create_order(self.accid2, type='market', instrument=instrument, side=side, units=amount)
+            else:
+                print 'Nothing to trade on {0}.'.format(i)
         print
 
 class FinancialModel:
@@ -1337,7 +1375,7 @@ import pandas as p
 class Etoro():
     def __init__(self):
         self.driver = None        
-        self.fname_trader_positions = 'etoro-trader-positions.json'            
+        self.fname_trader_positions = 'etoro-trader-positions.json'
         
     def disableImages(self):
         ## get the Firefox profile object
@@ -1375,7 +1413,7 @@ class Etoro():
     def isLoggedIn(self):
         from selenium.common.exceptions import NoSuchElementException
         try:
-            et.driver.find_element_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')
+            self.et.driver.find_element_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')
             return False
         except NoSuchElementException, e:
             return True
@@ -1388,13 +1426,6 @@ class Etoro():
         link.click()
     
     def etoroLogin(self, verbose=False):
-        """
-        flow:
-         logged in: 2, 3, 5, 6, 7
-         logged out: 1, 5, 7
-         logged in on remote page: 2, 4, 5, 6, 7
-         logged out on remote page: 2, 4, 5, 7
-        """
         flow = []
         co = p.read_csv('config.csv', header=None)
         username = co.ix[3,1]
@@ -1437,6 +1468,22 @@ class Etoro():
             if verbose == True: print 6; flow.append(6);
             ''
         if verbose == True: print 7; flow.append(7);
+            
+        if verbose == True: print 7; print flow
+        
+        from test_qoreliquid import assertSequenceEqual
+        """
+        flow:
+        """
+        try: assertSequenceEqual(flow, [2, 3, 5, 6, 7]) #logged in
+        except AssertionError, e: ''#print e
+        try: assertSequenceEqual(flow, [1,5,7])         #logged out
+        except AssertionError, e: ''#print e
+        try: assertSequenceEqual(flow, [2, 4, 5, 6, 7]) #logged in on remote page
+        except AssertionError, e: ''#print e
+        try: assertSequenceEqual(flow, [2, 4, 5, 7])    #logged in on remote page
+        except AssertionError, e: ''#print e
+            
         return flow
         
     def quit(self):
@@ -1461,6 +1508,9 @@ class Etoro():
             return p.DataFrame(els, columns=[column])
         except:
             ''
+    
+    # todo:
+    #https://openbook.etoro.com/markets/stocks/
     
     def getEtoroDiscoverPeople(self, driver=None):
         self.check()
