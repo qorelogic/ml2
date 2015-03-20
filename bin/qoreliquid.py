@@ -107,7 +107,7 @@ class QoreQuant():
         et = Etoro()
         tarp = et.getTargetPortfolio('manapana')
         # source: http://pandas.pydata.org/pandas-docs/dev/indexing.html#the-where-method-and-masking
-        tarp = tarp.query('username == "noasnoas"')
+        #tarp = tarp.query('username == "noasnoas"')
         #print tarp
         tarp2 = [list(n.array(tarp.ix[:,'pair'].get_values(), dtype=str)), list(n.array(tarp.ix[:,'amount'].get_values(), dtype=str))]
         #print tarp
@@ -164,9 +164,9 @@ class QoreQuant():
         df = p.DataFrame([d0, d1, d2]).transpose()
         return p.DataFrame(df)
         
-    def sendToMarket(df):
-        pp0 = list(targetPortfolio2.ix[:,'instrument'].get_values())
-        pp1 = list(targetPortfolio2.ix[:,'amount'].get_values())
+    def sendToMarket(self, df):
+        #pp0 = list(df.ix[:,'instrument'].get_values())
+        #pp1 = list(df.ix[:,'amount'].get_values())
         #print pp0;
         #print pp1; print
         
@@ -193,7 +193,7 @@ class QoreQuant():
             #price: Required If order type is 'limit', 'stop', or 
             #"""
             print "order = oanda1.create_order({0}, type='market', instrument='{1}', side='{2}', units='{3}')".format(self.accid2, instrument, side, amount)
-            #order = self.oanda2.create_order(self.accid2, type='market', instrument=instrument, side=side, units=amount)
+            order = self.oanda2.create_order(self.accid2, type='market', instrument=instrument, side=side, units=amount)
         print
 
 class FinancialModel:
@@ -1463,6 +1463,7 @@ class Etoro():
             ''
     
     def getEtoroDiscoverPeople(self, driver=None):
+        self.check()
         if driver != None:
             self.driver = driver
         lss = []
