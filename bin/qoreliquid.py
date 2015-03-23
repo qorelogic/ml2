@@ -108,14 +108,17 @@ class QoreQuant():
         #driver = webdriver.Chrome()
         self.et = Etoro()
         
-    def synchonizeTrades(self):
+    def synchonizeTrades(self, dryrun=True):
         # send to market works
-        print self.et.getEtoroTraderPositions('manapana', save=True, mode=2)
-        #%prun print self.et.getEtoroTraderPositions('manapana', save=True, mode=2)
+        username = 'manapana'
+        save = True
+        mode = 2
+        try: print self.et.getEtoroTraderPositions(username, save=save, mode=mode)
+        except: print self.et.getEtoroTraderPositions('manapana', save=save, mode=mode)
         targetPortfolio2 = self.prepTargetPortfolio()
         df = self.generateTargetPortfolio(targetPortfolio2)
         df0 = self.prepSendToMarket(df)
-        self.sendToMarket(df0, dryrun=False)
+        self.sendToMarket(df0, dryrun=dryrun)
         #self.et.etoroLogout()
         self.et.quit()
     
@@ -171,7 +174,7 @@ class QoreQuant():
             tarp.ix[i,'risk0'] = float(str(tarp.ix[i,'amount'])) * 25 / balance * 100
             tarp.ix[i,'risk1'] = ceil(float(str(tarp.ix[i,'risk0'])) / 100 * self.balance1)
             tarp.ix[i,'risk2'] = ceil(float(str(tarp.ix[i,'risk0'])) / 100 * self.balance2)
-        #print tarp
+        print tarp
         #print
         targetPortfolio1 = tarp.ix[:,['instrument','bias','risk1','take_profit','stop_loss']]
         targetPortfolio2 = tarp.ix[:,['instrument','bias','risk2','take_profit','stop_loss']]
@@ -1621,9 +1624,6 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
                     lss.append(ilss)
                 except IndexError, e:
                     print "e1:"
-                    print e
-                except TypeError, e:
-                    print "e2:"
                     print e
             return lss
 
