@@ -1471,20 +1471,20 @@ class Etoro():
         try:
             # find element in loggedout template
             python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
-            if verbose == True: print 1; flow.append(1);
+            if verbose == True: flow.append(1);
         except IndexError, e:
-            if verbose == True: print 2; flow.append(2);
+            if verbose == True: flow.append(2);
             try:
                 # find element in loggedin template        
                 #python_link = self.driver.find_elements_by_xpath('//span[@class="ob-crown-user-name ob-drop-icon"]')[0]
                 self.driver.find_elements_by_xpath('//*[contains(@class, "ob-crown-user-drop-logout-a")]')[0]
                 #python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div[1]/span')[0]
-                if verbose == True: print 3; flow.append(3);
+                if verbose == True: flow.append(3);
             except IndexError, f:
-                if verbose == True: print 4; flow.append(4);
+                if verbose == True: flow.append(4);
                 self.driver.get('https://openbook.etoro.com/manapana/portfolio/open-trades/')
         try:
-            if verbose == True: print 5; flow.append(5);
+            if verbose == True: flow.append(5);
             python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
             python_link.click()
             
@@ -1500,11 +1500,11 @@ class Etoro():
             #submit_button = driver.find_element_by_name('submit')
             submit_button.click()
         except:
-            if verbose == True: print 6; flow.append(6);
+            if verbose == True: flow.append(6);
             ''
-        if verbose == True: print 7; flow.append(7);
+        if verbose == True: flow.append(7);
             
-        if verbose == True: print 7; print flow
+        if verbose == True: print flow
         
         from test_qoreliquid import assertSequenceEqual
         """
