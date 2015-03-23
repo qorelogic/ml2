@@ -28,6 +28,34 @@ Created on Thu Nov 13 21:52:25 2014
 @author: qore2
 """
 
+
+class Selenium:
+
+    def scrollToBottom(driver):
+        # scroll to bottom of page
+        # todo: go into loop until it reaches the end of the list
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    
+        #driver.execute_script("return window.screenTop;")
+    
+    def test():
+        # Select the Python language option
+        python_link = driver.find_elements_by_xpath('//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[3]/div[1]/div/div/div[1]/div/a')[0]
+        python_link.click()
+        
+        # Enter some text!
+        text_area = driver.find_element_by_id('textarea')
+        text_area.send_keys("print 'Hello,' + ' World!'")
+        
+        # Submit the form!
+        submit_button = driver.find_element_by_name('submit')
+        submit_button.click()
+        
+        # Make this an actual test. Isn't Python beautiful?
+        #assert "Hello, World!" in driver.get_page_source()
+        xp = '/html/body/div/table/tbody/tr/td/div[2]/table/tbody/tr/td[2]/div/pre'
+        assert "Hello, World!" in driver.find_element_by_xpath(xp).text
+        
 # -*- coding: utf-8 -*-
 """Example Google style docstrings.
 
@@ -72,9 +100,9 @@ class QoreQuant():
         access_token2=co.ix[1,2]
         self.oanda2 = oandapy.API(environment=env2, access_token=access_token2)
         
-        self.accid = self.oanda1.get_accounts()['accounts'][6]['accountId']
+        self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
         self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
-        print 'using account: {0}'.format(self.accid)
+        #print 'using account: {0}'.format(self.accid1)
         
         #from selenium import webdriver
         #driver = webdriver.Chrome()
@@ -87,7 +115,7 @@ class QoreQuant():
         targetPortfolio2 = self.prepTargetPortfolio()
         df = self.generateTargetPortfolio(targetPortfolio2)
         df0 = self.prepSendToMarket(df)
-        self.sendToMarket(df0, df)
+        self.sendToMarket(df0, dryrun=False)
         #self.et.etoroLogout()
         self.et.quit()
     
@@ -1390,6 +1418,13 @@ class Etoro():
         #self.browserHandle = webdriver.Firefox(firefoxProfile)
         return firefoxProfile
 
+    def getURL(self, url):
+        """Gets a url (selenium.get) specified by the url param if the url is not the current url."""
+        
+        if self.driver.current_url != url:
+            print "getting: {0}".format(self.driver.current_url)
+            self.driver.get(url)
+    
     def start(self):
         """
         checks whether the browser is running, returns boolean
@@ -1573,12 +1608,22 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
                 iss = xps[i].split(' ')
                 iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
                 try:
-                    ilss = self.find_elements_by_xpath_return_list(iss[1], iss[0])
+                    #print "{1}::  len iss: {0}".format(len(iss), iss[0])
+                    if len(iss) == 2:
+                        ilss = self.find_elements_by_xpath_return_list(iss[1], iss[0])
+                        #print 'q1'
+                    if len(iss) == 3:
+                        iss1 = " ".join(iss[1:])
+                        ilss = self.find_elements_by_xpath_return_list(iss1, iss[0])
+                        #print 'q2'
                     print "{1} {0}".format(iss, len(ilss))
+                    #print
                     lss.append(ilss)
                 except IndexError, e:
+                    print "e1:"
                     print e
                 except TypeError, e:
+                    print "e2:"
                     print e
             return lss
 
@@ -1606,15 +1651,14 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
         
         if mode == 2:
             self.etoroLogin(verbose=True)
-            self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
+            self.getURL('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
             
             lss = []
-
             xps = """pair //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/a
 bias //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/strong
 amount //*[contains(@class,<space>"user-table-cell<space>uttc-3")]
-take_profit //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/span[2]
-stop_loss //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/span[1]
+take_profit //*[contains(@class, "info-row-close-reason")][2]
+stop_loss //*[contains(@class, "info-row-close-reason")][1]
 time //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[3]/div/span
 username //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[2]/a
 open //*[contains(@class,<space>"user-table-cell<space>uttc-4")]
@@ -1837,6 +1881,25 @@ class Bancor:
         print '==========================================================================================='
 
     
+    def discoverInvestors(self):
+        self.qq.et.driver.get('https://beta.etoro.com/discover/?culture=en-gb')
+        
+        # click on Search
+        #python_link = self.et.driver.find_elements_by_xpath('/html/body/div[3]/div/div[3]/a/span')[0]
+        #python_link.click()
+        
+        # Click on Trending Investors
+        try:
+            python_link = self.et.driver.find_elements_by_xpath('/html/body/div[3]/div/div[5]/div[1]/table/tbody/tr/td[3]/div/a/span/span')[0]
+            python_link.click()
+        except Exception, e:
+            print e
+        except:
+            pass
+        
+        # clear the filters
+        #python_link = driver.find_elements_by_xpath('/html/body/div[2]/div[3]/div[1]/div[2]/div[12]')[0]
+        #python_link.click()
     
 if __name__ == "__main__":
     print 'stub'
