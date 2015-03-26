@@ -120,7 +120,7 @@ class QoreQuant():
         df0 = self.prepSendToMarket(df)
         self.sendToMarket(df0, dryrun=dryrun)
         #self.et.etoroLogout()
-        self.et.quit()
+        #self.et.quit()
     
     """
     targetPortfolio = [['AAPL', 'BAC', 'BOA', 'DAL'], [1032, 123, 98, 9812]]
@@ -146,6 +146,10 @@ class QoreQuant():
             return tt    
     #assert toTrade([['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]], [['AAPL', 'BAC', 'BOA', 'DAL'], [1032, 123, 98, 9812]], returnList=True) == [['AAPL', 'BAC', 'BOA', 'DAL'], [102, -107, -11, 7682]]
 
+    def getMeanPrice(self, instrument):
+        pr0 = self.oanda1.get_prices(instruments=[instrument])['prices'][0]
+        return n.mean([pr0['ask'], pr0['bid']])
+    
     def prepTargetPortfolio(self):
         """
         test
@@ -158,7 +162,7 @@ class QoreQuant():
         #print tarp
         #tarp = p.DataFrame(tarp).transpose()
         
-        balance = 100
+        balance = 200
         
         # oanda account info
         self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
@@ -168,10 +172,20 @@ class QoreQuant():
         
         for i in range(0,len(tarp.ix[:,1])):
             tarp.ix[i,'amount'] = float(str(tarp.ix[i,'amount']).replace('$', ''))
+            #try:
+            # infere leverage of the trade
+            openp = float(tarp.ix[i,'open'])
+            currentp = self.getMeanPrice(tarp.ix[i,'pair'].replace('/','_'))
+            amount = float(tarp.ix[i,'amount'])
+            gain = float(tarp.ix[i,'gain'].replace('$', ''))
+            tarp.ix[i,'leverage'] = abs(floor((gain/(openp-currentp))/amount / 25)) * 25
+            tarp.ix[i,'units0'] = amount * tarp.ix[i,'leverage']
+            #except:
+            #    ''
+            
             #tarp.ix[i,2] = float(str(tarp.ix[i,1])) / balance
-            tarp.ix[i,'units0'] = float(str(tarp.ix[i,'amount'])) * 25
             tarp.ix[i,'instrument'] = tarp.ix[i,'pair'].replace('/', '_')
-            tarp.ix[i,'risk0'] = float(str(tarp.ix[i,'amount'])) * 25 / balance * 100
+            tarp.ix[i,'risk0'] = float(str(tarp.ix[i,'amount'])) * tarp.ix[i,'leverage'] / balance * 100
             tarp.ix[i,'risk1'] = ceil(float(str(tarp.ix[i,'risk0'])) / 100 * self.balance1)
             tarp.ix[i,'risk2'] = ceil(float(str(tarp.ix[i,'risk0'])) / 100 * self.balance2)
         print tarp
