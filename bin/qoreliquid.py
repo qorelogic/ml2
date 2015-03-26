@@ -1617,8 +1617,8 @@ class Bancor:
 
     
     
-if __name__ == "__main__":
-    print 'stub'
+#if __name__ == "__main__":
+#    print 'stub'
     #testMicrofinance()
     #testGetDataFromQuandl()
     #print normalizeme2([1423,2342,2343,23441,1235,1236,7123,8123,913])
