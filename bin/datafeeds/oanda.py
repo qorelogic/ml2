@@ -16,6 +16,7 @@ import datetime as dd
 import time
 # error classes
 import requests
+import socket
 
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -75,6 +76,8 @@ def do_work( forever = True):
             stream = MyStreamer(environment=env2, access_token=access_token2)
             pairs = ",".join(list(n.array(p.DataFrame(oanda2.get_instruments(accid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
             stream.start(accountId=accid, instruments=pairs)
+        except socket.error, e:
+            print e
         except TypeError, e:
             ''
             #print e
