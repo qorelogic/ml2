@@ -73,3 +73,97 @@ def mkdir_p(path):
         if exc.errno == errno.EEXIST and os.path.isdir(path):
             pass
         else: raise
+
+#for i in range(len(allPositions2['noasnoas'])):
+#    try:
+#        allPositions2['noasnoas'][str(i)] = allPositions2['noasnoas'].pop(i)
+#    except:
+#        ''
+#print allPositions2
+#print j.dumps(allPositions2)
+
+# source: http://gotoanswer.stanford.edu/?q=Recursive+depth+of+python+dictionary
+#Be sure to assign the result of the recursive call to depth. Also, as @amit says, 
+# consider using max so that you can handle dicts with multiple key value pairs (a treelike structure).
+#>>> myDict = {'leve1_key1': {'level2_key1': 
+#               {'level3_key1': {'level4_key_1': 
+#                  {'level5_key1':   'level5_value1'}}}}}
+#>>> dict_depth(myDict)
+#5
+def dict_depth(d, depth=0):
+    if not isinstance(d, dict) or not d:
+        return depth
+    return max(dict_depth(v, depth+1) for k, v in d.iteritems())
+
+#You should store the value retured from the recursive call, 
+# and return the max value found, otherwise - you are calling the recursive 
+# function without doing anything with the returned value! [and returning 0 as expected, since it was never changed]
+def dict_depth(d, depth=0):
+    ret = depth 
+    for i in d.keys():
+        if type(d[i]) is dict:
+            newDict = d[i]
+            ret = max(dict_depth(newDict, depth+1),ret) #finding max and storing it
+    return ret #returning the max found
+
+def convertDictKeysToString(dt, depth=2):
+    if dict_depth(dt) == 1:
+        for i in dt.keys(): 
+            dt[i] = ({str(k): v for k, v in dt[i].iteritems()})
+    if dict_depth(dt) == 2:
+        for i in dt.keys():
+            for j in dt[i].keys():
+                dt[i][j] = ({str(k): v for k, v in dt[i][j].iteritems()})
+    return dt
+
+#alp = convertDictKeysToString(allPositions2)
+#alp = j.dumps(alp)
+#print alp
+
+#positions = et.getEtoroTraderPositions('noasnoas', )
+
+
+def prepTestDataFrame(df, verbose=0):
+    """Prepares a pandas DataFrame for the test suite. Converts the 2D matrix to a 1D vector
+returning a one-line python list that can be copy/pasted to the assertion line.
+
+Parameters:
+-----------
+df : a pandas DataFrame
+verbose : accepts int
+          Set the verbosity level to 0 or 1. This prints the assertion string to stdout
+           so that you can copy the assertion to a test file.
+               
+Examples:
+---------
+>>> df = p.DataFrame([['a','b','c'],['buy','sell','sell'],[1,2,3]], index=['pair', 'bias', 'amount']).transpose()
+>>> prepTestDataFrame(df, verbose=1)
+DataFrame=
+  pair  bias amount
+0    a   buy      1
+1    b  sell      2
+2    c  sell      3
+
+Copy assertion line and example DataFrame to a test file:
+assert prepTestDataFrame(df) == ['a', 'buy', 1, 'b', 'sell', 2, 'c', 'sell', 3]
+
+Pasting the following lines 
+to test_example.py:
+
+df = p.DataFrame([['a','b','c'],['buy','sell','sell'],[1,2,3]], index=['pair', 'bias', 'amount']).transpose()
+assert prepTestDataFrame(df) == ['a', 'buy', 1, 'b', 'sell', 2, 'c', 'sell', 3]
+"""
+    h = len(df.index)
+    w = len(df.columns)
+    forAssertion = list((df.get_values().reshape(1, h * w))[0])
+    
+    if verbose == 1:
+        print
+        print 'DataFrame='
+        print df
+        print
+        print 'Copy assertion line and example DataFrame to your test file:'
+        print "assert prepTestDataFrame(df) == {0}".format(forAssertion)
+    
+    return forAssertion
+
