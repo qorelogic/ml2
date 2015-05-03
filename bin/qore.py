@@ -4,6 +4,7 @@ import json as j
 import os, errno
 import logging
 import re
+import pandas as p
 
 #logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
 logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
@@ -166,4 +167,26 @@ assert prepTestDataFrame(df) == ['a', 'buy', 1, 'b', 'sell', 2, 'c', 'sell', 3]
         print "assert prepTestDataFrame(df) == {0}".format(forAssertion)
     
     return forAssertion
+
+
+class QoreScrapy:
+    def makeItems(self, df, itemClass):
+        items = []
+        df = p.DataFrame.from_dict(df, orient='index').transpose().fillna('')
+        for i in xrange(len(df)):
+            ct = []
+            for j in xrange(len(df.ix[i,:])):
+                k = list(df.keys())[j]                
+                v = df.ix[i,k].replace("\'","\\'")
+                pair = "{0}='{1}'".format(k, v.encode('utf-8'))
+                ct.append(pair)
+            # import the item class
+            exec('import {0}'.format(re.sub(re.compile(r'(.*?)\..*'), '\\1', itemClass)))
+            # append to items
+            try:
+                exec('items.append({0})'.format("{0}({1})".format(itemClass, ", ".join(ct))))
+            except:
+                print itemClass
+                print ct
+        return items
 
