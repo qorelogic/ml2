@@ -17,6 +17,8 @@ import StringIO as sio
 import threading,time
 import itertools as it
 
+import oandapy
+
 def toCurrency(n):
     return '%2d' % n
 
@@ -25,6 +27,257 @@ Created on Thu Nov 13 21:52:25 2014
 
 @author: qore2
 """
+
+
+class Selenium:
+
+    def scrollToBottom(driver):
+        # scroll to bottom of page
+        # todo: go into loop until it reaches the end of the list
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    
+        #driver.execute_script("return window.screenTop;")
+    
+    def test():
+        # Select the Python language option
+        python_link = driver.find_elements_by_xpath('//*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[3]/div[1]/div/div/div[1]/div/a')[0]
+        python_link.click()
+        
+        # Enter some text!
+        text_area = driver.find_element_by_id('textarea')
+        text_area.send_keys("print 'Hello,' + ' World!'")
+        
+        # Submit the form!
+        submit_button = driver.find_element_by_name('submit')
+        submit_button.click()
+        
+        # Make this an actual test. Isn't Python beautiful?
+        #assert "Hello, World!" in driver.get_page_source()
+        xp = '/html/body/div/table/tbody/tr/td/div[2]/table/tbody/tr/td[2]/div/pre'
+        assert "Hello, World!" in driver.find_element_by_xpath(xp).text
+        
+# -*- coding: utf-8 -*-
+"""Example Google style docstrings.
+
+This module demonstrates documentation as specified by the `Google Python
+Style Guide`_. Docstrings may extend over multiple lines. Sections are created
+with a section header and a colon followed by a block of indented text.
+
+Example:
+  Examples can be given using either the ``Example`` or ``Examples``
+  sections. Sections support any reStructuredText formatting, including
+  literal blocks::
+
+      $ python example_google.py
+
+Section breaks are created by simply resuming unindented text. Section breaks
+are also implicitly created anytime a new section starts.
+
+Attributes:
+  module_level_variable (int): Module level variables may be documented in
+    either the ``Attributes`` section of the module docstring, or in an
+    inline docstring immediately following the variable.
+
+    Either form is acceptable, but the two should not be mixed. Choose
+    one convention to document module level variables and be consistent
+    with it.
+
+.. _Google Python Style Guide:
+   http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
+
+"""
+class QoreQuant():
+
+    def __init__(self):
+
+        co = p.read_csv('config.csv', header=None)
+        
+        env1=co.ix[0,1]
+        access_token1=co.ix[0,2]
+        self.oanda1 = oandapy.API(environment=env1, access_token=access_token1)
+        
+        env2=co.ix[1,1]
+        access_token2=co.ix[1,2]
+        self.oanda2 = oandapy.API(environment=env2, access_token=access_token2)
+        
+        self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
+        self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
+        #print 'using account: {0}'.format(self.accid1)
+        
+        #from selenium import webdriver
+        #driver = webdriver.Chrome()
+        self.et = Etoro()
+        
+    def synchonizeTrades(self, dryrun=True):
+        # send to market works
+        username = 'manapana'
+        save = True
+        mode = 2
+        try: print self.et.getEtoroTraderPositions(username, save=save, mode=mode)
+        except: print self.et.getEtoroTraderPositions('manapana', save=save, mode=mode)
+        targetPortfolio2 = self.prepTargetPortfolio()
+        df = self.generateTargetPortfolio(targetPortfolio2)
+        df0 = self.prepSendToMarket(df)
+        self.sendToMarket(df0, dryrun=dryrun)
+        #self.et.etoroLogout()
+        #self.et.quit()
+    
+    """
+    targetPortfolio = [['AAPL', 'BAC', 'BOA', 'DAL'], [1032, 123, 98, 9812]]
+    livePortfolio = [['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]]
+    """
+    def toTrade(self, livePortfolio, targetPortfolio, returnList=False):
+        print 'target portfolio'
+        print targetPortfolio
+        if type(targetPortfolio) != type(p.DataFrame([])):
+            targetPortfolio = p.DataFrame(targetPortfolio).transpose()
+        #print type(targetPortfolio)
+        print 'live portfolio'
+        print livePortfolio    
+        if type(livePortfolio) != type(p.DataFrame([])):
+            livePortfolio = p.DataFrame(livePortfolio).transpose()
+        #print type(livePortfolio)
+        
+        print 'to trade'
+        tt = p.DataFrame([list(targetPortfolio.ix[:,0].get_values()), list((targetPortfolio.ix[:,1] - livePortfolio.ix[:,1]).get_values())]).transpose()
+        if returnList == True:
+            [list(tt.transpose().get_values()[0]), list(tt.transpose().get_values()[1])]    
+        else:
+            return tt    
+    #assert toTrade([['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]], [['AAPL', 'BAC', 'BOA', 'DAL'], [1032, 123, 98, 9812]], returnList=True) == [['AAPL', 'BAC', 'BOA', 'DAL'], [102, -107, -11, 7682]]
+
+    def getMeanPrice(self, instrument):
+        pr0 = self.oanda1.get_prices(instruments=[instrument])['prices'][0]
+        return n.mean([pr0['ask'], pr0['bid']])
+    
+    def prepTargetPortfolio(self):
+        """
+        test
+        """
+        tarp = self.et.getTargetPortfolio('manapana')
+        # source: http://pandas.pydata.org/pandas-docs/dev/indexing.html#the-where-method-and-masking
+        #tarp = tarp.query('username == "noasnoas"')
+        #print tarp
+        tarp2 = [list(n.array(tarp.ix[:,'pair'].get_values(), dtype=str)), list(n.array(tarp.ix[:,'amount'].get_values(), dtype=str))]
+        #print tarp
+        #tarp = p.DataFrame(tarp).transpose()
+        
+        balance = 200
+        
+        # oanda account info
+        self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
+        self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
+        self.balance1 = self.oanda1.get_account(self.accid1)['balance']
+        self.balance2 = self.oanda2.get_account(self.accid2)['balance']
+        
+        for i in range(0,len(tarp.ix[:,1])):
+            tarp.ix[i,'amount'] = float(str(tarp.ix[i,'amount']).replace('$', ''))
+            #try:
+            # infere leverage of the trade
+            openp = float(tarp.ix[i,'open'])
+            currentp = self.getMeanPrice(tarp.ix[i,'pair'].replace('/','_'))
+            amount = float(tarp.ix[i,'amount'])
+            gain = float(tarp.ix[i,'gain'].replace('$', ''))
+            tarp.ix[i,'leverage'] = abs(floor((gain/(openp-currentp))/amount / 25)) * 25
+            tarp.ix[i,'units0'] = amount * tarp.ix[i,'leverage']
+            #except:
+            #    ''
+            
+            #tarp.ix[i,2] = float(str(tarp.ix[i,1])) / balance
+            tarp.ix[i,'instrument'] = tarp.ix[i,'pair'].replace('/', '_')
+            tarp.ix[i,'risk0'] = float(str(tarp.ix[i,'amount'])) * tarp.ix[i,'leverage'] / balance * 100
+            tarp.ix[i,'risk1'] = ceil(float(str(tarp.ix[i,'risk0'])) / 100 * self.balance1)
+            tarp.ix[i,'risk2'] = ceil(float(str(tarp.ix[i,'risk0'])) / 100 * self.balance2)
+        print tarp
+        #print
+        targetPortfolio1 = tarp.ix[:,['instrument','bias','risk1','take_profit','stop_loss']]
+        targetPortfolio2 = tarp.ix[:,['instrument','bias','risk2','take_profit','stop_loss']]
+        
+        #print "Account: {0}".format(self.accid1)
+        #print targetPortfolio1
+        #print
+        #print "Account: {0}".format(self.accid2)
+        #print targetPortfolio2
+        
+        return targetPortfolio2
+    
+    
+    def generateTargetPortfolio(self, targetPortfolio2):
+        #print "Account: {0}".format(self.accid1); print targetPortfolio1; print
+        print "Account: {0}".format(self.accid2); #print targetPortfolio2; print
+        targetPortfolio2.ix[:,'take_profit'] = n.array(targetPortfolio2.ix[:,'take_profit'], dtype=float)
+        targetPortfolio2.ix[:,'stop_loss']   = n.array(targetPortfolio2.ix[:,'stop_loss'],   dtype=float)
+        targetPortfolio2 = polarizePortfolio(targetPortfolio2, 'risk2', 'amount', 'bias')
+        
+        # group positions by aggregate pairs
+        # 
+        # source: http://pandas.pydata.org/pandas-docs/dev/reshaping.html
+        #print df.stack() #.groupby(level=1, axis=2)
+        # source: http://bconnelly.net/2013/10/summarizing-data-in-python-with-pandas/
+        df = targetPortfolio2.groupby('instrument')
+        d0 = df['amount'].aggregate(n.sum)
+        d1 = df['take_profit'].aggregate(n.mean)
+        d2 = df['stop_loss'].aggregate(n.mean)
+        print
+        #print df.describe()
+        df = p.DataFrame([d0, d1, d2]).transpose()
+        return p.DataFrame(df)
+        
+
+    def prepSendToMarket(self, df):
+        df2 = self.oanda2.get_positions(self.accid2)
+        df2 = p.DataFrame(df2['positions']).sort('instrument', ascending=True).ix[:,['instrument','side','units']]
+        polarizePortfolio(df2, 'units', 'amount', 'side')
+        
+        df2 = df2.set_index('instrument').ix[:,['amount']] 
+        df2 = df2.convert_objects(convert_numeric=True)
+        df1 = df.ix[:,['amount']]
+        #print df1
+        #print
+        #print df2
+        #print type(df)
+        #print type(df2)
+        df0 =  df1 - df2
+        #print df0
+        #print df
+        df0 = df0.combine_first(df)
+        return df0
+
+    def sendToMarket(self, df, dryrun=True):
+        #pp0 = list(df.ix[:,'instrument'].get_values())
+        #pp1 = list(df.ix[:,'amount'].get_values())
+        #print pp0;
+        #print pp1; print
+        
+        #print df
+        #print df.index
+        #print
+        
+        for i in df.index:
+            dfi = df.ix[i,:]
+            instrument = i
+            amount     = int(ceil(n.abs(dfi['amount'])))
+            if dfi['amount'] > 0:
+                side = 'buy'
+            elif dfi['amount'] < 0:
+                side = 'sell'
+            
+            # send order to market
+            #"""
+            #instrument:* Required Instrument to open the order on.
+            #units: Required The number of units to open order for.
+            #side: Required Direction of the order, either 'buy' or 'sell'.
+            #type: Required The type of the order 'limit', 'stop', 'marketIfTouched' or 'market'.
+            #expiry: Required If order type is 'limit', 'stop', or 'marketIfTouched'. The order expiration time in UTC. The value specified must be in a valid datetime format.
+            #price: Required If order type is 'limit', 'stop', or 
+            #"""
+            if amount > 0:
+                print "order = self.oanda2.create_order({0}, type='market', instrument='{1}', side='{2}', units='{3}')".format(self.accid2, instrument, side, amount)
+                if dryrun == False:
+                    order = self.oanda2.create_order(self.accid2, type='market', instrument=instrument, side=side, units=amount)
+            else:
+                print 'Nothing to trade on {0}.'.format(i)
+        print
 
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
@@ -1167,7 +1420,7 @@ import pandas as p
 class Etoro():
     def __init__(self):
         self.driver = None        
-        self.fname_trader_positions = 'etoro-trader-positions.json'            
+        self.fname_trader_positions = 'etoro-trader-positions.json'
         
     def disableImages(self):
         ## get the Firefox profile object
@@ -1182,6 +1435,13 @@ class Etoro():
         #self.browserHandle = webdriver.Firefox(firefoxProfile)
         return firefoxProfile
 
+    def getURL(self, url):
+        """Gets a url (selenium.get) specified by the url param if the url is not the current url."""
+        
+        if self.driver.current_url != url:
+            print "getting: {0}".format(self.driver.current_url)
+            self.driver.get(url)
+    
     def start(self):
         """
         checks whether the browser is running, returns boolean
@@ -1205,7 +1465,7 @@ class Etoro():
     def isLoggedIn(self):
         from selenium.common.exceptions import NoSuchElementException
         try:
-            et.driver.find_element_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')
+            self.et.driver.find_element_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')
             return False
         except NoSuchElementException, e:
             return True
@@ -1218,13 +1478,6 @@ class Etoro():
         link.click()
     
     def etoroLogin(self, verbose=False):
-        """
-        flow:
-         logged in: 2, 3, 5, 6, 7
-         logged out: 1, 5, 7
-         logged in on remote page: 2, 4, 5, 6, 7
-         logged out on remote page: 2, 4, 5, 7
-        """
         flow = []
         co = p.read_csv('config.csv', header=None)
         username = co.ix[3,1]
@@ -1235,20 +1488,20 @@ class Etoro():
         try:
             # find element in loggedout template
             python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
-            if verbose == True: print 1; flow.append(1);
+            if verbose == True: flow.append(1);
         except IndexError, e:
-            if verbose == True: print 2; flow.append(2);
+            if verbose == True: flow.append(2);
             try:
                 # find element in loggedin template        
                 #python_link = self.driver.find_elements_by_xpath('//span[@class="ob-crown-user-name ob-drop-icon"]')[0]
                 self.driver.find_elements_by_xpath('//*[contains(@class, "ob-crown-user-drop-logout-a")]')[0]
                 #python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div[1]/span')[0]
-                if verbose == True: print 3; flow.append(3);
+                if verbose == True: flow.append(3);
             except IndexError, f:
-                if verbose == True: print 4; flow.append(4);
+                if verbose == True: flow.append(4);
                 self.driver.get('https://openbook.etoro.com/manapana/portfolio/open-trades/')
         try:
-            if verbose == True: print 5; flow.append(5);
+            if verbose == True: flow.append(5);
             python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/b')[0]
             python_link.click()
             
@@ -1264,9 +1517,25 @@ class Etoro():
             #submit_button = driver.find_element_by_name('submit')
             submit_button.click()
         except:
-            if verbose == True: print 6; flow.append(6);
+            if verbose == True: flow.append(6);
             ''
-        if verbose == True: print 7; flow.append(7);
+        if verbose == True: flow.append(7);
+            
+        if verbose == True: print flow
+        
+        from test_qoreliquid import assertSequenceEqual
+        """
+        flow:
+        """
+        try: assertSequenceEqual(flow, [2, 3, 5, 6, 7]) #logged in
+        except AssertionError, e: ''#print e
+        try: assertSequenceEqual(flow, [1,5,7])         #logged out
+        except AssertionError, e: ''#print e
+        try: assertSequenceEqual(flow, [2, 4, 5, 6, 7]) #logged in on remote page
+        except AssertionError, e: ''#print e
+        try: assertSequenceEqual(flow, [2, 4, 5, 7])    #logged in on remote page
+        except AssertionError, e: ''#print e
+            
         return flow
         
     def quit(self):
@@ -1292,7 +1561,11 @@ class Etoro():
         except:
             ''
     
+    # todo:
+    #https://openbook.etoro.com/markets/stocks/
+    
     def getEtoroDiscoverPeople(self, driver=None):
+        self.check()
         if driver != None:
             self.driver = driver
         lss = []
@@ -1352,12 +1625,19 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
                 iss = xps[i].split(' ')
                 iss[1] = re.sub(re.compile(r'<space>'), ' ', iss[1])
                 try:
-                    ilss = self.find_elements_by_xpath_return_list(iss[1], iss[0])
+                    #print "{1}::  len iss: {0}".format(len(iss), iss[0])
+                    if len(iss) == 2:
+                        ilss = self.find_elements_by_xpath_return_list(iss[1], iss[0])
+                        #print 'q1'
+                    if len(iss) == 3:
+                        iss1 = " ".join(iss[1:])
+                        ilss = self.find_elements_by_xpath_return_list(iss1, iss[0])
+                        #print 'q2'
                     print "{1} {0}".format(iss, len(ilss))
+                    #print
                     lss.append(ilss)
                 except IndexError, e:
-                    print e
-                except TypeError, e:
+                    print "e1:"
                     print e
             return lss
 
@@ -1385,15 +1665,14 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
         
         if mode == 2:
             self.etoroLogin(verbose=True)
-            self.driver.get('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
+            self.getURL('https://openbook.etoro.com/{0}/portfolio/open-trades/'.format(username))
             
             lss = []
-
             xps = """pair //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/a
 bias //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[1]/div/strong
 amount //*[contains(@class,<space>"user-table-cell<space>uttc-3")]
-take_profit //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/span[2]
-stop_loss //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[2]/span[1]
+take_profit //*[contains(@class, "info-row-close-reason")][2]
+stop_loss //*[contains(@class, "info-row-close-reason")][1]
 time //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[1]/div/div/div[3]/div/span
 username //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div/div[2]/a
 open //*[contains(@class,<space>"user-table-cell<space>uttc-4")]
@@ -1616,6 +1895,25 @@ class Bancor:
         print '==========================================================================================='
 
     
+    def discoverInvestors(self):
+        self.qq.et.driver.get('https://beta.etoro.com/discover/?culture=en-gb')
+        
+        # click on Search
+        #python_link = self.et.driver.find_elements_by_xpath('/html/body/div[3]/div/div[3]/a/span')[0]
+        #python_link.click()
+        
+        # Click on Trending Investors
+        try:
+            python_link = self.et.driver.find_elements_by_xpath('/html/body/div[3]/div/div[5]/div[1]/table/tbody/tr/td[3]/div/a/span/span')[0]
+            python_link.click()
+        except Exception, e:
+            print e
+        except:
+            pass
+        
+        # clear the filters
+        #python_link = driver.find_elements_by_xpath('/html/body/div[2]/div[3]/div[1]/div[2]/div[12]')[0]
+        #python_link.click()
     
 if __name__ == "__main__":
     print 'stub'
