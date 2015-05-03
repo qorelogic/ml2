@@ -1,10 +1,11 @@
 
 import sys
+def defp(pt):
+    try:    sys.path.index(pt)
+    except: sys.path.append(pt)
 
-try:
-    sys.path.index('/ml.dev/bin')
-except:
-    sys.path.append('/ml.dev/bin')
+defp('/ml.dev/bin')
+defp('/ml.dev/lib/oanda/oandapy')
     
 from qore import *
 from qoreliquid import *
@@ -20,7 +21,13 @@ import socket
 
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-co = p.read_csv('config.csv', header=None)
+co = ''
+try:
+    co = p.read_csv('config.csv', header=None)
+except IOError, e:
+    print e
+    sys.exit()
+    
 
 env1=co.ix[0,1]
 access_token1=co.ix[0,2]
