@@ -388,6 +388,49 @@ class FinancialModel:
         res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
         print res
 
+class ml007:
+    
+    def computeCost(self, X, y, theta):
+        X = n.array(X)
+        #print X
+        m = len(y)
+        J = 0
+        J = 1.0/(2*m) * n.sum(n.power(n.dot(X,theta)-y,2))
+        return J
+    
+    #print computeCost( n.array([1, 2, 1, 3, 1, 4, 1, 5]).reshape(4,2), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2]).reshape(2,1) )
+    # 11.945
+    #print computeCost( n.array([1,2,3,1,3,4,1,4,5,1,5,6]).reshape(4,3), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2,0.3]).reshape(3,1))
+    # 7.0175
+    
+    def gradientDescent(self, X, y, theta, alpha, num_iters):
+        m = len(y)
+        J_history = n.zeros(num_iters)
+        for iter in range(0,num_iters):
+            theta = theta - (float(alpha)/m) * n.dot((n.dot(X,theta)-y).transpose(),X).transpose()
+            J_history[iter] = self.computeCost(X, y, theta)
+        
+        return [theta, J_history]
+        
+    #[theta, J_history] = gradientDescent(n.array([1,5,1,2,1,4,1,5]).reshape(4,2), n.array([1,6,4,2]).reshape(4,1), n.array([0,0]).reshape(2,1),0.01,1000);
+    #print theta
+    #print J_history
+    #theta =
+    #    5.2148
+    #   -0.5733
+    #>>J_hist(1)
+    #ans  =  5.9794
+    #>>J_hist(1000)
+    #ans = 0.85426
+    
+    #[theta, J_hist] = gradientDescent(n.array([3,5,1,2,9,4,1,5]).reshape(4,2),n.array([1,6,4,2]).reshape(4,1), n.array([0,0]).reshape(2,1), 0.01,1000);
+    #print theta
+    #print J_hist
+    #>>theta
+    #theta =
+    #    0.2588
+    #    0.3999
+
 class StatWing:
     
     def getCol(self, col, df):
