@@ -468,8 +468,10 @@ class StatWing:
         print summary
         
         print 'Percentiles:'
-        #0th (Minimum)	1st	5th	10th	25th (Lower Quartile)	50th (Median)	75th (Upper Quartile)	90th	95th	99th	100th (Maximum)
-        #0	0	0	0	0	0.736	0.822	1.02	1.11	1.16	1.21
+        pctl = []
+        for i in [0,1,5,10,25,50,75,90,95,99,100]:
+            pctl.append(n.percentile(df.ix[:,1], i))
+        print p.DataFrame(pctl, index=['0th (Minimum)', '1st','5th','10th','25th (Lower Quartile)','50th (Median)','75th (Upper Quartile)','90th','95th','99th','100th (Maximum)'])#.transpose()
         
         sample.hist(bins=100);
         xlabel(self.getCol(col, df))
