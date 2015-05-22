@@ -388,6 +388,42 @@ class FinancialModel:
         res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
         print res
 
+class StatWing:
+    
+    def getCol(self, col, df):
+
+        if type(col) == type(0):
+            column = df.columns[col]
+        elif type(col) == type(''):
+            column = col
+        return column
+    
+    def describe(self, df, col):
+
+        print 'Summary:'
+        sample = df.ix[:,col]  
+        c = ['Sample Size', 'Median',        'Average',      'Confidence Interval of Average',  'Standard Deviation', 'Minimum',      'Maximum',      'Sum']
+        d = [len(sample),   n.median(sample),n.mean(sample), '0.53784 to 0.54679',                    n.std(sample),       n.min(sample), n.max(sample), n.sum(sample)]
+        #110.279 to 110.636
+        summary = p.DataFrame(d, index=c)#.transpose()
+        print summary
+        
+        print 'Percentiles:'
+        #0th (Minimum)	1st	5th	10th	25th (Lower Quartile)	50th (Median)	75th (Upper Quartile)	90th	95th	99th	100th (Maximum)
+        #0	0	0	0	0	0.736	0.822	1.02	1.11	1.16	1.21
+        
+        sample.hist(bins=100);
+        xlabel(self.getCol(col, df))
+        #ylabel('t2')
+        show();
+        
+    def relate(self, sample, keyCol, relatedCol):
+
+        scatter(sample.ix[:, relatedCol], sample.ix[:, keyCol]);
+        xlabel(self.getCol(relatedCol, sample))
+        ylabel(self.getCol(keyCol, sample))
+        show();
+
 def polarizePortfolio(df, fromCol, toCol, biasCol):
     """Adds an extra polarization column that separates fromCol between positive and negative
 according to the status of the given bias column, the new values are placed ino toCol.
