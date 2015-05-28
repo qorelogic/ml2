@@ -447,6 +447,49 @@ class ml007:
     #    0.2588
     #    0.3999
 
+# source: http://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
+import math
+def pearson_def(x, y):
+    def average(x):
+        assert len(x) > 0
+        return float(sum(x)) / len(x)
+    assert len(x) == len(y)
+    n = len(x)
+    assert n > 0
+    avg_x = average(x)
+    avg_y = average(y)
+    diffprod = 0
+    xdiff2 = 0
+    ydiff2 = 0
+    for idx in range(n):
+        xdiff = x[idx] - avg_x
+        ydiff = y[idx] - avg_y
+        diffprod += xdiff * ydiff
+        xdiff2 += xdiff * xdiff
+        ydiff2 += ydiff * ydiff
+
+    return diffprod / math.sqrt(xdiff2 * ydiff2)
+#print pearson_def([1,2,3], [1,5,7])
+#returns
+#0.981980506062
+
+import numpy as np
+def pcc(X, Y):
+   ''' Compute Pearson Correlation Coefficient. '''
+   # Normalise X and Y
+   X -= X.mean(0)
+   Y -= Y.mean(0)
+   # Standardise X and Y
+   X /= X.std(0)
+   Y /= Y.std(0)
+   # Compute mean product
+   return np.mean(X*Y)
+# Using it on a random example
+#from random import random
+#X = np.array([random() for x in xrange(100)])
+#Y = np.array([random() for x in xrange(100)])
+#pcc(X, Y)
+
 class StatWing:
     
     def getCol(self, col, df):
@@ -480,10 +523,45 @@ class StatWing:
         
     def relate(self, sample, keyCol, relatedCol):
 
-        scatter(sample.ix[:, relatedCol], sample.ix[:, keyCol]);
+        #print n.corrcoef(sample.ix[:, keyCol], sample.ix[:, relatedCol])[0, 1]
+        #print pearson_def(sample.ix[:, keyCol], sample.ix[:, relatedCol])
+        # source: http://stackoverflow.com/questions/19428029/how-to-get-correlation-of-two-vectors-in-python
+        from scipy.stats.stats import pearsonr, spearmanr
+        ind = ['Pearson\'s r: ', 'Spearman\'s r: ']
+        d = [pearsonr(sample.ix[:, keyCol], sample.ix[:, relatedCol]), spearmanr(sample.ix[:, keyCol], sample.ix[:, relatedCol])]
+        print p.DataFrame(d, index=ind)
+        
+        import numpy as np
+        x = sample.ix[:, relatedCol]
+        y = sample.ix[:, keyCol]
+        
+        deg = 1
+        weight = 1
+        theta = np.polynomial.polynomial.polyfit(x,y,deg,weight)#w=weight of each observation)
+        print theta
+        #p.DataFrame(theta[0] + theta[1] * n.array(range(0, int(n.max(x.ix[:,1]))))).plot()
+        #p.DataFrame(theta[0] + theta[1] * n.array(range(0, ceil(n.max(x.get_values()))))).plot()
+        print [min(y), max(y)]
+        print [min(x), max(x)]
+        #p.DataFrame(theta[0] + theta[1] * n.array( n.linspace(0, int(ceil(n.max(x.get_values()))), 5) )).plot()
+        mini = int(ceil(n.min(x.get_values())))#-10
+        maxi = int(ceil(n.max(x.get_values())))#+10
+        print mini
+        print maxi
+        p.DataFrame(theta[0] + theta[1] * n.array( n.linspace(mini, maxi, maxi-mini) )).plot()
+        #p.DataFrame(theta[0] + theta[1] * n.array( n.linspace(-120, 60, 180) )).plot()
+        print maxi-mini
+        
+        #print n.linspace(int(ceil(n.max(x.get_values()))), int(ceil(n.max(x.get_values()))), 5)
+        #print n.linspace(min(x)-10, int(ceil(n.max(x.get_values())))+10, len(x))
+        
+        scatter(x,y, vmin=0, vmax=(100));
+        #print ceil(max(x))
+        #scatter(sample.ix[:, relatedCol], sample.ix[:, keyCol]);
         xlabel(self.getCol(relatedCol, sample))
         ylabel(self.getCol(keyCol, sample))
         show();
+
 
 def polarizePortfolio(df, fromCol, toCol, biasCol):
     """Adds an extra polarization column that separates fromCol between positive and negative
