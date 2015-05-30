@@ -19,6 +19,7 @@ import itertools as it
 
 import oandapy
 
+
 def toCurrency(n):
     return '%2d' % n
 
@@ -1417,6 +1418,77 @@ from selenium.selenium import selenium
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 import pandas as p
 
+class Bloomberg():
+    def __init__(self):
+        self.driver = None
+
+    def start(self):
+        """
+        checks whether the browser is running, returns boolean
+        """
+        # iPhone
+        #driver = webdriver.Remote(browser_name="iphone", command_executor='http://172.24.101.36:3001/hub')
+        # Android
+        #driver = webdriver.Remote(browser_name="android", command_executor='http://127.0.0.1:8080/hub')
+        # Google Chrome 
+        #driver = webdriver.Chrome()
+        # Firefox 
+        #FirefoxProfile fp = new FirefoxProfile();
+        #fp.setPreference("webdriver.load.strategy", "unstable");
+        #WebDriver driver = new FirefoxDriver(fp);
+        
+        #driver = webdriver.Firefox(firefox_profile=self.disableImages())
+        driver = webdriver.Firefox()
+        
+        self.driver = driver
+
+    def getProfile(self, rank):
+        print 'Fetching BBGB profile for rank:{0}'.format(rank)
+        
+        b.driver.find_elements_by_xpath('//*[@id="menu"]/ul/li[1]')[0].click() # click explore
+        b.driver.find_elements_by_xpath('//*[@id="views"]/div[1]/div['+str(rank)+']/div[3]')[0].click()
+        
+        li = {}
+        li['rank'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/ul/li[1]')[0].text.replace('#','')
+        li['name'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/ul/li[2]')[0].text
+        li['networth'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/ul/li[3]/span')[0].text
+        li['age'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[1]/span[2]')[0].text
+        li['biggestasset'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[2]/span[2]')[0].text
+        li['source'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[3]/span[2]')[0].text
+        li['lastchange'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[4]/span[2]/span[1]')[0].text
+        li['YTD change'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[5]/span[2]/span[1]')[0].text
+        li['funfact'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[3]')[0].text
+        li['country'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[4]/span[1]')[0].text
+        li['industry'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[4]/span[2]')[0].text
+        li['overview'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[1]/span/p')[0].text
+        li['intel'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[3]/ul')[0].text
+        li['dob'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/ul/li[1]/span')[0].text
+        li['education'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/ul/li[2]/span')[0].text
+        li['family'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/ul/li[3]/span')[0].text
+        li['story'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/span')[0].text
+        li['milestones'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[2]/ul')[0].text
+        li['networth-story'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[2]')[0].text
+        
+        #li['portfolio'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[1]/@style')[0].text    
+        #print b.driver.find_element_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[1]')
+        
+        #li['portfolio-public'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[1]')[0].html
+        li['portfolio-private'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[2]')[0].text
+        li['portfolio-liabilities'] = b.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[2]')[0].text
+        #li[''] = b.driver.find_elements_by_xpath('')[0].text
+        #li[''] = b.driver.find_elements_by_xpath('')[0].text
+        
+        df = p.DataFrame(li, index=[0])#.transpose()
+        df['indx'] = n.array(df.ix[:,'rank'], dtype=int16)
+        df = df.set_index('indx')
+        hdir = '/mldev/bin/data/bloomberg/billionaires/'
+        mkdir_p(hdir)
+        #df.to_csv('{0}rank.{1}.csv'.format(hdir, rank))
+        #import ujson as j
+        #jdf = j.dumps(df)
+        #print jdf
+        return df
+    
 class Etoro():
     def __init__(self):
         self.driver = None        
