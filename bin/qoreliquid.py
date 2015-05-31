@@ -1416,11 +1416,13 @@ class ShapeShift(CryptoCoinBaseClass):
 from selenium import webdriver
 from selenium.selenium import selenium
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+from selenium.webdriver.common.action_chains import ActionChains
 import pandas as p
 
 class Bloomberg():
     def __init__(self):
         self.driver = None
+        self.billionaires = p.DataFrame()
 
     def start(self):
         """
@@ -1510,7 +1512,83 @@ class Bloomberg():
         #jdf = j.dumps(df)
         #print jdf
         return df
+
+    def getAllBillionaires(self, fromn=1):
+        num = 200+2
+        dfs = list(xrange(1, num))
+        #self.billionaires = p.DataFrame()
+        for i in xrange(fromn, num):
+            try:
+                dfs[i] = self.getProfile(i)
+                self.billionaires = self.billionaires.combine_first(dfs[i])
+                indx = xrange(0,4)
+                hdir = '/mldev/bin/data/bloomberg/billionaires/'
+                self.billionaires.ix[:,indx].to_csv('{0}/bloomberg-billionaires-index.csv'.format(hdir))
+            except IndexError, e:
+                print e
+        
+        for i in xrange(len(self.billionaires.ix[:,0])):
+            self.billionaires.ix[i,'YTD change'] = mclean(self.billionaires.ix[i,'YTD change'])
+            self.billionaires.ix[i,'networth'] = mclean(self.billionaires.ix[i,'networth'])
+            self.billionaires.ix[i,'age'] = mclean(self.billionaires.ix[i,'age'])
+        return self.billionaires
     
+    def apad(self, a, num):
+        a = n.array(a, dtype=int16)
+        #print a
+        az = n.zeros(num)
+        #print az
+        az[0:len(a)] = a
+        return list(az)
+    #apad([45,56,76], 5)
+    
+    def getPortfolio(self):
+        ps = {}
+        dfs = {}
+        
+        xp = '//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div'
+        res = self.driver.find_elements_by_xpath(xp)
+        for i in res:
+            nclass = i.get_attribute('class')
+            print nclass
+        
+            xp = '//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[@class="'+nclass+'"]/div[@class="item"]'
+            psn = []
+            for i in self.driver.find_elements_by_xpath(xp): 
+                psn.append(int(i.value_of_css_property('width').replace('px', '')))
+            ps[nclass] = psn
+        
+            xp = '//div[@class="'+nclass+'"]/div[@class="item"]'
+            els = self.driver.find_elements_by_xpath(xp)
+            df = p.DataFrame()
+            li = {}
+            for i in xrange(len(els)):
+                #print i
+                #print els[i]
+                ActionChains(self.driver).move_to_element(els[i]).perform()
+                xp = '//*[@id="billionaires"]//div[@class="bubble"]/ul/li'
+                res = self.driver.find_elements_by_xpath(xp)
+                reso = res[0].text.split(' ')
+                try:
+                    li[i] = [res[0].text, res[1].text, reso[0], reso[1], reso[2]]
+                except:
+                    li[i] = [res[0].text, res[1].text, '', '', '']
+                df = df.combine_first(p.DataFrame(li).transpose())
+            df['px'] = psn
+            print df
+            dfs[nclass] = df
+            print
+        #print dfs
+        
+        #print p.DataFrame(ps)
+        a = n.array(ps['cash'])
+        li = []
+        for i in ps:
+            li.append(len(ps[i]))
+        for i in ps:
+            ps[i] = self.apad(ps[i], n.max(li))
+        print p.DataFrame(ps)
+
 class Etoro():
     def __init__(self):
         self.driver = None        
