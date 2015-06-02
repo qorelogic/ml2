@@ -405,26 +405,35 @@ class ml007:
     #print computeCost( n.array([1,2,3,1,3,4,1,4,5,1,5,6]).reshape(4,3), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2,0.3]).reshape(3,1))
     # 7.0175
     
-    def gradientDescent(self, X, y, theta, alpha, num_iters, viewProgress=True, b=100):
+    def gradientDescent(self, X, y, theta, alpha, num_iters, viewProgress=True, b=10, ):
         m = len(y)
         J_history = n.zeros(num_iters)
-        for iter in range(0,num_iters):
-            theta = theta - (float(alpha)/m) * n.dot((n.dot(X,theta)-y).transpose(),X).transpose()
-            if viewProgress:
-                if iter % b == 0:
-                    clear_output()
-                    print ''
-                    print theta
-            J_history[iter] = self.computeCost(X, y, theta)
-            if viewProgress:
-                if iter % b == 0:
-                    print J_history[iter]
-                    print iter
+        try:
+            for iter in range(0,num_iters):
+                    theta = theta - (float(alpha)/m) * n.dot((n.dot(X,theta)-y).transpose(),X).transpose()
+                    if viewProgress:
+                        if iter % b == 0:
+                            clear_output()
+                            print ''
+                            print 'theta:{0}'.format(theta)
+                    J_history[iter] = self.computeCost(X, y, theta)
+                    if viewProgress:
+                        if iter % b == 0:
+                            print '1 J history:{0}'.format(J_history[iter])
+                            print '1 iter:{0}'.format(iter)
+                    #print type(J_history[iter])
+                    if n.isnan(J_history[iter]):
+                        #plot(J_history); show();
+                        scatter(iter, J_history); show();
+                        return [theta, J_history]
+                        
+        except:
+            ''
         if viewProgress: 
             if iter % b == 0:
-                clear_output()
-                print J_history[iter]
-                print iter
+                #clear_output()
+                print '2 J history:{0}'.format(J_history[iter])
+                print '2 iter:{0}'.format(iter)
         
         return [theta, J_history]
         
