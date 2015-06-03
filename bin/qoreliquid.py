@@ -424,7 +424,7 @@ class ml007:
                     #print type(J_history[iter])
                     if n.isnan(J_history[iter]):
                         #plot(J_history); show();
-                        scatter(iter, J_history); show();
+                        plt.scatter(iter, J_history); show();
                         return [theta, J_history]
                         
         except:
@@ -541,25 +541,23 @@ class StatWing:
         print p.DataFrame(d, index=ind)
         
         import numpy as np
-        x = sample.ix[:, relatedCol]
-        y = sample.ix[:, keyCol]
+        x = sample.ix[:, relatedCol].fillna(0)
+        y = sample.ix[:, keyCol].fillna(0)
         
         deg = 1
         weight = 1
         theta = np.polynomial.polynomial.polyfit(x,y,deg,weight)#w=weight of each observation)
-        print theta
+        print 'theta:{0}'.format(theta)
         #p.DataFrame(theta[0] + theta[1] * n.array(range(0, int(n.max(x.ix[:,1]))))).plot()
         #p.DataFrame(theta[0] + theta[1] * n.array(range(0, ceil(n.max(x.get_values()))))).plot()
-        print [min(y), max(y)]
-        print [min(x), max(x)]
+        #print [min(y), max(y)]
+        #print [min(x), max(x)]
         #p.DataFrame(theta[0] + theta[1] * n.array( n.linspace(0, int(ceil(n.max(x.get_values()))), 5) )).plot()
         mini = int(ceil(n.min(x.get_values())))#-10
         maxi = int(ceil(n.max(x.get_values())))#+10
-        print mini
-        print maxi
-        p.DataFrame(theta[0] + theta[1] * n.array( n.linspace(mini, maxi, maxi-mini) )).plot()
+        plot(linspace(mini, maxi, 10), theta[0] + theta[1] * linspace(mini, maxi, 10), '-r');
+        #p.DataFrame(theta[0] + theta[1] * n.array( n.linspace(mini, maxi, maxi-mini) )).plot()
         #p.DataFrame(theta[0] + theta[1] * n.array( n.linspace(-120, 60, 180) )).plot()
-        print maxi-mini
         
         #print n.linspace(int(ceil(n.max(x.get_values()))), int(ceil(n.max(x.get_values()))), 5)
         #print n.linspace(min(x)-10, int(ceil(n.max(x.get_values())))+10, len(x))
