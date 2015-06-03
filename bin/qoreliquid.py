@@ -391,7 +391,7 @@ class FinancialModel:
 from IPython.display import display, clear_output
 import time
 class ml007:
-    
+
     def computeCost(self, X, y, theta):
         X = n.array(X)
         #print X
@@ -410,7 +410,9 @@ class ml007:
         J_history = n.zeros(num_iters)
         try:
             for iter in range(0,num_iters):
-                    theta = theta - (float(alpha)/m) * n.dot((n.dot(X,theta)-y).transpose(),X).transpose()
+                    dif = (float(alpha)/m) * n.dot((n.dot(X,theta)-y).transpose(),X).transpose()
+                    print dif
+                    theta = theta - dif
                     if viewProgress:
                         if iter % b == 0:
                             clear_output()
@@ -501,8 +503,32 @@ def pcc(X, Y):
 
 class StatWing:
     
-    def getCol(self, col, df):
+    # export dataset to csv for analysis (statwing)
+    def higherPrev(self, a):
+        a = sigmoidme(a) > 0.5
+        return n.array(a, dtype=int)
+    
+    def lowerPrev(self, a):
+        a = sigmoidme(a) < 0.5
+        return n.array(a, dtype=int)
+    
+    def exportToStatwing(self, de, currency_code):
+        #dff = n.matrix('1;2;3;4;-4;-5;-3;2;9').A
+        #print higherPrev(dff)
+        #print lowerPrev(dff)
+        s1 = 0
+        de = de.fillna(0)
+        de1 = de.ix[s1:,:]
+        #de1 = sigmoidme(normalizeme(de1))
+        de1 = p.DataFrame(de1)
+        de1['hi'] = self.higherPrev(de.ix[s1:,0].diff())
+        de1['lo'] = self.lowerPrev(de.ix[s1:,0].diff())
+        #de1.to_csv('quandl-BNP-'+currency_code+'.csv', index=None)
+        #de1.ix[:,:].plot(style='-'); show();
+        #print de1
+        return de1
 
+    def getCol(self, col, df):
         if type(col) == type(0):
             column = df.columns[col]
         elif type(col) == type(''):
@@ -568,6 +594,157 @@ class StatWing:
         xlabel(self.getCol(relatedCol, sample))
         ylabel(self.getCol(keyCol, sample))
         show();
+    
+    def regression(self, data, keyCol, relatedCols, viewProgress=True):
+
+        data = data.fillna(0)
+        #X = data.ix[:,0]; y = data.ix[:,1]
+        #X = data.ix[:,2]; y = data.ix[:,1]
+        ##X = data.ix[:,0]; 
+        #y = data.ix[:,'hi']
+        ##y = data.ix[:,0]
+        m = len(data)
+        
+        #scatter(X,y, marker='x', c='r'); show();
+        
+        # gradient descent
+        #plot(X,y,'.'); show();
+        
+        ##X = p.DataFrame()
+        ##X[0] = ones(m)
+        	##for i in relatedCols:
+        ##	X[1] = data.ix[:,0]
+        ##	X[2] = data.ix[:,1]
+        
+        # 
+        X = p.DataFrame(index=data.index)
+        X['bias'] = n.ones(len(data))
+        #X['keyCol'] = data.ix[:, keyCol].fillna(0)
+        for i in xrange(0, len(relatedCols)):
+            X[str(relatedCols[i])] = data.ix[:, relatedCols[i]].fillna(0)
+            #X[str(data.columns[relatedCols[i]])] = data.ix[:, data.columns[relatedCols[i]]].fillna(0)
+        #for i in relatedCols:
+        #    X[i] = data.ix[:, data.columns[i]].fillna(0)
+        y = data.ix[:, keyCol].fillna(0)
+        #print X
+        #print data.ix[:,relatedCols[0]]
+        #return X#
+        #print y
+        #import sys
+        #sys.exit()
+        
+        theta = n.zeros(len(X.columns))
+        #theta = n.random.randn(len(X.columns))
+        print theta
+        
+        #% Some gradient descent settings
+        iterations = 3000;
+        alpha = 0.01;
+        
+        ml = ml007()
+        
+        #% compute and display initial cost
+        ml.computeCost(X, y, theta)
+        
+        #% run gradient descent
+        [theta, J_hist] = ml.gradientDescent(X, y, theta, alpha, iterations, viewProgress=viewProgress);
+        
+        #% print theta to screen
+        print 'Theta found by gradient descent: '
+        #print '%f %f \n', theta(1), theta(2)
+        
+        print 'X len'
+        print len(X.columns)
+        print theta
+        jh = J_hist[0:4000]
+        p.DataFrame(jh)
+        plot(jh, '-')
+        
+        return theta
+
+    def predictRegression(self, te1, te2, mode=1):
+        
+        if len(te1) > len(te2):
+            #te2.append(0)
+            te2.insert(0,0)
+        
+        print te1
+        print te2
+        print '---'
+        
+        dp = p.DataFrame(te1)
+        #print len(te1)
+        #print te1
+        #print len(te2)
+        #print te2
+        dp[1] = te2
+        
+        # get current quotes
+        co = p.read_csv('datafeeds/config.csv', header=None)
+        env2=co.ix[1,1]
+        access_token2=co.ix[1,2]
+        oanda2 = oandapy.API(environment=env2, access_token=access_token2)
+        li = []
+        if mode == 1: fl = 0; ll = len(dp.index)-1;
+        if mode == 2: fl = 1; ll = len(dp.index);
+        for i in list(dp.ix[:,1])[fl:ll]:
+            if i != 'bias':
+                try:
+                    pai = "{0}_{1}".format(i[0:3], i[3:6])
+                    response = oanda2.get_prices(instruments=pai)
+                    prices = response.get("prices")
+                    asking_price = prices[0].get("ask")
+                    li.append(asking_price)
+                except oandapy.OandaError, e:
+                    print
+                    print e
+                    print
+                    print 'The above pair is not available, please omit this pair before applying a regression.'
+                    print 'The below output is not accurate and it only serves as an indication.'
+                    print
+                    li.append(0)
+            else:
+                li.append(1)
+        #if len(te1) > len(te2):
+        #li.append(1)
+        li.insert(0,1)
+        dp[2] = li
+        print dp
+        
+        dn = n.array(dp.get_values()[:,[0,2]], dtype=float)
+        #print dn
+        n.dot(dn[:,0], dn[:,1])
+        pred = n.sum(dn[:,0] * dn[:,1])
+        print pred
+        """
+        predictions.append(pred)
+        print p.DataFrame(predictions)
+        plot(predictions); show();
+        """
+        
+    # m2e() { fc="`echo "$1" | perl -pe 's/.xlsx/.csv/g'`"; echo $1; echo $fc; xlsx2csv $1 $fc; }    
+    def statwingExportPredict(self, fns, ):
+        for fn in fns:
+            print '================================================='
+            print fn
+            print '================================================='
+            
+            fp = open(fn,'r')
+            te = fp.read()
+            te = re.match(re.compile(r'.*?= (.*?").*', re.S), te).groups()[0]#.replace('\n', '')
+            #print te
+            
+            # weights
+            #te1 = re.findall(re.compile(r'[\+\-]\s+\d+\.\d+', re.S), te)#.groups()[0]#.replace('\n', '')            
+            te1 = re.findall(re.compile(r'([\+\-])\s+(\d+)(\.\d+)?', re.S), te)#.groups()[0]#.replace('\n', '')
+            #print te1
+            for i in xrange(len(te1)):
+                te1[i] = ''.join(te1[i])
+            
+            # pairs 
+            te2 = re.findall(re.compile(r'[A-Z]+\.([A-Z]+)', re.S), te)#.groups()[0]#.replace('\n', '')
+            
+            self.predictRegression(te1, te2)
 
 
 def polarizePortfolio(df, fromCol, toCol, biasCol):
@@ -612,6 +789,12 @@ This function can be called to generate a polarized target portfolio.
 
 def normalizeme(dfr):
     return (dfr - n.mean(dfr))/n.std(dfr)
+
+def normalizemePinv(ds, mean, std):
+    dsMean = n.mean(ds)
+    dsStd  = n.std(ds)
+    ds = (dfr * dfrStd) + dfrMean
+    return ds
 
 def normalizeme2(ds, index=None, columns=None):
     #print type(ds)
