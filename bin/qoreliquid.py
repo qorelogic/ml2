@@ -410,9 +410,7 @@ class ml007:
         J_history = n.zeros(num_iters)
         try:
             for iter in range(0,num_iters):
-                    dif = (float(alpha)/m) * n.dot((n.dot(X,theta)-y).transpose(),X).transpose()
-                    print dif
-                    theta = theta - dif
+                    theta = theta - (float(alpha)/m) * n.dot((n.dot(X,theta)-y).transpose(),X).transpose()
                     if viewProgress:
                         if iter % b == 0:
                             clear_output()
@@ -503,6 +501,13 @@ def pcc(X, Y):
 
 class StatWing:
     
+    def __init__(self):
+        self.keyCol = ''
+        self.relatedCols = []
+        self.theta = n.array([])
+        self.dmean = []
+        self.dstd = []
+        
     # export dataset to csv for analysis (statwing)
     def higherPrev(self, a):
         a = sigmoidme(a) > 0.5
@@ -745,7 +750,67 @@ class StatWing:
             te2 = re.findall(re.compile(r'[A-Z]+\.([A-Z]+)', re.S), te)#.groups()[0]#.replace('\n', '')
             
             self.predictRegression(te1, te2)
+            
+    #def regression2(self, de=None, du=None, da=None):
+    def regression2(self, de=None):
+        #if de == None:
+        #    de = getDatasetEUR()
+        #if du == None:
+        #    du = getDataUSD()
+        #if da == None:
+        #    da = getDataAUD()
+        
+        # last model
+        # 1990-01-01 2015-05-20 inclusive
+        
+        #df1 = self.exportToStatwing(de,'EUR')
+        #sw.exportToStatwing(du,'USD')
+        #print df1
+        
+        #sw.relate(df1, 0, 3)
+        
+        #data = p.read_csv('/coursera/ml-007/programming-exercises/mlclass-ex1/ex1data1.txt', header=None)
+        #data = p.read_csv('quandl-BNP-USD.csv')
+        data = p.read_csv('quandl-BNP-EUR.csv')
+        #data = de.fillna(0).ix[:,data.columns]
+        data = de.ix[de.index, data.columns].fillna(0)
+        [data, self.dmean, self.dstd] = normalizeme(data, pinv=True)
+        
+        #self.keyCol = 'BNP.EURUSD - EUR/USD_x'
+        #self.keyCol = 'BNP.EURGBP - EUR/GBP_x'
+        #self.keyCol = 'BNP.EURCHF - EUR/CHF_x'
+        #self.relatedCols = [0,1,2,3,6,9,8,5]
+        self.relatedCols = [0,1,2,3,6,8,5]
+        #self.relatedCols = data.columns
+        #self.relatedCols = [0,1]
+        
+        self.theta = self.regression(data, self.keyCol, self.relatedCols, viewProgress=True)
+        p1 = list(data.columns[self.relatedCols])
+        print p1
 
+    def predictRegression2(self, data):
+        
+        #if len(self.theta) == 0:
+        #    self.regression2(de=data)
+
+        # predict regression
+        X = p.DataFrame(n.ones(len(data)), index=data.index).combine_first(data.ix[:, self.relatedCols].fillna(0))
+        
+        print 
+        #s = len(X)-20
+        s = len(X)-1
+        #print X.ix[s:s+20, data.columns[[0]].insert(0,0)]
+        #print X.ix[s+19,data.columns[self.relatedCols].insert(0,0)]
+        #print theta
+        
+        predict = n.dot(X.ix[s,data.columns[self.relatedCols].insert(0,0)], self.theta.reshape(8,1))
+        
+        #print self.dmean
+        #print self.dstd
+        predict = normalizemePinv(predict, self.dmean, self.dstd)[self.keyCol]
+        print self.keyCol
+        print predict
+        return predict
 
 def polarizePortfolio(df, fromCol, toCol, biasCol):
     """Adds an extra polarization column that separates fromCol between positive and negative
@@ -787,14 +852,33 @@ This function can be called to generate a polarized target portfolio.
             df.ix[i, toCol] = df.ix[i, fromCol] * 1
     return df
 
-def normalizeme(dfr):
-    return (dfr - n.mean(dfr))/n.std(dfr)
+def normalizeme(dfr, pinv=False):
+    
+    nmean = n.mean(dfr, axis=0)
+    nstd = n.std(dfr, axis=0)
+    #nmean = n.mean(dfr)
+    #nstd = n.std(dfr)
+    dfr = (dfr - nmean) / nstd
+    #dfr = n.divide((dfr - nmean), nstd)
+    if pinv == False:
+        return dfr
+    else:
+        return [dfr, nmean, nstd]
 
-def normalizemePinv(ds, mean, std):
-    dsMean = n.mean(ds)
-    dsStd  = n.std(ds)
-    ds = (dfr * dfrStd) + dfrMean
-    return ds
+def normalizemePinv(dfr, mean, std):
+    
+    #print (n.dot(data.get_values(),  dst['mean'].get_values().reshape(len(dst), 1) )) + dst['std']
+    #print (n.dot(data.get_values(),  dmean.get_values().reshape(len(dst), 1) )) + dstd.get_values()
+    ##print type(data)
+    #print (data)
+    ##print type(dmean)
+    #print (dmean)
+    ##print type(dstd)
+    #print (dstd)
+    #print (n.dot(n.array(data), dmean.reshape(len(dst), 1) )) + dstd
+    
+    dfr = (dfr * std) + mean
+    return dfr
 
 def normalizeme2(ds, index=None, columns=None):
     #print type(ds)
