@@ -460,6 +460,58 @@ class ml007:
     #    0.2588
     #    0.3999
 
+
+def generateRelatedColsFromOandaTickers():
+    # generate relatedCols rfom oandas tickers
+    inst = p.DataFrame(oanda2.get_instruments(aid)['instruments'])
+    lse = []
+    lsf = []
+    for i in inst.ix[:, 'instrument']:
+        pair = i.replace('_', '')
+        if pair[0:3] == 'EUR':
+            lse.append('BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x')
+    for i in lse:
+        try:    lsf.append(list(de.columns).index(i))
+        except: ''
+            
+    #for i in inst:
+    #    print i['instrument']
+    
+    lsf  = list(p.DataFrame(lsf).sort(0).transpose().get_values()[0])
+    #print lsf
+    return lsf
+
+def getPricesLatest(data, trueprices=False):
+    ins = []
+    pairs = []
+    for i in list(data.ix[:, sw.relatedCols].columns):
+        pair = re.sub(re.compile(r'.*?-\ (.*)_x'), '\\1', i).replace('/', '_')
+        #print pair
+        pr = p.DataFrame(oanda2.get_prices(instruments=[pair])['prices'])
+        #print 
+        ins.append(n.mean(pr.ix[0, ['bid', 'ask']].get_values()))
+        pairs.append(pair)
+    prices = p.DataFrame(ins, index=pairs)
+    if trueprices:
+        return prices
+    #print #prices
+    list(prices.ix[1:,0])#.insert(0,1)
+    nprices = p.DataFrame([list(sw.theta), list(prices.ix[1:,0]) ]).transpose()
+    #nprices = nprices.fillna(0)
+    
+    #prices.ix[1:,0], sw.dmean, sw.dstd] = normalizeme(prices.ix[1:,0], pinv=True)
+    #rices.ix[1:,0] = sigmoidme(prices.ix[1:,0])
+    nprices = p.DataFrame([list(sw.theta), list(prices.ix[1:,0]) ], columns=list(prices.index)).transpose()
+    pr2 = list(nprices.ix[:,1])[0:10]
+    pr2.insert(0,1)
+    #print pr2
+    #print 
+    #print prices
+    nprices[1] = pr2
+    print nprices
+    return nprices
+
+
 # source: http://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
 import math
 def pearson_def(x, y):
@@ -516,7 +568,7 @@ class StatWing:
         dfc = p.DataFrame(index=dfa.index[0:len(dfa)-1])
         dfc['a'] = dfa.ix[0:len(dfa)-1, 0].get_values()
         dfc['b'] = dfa.ix[1:len(dfa), 0].get_values()
-        dfc['c'] = n.array((dfc['b'] > dfc['a']), dtype=int)
+        dfc['c'] = list(n.array((dfc['b'] > dfc['a']), dtype=int))
         return dfc['c']
         #p.DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
 
@@ -798,7 +850,8 @@ class StatWing:
         self.theta = self.regression(data, y, self.keyCol, self.relatedCols, iterations=iterations, alpha=alpha, viewProgress=viewProgress, showPlot=showPlot)
         #p1 = list(data.columns[self.relatedCols])
         #print p1
-        plot(data, '.'); show();
+        if showPlot:
+            plot(data, '.'); show();
 
     def predictRegression2(self, data, quiet=False):
         
@@ -1338,6 +1391,14 @@ def getDataUSD():
     
     du = getDataFromQuandlBNP(pa, 'USD')
     return du
+
+def getDataJPY():
+    pa = ''
+    # 2
+    pa += ' USDJPY AUDJPY EURJPY GBPJPY '
+    
+    res = getDataFromQuandlBNP(pa, 'JPY')
+    return res
 
 def getDataAUD():
     pa = ''
