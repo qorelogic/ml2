@@ -426,6 +426,10 @@ class ml007:
                         #plot(J_history); show();
                         plt.scatter(iter, J_history); show();
                         return [theta, J_history]
+                    if iter % b == 0:
+                        print iter
+                        print J_history[iter]
+                        clear_output()
                         
         except:
             ''
@@ -508,6 +512,22 @@ class StatWing:
         self.dmean = []
         self.dstd = []
         
+    def higherNextDay(self, dfa):
+        dfc = p.DataFrame(index=dfa.index[0:len(dfa)-1])
+        dfc['a'] = dfa.ix[0:len(dfa)-1, 0].get_values()
+        dfc['b'] = dfa.ix[1:len(dfa), 0].get_values()
+        dfc['c'] = n.array((dfc['b'] > dfc['a']), dtype=int)
+        return dfc['c']
+        #p.DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
+
+    def lowerNextDay(self, dfa):
+        dfc = p.DataFrame(index=dfa.index[0:len(dfa)-1])
+        dfc['a'] = dfa.ix[0:len(dfa)-1, 0].get_values()
+        dfc['b'] = dfa.ix[1:len(dfa), 0].get_values()
+        dfc['c'] = n.array((dfc['b'] < dfc['a']), dtype=int)
+        return dfc['c']
+        #p.DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
+    
     # export dataset to csv for analysis (statwing)
     def higherPrev(self, a):
         a = sigmoidme(a) > 0.5
@@ -600,7 +620,25 @@ class StatWing:
         ylabel(self.getCol(keyCol, sample))
         show();
     
-    def regression(self, data, keyCol, relatedCols, viewProgress=True):
+    def fixColumns(self, data, relatedCols, keyCol):
+        #print relatedCols
+        X = data.ix[:, relatedCols]
+        #print type(X)
+        #print X
+        #print list(X.columns)
+        X['bias'] = n.ones(len(data))
+        Xc = X.columns.tolist()
+        Xc.insert(0, Xc.pop())
+        #try:
+        Xc.remove(keyCol)
+        print 'removed {0}'.format(keyCol)
+        #except:
+        #    ''
+        X = X[Xc]
+        #print list(X.columns)
+        return X
+    
+    def regression(self, data, y, keyCol, relatedCols, iterations=1000, alpha=0.01, viewProgress=True, showPlot=True):
 
         data = data.fillna(0)
         #X = data.ix[:,0]; y = data.ix[:,1]
@@ -615,36 +653,14 @@ class StatWing:
         # gradient descent
         #plot(X,y,'.'); show();
         
-        ##X = p.DataFrame()
-        ##X[0] = ones(m)
-        	##for i in relatedCols:
-        ##	X[1] = data.ix[:,0]
-        ##	X[2] = data.ix[:,1]
-        
         # 
-        X = p.DataFrame(index=data.index)
-        X['bias'] = n.ones(len(data))
-        #X['keyCol'] = data.ix[:, keyCol].fillna(0)
-        for i in xrange(0, len(relatedCols)):
-            X[str(relatedCols[i])] = data.ix[:, relatedCols[i]].fillna(0)
-            #X[str(data.columns[relatedCols[i]])] = data.ix[:, data.columns[relatedCols[i]]].fillna(0)
-        #for i in relatedCols:
-        #    X[i] = data.ix[:, data.columns[i]].fillna(0)
-        y = data.ix[:, keyCol].fillna(0)
-        #print X
-        #print data.ix[:,relatedCols[0]]
-        #return X#
+        X = self.fixColumns(data, relatedCols, keyCol)
+        
         #print y
-        #import sys
-        #sys.exit()
         
         theta = n.zeros(len(X.columns))
         #theta = n.random.randn(len(X.columns))
         print theta
-        
-        #% Some gradient descent settings
-        iterations = 3000;
-        alpha = 0.01;
         
         ml = ml007()
         
@@ -658,12 +674,14 @@ class StatWing:
         print 'Theta found by gradient descent: '
         #print '%f %f \n', theta(1), theta(2)
         
-        print 'X len'
+        print 'len cols'
         print len(X.columns)
         print theta
-        jh = J_hist[0:4000]
-        p.DataFrame(jh)
-        plot(jh, '-')
+        jh = J_hist
+        print jh[len(jh)-1]
+        if showPlot == True:
+            plot(jh, '-'); show();
+
         
         return theta
 
@@ -752,9 +770,9 @@ class StatWing:
             self.predictRegression(te1, te2)
             
     #def regression2(self, de=None, du=None, da=None):
-    def regression2(self, de=None):
-        #if de == None:
-        #    de = getDatasetEUR()
+    def regression2(self, X=None, y=None, iterations=1000, alpha=0.01, viewProgress=True, showPlot=True):
+        #if X == None:
+        #    X = getDatasetEUR()
         #if du == None:
         #    du = getDataUSD()
         #if da == None:
@@ -763,7 +781,7 @@ class StatWing:
         # last model
         # 1990-01-01 2015-05-20 inclusive
         
-        #df1 = self.exportToStatwing(de,'EUR')
+        #df1 = self.exportToStatwing(X,'EUR')
         #sw.exportToStatwing(du,'USD')
         #print df1
         
@@ -771,45 +789,67 @@ class StatWing:
         
         #data = p.read_csv('/coursera/ml-007/programming-exercises/mlclass-ex1/ex1data1.txt', header=None)
         #data = p.read_csv('quandl-BNP-USD.csv')
-        data = p.read_csv('quandl-BNP-EUR.csv')
-        #data = de.fillna(0).ix[:,data.columns]
-        data = de.ix[de.index, data.columns].fillna(0)
+        #data = p.read_csv('quandl-BNP-EUR.csv')
+        #data = X.fillna(0).ix[:,data.columns]
+        data = X.ix[X.index, X.columns].fillna(0)
         [data, self.dmean, self.dstd] = normalizeme(data, pinv=True)
+        data = sigmoidme(data)
         
-        #self.keyCol = 'BNP.EURUSD - EUR/USD_x'
-        #self.keyCol = 'BNP.EURGBP - EUR/GBP_x'
-        #self.keyCol = 'BNP.EURCHF - EUR/CHF_x'
-        #self.relatedCols = [0,1,2,3,6,9,8,5]
-        self.relatedCols = [0,1,2,3,6,8,5]
-        #self.relatedCols = data.columns
-        #self.relatedCols = [0,1]
-        
-        self.theta = self.regression(data, self.keyCol, self.relatedCols, viewProgress=True)
-        p1 = list(data.columns[self.relatedCols])
-        print p1
+        self.theta = self.regression(data, y, self.keyCol, self.relatedCols, iterations=iterations, alpha=alpha, viewProgress=viewProgress, showPlot=showPlot)
+        #p1 = list(data.columns[self.relatedCols])
+        #print p1
+        plot(data, '.'); show();
 
-    def predictRegression2(self, data):
+    def predictRegression2(self, data, quiet=False):
         
         #if len(self.theta) == 0:
         #    self.regression2(de=data)
+        [data, self.dmean, self.dstd] = normalizeme(data, pinv=True)
+        data = sigmoidme(data)
 
         # predict regression
-        X = p.DataFrame(n.ones(len(data)), index=data.index).combine_first(data.ix[:, self.relatedCols].fillna(0))
-        
-        print 
+        print 'related cols'
+        print self.relatedCols
+        #print data
+        #X = p.DataFrame(n.ones(len(data)), index=data.index).combine_first(data.ix[:, self.relatedCols].fillna(0))
+        X = self.fixColumns(data, self.relatedCols, self.keyCol)
+        print list(X.columns)
+
         #s = len(X)-20
         s = len(X)-1
         #print X.ix[s:s+20, data.columns[[0]].insert(0,0)]
         #print X.ix[s+19,data.columns[self.relatedCols].insert(0,0)]
         #print theta
+        ntheta = self.theta.reshape(len(self.relatedCols),1)
+        #ntheta = self.theta.reshape(len(self.relatedCols)+1,1)
+        #nX = X.ix[:,data.columns[self.relatedCols].insert(0,0)]
+        nX = X
+        #nX = X.ix[s,data.columns[self.relatedCols].insert(0,0)]
         
-        predict = n.dot(X.ix[s,data.columns[self.relatedCols].insert(0,0)], self.theta.reshape(8,1))
+        #print nX
+        #print ntheta
+        print 'theta shape:'
+        print self.theta.shape
+        print self.theta
+        print 'X:'
+        print X.shape
+        print list(X.columns)
+        
+        predict = n.dot(nX, ntheta)
+        print ntheta
+        print nX.ix[len(nX)-1, :]
+        
+        X.ix[:,data.columns[self.relatedCols].insert(0,0)]
+        #self.theta.reshape(len(self.relatedCols)+1,1)            
         
         #print self.dmean
         #print self.dstd
-        predict = normalizemePinv(predict, self.dmean, self.dstd)[self.keyCol]
-        print self.keyCol
-        print predict
+        #predict = sigmoidmePinv(predict)
+        #predict = normalizemePinv(predict, self.dmean, self.dstd)[self.keyCol]
+        
+        if quiet == False:
+            print self.keyCol
+            print predict
         return predict
 
 def polarizePortfolio(df, fromCol, toCol, biasCol):
@@ -906,6 +946,16 @@ def normalizeme2(ds, index=None, columns=None):
 
 def sigmoidme(dfr):
     return 1.0 / (1 + pow(n.e,-dfr))
+
+def sigmoidmePinv(sigdfr):
+    #sigdfr = sigdfr.fillna(0).get_values()
+    #sigdfr = 1.0 / (1 + pow(n.e,-dfr))
+    #return pow(n.e,-dfr) = (1.0 / pinv) - 1
+    #return log10((1.0 / dfr.get_values()) - 1)
+    #return n.log10((1.0/sigdfr)-1)/n.log10(n.e)
+    #pow(n.e,-dfr) = (1.0 / pinv) - 1
+    #/ n.log(n.e)
+    return -n.divide(n.log10((n.divide(1.0, sigdfr))-1), n.log10(n.e))
 
 def sharpe(dfr):
     ''
