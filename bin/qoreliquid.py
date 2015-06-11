@@ -481,13 +481,25 @@ class OandaQ:
         
         print p.DataFrame(self.oanda2.get_account(self.aid), index=[0])
         
-    def buy(self, risk, stop):
-        self.order(risk, stop, 'buy')
+    def trade(self, risk, stop, instrument, side):
+        if instrument == 'eu':
+            instrument = 'EUR_USD'
+        if instrument == 'uj':
+            instrument = 'USD_JPY'
+        if side == 'b':
+            side ='buy'
+            self.buy(risk, stop, instrument=instrument)
+        if side == 's':
+            side ='sell'
+            self.sell(risk, stop, instrument=instrument)
         
-    def sell(self, risk, stop):
-        self.order(risk, stop, 'sell')
+    def buy(self, risk, stop, instrument='EUR_USD'):
+        self.order(risk, stop, 'buy', instrument=instrument)
+        
+    def sell(self, risk, stop, instrument='EUR_USD'):
+        self.order(risk, stop, 'sell', instrument=instrument)
 
-    def order(self, risk, stop, side):
+    def order(self, risk, stop, side, instrument='EUR_USD'):
         
         stop = float(stop) # pips
         risk = float(1) # percentage risk
@@ -504,7 +516,7 @@ class OandaQ:
         #print price
         print amount
         
-        order = self.oanda2.create_order(self.aid, type='market', instrument='EUR_USD', side=side, units=amount)
+        order = self.oanda2.create_order(self.aid, type='market', instrument=instrument, side=side, units=amount)
 
     def calculateAmount(self, bal, pcnt, stop):
         bal  = float(bal)
@@ -1004,7 +1016,8 @@ class StatWing:
         except:
             ''
             #print 'eerr'
-        self.nxps.append( val )
+        if val != 0:
+            self.nxps.append( val )
         #plot(self.nxps);
         #show();
         #print self.nxps

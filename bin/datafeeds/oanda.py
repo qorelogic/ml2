@@ -92,6 +92,25 @@ class MyStreamer(oandapy.Streamer):
             
             #for i in range(1000):
             #y = np.random.random()
+            pcn = 0.5
+            try:
+                imax = n.max(self.sw.nxps)
+                #imax = imax + (imax * pcn/100)
+                imax = imax + n.std(self.sw.nxps)
+            except:
+                ''
+            try:
+                imin = n.min(self.sw.nxps)
+                #imin = imin - (imin * pcn/100)
+                imin = imin - n.std(self.sw.nxps)
+            except:
+                ''
+            #plt.axis([0, 2000, -0.41, -0.38])
+                
+            try:
+                plt.axis([0, len(self.sw.nxps)+10, imin, imax])
+            except:
+                ''
             plt.scatter(self.i, y)
             plt.draw()
             #time.sleedf
