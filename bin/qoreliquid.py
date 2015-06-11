@@ -461,55 +461,123 @@ class ml007:
     #    0.3999
 
 
-def generateRelatedColsFromOandaTickers():
-    # generate relatedCols rfom oandas tickers
-    inst = p.DataFrame(oanda2.get_instruments(aid)['instruments'])
-    lse = []
-    lsf = []
-    for i in inst.ix[:, 'instrument']:
-        pair = i.replace('_', '')
-        if pair[0:3] == 'EUR':
-            lse.append('BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x')
-    for i in lse:
-        try:    lsf.append(list(de.columns).index(i))
-        except: ''
-            
-    #for i in inst:
-    #    print i['instrument']
+class OandaQ:
     
-    lsf  = list(p.DataFrame(lsf).sort(0).transpose().get_values()[0])
-    #print lsf
-    return lsf
+    oanda2 = None
+    
+    def __init__(self):
+        
+        # get current quotes
+        co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
+        env2=co.ix[1,1]
+        access_token2=co.ix[1,2]
+        self.oanda2 = oandapy.API(environment=env2, access_token=access_token2)
+    
+        self.aid = self.oanda2.get_accounts()['accounts'][0]['accountId']
+        #self.oanda2.create_order(aid, type='market', instrument='EUR_USD', side='sell', units=10)
+        res = self.oanda2.get_trades(self.aid)
+        for i in res:
+            print p.DataFrame(res[i])
+        
+        print p.DataFrame(self.oanda2.get_account(self.aid), index=[0])
+        
+    def buy(self, risk, stop):
+        self.order(risk, stop, 'buy')
+        
+    def sell(self, risk, stop):
+        self.order(risk, stop, 'sell')
 
-def getPricesLatest(data, trueprices=False):
-    ins = []
-    pairs = []
-    for i in list(data.ix[:, sw.relatedCols].columns):
-        pair = re.sub(re.compile(r'.*?-\ (.*)_x'), '\\1', i).replace('/', '_')
-        #print pair
-        pr = p.DataFrame(oanda2.get_prices(instruments=[pair])['prices'])
-        #print 
-        ins.append(n.mean(pr.ix[0, ['bid', 'ask']].get_values()))
-        pairs.append(pair)
-    prices = p.DataFrame(ins, index=pairs)
-    if trueprices:
-        return prices
-    #print #prices
-    list(prices.ix[1:,0])#.insert(0,1)
-    nprices = p.DataFrame([list(sw.theta), list(prices.ix[1:,0]) ]).transpose()
-    #nprices = nprices.fillna(0)
+    def order(self, risk, stop, side):
+        
+        stop = float(stop) # pips
+        risk = float(1) # percentage risk
+        
+        #print self.oanda2.get_accounts()['accounts'][0]['accountId']
+        acc = self.oanda2.get_account(self.aid)
+        #price = self.oanda2.get_prices(instruments='EUR_USD')['prices'][0]['ask']
+        #leverage = 50
+        
+        amount = self.calculateAmount(acc['marginAvail'], risk, stop)
+        
+        #print acc['marginAvail'] * float(leverage) / price
+        #print acc
+        #print price
+        print amount
+        
+        order = self.oanda2.create_order(self.aid, type='market', instrument='EUR_USD', side=side, units=amount)
+
+    def calculateAmount(self, bal, pcnt, stop):
+        bal  = float(bal)
+        lev  = 30.0
+        stop = float(stop)
+        openp = 1 #1.13024
+        pcnt = float(pcnt)
+        
+        amount = bal * lev
+        pl     = amount * ((openp + float(stop) / 10000.0) - openp )
+        #pcnt   = 100.0*pl / bal
+        
+        amount = (pcnt * bal) / (100* ((openp + float(stop) / 10000.0) - openp ) )
+        amount = int(amount)
+        #print amount
+        #print pl
+        #print pcnt
+        
+        return amount
+
+    def generateRelatedColsFromOandaTickers(self, de):
+        
+        # generate relatedCols from oandas tickers
+        inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
+        lse = []
+        lsf = []
+        for i in inst.ix[:, 'instrument']:
+            pair = i.replace('_', '')
+            if pair[0:3] == 'EUR':
+                lse.append('BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x')
+        for i in lse:
+            try:    
+                lsf.append(list(de.columns).index(i))
+            except: ''
+                
+        #for i in inst:
+        #    print i['instrument']
+        
+        print lsf
+        lsf  = list(p.DataFrame(lsf).sort(0).transpose().get_values()[0])
+        #print lsf
+        return lsf
     
-    #prices.ix[1:,0], sw.dmean, sw.dstd] = normalizeme(prices.ix[1:,0], pinv=True)
-    #rices.ix[1:,0] = sigmoidme(prices.ix[1:,0])
-    nprices = p.DataFrame([list(sw.theta), list(prices.ix[1:,0]) ], columns=list(prices.index)).transpose()
-    pr2 = list(nprices.ix[:,1])[0:10]
-    pr2.insert(0,1)
-    #print pr2
-    #print 
-    #print prices
-    nprices[1] = pr2
-    print nprices
-    return nprices
+    def getPricesLatest(self, data, sw, trueprices=False):
+        
+        ins = []
+        pairs = []
+        for i in list(data.ix[:, sw.relatedCols].columns):
+            pair = re.sub(re.compile(r'.*?-\ (.*)_x'), '\\1', i).replace('/', '_')
+            #print pair
+            pr = p.DataFrame(self.oanda2.get_prices(instruments=[pair])['prices'])
+            #print 
+            ins.append(n.mean(pr.ix[0, ['bid', 'ask']].get_values()))
+            pairs.append(pair)
+        prices = p.DataFrame(ins, index=pairs)
+        if trueprices:
+            return prices
+        #print #prices
+        list(prices.ix[1:,0])#.insert(0,1)
+        nprices = p.DataFrame([list(sw.theta), list(prices.ix[1:,0]) ]).transpose()
+        #nprices = nprices.fillna(0)
+        
+        #prices.ix[1:,0], sw.dmean, sw.dstd] = normalizeme(prices.ix[1:,0], pinv=True)
+        #rices.ix[1:,0] = sigmoidme(prices.ix[1:,0])
+        nprices = p.DataFrame([list(sw.theta), list(prices.ix[1:,0]) ], columns=list(prices.index)).transpose()
+        pr2 = list(nprices.ix[:,1])[0:10]
+        pr2.insert(0,1)
+        #print pr2
+        #print 
+        #print prices
+        nprices[1] = pr2
+        print nprices
+        return nprices
 
 
 # source: http://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
@@ -563,6 +631,11 @@ class StatWing:
         self.theta = n.array([])
         self.dmean = []
         self.dstd = []
+        
+        # for predict from theta
+        self.nxps = []
+        self.oq = OandaQ()
+        self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
         
     def higherNextDay(self, dfa):
         dfc = p.DataFrame(index=dfa.index[0:len(dfa)-1])
@@ -905,6 +978,38 @@ class StatWing:
             print predict
         return predict
 
+    # real-time theta
+    def predictFromTheta(self, df=None, nX=None):
+        
+        if type(nX) == type(None):
+            nX = self.oq.getPricesLatest(df, self, trueprices=True)
+            #print nX
+        
+        #print n.c_[n.ones(1), nX.ix[1:,:].get_values().T].T
+        #print nX.shape
+        #print n.dot(nX.T, theta)
+        if type(self.theta) == type(p.DataFrame()):
+            theta = self.theta.get_values()
+        else:
+            theta = self.theta
+        nXbias = n.c_[n.ones(1), nX.ix[1:,:].get_values().T]
+        #print nXbias
+        #print theta
+        #print nXbias.shape
+        #print self.theta.shape
+        
+        val = 0
+        try:
+            val = n.dot( nXbias, self.theta )[0][0]
+        except:
+            ''
+            #print 'eerr'
+        self.nxps.append( val )
+        #plot(self.nxps);
+        #show();
+        #print self.nxps
+        return val
+ 
 def polarizePortfolio(df, fromCol, toCol, biasCol):
     """Adds an extra polarization column that separates fromCol between positive and negative
 according to the status of the given bias column, the new values are placed ino toCol.
