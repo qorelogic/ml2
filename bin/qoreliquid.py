@@ -516,7 +516,18 @@ class OandaQ:
         #print price
         print amount
         
-        order = self.oanda2.create_order(self.aid, type='market', instrument=instrument, side=side, units=amount)
+        prc = self.oanda2.get_prices(instruments=instrument)['prices'][0]
+        
+        if side == 'buy':
+            stopLoss   = prc['bid'] - float(stop) / 10000
+            takeProfit = prc['bid'] + float(stop) / 10000
+            print takeProfit
+        if side == 'sell':
+            stopLoss = prc['ask'] + float(stop) / 10000
+            takeProfit = prc['ask'] - float(stop) / 10000
+            print takeProfit
+        
+        order = self.oanda2.create_order(self.aid, type='market', instrument=instrument, side=side, units=amount, stopLoss=stopLoss)#, takeProfit=takeProfit)
 
     def calculateAmount(self, bal, pcnt, stop):
         bal  = float(bal)
@@ -991,7 +1002,7 @@ class StatWing:
         return predict
 
     # real-time theta
-    def predictFromTheta(self, df=None, nX=None):
+    def predictFromTheta(self, df=None, nX=None, save=False):
         
         if type(nX) == type(None):
             nX = self.oq.getPricesLatest(df, self, trueprices=True)
@@ -1018,11 +1029,72 @@ class StatWing:
             #print 'eerr'
         if val != 0:
             self.nxps.append( val )
+        
+        if save == True:
+            p.DataFrame(self.nxps).to_csv('/mldev/bin/datafeeds/nxps.csv')
         #plot(self.nxps);
         #show();
         #print self.nxps
         return val
  
+
+class RealtimeChart:
+    
+    def __init__(self):
+        
+        ####
+        # real time chart
+        ####
+        self.df = p.DataFrame()
+        self.sw = StatWing()
+        
+        # real time plot
+        plt.axis([0, 2000, -0.41, -0.38])
+        plt.ion()
+        plt.show()
+        self.i = 0
+        ####
+        # end real time chart
+        ####
+        
+    def update(self, csvc):
+        
+        ####
+        # real time chart
+        ####
+        self.df[csvc[0]] = [float(csvc[1])]
+        nX =   self.df.transpose()
+        y  = self.sw.predictFromTheta(nX=nX)
+        
+        try:
+            imax = n.max(self.sw.nxps)
+            imax = imax + n.std(self.sw.nxps)
+        except:
+            ''
+        try:
+            imin = n.min(self.sw.nxps)
+            imin = imin - n.std(self.sw.nxps)
+        except:
+            ''
+        try:
+            plt.axis([0, len(self.sw.nxps)+10, imin, imax])
+        except:
+            ''
+        plt.scatter(self.i, y)
+        plt.draw()
+        #time.sleedf
+        
+        self.i += 1
+        ####
+        # end real time chart
+        ####
+        
+        print nX 
+        time.sleep(0.9)
+        clear_output()
+
+
+
 def polarizePortfolio(df, fromCol, toCol, biasCol):
     """Adds an extra polarization column that separates fromCol between positive and negative
 according to the status of the given bias column, the new values are placed ino toCol.

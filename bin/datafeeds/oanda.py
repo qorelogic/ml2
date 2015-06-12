@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import sys
 
@@ -19,6 +20,7 @@ import time
 # error classes
 import requests
 import socket
+import matplotlib.pyplot as plt
 
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -45,11 +47,6 @@ def oandaToTimestamp(ptime):
     dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
     return (dt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
 
-
-import time
-import numpy as np
-import matplotlib.pyplot as plt
-
 #------------------------------
 # tick streamer (data feed)
 class MyStreamer(oandapy.Streamer):
@@ -59,15 +56,8 @@ class MyStreamer(oandapy.Streamer):
         self.hdir = '/ml.dev/bin/data/oanda/datafeed'
         mkdir_p(self.hdir)
         
-        self.df = p.DataFrame()
-        self.sw = StatWing()
-        
-        # real time plot
-        plt.axis([0, 2000, -0.41, -0.38])
-        plt.ion()
-        plt.show()
-        self.i = 0
- 
+        self.rtc = RealtimeChart()
+
     def on_success(self, data):
         #self.ticks += 1
         #if self.ticks == 2: self.disconnect()
@@ -78,44 +68,13 @@ class MyStreamer(oandapy.Streamer):
             tick['timestamp'] = oandaToTimestamp(tick['time'].ix[0])
             csvc = n.array(tick.ix[:,[2,0,1,3,4]].get_values()[0], dtype=str)
             
-            #csv = ",".join(csvc)            
+            csv = ",".join(csvc)            
             #fp = open('{0}/{1}.csv'.format(self.hdir, pair), 'a')
             #fp.write(csv+'\n')
             #fp.close()
-            #print csv
+            print csv
             
-            self.df[csvc[0]] = [float(csvc[1])]
-            print self.df.transpose()
-            nX = self.df.transpose()
-            print nX 
-            y = self.sw.predictFromTheta(nX=nX)
-            
-            #for i in range(1000):
-            #y = np.random.random()
-            pcn = 0.5
-            try:
-                imax = n.max(self.sw.nxps)
-                #imax = imax + (imax * pcn/100)
-                imax = imax + n.std(self.sw.nxps)
-            except:
-                ''
-            try:
-                imin = n.min(self.sw.nxps)
-                #imin = imin - (imin * pcn/100)
-                imin = imin - n.std(self.sw.nxps)
-            except:
-                ''
-            #plt.axis([0, 2000, -0.41, -0.38])
-                
-            try:
-                plt.axis([0, len(self.sw.nxps)+10, imin, imax])
-            except:
-                ''
-            plt.scatter(self.i, y)
-            plt.draw()
-            #time.sleedf
-            
-            self.i += 1
+            self.rtc.update(csvc)
             
         except requests.ConnectionError, e:
             ''
@@ -134,8 +93,8 @@ def do_work( forever = True):
         try:
             stream = MyStreamer(environment=env2, access_token=access_token2)
             #pairs = ",".join(list(n.array(p.DataFrame(oanda2.get_instruments(accid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
-            #res = getPricesLatest(df, oanda2, sw).index
             #pairs = ",".join(list(res))
+            #res = getPricesLatest(df, oanda2, sw).index
             pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
             stream.start(accountId=accid, instruments=pairs)
         except socket.error, e:
@@ -178,3 +137,4 @@ def do_work( forever = True):
          
 if __name__ == '__main__':
     do_work( True)
+    ''
