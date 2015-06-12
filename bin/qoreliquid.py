@@ -1624,6 +1624,42 @@ def getDataAUD():
     #pa += ' /BITCOIN/MTGOXAUD /WGC/GOLD_DAILY_AUD'
     
     da = getDataFromQuandlBNP(pa, 'AUD')
+    
+def quandlSweepDatasources():
+    import StringIO as sio
+    df = p.read_csv('/mldev/lib/crawlers/finance/quandl.scrapy/datasources_quandl.csv')
+    print df['code']
+    #print df.ix[:,['name','code','datasets','url']]
+    return 
+    for i in xrange(len(df.ix[:,['code']])):
+        dsets = int(floor(float(df.ix[i,'datasets'].replace(',','')) / 300))
+        print dsets
+        for j in xrange(dsets):
+            print i
+            print j
+            break
+            url = 'http://www.quandl.com/api/v2/datasets.csv?query=*&source_code={0}&per_page=300&page={1}&auth_token=WVsyCxwHeYZZyhf5RHs2'
+            print 'fetching url:'+url
+            c = fetchURL(url.format(df.ix[i,['code']]['code'], j), mode='')
+            """
+            s = sio.StringIO()
+            s.write(c)
+            s.seek(0)
+            print p.read_csv(s)
+            """
+            #fp = open('', 'a')
+            #fp.write(c+'\n')
+            #c.split('\n')      
+            break
+
+def quandlGetDatasetSourceList(source_code):    
+    dsets = fetchURL('http://www.quandl.com/api/v2/datasets.json?query=*&source_code='+source_code+'&per_page=300&page=1')    
+    print dsets.keys()
+    print dsets['sources']
+    #print dsets['sources']['datasets_count']
+    print dsets['sources'][0]['datasets_count']
+    return dsets
+
 
 class CryptoCoinBaseClass:
     
