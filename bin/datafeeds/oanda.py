@@ -24,6 +24,11 @@ import matplotlib.pyplot as plt
 
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# todo: fix jbd2 io read write issue
+# iotop -obtqqq | grep jbd2:
+# https://bbs.archlinux.org/viewtopic.php?id=113516
+# http://ubuntuforums.org/showthread.php?t=839998
+
 co = ''
 try:
     co = p.read_csv('config.csv', header=None)

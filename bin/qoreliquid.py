@@ -657,7 +657,8 @@ class StatWing:
         
         # for predict from theta
         self.nxps = []
-        self.oq = OandaQ()
+        try:    self.oq = OandaQ()
+        except: print 'offline mode'
         self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
         
     def higherNextDay(self, dfa):
@@ -1038,6 +1039,8 @@ class StatWing:
         return val
  
 
+import plotly.plotly as py
+from plotly.graph_objs import *
 class RealtimeChart:
     
     def __init__(self):
@@ -1053,10 +1056,13 @@ class RealtimeChart:
         plt.ion()
         plt.show()
         self.i = 0
+        
+        self.startPlotly()
         ####
         # end real time chart
         ####
         
+    # source: http://stackoverflow.com/questions/4098131/how-to-update-a-plot-in-matplotlib
     def update(self, csvc):
         
         ####
@@ -1081,6 +1087,8 @@ class RealtimeChart:
         except:
             ''
         plt.scatter(self.i, y)
+        if float(y) != 0:
+            self.sendToPlotly(self.i, y)
         plt.draw()
         #time.sleedf
         
@@ -1090,10 +1098,28 @@ class RealtimeChart:
         ####
         
         print nX 
-        time.sleep(0.9)
-        clear_output()
-
-
+        #time.sleep(0.9)
+        #clear_output()
+        
+    def startPlotly(self):
+        # auto sign-in with credentials or use py.sign_in()
+        py.sign_in('cilixian', 'ks48f6mysz')
+        trace1 = Scatter(
+            x=[], 
+            y=[], 
+            #stream=dict(token='my_stream_id')
+            stream=dict(token='dlun5nb9sr')
+        )
+        data = Data([trace1])
+        py.plot(data)
+        
+    def sendToPlotly(self, x, y):
+        s = py.Stream('dlun5nb9sr')
+        s.open()
+        print 'x:'+str(x)
+        print 'y:'+str(y)
+        s.write(dict(x=x, y=y))
+        s.close()
 
 def polarizePortfolio(df, fromCol, toCol, biasCol):
     """Adds an extra polarization column that separates fromCol between positive and negative
@@ -1105,7 +1131,7 @@ df : pandas DataFrame
 fromCol : The originating column values to copy
 toCol : The column to paste values into. 
         The values are converted to +ive or -ive (negative or positive) 
-        according to the bias value of the respective row.
+        according to the bias value of the respecoq.trade(1, 20, 'eu', 's')tive row.
 biasCol : The column to check for bias
 
 Example
@@ -1164,10 +1190,10 @@ def normalizemePinv(dfr, mean, std):
     return dfr
 
 def normalizeme2(ds, index=None, columns=None):
-    #print type(ds)
-    ds = n.array(ds, dtype=float)
+    
+    #ds = n.array(ds, dtype=float)
     if type(ds) == type(p.DataFrame([])):
-    #    print '0'
+        #print '0'
         dss = ds.get_values()
         index = ds.index
         columns = ds.columns
@@ -1660,6 +1686,16 @@ def quandlGetDatasetSourceList(source_code):
     print dsets['sources'][0]['datasets_count']
     return dsets
 
+def quandlGetPreMunge(c, fromCol=None, toCol=None):
+    d = q.get(c, authtoken="WVsyCxwHeYZZyhf5RHs2")
+    print c
+    print list(d.columns)
+    d = normalizeme(d)
+    d = sigmoidme(d)
+    if fromCol != None and toCol != None:
+        d[toCol] = d.ix[:,[fromCol]]
+    print '----'
+    return d
 
 class CryptoCoinBaseClass:
     
