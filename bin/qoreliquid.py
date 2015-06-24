@@ -88,9 +88,12 @@ Attributes:
 """
 class QoreQuant():
 
+    configfile       = '/mldev/bin/datafeeds/config.csv'
+    quandlAuthtoken  = "WVsyCxwHeYZZyhf5RHs2"
+        
     def __init__(self):
 
-        co = p.read_csv('config.csv', header=None)
+        co = p.read_csv(self.configfile, header=None)
         
         env1=co.ix[0,1]
         access_token1=co.ix[0,2]
@@ -278,6 +281,94 @@ class QoreQuant():
             else:
                 print 'Nothing to trade on {0}.'.format(i)
         print
+        
+    def updateDatasets(self):
+
+        self.de = getDatasetEUR()
+        self.du = getDataUSD()
+        #self.da = getDataAUD()
+        #self.dg = getDataGBP()
+        #self.dj = getDataJPY()
+        #self.db = getDataBitcoin()
+        
+    def main(self):
+        
+        self.sw = StatWing()
+        
+        pair = 'EURUSD'
+        #pair = 'EURGBP'
+        #pair = 'EURCHF'
+        
+        self.sw.keyCol = 'BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x'
+        
+        self.updateDatasets()
+
+        #self.sw.relatedCols = [0, 1,2,3,6,9,8,5]
+        #self.sw.relatedCols = [0, 1,2,3,6,8,5, 7,9,10,11,12,13,14,16,17]
+        self.sw.relatedCols = self.sw.oq.generateRelatedColsFromOandaTickers(self.de)
+        #self.sw.relatedCols = [0,1, 2, 3, 4, 5, 6, 7, 8, 13, 19]
+        
+        #
+        #self.sw.relatedCols = range(1, 98)
+        #self.sw.relatedCols = data.columns
+        #self.sw.relatedCols = [0,1]
+        
+        self.df = self.de.ix[0:len(self.de)-0, :].fillna(0)
+        X = self.df.ix[0:len(self.df)]
+        # shift keyCol up ct cells
+        #ct = 5
+        #dfb = p.DataFrame(index=self.df.ix[0:len(self.df)-ct, 0].index)
+        #dfb['a'] = self.df.ix[0:len(self.df)-ct, 0].get_values()
+        #dfb['b'] = self.df.ix[ct:len(self.df), 0].get_values()
+        #self.df.ix[:,0] = dfb['b']
+        
+        y = self.df.ix[:, self.sw.keyCol].fillna(0)
+        #y = list(self.sw.higherNextDay(self.df).get_values()); y.append(0)
+        y = n.array(y)
+        y.shape
+        
+        theta = self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=10000, alpha=0.09, viewProgress=False, showPlot=False)
+    
+    def predict(self):
+        data = self.df
+        wlen = 200
+        #self.sw.predictRegression2(mdf.ix[0:ldf-0, :], quiet=True)
+        ldf = len(data.ix[:, self.sw.keyCol])
+        
+        """
+        try:
+            nprices = getPricesLatest(data, trueprices=True)
+            data.ix[p.tslib.Timestamp('2015-06-10').date(), self.sw.relatedCols] = list(nprices.transpose().ix[0,:])
+            #print data.ix[p.tslib.Timestamp('2015-06-10'), self.sw.relatedCols]
+            #print data
+            print nprices
+        except:
+            ''
+        """
+        [mdf, dmean, dstd] = normalizeme(data, pinv=True)
+        #tp = sw.predictRegression2(mdf.ix[0:ldf-i, :], quiet=False)
+        tp = p.DataFrame(self.sw.predictRegression2(mdf.ix[:, :], quiet=True), index=data.index)
+        plot(self.de.ix[ldf-wlen: ldf, self.sw.keyCol])
+        plot(tp.ix[ldf-wlen: ldf, :], '.')
+        legend(['price', 'tp'])
+        show();
+        #normalizemePinv(, dmean, dstd)
+        return tp.ix[len(tp)-10:len(tp)-0, :]
+    
+    def tradePrediction(self, tp):
+        oq = OandaQ()
+        pair = 'EUR_USD'
+        eu =  oq.oanda2.get_prices(instruments=pair)['prices']
+        
+        curr1 = n.mean([float(eu[0]['ask']), float(eu[0]['bid'])])
+        tp1 = float('%.5f' % tp.ix[len(tp)-1,0])
+        print curr1
+        print tp1
+        if tp1 > curr1:
+            oq.trade(1, 40, pair, 'b', tp=tp1)
+        if tp1 < curr1:
+            oq.trade(1, 40, pair, 's', tp=tp1)
+    
 
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
@@ -481,25 +572,27 @@ class OandaQ:
         
         print p.DataFrame(self.oanda2.get_account(self.aid), index=[0])
         
-    def trade(self, risk, stop, instrument, side):
+    def trade(self, risk, stop, instrument, side, tp=None):
         if instrument == 'eu':
             instrument = 'EUR_USD'
+        if instrument == 'ej':
+            instrument = 'EUR_JPY'
         if instrument == 'uj':
             instrument = 'USD_JPY'
         if side == 'b':
             side ='buy'
-            self.buy(risk, stop, instrument=instrument)
+            self.buy(risk, stop, instrument=instrument, tp=tp)
         if side == 's':
             side ='sell'
-            self.sell(risk, stop, instrument=instrument)
+            self.sell(risk, stop, instrument=instrument, tp=tp)
         
-    def buy(self, risk, stop, instrument='EUR_USD'):
-        self.order(risk, stop, 'buy', instrument=instrument)
+    def buy(self, risk, stop, instrument='EUR_USD', tp=None):
+        self.order(risk, stop, 'buy', instrument=instrument, tp=tp)
         
     def sell(self, risk, stop, instrument='EUR_USD'):
-        self.order(risk, stop, 'sell', instrument=instrument)
+        self.order(risk, stop, 'sell', instrument=instrument, tp=tp)
 
-    def order(self, risk, stop, side, instrument='EUR_USD'):
+    def order(self, risk, stop, side, instrument='EUR_USD', tp=None):
         
         stop = float(stop) # pips
         risk = float(1) # percentage risk
@@ -526,8 +619,13 @@ class OandaQ:
             stopLoss = prc['ask'] + float(stop) / 10000
             takeProfit = prc['ask'] - float(stop) / 10000
             print takeProfit
+            
+        if tp != None:
+            takeProfit = tp
+        else:
+            takeProfit = None
         
-        order = self.oanda2.create_order(self.aid, type='market', instrument=instrument, side=side, units=amount, stopLoss=stopLoss)#, takeProfit=takeProfit)
+        order = self.oanda2.create_order(self.aid, type='market', instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
 
     def calculateAmount(self, bal, pcnt, stop):
         bal  = float(bal)
@@ -779,8 +877,9 @@ class StatWing:
         Xc = X.columns.tolist()
         Xc.insert(0, Xc.pop())
         #try:
+        print 'removing {0}'.format(keyCol)
+        print Xc
         Xc.remove(keyCol)
-        print 'removed {0}'.format(keyCol)
         #except:
         #    ''
         X = X[Xc]
@@ -1051,10 +1150,12 @@ class RealtimeChart:
         self.df = p.DataFrame()
         self.sw = StatWing()
         
+        """
         # real time plot
         plt.axis([0, 2000, -0.41, -0.38])
         plt.ion()
         plt.show()
+        """
         self.i = 0
         
         self.startPlotly()
@@ -1082,14 +1183,16 @@ class RealtimeChart:
             imin = imin - n.std(self.sw.nxps)
         except:
             ''
+        """
         try:
             plt.axis([0, len(self.sw.nxps)+10, imin, imax])
         except:
             ''
         plt.scatter(self.i, y)
+        plt.draw()
+        """
         if float(y) != 0:
             self.sendToPlotly(self.i, y)
-        plt.draw()
         #time.sleedf
         
         self.i += 1
@@ -1097,12 +1200,13 @@ class RealtimeChart:
         # end real time chart
         ####
         
-        print nX 
+        #print nX 
         #time.sleep(0.9)
         #clear_output()
         
     def startPlotly(self):
         # auto sign-in with credentials or use py.sign_in()
+        #py.sign_in('<plotly username>', '<plotly API key>')
         py.sign_in('cilixian', 'ks48f6mysz')
         trace1 = Scatter(
             x=[], 
@@ -1112,14 +1216,15 @@ class RealtimeChart:
         )
         data = Data([trace1])
         py.plot(data)
+        self.s = py.Stream('dlun5nb9sr')
+        self.s.open()
         
     def sendToPlotly(self, x, y):
-        s = py.Stream('dlun5nb9sr')
-        s.open()
-        print 'x:'+str(x)
+        #print 'x:'+str(x)
         print 'y:'+str(y)
-        s.write(dict(x=x, y=y))
-        s.close()
+        if self.i % 20 == 0:
+             self.s.write(dict(x=x, y=y))
+        #self.s.close()
 
 def polarizePortfolio(df, fromCol, toCol, biasCol):
     """Adds an extra polarization column that separates fromCol between positive and negative
@@ -1426,7 +1531,7 @@ def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False, s
 # quandl js parser: for (var i = 2; i<=15; i++) {var buff = ''; $($x('//*[@id="ember894"]/div['+i+']/table/tbody/tr/td[3]/a/@href')).each(function(e,o) {buff += ' '+o.value.replace(/\/CURRFX\//g, '');}); console.log('# '+i); console.log('pa += \''+buff+'\'');}
 
 # getDataFromQuandlBNP(pa, curr)
-def getDataFromQuandlBNP(pa, curr): # curr = EUR || USD, etc.
+def getDataFromQuandlBNP(pa, curr, authtoken=None): # curr = EUR || USD, etc.
     pa = pa.split(' ')
     
     tk = []
@@ -1437,37 +1542,59 @@ def getDataFromQuandlBNP(pa, curr): # curr = EUR || USD, etc.
     #print tk
     #print tl
     
-    authtoken="WVsyCxwHeYZZyhf5RHs2"
-    fname = 'data/quandl/BNP.'+curr+'.csv'
+    fname = '/mldev/bin/data/quandl/BNP.'+curr+'.csv'
     print fname
     try:
         da = p.read_csv(fname, index_col=0)
         
         # if column mismatch then update from source instead of caching
+        """
         if len(tk) != len(da.columns):
+            print len(tk)
+            print len(da.columns)
+            print 'tickers and columns not matching'
+            print tk
+            print list(da.columns)
             raise IOError
+        """
         
         print 'updating..'
         import datetime as dd
         #trim_start = str(list(da.tail(1).ix[:,0])[0])
         trim_start = da.index[len(da)-1]
         trim_end = str(dd.datetime.today().year).zfill(4) + '-' + str(dd.datetime.today().month).zfill(2) + '-' + str(dd.datetime.today().day).zfill(2)
-        #print trim_start
-        #print trim_end
+        print trim_start
+        print trim_end
         ts = trim_start.split('-')
         te = trim_end.split('-')
         #print ts
         #print te
         a = dd.date(int(te[0]), int(te[1]), int(te[2]))
         b = dd.date(int(ts[0]), int(ts[1]), int(ts[2]))
-        days = (a-b).days
+        print 'a {0}'.format(a)
+        print 'b {0}'.format(b)
+        days = (a-b).days        
         print days
-        if days > 0:
+        
+        nowp             = dd.datetime.now()
+        lastp            = dd.datetime(nowp.year, nowp.month, nowp.day-1, 18)
+        secondsfromlastp = (nowp - lastp).total_seconds()
+        print lastp
+        print nowp
+        print secondsfromlastp
+        if secondsfromlastp > 86400: # 60 * 60 * 24 hardcoded
+        #    print 'update'
+        #return
+        #if days > 0:
+            qq = QoreQuant()            
+            print 'fetching from {0} to {1}'.format(trim_start, trim_end)
             print 'greater than 0 days'
+            return
             #d = q.get(tk[0:2], authtoken=authtoken, trim_start=trim_start, trim_end=trim_end)
             #d = q.get(tk[0:2], authtoken=authtoken, transformation="diff")
             #d = q.get(tk[0:2], authtoken=authtoken, collapse="annual")
-            d = q.get(tk, authtoken=authtoken, rows=days, sort_order='desc').sort(ascending=True)
+            d = q.get(tk, authtoken=qq.quandlAuthtoken, rows=days, sort_order='desc', trim_start=trim_start, trim_end=trim_end).sort(ascending=True)
+            print d
             
             # combine the cache and new data into one dataset
             d = da.combine_first(d)
@@ -1476,16 +1603,22 @@ def getDataFromQuandlBNP(pa, curr): # curr = EUR || USD, etc.
             print 'equal 0 days'
             d = da
     except IOError, e:
+        print e
         print 'getting from quandl..'
-        d = q.get(tk, authtoken=authtoken)
+        print 'get all from quandl'
+        #d = q.get(tk, authtoken=authtoken)
         #d = q.get(tk, returns="numpy")
         #d = q.get(["NSE/OIL.4","WIKI/AAPL.1"])
         #d = q.get("NSE/OIL", trim_start="yyyy-mm-dd", trim_end="yyyy-mm-dd")
         #print d
-        d.to_csv('data/quandl/BNP.'+curr+'.csv')
-        print e
+        #d.to_csv('data/quandl/BNP.'+curr+'.csv')
+        
+        print 'reading from '+fname
+        d = p.read_csv(fname)
         
     #plot(d.ix[:,tl])
+    print d.columns
+    print 'cols1'
     
     return d
 
@@ -1678,8 +1811,8 @@ def quandlSweepDatasources():
             #c.split('\n')      
             break
 
-def quandlGetDatasetSourceList(source_code):    
-    dsets = fetchURL('http://www.quandl.com/api/v2/datasets.json?query=*&source_code='+source_code+'&per_page=300&page=1')    
+def quandlGetDatasetSourceList(source_code, pg=1):    
+    dsets = fetchURL('http://www.quandl.com/api/v2/datasets.json?query=*&source_code='+source_code+'&per_page=300&page='+str(pg))
     print dsets.keys()
     print dsets['sources']
     #print dsets['sources']['datasets_count']

@@ -77,7 +77,7 @@ class MyStreamer(oandapy.Streamer):
             #fp = open('{0}/{1}.csv'.format(self.hdir, pair), 'a')
             #fp.write(csv+'\n')
             #fp.close()
-            print csv
+            #print csv
             
             self.rtc.update(csvc)
             
