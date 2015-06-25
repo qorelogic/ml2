@@ -589,7 +589,7 @@ class OandaQ:
     def buy(self, risk, stop, instrument='EUR_USD', tp=None):
         self.order(risk, stop, 'buy', instrument=instrument, tp=tp)
         
-    def sell(self, risk, stop, instrument='EUR_USD'):
+    def sell(self, risk, stop, instrument='EUR_USD', tp=None):
         self.order(risk, stop, 'sell', instrument=instrument, tp=tp)
 
     def order(self, risk, stop, side, instrument='EUR_USD', tp=None):
@@ -647,6 +647,10 @@ class OandaQ:
         return amount
 
     def generateRelatedColsFromOandaTickers(self, de):
+        
+        if type(de) == type(None):
+            print de
+            raise ValueError('given input is none')
         
         # generate relatedCols from oandas tickers
         inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
@@ -1569,13 +1573,14 @@ def getDataFromQuandlBNP(pa, curr, authtoken=None): # curr = EUR || USD, etc.
         te = trim_end.split('-')
         #print ts
         #print te
-        a = dd.date(int(te[0]), int(te[1]), int(te[2]))
-        b = dd.date(int(ts[0]), int(ts[1]), int(ts[2]))
-        print 'a {0}'.format(a)
+        b = dd.date(int(te[0]), int(te[1]), int(te[2]))
+        a = dd.date(int(ts[0]), int(ts[1]), int(ts[2])-1)
         print 'b {0}'.format(b)
-        days = (a-b).days        
+        print 'a {0}'.format(a)
+        days = (b-a).days        
         print days
         
+        """
         nowp             = dd.datetime.now()
         lastp            = dd.datetime(nowp.year, nowp.month, nowp.day-1, 18)
         secondsfromlastp = (nowp - lastp).total_seconds()
@@ -1584,16 +1589,15 @@ def getDataFromQuandlBNP(pa, curr, authtoken=None): # curr = EUR || USD, etc.
         print secondsfromlastp
         if secondsfromlastp > 86400: # 60 * 60 * 24 hardcoded
         #    print 'update'
-        #return
-        #if days > 0:
+        """
+        if days > 0:
             qq = QoreQuant()            
             print 'fetching from {0} to {1}'.format(trim_start, trim_end)
             print 'greater than 0 days'
-            return
             #d = q.get(tk[0:2], authtoken=authtoken, trim_start=trim_start, trim_end=trim_end)
             #d = q.get(tk[0:2], authtoken=authtoken, transformation="diff")
             #d = q.get(tk[0:2], authtoken=authtoken, collapse="annual")
-            d = q.get(tk, authtoken=qq.quandlAuthtoken, rows=days, sort_order='desc', trim_start=trim_start, trim_end=trim_end).sort(ascending=True)
+            d = q.get(tk, authtoken=qq.quandlAuthtoken, rows=days, sort_order='desc', trim_start=a, trim_end=b).sort(ascending=True)
             print d
             
             # combine the cache and new data into one dataset
@@ -1617,7 +1621,7 @@ def getDataFromQuandlBNP(pa, curr, authtoken=None): # curr = EUR || USD, etc.
         d = p.read_csv(fname)
         
     #plot(d.ix[:,tl])
-    print d.columns
+    #print d.columns
     print 'cols1'
     
     return d
