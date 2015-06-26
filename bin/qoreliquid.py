@@ -282,30 +282,34 @@ class QoreQuant():
                 print 'Nothing to trade on {0}.'.format(i)
         print
         
-    def updateDatasets(self):
+    def updateDatasets(self, code, noUpdate=False):
 
-        self.de = getDatasetEUR()
-        self.du = getDataUSD()
-        #self.da = getDataAUD()
-        #self.dg = getDataGBP()
-        #self.dj = getDataJPY()
-        #self.db = getDataBitcoin()
+        #self.da = getDataAUD(noUpdate=noUpdate)
+        #self.dg = getDataGBP(noUpdate=noUpdate)
+        #self.dj = getDataJPY(noUpdate=noUpdate)
+        #self.db = getDataBitcoin(noUpdate=noUpdate)
         
-    def main(self):
+        if code == 'EUR':
+            self.de = getDatasetEUR(noUpdate=noUpdate)
+            return self.de
+        if code == 'USD':
+            self.du = getDataJPY(noUpdate=noUpdate)
+            return self.du
+        
+    def main(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False):
         
         self.sw = StatWing()
         
-        pair = 'EURUSD'
         #pair = 'EURGBP'
         #pair = 'EURCHF'
         
         self.sw.keyCol = 'BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x'
         
-        self.updateDatasets()
+        self.dfdata = self.updateDatasets(pair[0:3], noUpdate=noUpdate)
 
         #self.sw.relatedCols = [0, 1,2,3,6,9,8,5]
         #self.sw.relatedCols = [0, 1,2,3,6,8,5, 7,9,10,11,12,13,14,16,17]
-        self.sw.relatedCols = self.sw.oq.generateRelatedColsFromOandaTickers(self.de)
+        self.sw.relatedCols = self.sw.oq.generateRelatedColsFromOandaTickers(self.dfdata)
         #self.sw.relatedCols = [0,1, 2, 3, 4, 5, 6, 7, 8, 13, 19]
         
         #
@@ -313,7 +317,7 @@ class QoreQuant():
         #self.sw.relatedCols = data.columns
         #self.sw.relatedCols = [0,1]
         
-        self.df = self.de.ix[0:len(self.de)-0, :].fillna(0)
+        self.df = self.dfdata.ix[0:len(self.dfdata)-0, :].fillna(0)
         X = self.df.ix[0:len(self.df)]
         # shift keyCol up ct cells
         #ct = 5
@@ -324,10 +328,13 @@ class QoreQuant():
         
         y = self.df.ix[:, self.sw.keyCol].fillna(0)
         #y = list(self.sw.higherNextDay(self.df).get_values()); y.append(0)
+        y = normalizeme(y)
         y = n.array(y)
+        #print p.DataFrame(y)
         y.shape
+        #return
         
-        theta = self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=10000, alpha=0.09, viewProgress=False, showPlot=False)
+        theta = self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, viewProgress=False, showPlot=False)
     
     def predict(self):
         data = self.df
@@ -348,14 +355,15 @@ class QoreQuant():
         [mdf, dmean, dstd] = normalizeme(data, pinv=True)
         #tp = sw.predictRegression2(mdf.ix[0:ldf-i, :], quiet=False)
         tp = p.DataFrame(self.sw.predictRegression2(mdf.ix[:, :], quiet=True), index=data.index)
-        plot(self.de.ix[ldf-wlen: ldf, self.sw.keyCol])
+        #plot(self.de.ix[ldf-wlen: ldf, self.sw.keyCol])
+        plot(data.ix[ldf-wlen: ldf, self.sw.keyCol])
         plot(tp.ix[ldf-wlen: ldf, :], '.')
         legend(['price', 'tp'])
         show();
         #normalizemePinv(, dmean, dstd)
         return tp.ix[len(tp)-10:len(tp)-0, :]
     
-    def tradePrediction(self, tp):
+    def tradePrediction(self, tp, risk=1, stop=40):
         oq = OandaQ()
         pair = 'EUR_USD'
         eu =  oq.oanda2.get_prices(instruments=pair)['prices']
@@ -365,9 +373,9 @@ class QoreQuant():
         print curr1
         print tp1
         if tp1 > curr1:
-            oq.trade(1, 40, pair, 'b', tp=tp1)
+            oq.trade(risk, stop, pair, 'b', tp=tp1)
         if tp1 < curr1:
-            oq.trade(1, 40, pair, 's', tp=tp1)
+            oq.trade(risk, stop, pair, 's', tp=tp1)
     
 
 class FinancialModel:
@@ -575,6 +583,8 @@ class OandaQ:
     def trade(self, risk, stop, instrument, side, tp=None):
         if instrument == 'eu':
             instrument = 'EUR_USD'
+        if instrument == 'nu':
+            instrument = 'NZD_USD'
         if instrument == 'ej':
             instrument = 'EUR_JPY'
         if instrument == 'uj':
@@ -595,7 +605,7 @@ class OandaQ:
     def order(self, risk, stop, side, instrument='EUR_USD', tp=None):
         
         stop = float(stop) # pips
-        risk = float(1) # percentage risk
+        risk = float(risk) # percentage risk
         
         #print self.oanda2.get_accounts()['accounts'][0]['accountId']
         acc = self.oanda2.get_account(self.aid)
@@ -646,10 +656,10 @@ class OandaQ:
         
         return amount
 
-    def generateRelatedColsFromOandaTickers(self, de):
+    def generateRelatedColsFromOandaTickers(self, data):
         
-        if type(de) == type(None):
-            print de
+        if type(data) == type(None):
+            print data
             raise ValueError('given input is none')
         
         # generate relatedCols from oandas tickers
@@ -660,9 +670,11 @@ class OandaQ:
             pair = i.replace('_', '')
             if pair[0:3] == 'EUR':
                 lse.append('BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x')
+            if pair[0:3] == 'USD':
+                lse.append('BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x')
         for i in lse:
             try:    
-                lsf.append(list(de.columns).index(i))
+                lsf.append(list(data.columns).index(i))
             except: ''
                 
         #for i in inst:
@@ -1535,7 +1547,7 @@ def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False, s
 # quandl js parser: for (var i = 2; i<=15; i++) {var buff = ''; $($x('//*[@id="ember894"]/div['+i+']/table/tbody/tr/td[3]/a/@href')).each(function(e,o) {buff += ' '+o.value.replace(/\/CURRFX\//g, '');}); console.log('# '+i); console.log('pa += \''+buff+'\'');}
 
 # getDataFromQuandlBNP(pa, curr)
-def getDataFromQuandlBNP(pa, curr, authtoken=None): # curr = EUR || USD, etc.
+def getDataFromQuandlBNP(pa, curr, authtoken=None, noUpdate=False): # curr = EUR || USD, etc.
     pa = pa.split(' ')
     
     tk = []
@@ -1561,26 +1573,26 @@ def getDataFromQuandlBNP(pa, curr, authtoken=None): # curr = EUR || USD, etc.
             print list(da.columns)
             raise IOError
         """
+        if noUpdate == True:
+            raise IOError
         
         print 'updating..'
-        import datetime as dd
         #trim_start = str(list(da.tail(1).ix[:,0])[0])
         trim_start = da.index[len(da)-1]
-        trim_end = str(dd.datetime.today().year).zfill(4) + '-' + str(dd.datetime.today().month).zfill(2) + '-' + str(dd.datetime.today().day).zfill(2)
+        trim_end = str(dd.datetime.today().year).zfill(4) + '-' + str(dd.datetime.today().month).zfill(2) + '-' + str(dd.datetime.today().day+1).zfill(2)
         print trim_start
         print trim_end
         ts = trim_start.split('-')
         te = trim_end.split('-')
         #print ts
         #print te
-        b = dd.date(int(te[0]), int(te[1]), int(te[2]))
         a = dd.date(int(ts[0]), int(ts[1]), int(ts[2])-1)
-        print 'b {0}'.format(b)
+        b = dd.date(int(te[0]), int(te[1]), int(te[2]))
         print 'a {0}'.format(a)
+        print 'b {0}'.format(b)
         days = (b-a).days        
         print days
         
-        """
         nowp             = dd.datetime.now()
         lastp            = dd.datetime(nowp.year, nowp.month, nowp.day-1, 18)
         secondsfromlastp = (nowp - lastp).total_seconds()
@@ -1588,13 +1600,13 @@ def getDataFromQuandlBNP(pa, curr, authtoken=None): # curr = EUR || USD, etc.
         print nowp
         print secondsfromlastp
         if secondsfromlastp > 86400: # 60 * 60 * 24 hardcoded
-        #    print 'update'
-        """
+            print 'update'
+        #return        
         if days > 0:
             qq = QoreQuant()            
-            print 'fetching from {0} to {1}'.format(trim_start, trim_end)
+            print 'fetching from {0} to {1}'.format(a, b)
             print 'greater than 0 days'
-            #d = q.get(tk[0:2], authtoken=authtoken, trim_start=trim_start, trim_end=trim_end)
+            #d = q.get(tk[0:2], authtoken=authtoken, trim_start=a, trim_end=b)
             #d = q.get(tk[0:2], authtoken=authtoken, transformation="diff")
             #d = q.get(tk[0:2], authtoken=authtoken, collapse="annual")
             d = q.get(tk, authtoken=qq.quandlAuthtoken, rows=days, sort_order='desc', trim_start=a, trim_end=b).sort(ascending=True)
@@ -1618,7 +1630,7 @@ def getDataFromQuandlBNP(pa, curr, authtoken=None): # curr = EUR || USD, etc.
         #d.to_csv('data/quandl/BNP.'+curr+'.csv')
         
         print 'reading from '+fname
-        d = p.read_csv(fname)
+        d = p.read_csv(fname, index_col=0)
         
     #plot(d.ix[:,tl])
     #print d.columns
@@ -1677,7 +1689,7 @@ def testGetDataFromQuandl():
     print d8.bfill().ffill()
 
 
-def getDatasetEUR():
+def getDatasetEUR(noUpdate=False):
     pa = ''
     # 2
     pa += 'EURUSD EURJPY EURGBP EURCHF EURCAD EURAUD EURNZD EURSEK EURNOK EURBRL EURCNY EURRUB EURINR EURTRY EURTHB EURIDR EURMYR EURMXN EURARS EURDKK EURILS EURPHP'
@@ -1708,10 +1720,10 @@ def getDatasetEUR():
     # 15
     pa += ' EURAUD EURFJD EURNZD EURPGK EURWST EURSBD EURTOP EURVUV'
     
-    de = getDataFromQuandlBNP(pa, 'EUR')
+    de = getDataFromQuandlBNP(pa, 'EUR', noUpdate=noUpdate)
     return de
 
-def getDataUSD():
+def getDataUSD(noUpdate=False):
     pa = ''
     # 2
     pa += ' USDEUR USDJPY USDGBP USDCHF USDCAD USDAUD USDNZD USDSEK USDNOK USDBRL USDCNY USDRUB USDINR USDTRY USDTHB USDIDR USDMYR USDMXN USDARS USDDKK USDILS USDPHP'
@@ -1742,18 +1754,18 @@ def getDataUSD():
     # 15
     pa += ' USDAUD USDFJD USDNZD USDPGK USDWST USDSBD USDTOP USDVUV'
     
-    du = getDataFromQuandlBNP(pa, 'USD')
+    du = getDataFromQuandlBNP(pa, 'USD', noUpdate=noUpdate)
     return du
 
-def getDataJPY():
+def getDataJPY(noUpdate=False):
     pa = ''
     # 2
-    pa += ' USDJPY AUDJPY EURJPY GBPJPY '
+    pa += ' USDJPY AUDJPY CADJPY CHFJPY EURJPY HKDJPY GBPJPY NZDJPY SGDJPY TRYJPY ZARJPY '
     
-    res = getDataFromQuandlBNP(pa, 'JPY')
+    res = getDataFromQuandlBNP(pa, 'JPY', noUpdate=noUpdate)
     return res
 
-def getDataAUD():
+def getDataAUD(noUpdate=False):
     pa = ''
     # 2
     pa += ' AUDEUR AUDJPY AUDGBP AUDCHF AUDCAD AUDUSD AUDNZD AUDSEK AUDNOK AUDBRL AUDCNY AUDRUB AUDINR AUDTRY AUDTHB AUDIDR AUDMYR AUDMXN AUDARS AUDDKK AUDILS AUDPHP'
@@ -1786,7 +1798,7 @@ def getDataAUD():
     # 16
     #pa += ' /BITCOIN/MTGOXAUD /WGC/GOLD_DAILY_AUD'
     
-    da = getDataFromQuandlBNP(pa, 'AUD')
+    da = getDataFromQuandlBNP(pa, 'AUD', noUpdate=noUpdate)
     
 def quandlSweepDatasources():
     import StringIO as sio
