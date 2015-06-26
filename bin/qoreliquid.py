@@ -328,7 +328,6 @@ class QoreQuant():
         
         y = self.df.ix[:, self.sw.keyCol].fillna(0)
         #y = list(self.sw.higherNextDay(self.df).get_values()); y.append(0)
-        y = normalizeme(y)
         y = n.array(y)
         #print p.DataFrame(y)
         y.shape
