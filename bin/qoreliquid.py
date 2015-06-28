@@ -111,6 +111,8 @@ class QoreQuant():
         #driver = webdriver.Chrome()
         self.et = Etoro()
         
+        self.sw = StatWing()
+        
     def synchonizeTrades(self, dryrun=True):
         # send to market works
         username = 'manapana'
@@ -297,8 +299,6 @@ class QoreQuant():
             return self.du
         
     def main(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False):
-        
-        self.sw = StatWing()
         
         #pair = 'EURGBP'
         #pair = 'EURCHF'
@@ -495,7 +495,7 @@ from IPython.display import display, clear_output
 import time
 class ml007:
 
-    def computeCost(self, X, y, theta):
+    def computeCost_linearRegression(self, X, y, theta):
         X = n.array(X)
         #print X
         m = len(y)
@@ -508,7 +508,7 @@ class ml007:
     #print computeCost( n.array([1,2,3,1,3,4,1,4,5,1,5,6]).reshape(4,3), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2,0.3]).reshape(3,1))
     # 7.0175
     
-    def gradientDescent(self, X, y, theta, alpha, num_iters, viewProgress=True, b=10, ):
+    def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=10, ):
         m = len(y)
         J_history = n.zeros(num_iters)
         try:
@@ -563,6 +563,47 @@ class ml007:
     #    0.2588
     #    0.3999
 
+    def costFunction_logisticRegression(self, theta, X, y):
+        #%COSTFUNCTION Compute cost and gradient for logistic regression
+        #%   J = COSTFUNCTION(theta, X, y) computes the cost of using theta as the
+        #%   parameter for logistic regression and the gradient of the cost
+        #%   w.r.t. to the parameters.
+        
+        #% Initialize some useful values
+        m = len(y); #% number of training examples
+        
+        #% You need to return the following variables correctly 
+        J = 0;
+        grad = n.zeros(size(theta));
+        
+        #% ====================== YOUR CODE HERE ======================
+        #% Instructions: Compute the cost of a particular choice of theta.
+        #%               You should set J to the cost.
+        #%               Compute the partial derivatives and set grad to the partial
+        #%               derivatives of the cost w.r.t. each parameter in theta
+        #%
+        #% Note: grad should have the same dimensions as theta
+        #%
+        
+        y = y.get_values()
+        
+        #J = (1/m)*sum(-y.*log(sigmoid(X*theta))-(1-y).*log(1-sigmoid(X*theta)));
+        J = (1.0/m) * n.sum(-y *  n.log(sigmoidme(n.dot(X, theta))) - (1 - y) *     log(  1 - sigmoidme(n.dot(X, theta))  ) );
+        #grad = (1/m)*sum((sigmoid(X*theta)-y).*X)
+        grad = (1/m)*n.sum(n.dot((sigmoidme(n.dot(X, theta))-y), X))
+        
+        #% =============================================================
+        
+        #end
+        
+        return [J, grad]    
+    
+    #initial_theta = n.zeros(nn + 1);
+    #initial_theta = n.zeros(nn);
+    #initial_theta
+    
+    #[cost, grad] = costFunction(initial_theta, X, y);
+
 
 class OandaQ:
     
@@ -587,6 +628,8 @@ class OandaQ:
     def trade(self, risk, stop, instrument, side, tp=None):
         if instrument == 'eu':
             instrument = 'EUR_USD'
+        if instrument == 'au':
+            instrument = 'AUD_USD'
         if instrument == 'nu':
             instrument = 'NZD_USD'
         if instrument == 'ej':
