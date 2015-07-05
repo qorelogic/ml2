@@ -331,7 +331,6 @@ class QoreQuant():
         y = n.array(y)
         #print p.DataFrame(y)
         y.shape
-        #return
         
         theta = self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, viewProgress=False, showPlot=False)
     
@@ -376,6 +375,30 @@ class QoreQuant():
         if tp1 < curr1:
             oq.trade(risk, stop, pair, 's', tp=tp1)
     
+    def forecastCurrency(self, mode=3, pair='EURUSD', iterations=10000, alpha=0.09, risk=5, stop=20):
+        # 1: update 2: train, 3: predict, 4: trade
+        #pair = 'EURJPY'
+             
+        onErrorTrain = False # onErrorTrain swich
+        
+        try:    self.df
+        except: onErrorTrain = True
+        
+        if mode == 1:
+            self.updateDatasets('EUR', noUpdate=False)
+            
+        if mode == 2 or onErrorTrain == True:
+            self.main(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True)
+        
+        if mode == 2 or mode == 3 or mode == 4:
+            tp = self.predict()
+            print tp
+            #tp['EURUSD'] = tp[0]
+            #tp.ix[:,'EURUSD']
+        
+        if mode == 4:
+            self.tradePrediction(tp, risk=risk, stop=stop)
+        
 
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
@@ -506,31 +529,31 @@ class ml007:
     def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=10, ):
         m = len(y)
         J_history = n.zeros(num_iters)
-        try:
-            for iter in range(0,num_iters):
-                    theta = theta - (float(alpha)/m) * n.dot((n.dot(X,theta)-y).transpose(),X).transpose()
-                    if viewProgress:
-                        if iter % b == 0:
-                            clear_output()
-                            print ''
-                            print 'theta:{0}'.format(theta)
-                    J_history[iter] = self.computeCost(X, y, theta)
-                    if viewProgress:
-                        if iter % b == 0:
-                            print '1 J history:{0}'.format(J_history[iter])
-                            print '1 iter:{0}'.format(iter)
-                    #print type(J_history[iter])
-                    if n.isnan(J_history[iter]):
-                        #plot(J_history); show();
-                        plt.scatter(iter, J_history); show();
-                        return [theta, J_history]
+        #try:
+        for iter in range(0,num_iters):
+                theta = theta - (float(alpha)/m) * n.dot((n.dot(X,theta)-y).transpose(),X).transpose()
+                if viewProgress:
                     if iter % b == 0:
-                        print iter
-                        print J_history[iter]
                         clear_output()
-                        
-        except:
-            ''
+                        print ''
+                        print 'theta:{0}'.format(theta)
+                J_history[iter] = self.computeCost_linearRegression(X, y, theta)
+                if viewProgress:
+                    if iter % b == 0:
+                        print '1 J history:{0}'.format(J_history[iter])
+                        print '1 iter:{0}'.format(iter)
+                #print type(J_history[iter])
+                if n.isnan(J_history[iter]):
+                    #plot(J_history); show();
+                    plt.scatter(iter, J_history); show();
+                    return [theta, J_history]
+                if iter % b == 0:
+                    print iter
+                    print J_history[iter]
+                    clear_output()
+                    
+        #except:
+        #    ''
         if viewProgress: 
             if iter % b == 0:
                 #clear_output()
@@ -604,7 +627,7 @@ class OandaQ:
     
     oanda2 = None
     
-    def __init__(self):
+    def __init__(self, verbose=False):
         
         # get current quotes
         co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
@@ -615,10 +638,11 @@ class OandaQ:
         self.aid = self.oanda2.get_accounts()['accounts'][0]['accountId']
         #self.oanda2.create_order(aid, type='market', instrument='EUR_USD', side='sell', units=10)
         res = self.oanda2.get_trades(self.aid)
-        for i in res:
-            print p.DataFrame(res[i])
+        if verbose:
+            for i in res:
+                print p.DataFrame(res[i])
         
-        print p.DataFrame(self.oanda2.get_account(self.aid), index=[0])
+            print p.DataFrame(self.oanda2.get_account(self.aid), index=[0])
         
     def trade(self, risk, stop, instrument, side, tp=None):
         if instrument == 'eu':
@@ -698,6 +722,11 @@ class OandaQ:
         
         return amount
 
+    def calculateStopLossFromPrice(pair, mprice):
+        current = qq.oanda2.get_prices(instruments=[pair])['prices'][0]['bid']
+        mstop = ((mprice-current)*10000)
+        return mstop
+    
     def generateRelatedColsFromOandaTickers(self, data):
         
         if type(data) == type(None):
@@ -971,10 +1000,10 @@ class StatWing:
         ml = ml007()
         
         #% compute and display initial cost
-        ml.computeCost(X, y, theta)
+        ml.computeCost_linearRegression(X, y, theta)
         
         #% run gradient descent
-        [theta, J_hist] = ml.gradientDescent(X, y, theta, alpha, iterations, viewProgress=viewProgress);
+        [theta, J_hist] = ml.gradientDescent_linearRegression(X, y, theta, alpha, iterations, viewProgress=viewProgress);
         
         #% print theta to screen
         print 'Theta found by gradient descent: '
@@ -1621,22 +1650,29 @@ def getDataFromQuandlBNP(pa, curr, authtoken=None, noUpdate=False): # curr = EUR
         print 'updating..'
         #trim_start = str(list(da.tail(1).ix[:,0])[0])
         trim_start = da.index[len(da)-1]
-        trim_end = str(dd.datetime.today().year).zfill(4) + '-' + str(dd.datetime.today().month).zfill(2) + '-' + str(dd.datetime.today().day+1).zfill(2)
+        trim_end = str(dd.datetime.today().year).zfill(4) + '-' + str(dd.datetime.today().month).zfill(2) + '-' + str(dd.datetime.today().day).zfill(2)
         print trim_start
         print trim_end
         ts = trim_start.split('-')
         te = trim_end.split('-')
         #print ts
         #print te
-        a = dd.date(int(ts[0]), int(ts[1]), int(ts[2])-1)
-        b = dd.date(int(te[0]), int(te[1]), int(te[2]))
+        #a = dd.date(int(ts[0]), int(ts[1]), int(ts[2])-1)
+        
+        
+        
+        # source: http://stackoverflow.com/questions/1506901/cleanest-and-most-pythonic-way-to-get-tomorrows-date
+        a = dd.date(int(ts[0]), int(ts[1]), int(ts[2])) - dd.timedelta(1) # minus 1 day
+        #b = dd.date(int(te[0]), int(te[1]), int(te[2]))
+        b = dd.date(int(te[0]), int(te[1]), int(te[2])) + dd.timedelta(1) # plus 1 day
         print 'a {0}'.format(a)
         print 'b {0}'.format(b)
         days = (b-a).days        
         print days
         
         nowp             = dd.datetime.now()
-        lastp            = dd.datetime(nowp.year, nowp.month, nowp.day-1, 18)
+        #lastp            = dd.datetime(nowp.year, nowp.month, nowp.day-1, 18)
+        lastp            = dd.datetime(nowp.year, nowp.month, nowp.day, 18) - dd.timedelta(1)
         secondsfromlastp = (nowp - lastp).total_seconds()
         print lastp
         print nowp
@@ -1731,7 +1767,7 @@ def testGetDataFromQuandl():
     print d8.bfill().ffill()
 
 
-def getDatasetEUR(noUpdate=False):
+def getDatasetEUR(noUpdate=False, returnPairs=False):
     pa = ''
     # 2
     pa += 'EURUSD EURJPY EURGBP EURCHF EURCAD EURAUD EURNZD EURSEK EURNOK EURBRL EURCNY EURRUB EURINR EURTRY EURTHB EURIDR EURMYR EURMXN EURARS EURDKK EURILS EURPHP'
@@ -1762,8 +1798,10 @@ def getDatasetEUR(noUpdate=False):
     # 15
     pa += ' EURAUD EURFJD EURNZD EURPGK EURWST EURSBD EURTOP EURVUV'
     
-    de = getDataFromQuandlBNP(pa, 'EUR', noUpdate=noUpdate)
-    return de
+    if returnPairs == True:
+        return pa
+    else:
+        return getDataFromQuandlBNP(pa, 'EUR', noUpdate=noUpdate)
 
 def getDataUSD(noUpdate=False):
     pa = ''
