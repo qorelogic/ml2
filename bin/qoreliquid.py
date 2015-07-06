@@ -757,6 +757,35 @@ class OandaQ:
         lsf  = list(p.DataFrame(lsf).sort(0).transpose().get_values()[0])
         #print lsf
         return lsf
+        
+    def getPairsRelatedToOandaTickers(self, pair):
+        
+        # generate relatedCols from oandas tickers
+        qq = QoreQuant()
+        
+        inst = p.DataFrame(qq.sw.oq.oanda2.get_instruments(qq.oq.aid)['instruments'])
+        lse = []
+        lsf = []
+        lsp = []
+        for i in inst.ix[:, 'instrument']:
+            pair = i.replace('_', '')
+            if pair[0:3] == 'EUR':
+                lse.append('BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x')
+                lsp.append([i, pair])
+            #elif pair[0:3] == 'USD':
+            #    lse.append('BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x')
+            #    lsp.append([i, pair])
+        for i in lse:
+            try:    
+                lsf.append(list(data.columns).index(i))
+            except: ''
+        
+        r = {}
+        r['lse'] = lse
+        r['lsf'] = lsf
+        r['lsp'] = lsp
+        
+        return r
     
     def getPricesLatest(self, data, sw, trueprices=False):
         
