@@ -789,6 +789,47 @@ class OandaQ:
         print nprices
         return nprices
 
+    def oandaTransactionHistory(self):
+        # oanda transaction history (long-term)
+        rcParams['figure.figsize'] = 20, 5
+        # oanda equity viz
+        df0 = p.read_csv('/home/qore/sec-svn.git/assets/oanda/kpql/primary/statement.csv')
+        #df0 = df0.ix[3000:, 'Balance']
+        df0 = df0.sort(columns=['Transaction ID'])
+        df0 = df0.ix[500:, :]
+        df0 = df0.set_index('Transaction ID')
+        
+        #dfn = df0.ix[:, 'Balance']
+        #dfn = normalizeme(dfn)
+        #dfn = sigmoidme(dfn)
+        #dfn.plot(); show();
+        #print df.ix[:,['Type','Currency Pair','Units','Balance','Interest','Pl']]
+        
+        # oanda transaction history (short-term)
+        qqq = QoreQuant()
+        df1 = p.DataFrame(qqq.oanda2.get_transaction_history(qqq.oq.aid)['transactions']).bfill()
+        df1 = df1.sort('id', ascending=True)
+        df1 = df1.set_index('id')
+        
+        #print df0.tail()
+        #print dfn.tail()
+        #print df0 #.transpose()
+        #print df1
+        
+        df1['Balance'] = df1['accountBalance']
+        #print df0.tail()
+        #print df1.tail()
+        #df = df0.combine_first(df1)
+        df = df1.combine_first(df0)
+        #print df.tail()
+        #df.ix[:,['Balance','accountBalance']]
+        
+        #print 'long term'
+        #df0.ix[:,'Balance'].plot(); show();
+        #print 'short term'
+        #df1['accountBalance'].plot(); show();
+        #print 'merge'
+        df.ix[:,'Balance'].plot(); show();
 
 # source: http://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
 import math
