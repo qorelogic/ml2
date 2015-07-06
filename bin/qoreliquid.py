@@ -822,14 +822,14 @@ class OandaQ:
         print nprices
         return nprices
 
-    def oandaTransactionHistory(self):
+    def oandaTransactionHistory(self, plot=True):
         # oanda transaction history (long-term)
         rcParams['figure.figsize'] = 20, 5
         # oanda equity viz
         df0 = p.read_csv('/home/qore/sec-svn.git/assets/oanda/kpql/primary/statement.csv')
         #df0 = df0.ix[3000:, 'Balance']
         df0 = df0.sort(columns=['Transaction ID'])
-        df0 = df0.ix[500:, :]
+        df0 = df0.ix[:, :]
         df0 = df0.set_index('Transaction ID')
         
         #dfn = df0.ix[:, 'Balance']
@@ -862,7 +862,9 @@ class OandaQ:
         #print 'short term'
         #df1['accountBalance'].plot(); show();
         #print 'merge'
-        df.ix[:,'Balance'].plot(); show();
+        if plot == True:
+            df.ix[:,'Balance'].plot(); show();
+        return df
 
 # source: http://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
 import math
