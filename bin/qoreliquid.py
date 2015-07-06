@@ -645,6 +645,10 @@ class OandaQ:
                 print p.DataFrame(res[i])
         
             print p.DataFrame(self.oanda2.get_account(self.aid), index=[0])
+    
+    def oandaToTimestamp(self, ptime):
+        dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
+        return (dt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
         
     def trade(self, risk, stop, instrument, side, tp=None):
         if instrument == 'eu':
