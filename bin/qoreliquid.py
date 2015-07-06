@@ -112,6 +112,9 @@ class QoreQuant():
         self.et = Etoro()
         
         self.sw = StatWing()
+
+        try:    self.oq = OandaQ()
+        except: print 'offline mode'
         
     def synchonizeTrades(self, dryrun=True):
         # send to market works
@@ -362,18 +365,17 @@ class QoreQuant():
         return tp.ix[len(tp)-10:len(tp)-0, :]
     
     def tradePrediction(self, tp, risk=1, stop=40):
-        oq = OandaQ()
         pair = 'EUR_USD'
-        eu =  oq.oanda2.get_prices(instruments=pair)['prices']
+        eu =  self.oq.oanda2.get_prices(instruments=pair)['prices']
         
         curr1 = n.mean([float(eu[0]['ask']), float(eu[0]['bid'])])
         tp1 = float('%.5f' % tp.ix[len(tp)-1,0])
         print curr1
         print tp1
         if tp1 > curr1:
-            oq.trade(risk, stop, pair, 'b', tp=tp1)
+            self.oq.trade(risk, stop, pair, 'b', tp=tp1)
         if tp1 < curr1:
-            oq.trade(risk, stop, pair, 's', tp=tp1)
+            self.oq.trade(risk, stop, pair, 's', tp=tp1)
     
     def forecastCurrency(self, mode=3, pair='EURUSD', iterations=10000, alpha=0.09, risk=5, stop=20):
         # 1: update 2: train, 3: predict, 4: trade
@@ -721,12 +723,12 @@ class OandaQ:
         #print pcnt
         
         return amount
-
-    def calculateStopLossFromPrice(pair, mprice):
-        current = qq.oanda2.get_prices(instruments=[pair])['prices'][0]['bid']
-        mstop = ((mprice-current)*10000)
+        
+    def calculateStopLossFromPrice(self, pair, mprice):
+        current = self.oanda2.get_prices(instruments=[pair])['prices'][0]['bid']
+        mstop = (mprice-current) * 10000
         return mstop
-    
+        
     def generateRelatedColsFromOandaTickers(self, data):
         
         if type(data) == type(None):
@@ -973,7 +975,7 @@ class StatWing:
         #print list(X.columns)
         return X
     
-    def regression(self, data, y, keyCol, relatedCols, iterations=1000, alpha=0.01, viewProgress=True, showPlot=True):
+    def regression(self, data, y, keyCol, relatedCols, iterations=1000, alpha=0.01, viewProgress=True, showPlot=True, verbose=False):
 
         data = data.fillna(0)
         #X = data.ix[:,0]; y = data.ix[:,1]
@@ -1005,15 +1007,17 @@ class StatWing:
         #% run gradient descent
         [theta, J_hist] = ml.gradientDescent_linearRegression(X, y, theta, alpha, iterations, viewProgress=viewProgress);
         
-        #% print theta to screen
-        print 'Theta found by gradient descent: '
-        #print '%f %f \n', theta(1), theta(2)
+        if verbose == True:
+            #% print theta to screen
+            print 'Theta found by gradient descent: '
+            #print '%f %f \n', theta(1), theta(2)
         
-        print 'len cols'
-        print len(X.columns)
-        print theta
         jh = J_hist
-        print jh[len(jh)-1]
+        if verbose == True:
+            print 'len cols'
+            print len(X.columns)
+            print theta
+            print jh[len(jh)-1]
         if showPlot == True:
             plot(jh, '-'); show();
 
@@ -1144,12 +1148,14 @@ class StatWing:
         data = sigmoidme(data)
 
         # predict regression
-        print 'related cols'
-        print self.relatedCols
-        #print data
+        if quiet == False:
+            print 'related cols'
+            print self.relatedCols
+            #print data
         #X = p.DataFrame(n.ones(len(data)), index=data.index).combine_first(data.ix[:, self.relatedCols].fillna(0))
         X = self.fixColumns(data, self.relatedCols, self.keyCol)
-        print list(X.columns)
+        if quiet == False:
+            print list(X.columns)
 
         #s = len(X)-20
         s = len(X)-1
@@ -1162,28 +1168,29 @@ class StatWing:
         nX = X
         #nX = X.ix[s,data.columns[self.relatedCols].insert(0,0)]
         
-        #print nX
-        #print ntheta
-        print 'theta shape:'
-        print self.theta.shape
-        print self.theta
-        print 'X:'
-        print X.shape
-        print list(X.columns)
+        if quiet == False:
+            #print nX
+            #print ntheta
+            print 'theta shape:'
+            print self.theta.shape
+            print self.theta
+            print 'X:'
+            print X.shape
+            print list(X.columns)
         
         predict = n.dot(nX, ntheta)
-        print ntheta
-        print nX.ix[len(nX)-1, :]
+        if quiet == False:
+            print ntheta
+            print nX.ix[len(nX)-1, :]
         
         X.ix[:,data.columns[self.relatedCols].insert(0,0)]
         #self.theta.reshape(len(self.relatedCols)+1,1)            
         
-        #print self.dmean
-        #print self.dstd
-        #predict = sigmoidmePinv(predict)
-        #predict = normalizemePinv(predict, self.dmean, self.dstd)[self.keyCol]
-        
         if quiet == False:
+            #print self.dmean
+            #print self.dstd
+            #predict = sigmoidmePinv(predict)
+            #predict = normalizemePinv(predict, self.dmean, self.dstd)[self.keyCol]
             print self.keyCol
             print predict
         return predict
@@ -1630,7 +1637,7 @@ def getDataFromQuandlBNP(pa, curr, authtoken=None, noUpdate=False): # curr = EUR
     #print tl
     
     fname = '/mldev/bin/data/quandl/BNP.'+curr+'.csv'
-    print fname
+    #print fname
     try:
         da = p.read_csv(fname, index_col=0)
         
