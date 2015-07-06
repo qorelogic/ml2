@@ -646,10 +646,13 @@ class OandaQ:
         
             print p.DataFrame(self.oanda2.get_account(self.aid), index=[0])
     
+    def datetimeToTimestamp(self, ddt):
+        return (ddt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
+
     def oandaToTimestamp(self, ptime):
         dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
         return (dt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
-        
+
     def trade(self, risk, stop, instrument, side, tp=None):
         if instrument == 'eu':
             instrument = 'EUR_USD'
@@ -865,6 +868,44 @@ class OandaQ:
         if plot == True:
             df.ix[:,'Balance'].plot(); show();
         return df
+        
+    def getHistoricalPrice(self, pair, granularity='S5', count=2, plot=True):
+        qqq = QoreQuant()
+        df = qqq.oq.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
+        hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid', 'volume']
+        hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid']
+        hed = ['closeAsk', 'closeBid']
+        df = p.DataFrame(df['candles'])
+        df = df.set_index('time')
+        #print df
+        df = df.ix[:,hed]
+        #df = normalizeme(df)
+        #df = sigmoidme(df)
+        if plot == True:
+            df.ix[:,:].plot(legend=False); show();
+        #print df
+        
+        return df
+    
+    def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True):
+        ti = df.tail(1).index[0]
+        ddt = self.datetimeToTimestamp(dd.datetime.now()) 
+        #print ddt
+        ddtdiff = ddt - self.oandaToTimestamp(ti) + (60*60*3)
+        print '{0} seconds behind'.format(ddtdiff)
+        print '{0} minutes behind'.format(ddtdiff / 60)
+        reqcount = int(ceil(ddtdiff / 5))+3
+        print 'requesting {0} ticks'.format(reqcount)
+        dfn = self.getHistoricalPrice(pair, count=reqcount, plot=plot)#.tail()
+        #print df.tail()
+        #print dfn.tail()
+        dfc = df.combine_first(dfn)
+        df = dfc
+        
+        #df.plot(); show();
+        dfc.plot(); show();
+        return dfc
+        
 
 # source: http://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
 import math
