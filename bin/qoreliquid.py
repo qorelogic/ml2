@@ -944,20 +944,36 @@ class OandaQ:
         dfc.plot(); show();
         return dfc
         
-    def updateBarsFromOanda(self, dfa={}):
+    def updateBarsFromOanda(self, dfa={}, granularities = 'H4'):
 
         relatedPairs = self.getPairsRelatedToOandaTickers('EURUSD')
         
         pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
-        self.granularities = ['H4']
+        self.granularities = granularities.split(' ')
         for pair in pairs:
             for granularity in self.granularities:
                 print pair
                 print granularity
-                try:    dfa[pair][granularity]
-                except: dfa[pair] = {}
+                fname = '/mldev/bin/data/oanda/ticks/{0}/{0}-{1}.csv'.format(pair, granularity)
+                try:    
+                    dfa[pair][granularity]
+                except:
+                    # if dataframe not in memory
+                    try:
+                        # read from csv
+                        dfa[pair][granularity].from_csv(fname)
+                    except KeyError, e:
+                        # if no csv file, initialize memory for the dataframe
+                        dfa[pair] = {}
+                # append to current dataframe in memory
                 try:    dfa[pair][granularity] = self.appendHistoricalPrice(dfa[pair][granularity], pair, granularity=granularity, plot=True)
-                except: dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=True)            
+                # if no dataframe in memory, download from data source
+                except: dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=True)
+                
+                # save to csv file
+                li = fname.split('/'); li.pop(); hdir = '/'.join(li);
+                mkdir_p(hdir)
+                dfa[pair][granularity].to_csv(fname)
                 #dfa[pair][granularity].plot(); show();
         #print dfa
         
