@@ -305,8 +305,40 @@ class QoreQuant():
         
     def setDfData(self, dfdata):
         self.dfdata = dfdata
+    
+    def update(self, granularity = None):        
+        # update from data the source
+        #self.granularityMap.keys()
+        if granularity == None:
+            self.oq.updateBarsFromOanda(granularities=' '.join(['D','H4','H1','M30','M15','M5','M1','S5','M','W']), plot=False)
+        else:
+            self.oq.updateBarsFromOanda(granularities=' '.join([granularity]), plot=False)
+
+    def main(self, noUpdate=False):
         
-    def main(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False):
+        mode = 1
+        modes = ['train','predict','trade']
+        pair = 'EUR_USD'
+        granularity = 'H4'
+        mstop = self.oq.calculateStopLossFromPrice(pair, [1.113, 1.10963, 1.10707, 1.0963][3])
+        
+        if noUpdate == False:
+            self.update(granularity='H4')
+        self.setDfData(self.oq.prepareDfData(dfa).bfill().ffill())
+    
+        if modes[mode] == 'train':
+            self.forecastCurrency(mode=2, pair=pair, iterations=20000, alpha=0.09, risk=1, stop=mstop)
+            self.forecastCurrency(mode=3, pair=pair, iterations=10000, alpha=0.3, risk=5, stop=mstop)
+        if modes[mode] == 'predict':
+            tp = self.forecastCurrency(mode=3, pair=pair, iterations=10000, alpha=0.3, risk=5, stop=mstop)
+            #print self.oq.granularities[0]
+            print 'Price forecast for {0} H4'.format(pair)
+            print p.DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
+        
+        if modes[mode] == 'trade':
+            self.forecastCurrency(mode=4, pair=pair, iterations=10000, alpha=0.3, risk=5, stop=mstop)
+        
+    def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False):
         
         #pair = 'EURGBP'
         #pair = 'EURCHF'
@@ -386,9 +418,9 @@ class QoreQuant():
     
     def forecastCurrency(self, mode=3, pair='EURUSD', iterations=10000, alpha=0.09, risk=5, stop=20):
         # 1: update 2: train, 3: predict, 4: trade
-        #pair = 'EURJPY'
              
         onErrorTrain = False # onErrorTrain swich
+        pair = pair.replace('_', '') # remove the underscore
         
         try:    self.df
         except: onErrorTrain = True
@@ -397,7 +429,7 @@ class QoreQuant():
             self.updateDatasets('EUR', noUpdate=False)
             
         if mode == 2 or onErrorTrain == True:
-            self.main(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True)
+            self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True)
         
         if mode == 2 or mode == 3 or mode == 4:
             tp = self.predict()
@@ -654,6 +686,36 @@ class OandaQ:
         
             print p.DataFrame(self.oanda2.get_account(self.aid), index=[0])
     
+        self.dfa = {}
+        
+        self.granularityMap = {
+            'S5' : 5, # seconds
+            'S10' : 10, # seconds
+            'S15' : 15, # seconds
+            'S30' : 30, # seconds
+            'M1' : 1 * 60, # minute
+    
+            'M2' : 2 * 60, # minutes
+            'M3' : 3 * 60, # minutes
+            'M4' : 4 * 60, # minutes
+            'M5' : 5 * 60, # minutes
+            'M10' : 10 * 60, # minutes
+            'M15' : 15 * 60, # minutes
+            'M30' : 30 * 60, # minutes
+            'H1' : 1 * 3600, # hour
+            'H2' : 2 * 3600, # hours
+            'H3' : 3 * 3600, # hours
+            'H4' : 4 * 3600, # hours
+            'H6' : 6 * 3600, # hours
+            'H8' : 8 * 3600, # hours
+            'H12' : 12 * 3600, # hours
+            'D' : 1 * 86400, # Day
+            #Start of week alignment (default Friday)        
+            'W' : 1 * 604800, # Week
+            #Start of month alignment (First day of the month)        
+            'M' : 1 * 2419200 # Month
+        }
+
     def datetimeToTimestamp(self, ddt):
 
         def _datetimeToTimestamp(ddt):
@@ -674,8 +736,35 @@ class OandaQ:
         except:
             ddt = []
             for i in tst: ddt.append(_timestampToDatetime(i))                
-        return ddt        
+        return ddt
         
+    """
+    timestampToDatetimeFormat [1435942800.0, 1436130000.0, 1436144400.0, 1436158800.0, 1436173200.0, 1436187600.0, 1436202000.0, 1436216400.0, 1436230800.0, 1436245200.0]
+    Out]:
+    ['2015-07-03 14:00:00',
+     '2015-07-05 18:00:00',
+     '2015-07-05 22:00:00',
+     '2015-07-06 02:00:00',
+     '2015-07-06 06:00:00',
+     '2015-07-06 10:00:00',
+     '2015-07-06 14:00:00',
+     '2015-07-06 18:00:00',
+     '2015-07-06 22:00:00',
+     '2015-07-07 02:00:00']
+     """
+    def timestampToDatetimeFormat(self, tst, fmt='%Y-%m-%d %H:%M:%S %Z'):
+
+        def _timestampToDatetimeFormat(tst):
+            w2 = dd.datetime.fromtimestamp(tst)
+            return w2.strftime(fmt)
+            #return dd.datetime.fromtimestamp(tst)
+
+        try:    ddt = _timestampToDatetimeFormat(tst)
+        except:
+            ddt = []
+            for i in tst: ddt.append(_timestampToDatetimeFormat(i))                
+        return ddt
+
     def oandaToTimestamp(self, ptime):
         
         def _oandaToTimestamp(ptime):
@@ -928,33 +1017,6 @@ class OandaQ:
         return df
     
     def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True):
-        granmap = {
-            'S5' : 5, # seconds
-            'S10' : 10, # seconds
-            'S15' : 15, # seconds
-            'S30' : 30, # seconds
-            'M1' : 1 * 60, # minute
-    
-            'M2' : 2 * 60, # minutes
-            'M3' : 3 * 60, # minutes
-            'M4' : 4 * 60, # minutes
-            'M5' : 5 * 60, # minutes
-            'M10' : 10 * 60, # minutes
-            'M15' : 15 * 60, # minutes
-            'M30' : 30 * 60, # minutes
-            'H1' : 1 * 3600, # hour
-            'H2' : 2 * 3600, # hours
-            'H3' : 3 * 3600, # hours
-            'H4' : 4 * 3600, # hours
-            'H6' : 6 * 3600, # hours
-            'H8' : 8 * 3600, # hours
-            'H12' : 12 * 3600, # hours
-            'D' : 1 * 86400, # Day
-            #Start of week alignment (default Friday)        
-            'W' : 1 * 604800, # Week
-            #Start of month alignment (First day of the month)        
-            'M' : 1 * 2419200 # Month
-        }
 
         ti = df.tail(1).index[0]
         ddt = self.datetimeToTimestamp(dd.datetime.now()) 
@@ -962,8 +1024,8 @@ class OandaQ:
         ddtdiff = ddt - self.oandaToTimestamp(ti) + (60*60*3)
         print '{0} seconds behind'.format(ddtdiff)
         print '{0} minutes behind'.format(ddtdiff / 60)
-        reqcount = int(ceil(ddtdiff / granmap[granularity]))+0
-        print granmap[granularity]
+        reqcount = int(ceil(ddtdiff / self.granularityMap[granularity]))+0
+        print self.granularityMap[granularity]
         print 'requesting {0} ticks'.format(reqcount)
         dfn = self.getHistoricalPrice(pair, count=reqcount, granularity=granularity, plot=plot)#.tail()
         #print df.tail()
@@ -975,7 +1037,7 @@ class OandaQ:
         dfc.plot(); show();
         return dfc
         
-    def updateBarsFromOanda(self, dfa={}, granularities = 'H4'):
+    def updateBarsFromOanda(self, granularities = 'H4', plot=True):
 
         relatedPairs = self.getPairsRelatedToOandaTickers('EURUSD')
         
@@ -987,28 +1049,46 @@ class OandaQ:
                 print granularity
                 fname = '/mldev/bin/data/oanda/ticks/{0}/{0}-{1}.csv'.format(pair, granularity)
                 try:    
-                    dfa[pair][granularity]
+                    self.dfa[pair][granularity]
                 except:
                     # if dataframe not in memory
                     try:
                         # read from csv
-                        dfa[pair][granularity].from_csv(fname)
-                    except KeyError, e:
+                        print 'reading from '+pair+' '+granularity
+                        self.dfa[pair][granularity] = p.read_csv(fname)
+                        print 'len {0}.'format(len(self.dfa[pair][granularity]))
+                    except IOError, e:
                         # if no csv file, initialize memory for the dataframe
-                        dfa[pair] = {}
+                        print e
+                        self.dfa[pair] = {}
+                    except KeyError, e:
+                        print e
+                        self.dfa[pair] = {}
+                    except:
+                        print 'exception {0}'.format(pair)
+                        
                 # append to current dataframe in memory
-                try:    dfa[pair][granularity] = self.appendHistoricalPrice(dfa[pair][granularity], pair, granularity=granularity, plot=True)
+                try:    
+                    print 'appending'
+                    self.dfa[pair][granularity] = self.appendHistoricalPrice(self.dfa[pair][granularity], pair, granularity=granularity, plot=plot)
                 # if no dataframe in memory, download from data source
-                except: dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=True)
+                except: 
+                    try:
+                        print 'getting clean series..'
+                        self.dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=plot)
+                    except oandapy.OandaError, e:
+                        print e                        
                 
-                # save to csv file
-                li = fname.split('/'); li.pop(); hdir = '/'.join(li);
-                mkdir_p(hdir)
-                dfa[pair][granularity].to_csv(fname)
-                #dfa[pair][granularity].plot(); show();
-        #print dfa
-        
-        return dfa
+                try:
+                    # save to csv file
+                    li = fname.split('/'); li.pop(); hdir = '/'.join(li);
+                    mkdir_p(hdir)
+                    self.dfa[pair][granularity].to_csv(fname)
+                    #self.dfa[pair][granularity].plot(); show();
+                except KeyError, e:
+                    print e
+        #print self.dfa
+        return self.dfa
 
     def prepareDfData(self, dfa):
         dfac = p.DataFrame()
