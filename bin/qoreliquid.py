@@ -402,6 +402,7 @@ class QoreQuant():
         if mode == 2 or mode == 3 or mode == 4:
             tp = self.predict()
             print tp
+            return tp
             #tp['EURUSD'] = tp[0]
             #tp.ix[:,'EURUSD']
         
@@ -654,11 +655,41 @@ class OandaQ:
             print p.DataFrame(self.oanda2.get_account(self.aid), index=[0])
     
     def datetimeToTimestamp(self, ddt):
-        return (ddt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
 
+        def _datetimeToTimestamp(ddt):
+            return (ddt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
+        
+        try:    tstmp = _datetimeToTimestamp(ddt)
+        except:
+            tstmp = []
+            for i in ddt: tstmp.append(_datetimeToTimestamp(i))
+        return tstmp
+        
+    def timestampToDatetime(self, tst):
+
+        def _timestampToDatetime(tst):
+            return dd.datetime.fromtimestamp(tst)
+
+        try:    ddt = _timestampToDatetime(tst)
+        except:
+            ddt = []
+            for i in tst: ddt.append(_timestampToDatetime(i))                
+        return ddt        
+        
     def oandaToTimestamp(self, ptime):
-        dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
-        return (dt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
+        
+        def _oandaToTimestamp(ptime):
+            dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
+            return (dt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
+            
+        try:    tstmp = _oandaToTimestamp(ptime)
+        except:
+            tstmp = []
+            for i in ptime: tstmp.append(_oandaToTimestamp(i))                
+        return tstmp
+
+    def oandaToDatetime(self, ptime):
+        return dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
 
     def trade(self, risk, stop, instrument, side, tp=None):
         if instrument == 'eu':
@@ -931,7 +962,7 @@ class OandaQ:
         ddtdiff = ddt - self.oandaToTimestamp(ti) + (60*60*3)
         print '{0} seconds behind'.format(ddtdiff)
         print '{0} minutes behind'.format(ddtdiff / 60)
-        reqcount = int(ceil(ddtdiff / granmap[granularity]))+1
+        reqcount = int(ceil(ddtdiff / granmap[granularity]))+0
         print granmap[granularity]
         print 'requesting {0} ticks'.format(reqcount)
         dfn = self.getHistoricalPrice(pair, count=reqcount, granularity=granularity, plot=plot)#.tail()
