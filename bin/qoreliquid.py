@@ -116,6 +116,8 @@ class QoreQuant():
         try:    self.oq = OandaQ()
         except: print 'offline mode'
         
+        self.dfdata = None
+        
     def synchonizeTrades(self, dryrun=True):
         # send to market works
         username = 'manapana'
@@ -301,6 +303,9 @@ class QoreQuant():
             self.du = getDataJPY(noUpdate=noUpdate)
             return self.du
         
+    def setDfData(self, dfdata):
+        self.dfdata = dfdata
+        
     def main(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False):
         
         #pair = 'EURGBP'
@@ -308,7 +313,9 @@ class QoreQuant():
         
         self.sw.keyCol = 'BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x'
         
-        self.dfdata = self.updateDatasets(pair[0:3], noUpdate=noUpdate)
+        if type(self.dfdata) == type(None):
+            self.dfdata = self.updateDatasets(pair[0:3], noUpdate=noUpdate)
+        
 
         #self.sw.relatedCols = [0, 1,2,3,6,9,8,5]
         #self.sw.relatedCols = [0, 1,2,3,6,8,5, 7,9,10,11,12,13,14,16,17]
@@ -888,15 +895,44 @@ class OandaQ:
         return df
     
     def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True):
+        granmap = {
+            'S5' : 5, # seconds
+            'S10' : 10, # seconds
+            'S15' : 15, # seconds
+            'S30' : 30, # seconds
+            'M1' : 1 * 60, # minute
+    
+            'M2' : 2 * 60, # minutes
+            'M3' : 3 * 60, # minutes
+            'M4' : 4 * 60, # minutes
+            'M5' : 5 * 60, # minutes
+            'M10' : 10 * 60, # minutes
+            'M15' : 15 * 60, # minutes
+            'M30' : 30 * 60, # minutes
+            'H1' : 1 * 3600, # hour
+            'H2' : 2 * 3600, # hours
+            'H3' : 3 * 3600, # hours
+            'H4' : 4 * 3600, # hours
+            'H6' : 6 * 3600, # hours
+            'H8' : 8 * 3600, # hours
+            'H12' : 12 * 3600, # hours
+            'D' : 1 * 86400, # Day
+            #Start of week alignment (default Friday)        
+            'W' : 1 * 604800, # Week
+            #Start of month alignment (First day of the month)        
+            'M' : 1 * 2419200 # Month
+        }
+
         ti = df.tail(1).index[0]
         ddt = self.datetimeToTimestamp(dd.datetime.now()) 
         #print ddt
         ddtdiff = ddt - self.oandaToTimestamp(ti) + (60*60*3)
         print '{0} seconds behind'.format(ddtdiff)
         print '{0} minutes behind'.format(ddtdiff / 60)
-        reqcount = int(ceil(ddtdiff / 5))+3
+        reqcount = int(ceil(ddtdiff / granmap[granularity]))+3
+        print granmap[granularity]
         print 'requesting {0} ticks'.format(reqcount)
-        dfn = self.getHistoricalPrice(pair, count=reqcount, plot=plot)#.tail()
+        dfn = self.getHistoricalPrice(pair, count=reqcount, granularity=granularity, plot=plot)#.tail()
         #print df.tail()
         #print dfn.tail()
         dfc = df.combine_first(dfn)
