@@ -686,7 +686,7 @@ class OandaQ:
 
     def order(self, risk, stop, side, instrument='EUR_USD', tp=None):
         
-        stop = float(stop) # pips
+        stop = abs(float(stop)) # pips
         risk = float(risk) # percentage risk
         
         #print self.oanda2.get_accounts()['accounts'][0]['accountId']
@@ -731,16 +731,18 @@ class OandaQ:
         #pcnt   = 100.0*pl / bal
         
         amount = (pcnt * bal) / (100* ((openp + float(stop) / 10000.0) - openp ) )
-        amount = int(amount)
-        #print amount
-        #print pl
-        #print pcnt
+        #amount = (pcnt * bal) / (100* ((openp - float(stop) / 10000.0) - openp ) )
+        amount = abs(int(amount))
+        print 'amount {0}'.format(amount)
+        print 'pl {0}'.format(pl)
+        print 'pcnt {0}'.format(pcnt)
         
         return amount
         
     def calculateStopLossFromPrice(self, pair, mprice):
         current = self.oanda2.get_prices(instruments=[pair])['prices'][0]['bid']
         mstop = (mprice-current) * 10000
+        print 'mstop {0}'.format(mstop)
         return mstop
         
     def generateRelatedColsFromOandaTickers(self, data):
@@ -929,7 +931,7 @@ class OandaQ:
         ddtdiff = ddt - self.oandaToTimestamp(ti) + (60*60*3)
         print '{0} seconds behind'.format(ddtdiff)
         print '{0} minutes behind'.format(ddtdiff / 60)
-        reqcount = int(ceil(ddtdiff / granmap[granularity]))+3
+        reqcount = int(ceil(ddtdiff / granmap[granularity]))+1
         print granmap[granularity]
         print 'requesting {0} ticks'.format(reqcount)
         dfn = self.getHistoricalPrice(pair, count=reqcount, granularity=granularity, plot=plot)#.tail()
@@ -942,6 +944,53 @@ class OandaQ:
         dfc.plot(); show();
         return dfc
         
+    def updateBarsFromOanda(self, dfa={}):
+
+        relatedPairs = self.getPairsRelatedToOandaTickers('EURUSD')
+        
+        pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
+        self.granularities = ['H4']
+        for pair in pairs:
+            for granularity in self.granularities:
+                print pair
+                print granularity
+                try:    dfa[pair][granularity]
+                except: dfa[pair] = {}
+                try:    dfa[pair][granularity] = self.appendHistoricalPrice(dfa[pair][granularity], pair, granularity=granularity, plot=True)
+                except: dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=True)            
+                #dfa[pair][granularity].plot(); show();
+        #print dfa
+        
+        return dfa
+
+    def prepareDfData(self, dfa):
+        dfac = p.DataFrame()
+        gran = self.granularities[0]
+        
+        try:
+            for i in dfa:
+                #dfa[i][gran][i+'closeAsk'] = dfa[i][gran]['closeAsk']
+                #dfa[i][gran][i+'closeBid'] = dfa[i][gran]['closeBid']
+                par = 'BNP.{0} - {1}_x'.format(i.replace('_', ''), i.replace('_', '/'))
+                dfa[i][gran][par] = (dfa[i][gran]['closeAsk'] + dfa[i][gran]['closeBid']) / 2       
+                #print dfa[i][gran].ix[:,[2,3]].tail(1)#.transpose()
+                #dfac = dfac.combine_first(dfa[i][gran].ix[:,[2,3,4]]) #.tail(1)#.transpose()
+                dfac = dfac.combine_first(dfa[i][gran].ix[:,[par]]) #.tail(1)#.transpose()
+        except:
+            print gran+' granularity not available, please update for '+gran
+        #dfac = normalizeme(dfac)
+        #dfac = sigmoidme(dfac)
+        #dfac = (1 - n.power(n.e, -dfac)) / (1 + n.power(n.e, -dfac)) # hyperbolic tangent, tanh
+        #dfac = n.log(1 + n.power(n.e, dfac)) # relu
+        #dfac = n.tanh(dfac) # tanh
+        #dfac.plot(legend=False); show();
+        #dfac
+        
+        #from qoreliquid import *
+        #qq = QoreQuant()
+        
+        return dfac
+
 
 # source: http://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
 import math
