@@ -409,9 +409,13 @@ class QoreQuant():
         #normalizemePinv(, dmean, dstd)
         return tp.ix[len(tp)-10:len(tp)-0, :]
     
-    def tradePrediction(self, tp, risk=1, stop=40):
+    def tradePrediction(self, pair, tp, risk=1, stop=40):
         print 'tradePrediction'
-        pair = 'EUR_USD'
+        print pair
+        pair = pair.replace('_','')
+        print pair
+        pair = pair[0:3]+'_'+pair[3:6]
+        print pair
         eu =  self.oq.oanda2.get_prices(instruments=pair)['prices']
         
         curr1 = n.mean([float(eu[0]['ask']), float(eu[0]['bid'])])
@@ -444,7 +448,7 @@ class QoreQuant():
             print p.DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
         
         if mode == 4:
-            self.tradePrediction(tp, risk=risk, stop=stop)
+            self.tradePrediction(pair, tp, risk=risk, stop=stop)
         
 
 class FinancialModel:
