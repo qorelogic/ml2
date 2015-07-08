@@ -558,6 +558,10 @@ from IPython.display import display, clear_output
 import time
 class ml007:
 
+    def __init__(self):
+        self.J_history = []
+        self.theta     = []
+        
     def computeCost_linearRegression(self, X, y, theta):
         X = n.array(X)
         #print X
@@ -573,28 +577,30 @@ class ml007:
     
     def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=10, ):
         m = len(y)
-        J_history = n.zeros(num_iters)
+        self.J_history = n.zeros(num_iters)
+        self.theta = theta
         #try:
         for iter in range(0,num_iters):
-                theta = theta - (float(alpha)/m) * n.dot((n.dot(X,theta)-y).transpose(),X).transpose()
+                self.theta = self.theta - (float(alpha)/m) * n.dot((n.dot(X,self.theta)-y).transpose(),X).transpose()
                 if viewProgress:
                     if iter % b == 0:
                         clear_output()
                         print ''
-                        print 'theta:{0}'.format(theta)
-                J_history[iter] = self.computeCost_linearRegression(X, y, theta)
+                        print 'theta:{0}'.format(self.theta)
+                self.J_history[iter] = self.computeCost_linearRegression(X, y, self.theta)
                 if viewProgress:
                     if iter % b == 0:
-                        print '1 J history:{0}'.format(J_history[iter])
+                        print '1 J history:{0}'.format(self.J_history[iter])
                         print '1 iter:{0}'.format(iter)
-                #print type(J_history[iter])
-                if n.isnan(J_history[iter]):
-                    #plot(J_history); show();
-                    plt.scatter(iter, J_history); show();
-                    return [theta, J_history]
+                #print type(self.J_history[iter])
+                if n.isnan(self.J_history[iter]):
+                    #plot(self.J_history); show();
+                    plt.scatter(iter, self.J_history); show();
+                    return [self.theta, self.J_history]
                 if iter % b == 0:
                     print iter
-                    print J_history[iter]
+                    print self.J_history[iter]
+                    #print self.theta
                     clear_output()
                     
         #except:
@@ -602,10 +608,10 @@ class ml007:
         if viewProgress: 
             if iter % b == 0:
                 #clear_output()
-                print '2 J history:{0}'.format(J_history[iter])
+                print '2 J history:{0}'.format(self.J_history[iter])
                 print '2 iter:{0}'.format(iter)
         
-        return [theta, J_history]
+        return [self.theta, self.J_history]
         
     #[theta, J_history] = gradientDescent(n.array([1,5,1,2,1,4,1,5]).reshape(4,2), n.array([1,6,4,2]).reshape(4,1), n.array([0,0]).reshape(2,1),0.01,1000);
     #print theta
@@ -1194,6 +1200,7 @@ class StatWing:
         try:    self.oq = OandaQ()
         except: print 'offline mode'
         self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
+        self.ml = ml007()
         
     def higherNextDay(self, dfa):
         dfc = p.DataFrame(index=dfa.index[0:len(dfa)-1])
@@ -1342,34 +1349,32 @@ class StatWing:
         
         #print y
         
-        theta = n.zeros(len(X.columns))
+        self.theta = n.zeros(len(X.columns))
         #theta = n.random.randn(len(X.columns))
-        print theta
-        
-        ml = ml007()
+        print self.theta
         
         #% compute and display initial cost
-        ml.computeCost_linearRegression(X, y, theta)
+        self.ml.computeCost_linearRegression(X, y, self.theta)
         
         #% run gradient descent
-        [theta, J_hist] = ml.gradientDescent_linearRegression(X, y, theta, alpha, iterations, viewProgress=viewProgress);
+        [self.theta, self.J_hist] = self.ml.gradientDescent_linearRegression(X, y, self.theta, alpha, iterations, viewProgress=viewProgress);
         
         if verbose == True:
             #% print theta to screen
             print 'Theta found by gradient descent: '
             #print '%f %f \n', theta(1), theta(2)
         
-        jh = J_hist
+        jh = self.J_hist
         if verbose == True:
             print 'len cols'
             print len(X.columns)
-            print theta
+            print self.ml.theta
             print jh[len(jh)-1]
         if showPlot == True:
             plot(jh, '-'); show();
 
         
-        return theta
+        return self.ml.theta
 
     def predictRegression(self, te1, te2, mode=1):
         
@@ -1481,7 +1486,8 @@ class StatWing:
         [data, self.dmean, self.dstd] = normalizeme(data, pinv=True)
         data = sigmoidme(data)
         
-        self.theta = self.regression(data, y, self.keyCol, self.relatedCols, iterations=iterations, alpha=alpha, viewProgress=viewProgress, showPlot=showPlot)
+        self.regression(data, y, self.keyCol, self.relatedCols, iterations=iterations, alpha=alpha, viewProgress=viewProgress, showPlot=showPlot)
+        self.theta = self.ml.theta
         #p1 = list(data.columns[self.relatedCols])
         #print p1
         if showPlot:
@@ -1509,8 +1515,8 @@ class StatWing:
         #print X.ix[s:s+20, data.columns[[0]].insert(0,0)]
         #print X.ix[s+19,data.columns[self.relatedCols].insert(0,0)]
         #print theta
-        ntheta = self.theta.reshape(len(self.relatedCols),1)
-        #ntheta = self.theta.reshape(len(self.relatedCols)+1,1)
+        ntheta = self.ml.theta.reshape(len(self.relatedCols),1)
+        #ntheta = self.ml.theta.reshape(len(self.relatedCols)+1,1)
         #nX = X.ix[:,data.columns[self.relatedCols].insert(0,0)]
         nX = X
         #nX = X.ix[s,data.columns[self.relatedCols].insert(0,0)]
@@ -1519,8 +1525,8 @@ class StatWing:
             #print nX
             #print ntheta
             print 'theta shape:'
-            print self.theta.shape
-            print self.theta
+            print self.ml.theta.shape
+            print self.ml.theta
             print 'X:'
             print X.shape
             print list(X.columns)
@@ -1531,7 +1537,7 @@ class StatWing:
             print nX.ix[len(nX)-1, :]
         
         X.ix[:,data.columns[self.relatedCols].insert(0,0)]
-        #self.theta.reshape(len(self.relatedCols)+1,1)            
+        #self.ml.theta.reshape(len(self.relatedCols)+1,1)            
         
         if quiet == False:
             #print self.dmean
