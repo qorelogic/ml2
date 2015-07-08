@@ -307,16 +307,16 @@ class QoreQuant():
     def setDfData(self, dfdata):
         self.dfdata = dfdata
     
-    def update(self, granularity = None, noUpdate=False):        
+    def update(self, pair='EURUSD', granularity = None, noUpdate=False, plot=False):        
         # update from data the source
-        #self.granularityMap.keys()
+        #self.granularityMap.keys()        
         if granularity == None:
-            self.oq.updateBarsFromOanda(granularities=' '.join(['D','H4','H1','M30','M15','M5','M1','S5','M','W']), plot=False, noUpdate=noUpdate)
+            self.oq.updateBarsFromOanda(pair=pair, granularities=' '.join(['D','H4','H1','M30','M15','M5','M1','S5','M','W']), plot=plot, noUpdate=noUpdate)
         else:
-            self.oq.updateBarsFromOanda(granularities=' '.join([granularity]), plot=False, noUpdate=noUpdate)
+            self.oq.updateBarsFromOanda(pair=pair, granularities=' '.join([granularity]), plot=plot, noUpdate=noUpdate)
 
     
-    def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False):
+    def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False, plot=True):
         #modes = ['train','predict','trade']
         #alpha = 0.09 # 0.3
         
@@ -324,7 +324,7 @@ class QoreQuant():
         if stopLossPrice != None:
             mstop = self.oq.calculateStopLossFromPrice(pair, stopLossPrice)
         
-        self.update(granularity='H4', noUpdate=noUpdate)
+        self.update(pair=pair, granularity='H4', noUpdate=noUpdate, plot=plot)
         self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
     
         if modes[mode] == 'train':
@@ -347,19 +347,22 @@ class QoreQuant():
         
         self.sw.keyCol = 'BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x'
         
-        if type(self.dfdata) == type(None):
-            self.dfdata = self.updateDatasets(pair[0:3], noUpdate=noUpdate)
-        
+        #if type(self.dfdata) == type(None):
+        #    self.dfdata = self.updateDatasets(pair[0:3], noUpdate=noUpdate)        
+        self.update(pair=pair, granularity='H4', noUpdate=noUpdate)
+        self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
 
         #self.sw.relatedCols = [0, 1,2,3,6,9,8,5]
         #self.sw.relatedCols = [0, 1,2,3,6,8,5, 7,9,10,11,12,13,14,16,17]
-        self.sw.relatedCols = self.sw.oq.generateRelatedColsFromOandaTickers(self.dfdata)
+        self.sw.relatedCols = self.sw.oq.generateRelatedColsFromOandaTickers(self.dfdata, pair)
         #self.sw.relatedCols = [0,1, 2, 3, 4, 5, 6, 7, 8, 13, 19]
         
         #
         #self.sw.relatedCols = range(1, 98)
         #self.sw.relatedCols = data.columns
         #self.sw.relatedCols = [0,1]
+        
+        print self.dfdata.columns
         
         self.df = self.dfdata.ix[0:len(self.dfdata)-0, :].fillna(0)
         X = self.df.ix[0:len(self.df)]
@@ -868,22 +871,33 @@ class OandaQ:
         #print 'mstop {0}'.format(mstop)
         return mstop
         
-    def generateRelatedColsFromOandaTickers(self, data):
+    def generateRelatedColsFromOandaTickers(self, data, pair):
         
         if type(data) == type(None):
             print data
             raise ValueError('given input is none')
         
         # generate relatedCols from oandas tickers
-        inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
+        fname = '/mldev/bin/data/oanda/cache/instruments.csv'
+        try:
+            inst = readcache(fname)
+        except:     
+            inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
+            writecache(inst, fname)
         lse = []
         lsf = []
         for i in inst.ix[:, 'instrument']:
-            pair = i.replace('_', '')
-            if pair[0:3] == 'EUR':
-                lse.append('BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x')
-            if pair[0:3] == 'USD':
-                lse.append('BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x')
+
+            ipair = i.replace('_', '')
+            
+            if pair[0:3] == ipair[0:3] or pair[0:3] == ipair[3:6]:
+                lse.append('BNP.'+ipair+' - '+ipair[0:3]+'/'+ipair[3:6]+'_x')
+
+            if pair[3:6] == ipair[0:3] or pair[3:6] == ipair[3:6]:
+                lse.append('BNP.'+ipair+' - '+ipair[0:3]+'/'+ipair[3:6]+'_x')
+                
+            if pair[0:3] == ipair[0:3] and pair[3:6] == ipair[3:6]:
+                lse.pop()
         for i in lse:
             try:    
                 lsf.append(list(data.columns).index(i))
@@ -912,13 +926,19 @@ class OandaQ:
         lsf = []
         lsp = []
         for i in inst.ix[:, 'instrument']:
-            pair = i.replace('_', '')
-            if pair[0:3] == 'EUR':
-                lse.append('BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x')
-                lsp.append([i, pair])
-            #elif pair[0:3] == 'USD':
-            #    lse.append('BNP.'+pair+' - '+pair[0:3]+'/'+pair[3:6]+'_x')
-            #    lsp.append([i, pair])
+
+            ipair = i.replace('_', '')
+            
+            if pair[0:3] == ipair[0:3] or pair[0:3] == ipair[3:6]:
+                lse.append('BNP.'+ipair+' - '+ipair[0:3]+'/'+ipair[3:6]+'_x')
+                lsp.append([i, ipair])
+
+            if pair[3:6] == ipair[0:3] or pair[3:6] == ipair[3:6]:
+                lse.append('BNP.'+ipair+' - '+ipair[0:3]+'/'+ipair[3:6]+'_x')
+                lsp.append([i, ipair])
+                
+        #print lse
+        #print lsp
         for i in lse:
             try:    
                 lsf.append(list(data.columns).index(i))
@@ -1019,35 +1039,41 @@ class OandaQ:
         #df = normalizeme(df)
         #df = sigmoidme(df)
         if plot == True:
-            df.ix[:,:].plot(legend=False); show();
+            df.ix[:,:].plot(legend=False, title=pair); show();
         #print df
         
         return df
     
     def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True):
 
+        safeShift = 0
+        
         ti = df.tail(1).index[0]
         ddt = self.datetimeToTimestamp(dd.datetime.now()) 
         #print ddt
         ddtdiff = ddt - self.oandaToTimestamp(ti) + (60*60*3)
         print '{0} seconds behind'.format(ddtdiff)
         print '{0} minutes behind'.format(ddtdiff / 60)
-        reqcount = int(ceil(ddtdiff / self.granularityMap[granularity]))+0
+        reqcount = int(ceil(ddtdiff / self.granularityMap[granularity])) + safeShift
         print self.granularityMap[granularity]
         print 'requesting {0} ticks'.format(reqcount)
-        dfn = self.getHistoricalPrice(pair, count=reqcount, granularity=granularity, plot=plot)#.tail()
+        if safeShift > 0:
+            plotHiPr = True
+        else:
+            plotHiPr = False
+        dfn = self.getHistoricalPrice(pair, count=reqcount, granularity=granularity, plot=plotHiPr)#.tail()
         #print df.tail()
         #print dfn.tail()
         dfc = df.combine_first(dfn)
         df = dfc
         
         #df.plot(); show();
-        dfc.plot(); show();
+        dfc.plot(title=pair); show();
         return dfc
         
-    def updateBarsFromOanda(self, granularities = 'H4', plot=True, noUpdate=False):
+    def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
 
-        relatedPairs = self.getPairsRelatedToOandaTickers('EURUSD')
+        relatedPairs = self.getPairsRelatedToOandaTickers(pair)
         
         pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
         self.granularities = granularities.split(' ')
@@ -1303,7 +1329,16 @@ class StatWing:
         show();
     
     def fixColumns(self, data, relatedCols, keyCol):
+        
+        #print 'relatedCols'
         #print relatedCols
+        
+        #print 'keyCol'
+        #print keyCol
+        
+        #print 'datavols'
+        #print data.columns
+
         X = data.ix[:, relatedCols]
         #print type(X)
         #print X
@@ -1508,6 +1543,9 @@ class StatWing:
         #print X.ix[s:s+20, data.columns[[0]].insert(0,0)]
         #print X.ix[s+19,data.columns[self.relatedCols].insert(0,0)]
         #print theta
+        #print 'shape theta'
+        #print self.theta.shape
+        #print len(self.relatedCols)
         ntheta = self.theta.reshape(len(self.relatedCols),1)
         #ntheta = self.theta.reshape(len(self.relatedCols)+1,1)
         #nX = X.ix[:,data.columns[self.relatedCols].insert(0,0)]
