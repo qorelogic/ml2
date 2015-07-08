@@ -324,8 +324,7 @@ class QoreQuant():
         if stopLossPrice != None:
             mstop = self.oq.calculateStopLossFromPrice(pair, stopLossPrice)
         
-        if noUpdate == False:
-            self.update(granularity='H4', noUpdate=noUpdate)
+        self.update(granularity='H4', noUpdate=noUpdate)
         self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
     
         if modes[mode] == 'train':
