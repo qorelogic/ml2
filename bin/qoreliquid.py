@@ -315,8 +315,9 @@ class QoreQuant():
         else:
             self.oq.updateBarsFromOanda(granularities=' '.join([granularity]), plot=False, noUpdate=noUpdate)
 
+    
     def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False):
-        
+        #modes = ['train','predict','trade']
         #alpha = 0.09 # 0.3
         
         modes = ['train','predict','trade']
@@ -328,16 +329,17 @@ class QoreQuant():
         self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
     
         if modes[mode] == 'train':
-            self.forecastCurrency(mode=2, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
+            try:
+                self.forecastCurrency(mode=2, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
+            except KeyboardInterrupt, e:
+                pass
             self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
         if modes[mode] == 'predict':
-            tp = self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
+            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
             #print self.oq.granularities[0]
-            print 'Price forecast for {0} {1}'.format(pair, granularity)
-            print p.DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
         
         if modes[mode] == 'trade':
-            self.forecastCurrency(mode=4, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
+            self.forecastCurrency(mode=4, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
         
     def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False):
         
@@ -406,6 +408,7 @@ class QoreQuant():
         return tp.ix[len(tp)-10:len(tp)-0, :]
     
     def tradePrediction(self, tp, risk=1, stop=40):
+        print 'tradePrediction'
         pair = 'EUR_USD'
         eu =  self.oq.oanda2.get_prices(instruments=pair)['prices']
         
@@ -418,7 +421,7 @@ class QoreQuant():
         if tp1 < curr1:
             self.oq.trade(risk, stop, pair, 's', tp=tp1)
     
-    def forecastCurrency(self, mode=3, pair='EURUSD', iterations=10000, alpha=0.09, risk=5, stop=20):
+    def forecastCurrency(self, mode=3, pair='EURUSD', granularity='H4', iterations=10000, alpha=0.09, risk=5, stop=20):
         # 1: update 2: train, 3: predict, 4: trade
              
         onErrorTrain = False # onErrorTrain swich
@@ -435,7 +438,8 @@ class QoreQuant():
         
         if mode == 2 or mode == 3 or mode == 4:
             tp = self.predict(plotTitle=pair)
-            return tp
+            print 'Price forecast for {0} {1}'.format(pair, granularity)
+            print p.DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
         
         if mode == 4:
             self.tradePrediction(tp, risk=risk, stop=stop)
