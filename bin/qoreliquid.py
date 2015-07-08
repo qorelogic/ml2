@@ -105,6 +105,7 @@ class QoreQuant():
         
         self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
         self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
+
         #print 'using account: {0}'.format(self.accid1)
         
         #from selenium import webdriver
@@ -306,37 +307,37 @@ class QoreQuant():
     def setDfData(self, dfdata):
         self.dfdata = dfdata
     
-    def update(self, granularity = None):        
+    def update(self, granularity = None, noUpdate=False):        
         # update from data the source
         #self.granularityMap.keys()
         if granularity == None:
-            self.oq.updateBarsFromOanda(granularities=' '.join(['D','H4','H1','M30','M15','M5','M1','S5','M','W']), plot=False)
+            self.oq.updateBarsFromOanda(granularities=' '.join(['D','H4','H1','M30','M15','M5','M1','S5','M','W']), plot=False, noUpdate=noUpdate)
         else:
-            self.oq.updateBarsFromOanda(granularities=' '.join([granularity]), plot=False)
+            self.oq.updateBarsFromOanda(granularities=' '.join([granularity]), plot=False, noUpdate=noUpdate)
 
-    def main(self, noUpdate=False):
+    def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False):
         
-        mode = 1
+        #alpha = 0.09 # 0.3
+        
         modes = ['train','predict','trade']
-        pair = 'EUR_USD'
-        granularity = 'H4'
-        mstop = self.oq.calculateStopLossFromPrice(pair, [1.113, 1.10963, 1.10707, 1.0963][3])
+        if stopLossPrice != None:
+            mstop = self.oq.calculateStopLossFromPrice(pair, stopLossPrice)
         
         if noUpdate == False:
-            self.update(granularity='H4')
-        self.setDfData(self.oq.prepareDfData(dfa).bfill().ffill())
+            self.update(granularity='H4', noUpdate=noUpdate)
+        self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
     
         if modes[mode] == 'train':
-            self.forecastCurrency(mode=2, pair=pair, iterations=20000, alpha=0.09, risk=1, stop=mstop)
-            self.forecastCurrency(mode=3, pair=pair, iterations=10000, alpha=0.3, risk=5, stop=mstop)
+            self.forecastCurrency(mode=2, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
+            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
         if modes[mode] == 'predict':
-            tp = self.forecastCurrency(mode=3, pair=pair, iterations=10000, alpha=0.3, risk=5, stop=mstop)
+            tp = self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
             #print self.oq.granularities[0]
-            print 'Price forecast for {0} H4'.format(pair)
+            print 'Price forecast for {0} {1}'.format(pair, granularity)
             print p.DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
         
         if modes[mode] == 'trade':
-            self.forecastCurrency(mode=4, pair=pair, iterations=10000, alpha=0.3, risk=5, stop=mstop)
+            self.forecastCurrency(mode=4, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
         
     def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False):
         
@@ -376,7 +377,7 @@ class QoreQuant():
         
         theta = self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, viewProgress=False, showPlot=False)
     
-    def predict(self):
+    def predict(self, plotTitle=''):
         data = self.df
         wlen = 200
         #self.sw.predictRegression2(mdf.ix[0:ldf-0, :], quiet=True)
@@ -399,6 +400,7 @@ class QoreQuant():
         plot(data.ix[ldf-wlen: ldf, self.sw.keyCol])
         plot(tp.ix[ldf-wlen: ldf, :], '.')
         legend(['price', 'tp'])
+        title(plotTitle)
         show();
         #normalizemePinv(, dmean, dstd)
         return tp.ix[len(tp)-10:len(tp)-0, :]
@@ -432,11 +434,8 @@ class QoreQuant():
             self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True)
         
         if mode == 2 or mode == 3 or mode == 4:
-            tp = self.predict()
-            print tp
+            tp = self.predict(plotTitle=pair)
             return tp
-            #tp['EURUSD'] = tp[0]
-            #tp.ix[:,'EURUSD']
         
         if mode == 4:
             self.tradePrediction(tp, risk=risk, stop=stop)
@@ -771,7 +770,8 @@ class OandaQ:
             dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
             return (dt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
             
-        try:    tstmp = _oandaToTimestamp(ptime)
+        try:
+            tstmp = _oandaToTimestamp(ptime)
         except:
             tstmp = []
             for i in ptime: tstmp.append(_oandaToTimestamp(i))                
@@ -862,7 +862,7 @@ class OandaQ:
     def calculateStopLossFromPrice(self, pair, mprice):
         current = self.oanda2.get_prices(instruments=[pair])['prices'][0]['bid']
         mstop = (mprice-current) * 10000
-        print 'mstop {0}'.format(mstop)
+        #print 'mstop {0}'.format(mstop)
         return mstop
         
     def generateRelatedColsFromOandaTickers(self, data):
@@ -889,7 +889,7 @@ class OandaQ:
         #for i in inst:
         #    print i['instrument']
         
-        print lsf
+        #print lsf
         lsf  = list(p.DataFrame(lsf).sort(0).transpose().get_values()[0])
         #print lsf
         return lsf
@@ -897,9 +897,14 @@ class OandaQ:
     def getPairsRelatedToOandaTickers(self, pair):
         
         # generate relatedCols from oandas tickers
-        qq = QoreQuant()
         
-        inst = p.DataFrame(qq.sw.oq.oanda2.get_instruments(qq.oq.aid)['instruments'])
+        fname = '/mldev/bin/data/oanda/cache/instruments.csv'
+        try:
+            inst = readcache(fname)
+        except:     
+            inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
+            writecache(inst, fname)
+
         lse = []
         lsf = []
         lsp = []
@@ -1001,8 +1006,8 @@ class OandaQ:
     def getHistoricalPrice(self, pair, granularity='S5', count=2, plot=True):
         qqq = QoreQuant()
         df = qqq.oq.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
-        hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid', 'volume']
-        hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid']
+        #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid', 'volume']
+        #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid']
         hed = ['closeAsk', 'closeBid']
         df = p.DataFrame(df['candles'])
         df = df.set_index('time')
@@ -1037,13 +1042,16 @@ class OandaQ:
         dfc.plot(); show();
         return dfc
         
-    def updateBarsFromOanda(self, granularities = 'H4', plot=True):
+    def updateBarsFromOanda(self, granularities = 'H4', plot=True, noUpdate=False):
 
         relatedPairs = self.getPairsRelatedToOandaTickers('EURUSD')
         
         pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
         self.granularities = granularities.split(' ')
         for pair in pairs:
+            try:                self.dfa[pair]
+            except KeyError, e: self.dfa[pair] = {}
+            
             for granularity in self.granularities:
                 print pair
                 print granularity
@@ -1054,39 +1062,45 @@ class OandaQ:
                     # if dataframe not in memory
                     try:
                         # read from csv
-                        print 'reading from '+pair+' '+granularity
-                        self.dfa[pair][granularity] = p.read_csv(fname)
-                        print 'len {0}.'format(len(self.dfa[pair][granularity]))
-                    except IOError, e:
-                        # if no csv file, initialize memory for the dataframe
+                        print 'reading from {0} {1} {2}'.format(fname, pair, granularity)
+                        self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
+                        print 'len {0}.'.format(len(self.dfa[pair][granularity]))
+                    except KeyError, e:
                         print e
                         self.dfa[pair] = {}
-                    except KeyError, e:
+                    except IOError, e:
+                        # if no csv file, initialize memory for the dataframe
                         print e
                         self.dfa[pair] = {}
                     except:
                         print 'exception {0}'.format(pair)
                         
                 # append to current dataframe in memory
-                try:    
-                    print 'appending'
-                    self.dfa[pair][granularity] = self.appendHistoricalPrice(self.dfa[pair][granularity], pair, granularity=granularity, plot=plot)
-                # if no dataframe in memory, download from data source
-                except: 
+                if noUpdate == False:
                     try:
-                        print 'getting clean series..'
-                        self.dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=plot)
-                    except oandapy.OandaError, e:
-                        print e                        
+                        print 'len {0} before append.'.format(len(self.dfa[pair][granularity]))
+                        self.dfa[pair][granularity] = self.appendHistoricalPrice(self.dfa[pair][granularity], pair, granularity=granularity, plot=plot)
+                        print 'len {0} after append.'.format(len(self.dfa[pair][granularity]))
+                        print 'appended to {0}'.format(pair)
+                        # if no dataframe in memory, download from data source
+                    except:
+                        try:
+                            self.dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=plot)
+                            print 'got clean series {0}'.format(pair)
+                        except oandapy.OandaError, e:
+                            print e                        
                 
-                try:
-                    # save to csv file
-                    li = fname.split('/'); li.pop(); hdir = '/'.join(li);
-                    mkdir_p(hdir)
-                    self.dfa[pair][granularity].to_csv(fname)
-                    #self.dfa[pair][granularity].plot(); show();
-                except KeyError, e:
-                    print e
+                if noUpdate == False:
+                    try:
+                        # save to csv file
+                        li = fname.split('/'); li.pop(); hdir = '/'.join(li);
+                        mkdir_p(hdir)
+                        self.dfa[pair][granularity].to_csv(fname)
+                        #self.dfa[pair][granularity].plot(); show();
+                        print 'saved {0} to {1}'.format(pair, fname)
+                    except KeyError, e:
+                        print e
+                print
         #print self.dfa
         return self.dfa
 
@@ -1295,8 +1309,8 @@ class StatWing:
         Xc = X.columns.tolist()
         Xc.insert(0, Xc.pop())
         #try:
-        print 'removing {0}'.format(keyCol)
-        print Xc
+        #print 'removing {0}'.format(keyCol)
+        #print Xc
         Xc.remove(keyCol)
         #except:
         #    ''
