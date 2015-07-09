@@ -18,7 +18,8 @@ import pandas as p
 import numpy as n
 import time
 from threading import Thread
-	
+from qoreliquid import *
+
 # Trading Algorithm
 class QsTrader(Thread):
     def __init__(self):
@@ -134,7 +135,7 @@ class QsForecaster:
             self.machineLearning   = None
             
             # setters
-            self.nDayForecast = Null
+            self.nDayForecast = None
         
         def getInformationFeed(self):
             ''
@@ -144,20 +145,36 @@ class QsForecaster:
             self.historical = trader.getHistoricalPriceData()
         
         def getMachineLearning(self):
-            ''
+            
+            qq = QoreQuant()
+            #qq.main(mode=1, pair='EUR_USD', granularity='H4', iterations=10000, alpha=0.09, risk=1, stopLossPrice=[1.113, 1.10963, 1.10707, 1.0963][3], noUpdate=True)
+
+            mode          = 0
+            pair          = ['EUR_USD', 'EUR_NZD', 'NZD_USD', 'AUD_JPY', 'GBP_USD', 'AUD_USD', 'USD_CAD', 'NZD_JPY'][0]
+            noUpdate      = 1
+            granularity   = ['M5', 'H4'][1]
+            iterations    = 2000
+            alpha         = 0.1
+            risk          = 1
+            stopLossPrice = [1.65, 1.113, 1.10963, 1.10707, 1.0963][2]
+            
+            qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate)
+
         
         def generateNDayForecast(self):
             ''
     
 trader = QsTrader()
+forecaster = QsForecaster()
 
 def main():
-    trader.start()
+    #trader.start()
+    forecaster.getMachineLearning()
 
 def test():
     trader.gotoMarket()
 
 if __name__ == "__main__":
-    #main()
-    test()
+    main()
+    #test()
 
