@@ -379,7 +379,7 @@ class QoreQuant():
         #print p.DataFrame(y)
         y.shape
         
-        theta = self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, viewProgress=False, showPlot=False)
+        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, viewProgress=False, showPlot=False)
     
     def predict(self, plotTitle=''):
         data = self.df
@@ -568,44 +568,41 @@ class ml007:
         self.J_history = []
         self.theta     = []
         
-    def computeCost_linearRegression(self, X, y, theta):
-        X = n.array(X)
-        #print X
-        m = len(y)
-        J = 0
-        J = 1.0/(2*m) * n.sum(n.power(n.dot(X,theta)-y,2))
-        return J
+    def computeCost_linearRegression(self, X, y, theta, m):
+        return 1.0/(2*m) * n.sum(n.power(n.dot(X,theta)-y,2)) # J
     
     #print computeCost( n.array([1, 2, 1, 3, 1, 4, 1, 5]).reshape(4,2), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2]).reshape(2,1) )
     # 11.945
     #print computeCost( n.array([1,2,3,1,3,4,1,4,5,1,5,6]).reshape(4,3), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2,0.3]).reshape(3,1))
     # 7.0175
     
-    def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=10, ):
+    def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=500, ):
         m = len(y)
         self.J_history = n.zeros(num_iters)
         self.theta = theta
+        X = n.array(X)
+        alpha_over_m = (float(alpha)/m)
         #try:
         for iter in range(0,num_iters):
-                self.theta = self.theta - (float(alpha)/m) * n.dot((n.dot(X,self.theta)-y).transpose(),X).transpose()
-                if viewProgress:
-                    if iter % b == 0:
-                        clear_output()
-                        print ''
-                        print 'theta:{0}'.format(self.theta)
-                self.J_history[iter] = self.computeCost_linearRegression(X, y, self.theta)
-                if viewProgress:
-                    if iter % b == 0:
-                        print '1 J history:{0}'.format(self.J_history[iter])
-                        print '1 iter:{0}'.format(iter)
+                self.theta = self.theta - alpha_over_m * n.dot((   n.dot(X, self.theta) - y).transpose(), X).transpose()
+                #                              nx1   1xm mx1   mxn nx1      mx1           mxn
+                #if viewProgress:
+                #    if iter % b == 0:
+                #        clear_output()
+                #        print ''
+                #        print 'theta:{0}'.format(self.theta)
+                self.J_history[iter] = self.computeCost_linearRegression(X, y, self.theta, m)
+                #if viewProgress:
+                #    if iter % b == 0:
+                #        print '1 J history:{0}'.format(self.J_history[iter])
+                #        print '1 iter:{0}'.format(iter)
                 #print type(self.J_history[iter])
-                if n.isnan(self.J_history[iter]):
-                    #plot(self.J_history); show();
-                    plt.scatter(iter, self.J_history); show();
-                    return [self.theta, self.J_history]
+                #if n.isnan(self.J_history[iter]):
+                #    #plot(self.J_history); show();
+                #    plt.scatter(iter, self.J_history); show();
+                #    return [self.theta, self.J_history]
                 if iter % b == 0:
-                    print iter
-                    print self.J_history[iter]
+                    print '{0} {1}'.format(iter, self.J_history[iter])
                     #print self.theta
                     clear_output()
                     
@@ -1392,7 +1389,7 @@ class StatWing:
         print self.theta
         
         #% compute and display initial cost
-        self.ml.computeCost_linearRegression(X, y, self.theta)
+        self.ml.computeCost_linearRegression(X, y, self.theta, len(y))
         
         #% run gradient descent
         [self.theta, self.J_hist] = self.ml.gradientDescent_linearRegression(X, y, self.theta, alpha, iterations, viewProgress=viewProgress);
