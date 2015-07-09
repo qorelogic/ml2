@@ -373,6 +373,7 @@ class QoreQuant():
         #dfb['b'] = self.df.ix[ct:len(self.df), 0].get_values()
         #self.df.ix[:,0] = dfb['b']
         
+        print self.df
         y = self.df.ix[:, self.sw.keyCol].fillna(0)
         #y = list(self.sw.higherNextDay(self.df).get_values()); y.append(0)
         #print self.df
@@ -383,7 +384,55 @@ class QoreQuant():
         #print p.DataFrame(y)
         y.shape
         
-        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, viewProgress=False, showPlot=False)
+        self.loadTheta(iterations)
+        
+        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=self.sw.theta, viewProgress=False, showPlot=False)
+        
+        self.saveTheta(iterations)
+        
+    def loadTheta(self, iterations):
+    
+        hdir = '/mldev/bin/datafeeds/models/qorequant'
+        fname = hdir+'/EURUSD-H4.theta.csv'
+        
+        try:
+            df0 = p.read_csv(fname, index_col=0)
+            iter = max(df0.index[df0.index < iterations])
+            #print iter
+            #print iterations - iter    
+            initialTheta = df0.ix[iter, :].get_values()
+            #print initialTheta
+        except:
+            df0 = p.DataFrame()
+            initialTheta = None
+            
+        self.sw.theta = initialTheta
+        self.sw.ml.initialIter = iter
+        #print self.sw.ml.initialIter
+        #print self.sw.theta
+        #print len(self.sw.theta)
+   
+    def saveTheta(self, iterations):
+        
+        #print list(self.df.columns)
+        #print 
+        #print 
+        #print len(list(self.dfdata.columns))
+        
+        hdir = '/mldev/bin/datafeeds/models/qorequant'
+        fname = hdir+'/EURUSD-H4.theta.csv'
+        
+        mkdir_p(hdir)
+        try:
+            df0 = p.read_csv(fname, index_col=0)
+        except:
+            df0 = p.DataFrame()
+        #print len(df0)
+        df = p.DataFrame(self.sw.theta, index=list(self.dfdata.columns), columns=[iterations]).transpose()
+        df = df0.combine_first(df)
+        #print df.transpose()
+        df.plot(legend=None, title='EURUSD H4 theta progression'); show();
+        df.to_csv(fname)        
     
     def predict(self, plotTitle=''):
         data = self.df
@@ -572,6 +621,7 @@ class ml007:
     def __init__(self):
         self.J_history = []
         self.theta     = []
+        self.initialIter = 0
         
     def computeCost_linearRegression(self, X, y, theta, m):
         return 1.0/(2*m) * n.sum(n.power(n.dot(X,theta)-y,2)) # J
@@ -588,7 +638,7 @@ class ml007:
         X = n.array(X)
         alpha_over_m = (float(alpha)/m)
         #try:
-        for iter in range(0,num_iters):
+        for iter in range(self.initialIter, num_iters):
                 self.theta = self.theta - alpha_over_m * n.dot((   n.dot(X, self.theta) - y).transpose(), X).transpose()
                 #                              nx1   1xm mx1   mxn nx1      mx1           mxn
                 #if viewProgress:
@@ -1369,7 +1419,7 @@ class StatWing:
         #print list(X.columns)
         return X
     
-    def regression(self, data, y, keyCol, relatedCols, iterations=1000, alpha=0.01, viewProgress=True, showPlot=True, verbose=False):
+    def regression(self, data, y, keyCol, relatedCols, initialTheta=None, iterations=1000, alpha=0.01, viewProgress=True, showPlot=True, verbose=False):
 
         data = data.fillna(0)
         #X = data.ix[:,0]; y = data.ix[:,1]
@@ -1389,7 +1439,11 @@ class StatWing:
         
         #print y
         
-        self.theta = n.zeros(len(X.columns))
+        if initialTheta == None:
+            self.theta = n.zeros(len(X.columns))
+        else:
+            self.theta = initialTheta
+        
         #theta = n.random.randn(len(X.columns))
         print self.theta
         
@@ -1501,7 +1555,7 @@ class StatWing:
             self.predictRegression(te1, te2)
             
     #def regression2(self, de=None, du=None, da=None):
-    def regression2(self, X=None, y=None, iterations=1000, alpha=0.01, viewProgress=True, showPlot=True):
+    def regression2(self, X=None, y=None, iterations=1000, alpha=0.01, initialTheta=None, viewProgress=True, showPlot=True):
         #if X == None:
         #    X = getDatasetEUR()
         #if du == None:
@@ -1529,7 +1583,7 @@ class StatWing:
         [y, self.ymean, self.ystd] = normalizeme(y, pinv=True)
         y = sigmoidme(y)
         
-        self.regression(data, y, self.keyCol, self.relatedCols, iterations=iterations, alpha=alpha, viewProgress=viewProgress, showPlot=showPlot)
+        self.regression(data, y, self.keyCol, self.relatedCols, iterations=iterations, alpha=alpha, initialTheta=initialTheta, viewProgress=viewProgress, showPlot=showPlot)
         self.theta = self.ml.theta
         #p1 = list(data.columns[self.relatedCols])
         #print p1
