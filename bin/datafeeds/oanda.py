@@ -48,9 +48,7 @@ oanda2 = oandapy.API(environment=env2, access_token=access_token2)
 acc = oanda2.get_accounts()['accounts']
 accid = acc[0]['accountId']
 
-def oandaToTimestamp(ptime):
-    dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
-    return (dt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
+oq = OandaQ()
 
 #------------------------------
 # tick streamer (data feed)
@@ -70,7 +68,7 @@ class MyStreamer(oandapy.Streamer):
             pair = data['tick']['instrument']
             #print p.DataFrame(data['tick'], index=[0]).to_string(index=False).split('\n')[1]
             tick = p.DataFrame(data['tick'], index=[0])
-            tick['timestamp'] = oandaToTimestamp(tick['time'].ix[0])
+            tick['timestamp'] = oq.oandaToTimestamp(tick['time'].ix[0])
             csvc = n.array(tick.ix[:,[2,0,1,3,4]].get_values()[0], dtype=str)
             
             csv = ",".join(csvc)            

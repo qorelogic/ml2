@@ -75,6 +75,23 @@ def mkdir_p(path):
             pass
         else: raise
 
+def readcache(fname):
+    return p.read_csv(fname, index_col=0)
+
+def writecache(df, fname):
+    mkdir_p(os.path.dirname(fname))
+    df.to_csv(fname)
+    
+def cacheme(cmd, fname):
+    try:
+        df = readcache(fname)
+    except:
+        
+        exec('df = '+cmd)
+        writecache(df, fname)
+    return df
+
+
 #for i in range(len(allPositions2['noasnoas'])):
 #    try:
 #        allPositions2['noasnoas'][str(i)] = allPositions2['noasnoas'].pop(i)
