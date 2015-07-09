@@ -379,7 +379,7 @@ class QoreQuant():
         #print p.DataFrame(y)
         y.shape
         
-        theta = self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, viewProgress=False, showPlot=False)
+        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, viewProgress=False, showPlot=False)
     
     def predict(self, plotTitle=''):
         data = self.df
@@ -564,43 +564,40 @@ from IPython.display import display, clear_output
 import time
 class ml007:
 
-    def computeCost_linearRegression(self, X, y, theta):
-        X = n.array(X)
-        #print X
-        m = len(y)
-        J = 0
-        J = 1.0/(2*m) * n.sum(n.power(n.dot(X,theta)-y,2))
-        return J
+    def computeCost_linearRegression(self, X, y, theta, m):
+        return 1.0/(2*m) * n.sum(n.power(n.dot(X,theta)-y,2)) # J
     
     #print computeCost( n.array([1, 2, 1, 3, 1, 4, 1, 5]).reshape(4,2), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2]).reshape(2,1) )
     # 11.945
     #print computeCost( n.array([1,2,3,1,3,4,1,4,5,1,5,6]).reshape(4,3), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2,0.3]).reshape(3,1))
     # 7.0175
     
-    def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=10, ):
+    def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=500, ):
         m = len(y)
         J_history = n.zeros(num_iters)
+        X = n.array(X)
+        alpha_over_m = (float(alpha)/m)
         #try:
         for iter in range(0,num_iters):
-                theta = theta - (float(alpha)/m) * n.dot((n.dot(X,theta)-y).transpose(),X).transpose()
-                if viewProgress:
-                    if iter % b == 0:
-                        clear_output()
-                        print ''
-                        print 'theta:{0}'.format(theta)
-                J_history[iter] = self.computeCost_linearRegression(X, y, theta)
-                if viewProgress:
-                    if iter % b == 0:
-                        print '1 J history:{0}'.format(J_history[iter])
-                        print '1 iter:{0}'.format(iter)
+                theta = theta - alpha_over_m * n.dot((   n.dot(X,  theta) - y).transpose(), X).transpose()
+                #                              nx1   1xm mx1   mxn nx1      mx1             mxn
+                #if viewProgress:
+                #    if iter % b == 0:
+                #        clear_output()
+                #        print ''
+                #        print 'theta:{0}'.format(theta)
+                J_history[iter] = self.computeCost_linearRegression(X, y, theta, m)
+                #if viewProgress:
+                #    if iter % b == 0:
+                #        print '1 J history:{0}'.format(J_history[iter])
+                #        print '1 iter:{0}'.format(iter)
                 #print type(J_history[iter])
-                if n.isnan(J_history[iter]):
-                    #plot(J_history); show();
-                    plt.scatter(iter, J_history); show();
-                    return [theta, J_history]
+                #if n.isnan(J_history[iter]):
+                #    #plot(J_history); show();
+                #    plt.scatter(iter, J_history); show();
+                #    return [theta, J_history]
                 if iter % b == 0:
-                    print iter
-                    print J_history[iter]
+                    print '{0} {1}'.format(iter, J_history[iter])
                     clear_output()
                     
         #except:
@@ -1223,6 +1220,7 @@ class StatWing:
         try:    self.oq = OandaQ()
         except: print 'offline mode'
         self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
+        self.ml = ml007()
         
     def higherNextDay(self, dfa):
         dfc = p.DataFrame(index=dfa.index[0:len(dfa)-1])
@@ -1384,13 +1382,11 @@ class StatWing:
         #theta = n.random.randn(len(X.columns))
         print theta
         
-        ml = ml007()
-        
         #% compute and display initial cost
-        ml.computeCost_linearRegression(X, y, theta)
+        self.ml.computeCost_linearRegression(X, y, theta, len(y))
         
         #% run gradient descent
-        [theta, J_hist] = ml.gradientDescent_linearRegression(X, y, theta, alpha, iterations, viewProgress=viewProgress);
+        [theta, J_hist] = self.ml.gradientDescent_linearRegression(X, y, theta, alpha, iterations, viewProgress=viewProgress);
         
         if verbose == True:
             #% print theta to screen
