@@ -428,7 +428,7 @@ class QoreQuant():
             df0 = p.DataFrame()
         #print len(df0)
         df = p.DataFrame(self.sw.theta, index=list(self.dfdata.columns), columns=[iterations]).transpose()
-        df = df0.combine_first(df)
+        df = df.combine_first(df0)
         #print df.transpose()
         df.plot(legend=None, title='EURUSD H4 theta progression'); show();
         df.to_csv(fname)        
