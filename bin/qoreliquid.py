@@ -329,18 +329,18 @@ class QoreQuant():
     
         if modes[mode] == 'train':
             try:
-                self.forecastCurrency(mode=2, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
+                self.forecastCurrency(mode=2, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
             except KeyboardInterrupt, e:
                 pass
-            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
+            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
         if modes[mode] == 'predict':
-            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop)
+            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
             #print self.oq.granularities[0]
         
         if modes[mode] == 'trade':
             self.forecastCurrency(mode=4, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
         
-    def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False):
+    def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4'):
         
         #pair = 'EURGBP'
         #pair = 'EURCHF'
@@ -349,7 +349,7 @@ class QoreQuant():
         
         #if type(self.dfdata) == type(None):
         #    self.dfdata = self.updateDatasets(pair[0:3], noUpdate=noUpdate)        
-        self.update(pair=pair, granularity='H4', noUpdate=noUpdate)
+        self.update(pair=pair, granularity=granularity, noUpdate=noUpdate)
         self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
 
         #self.sw.relatedCols = [0, 1,2,3,6,9,8,5]
@@ -440,7 +440,7 @@ class QoreQuant():
             self.updateDatasets('EUR', noUpdate=False)
             
         if mode == 2 or onErrorTrain == True:
-            self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True)
+            self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity)
         
         if mode == 2 or mode == 3 or mode == 4:
             tp = self.predict(plotTitle=pair)
