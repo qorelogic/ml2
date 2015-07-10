@@ -103,8 +103,10 @@ class QoreQuant():
         access_token2=co.ix[1,2]
         self.oanda2 = oandapy.API(environment=env2, access_token=access_token2)
         
-        self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
-        self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
+        try:
+            self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
+            self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
+        except: ''
 
         #print 'using account: {0}'.format(self.accid1)
         
@@ -115,7 +117,9 @@ class QoreQuant():
         self.sw = StatWing()
 
         try:    self.oq = OandaQ()
-        except: print 'offline mode'
+        except: 
+            self.oq = OandaQOffline()
+            print 'offline mode'
         
         self.dfdata = None
         
@@ -307,14 +311,19 @@ class QoreQuant():
     def setDfData(self, dfdata):
         self.dfdata = dfdata
     
-    def update(self, pair='EURUSD', granularity = None, noUpdate=False, plot=False):        
+    def update(self, pair='EURUSD', granularity = None, noUpdate=False, plot=False):
         # update from data the source
-        #self.granularityMap.keys()        
+        #self.granularityMap.keys()
+        noUpdate=True
+        
+        #try:
+        #except:
+        #    ''
         if granularity == None:
             self.oq.updateBarsFromOanda(pair=pair, granularities=' '.join(['D','H4','H1','M30','M15','M5','M1','S5','M','W']), plot=plot, noUpdate=noUpdate)
         else:
             self.oq.updateBarsFromOanda(pair=pair, granularities=' '.join([granularity]), plot=plot, noUpdate=noUpdate)
-
+        self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
     
     def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False, plot=True):
         #modes = ['train','predict','trade']
@@ -322,10 +331,10 @@ class QoreQuant():
         
         modes = ['train','predict','trade']
         if stopLossPrice != None:
-            mstop = self.oq.calculateStopLossFromPrice(pair, stopLossPrice)
+            try: mstop = self.oq.calculateStopLossFromPrice(pair, stopLossPrice)
+            except: mstop = 10
         
         self.update(pair=pair, granularity=granularity, noUpdate=noUpdate, plot=plot)
-        self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
     
         if modes[mode] == 'train':
             try:
@@ -350,7 +359,6 @@ class QoreQuant():
         #if type(self.dfdata) == type(None):
         #    self.dfdata = self.updateDatasets(pair[0:3], noUpdate=noUpdate)        
         self.update(pair=pair, granularity=granularity, noUpdate=noUpdate)
-        self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
 
         #self.sw.relatedCols = [0, 1,2,3,6,9,8,5]
         #self.sw.relatedCols = [0, 1,2,3,6,8,5, 7,9,10,11,12,13,14,16,17]
@@ -1221,6 +1229,69 @@ class OandaQ:
         
         return dfac
 
+class OandaQOffline:
+    
+    oanda2 = None
+    
+    def __init__(self, verbose=False):
+        ''
+
+    def datetimeToTimestamp(self, ddt):
+        ''
+        
+    def timestampToDatetime(self, tst):
+        ''
+
+    def timestampToDatetimeFormat(self, tst, fmt='%Y-%m-%d %H:%M:%S %Z'):
+        ''
+
+    def oandaToTimestamp(self, ptime):
+        ''
+        
+    def oandaToDatetime(self, ptime):
+        ''
+
+    def trade(self, risk, stop, instrument, side, tp=None):
+        ''
+        
+    def buy(self, risk, stop, instrument='EUR_USD', tp=None):
+        ''
+        
+    def sell(self, risk, stop, instrument='EUR_USD', tp=None):
+        ''
+
+    def order(self, risk, stop, side, instrument='EUR_USD', tp=None):
+        ''
+        
+    def calculateAmount(self, bal, pcnt, stop):
+        ''
+        
+    def calculateStopLossFromPrice(self, pair, mprice):
+        ''
+        
+    def generateRelatedColsFromOandaTickers(self, data, pair):
+        ''
+        
+    def getPairsRelatedToOandaTickers(self, pair):
+        ''
+    
+    def getPricesLatest(self, data, sw, trueprices=False):
+        ''
+
+    def oandaTransactionHistory(self, plot=True):
+        ''
+        
+    def getHistoricalPrice(self, pair, granularity='S5', count=2, plot=True):
+        ''
+    
+    def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True):
+        ''
+        
+    def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
+        ''
+
+    def prepareDfData(self, dfa):
+        ''
 
 # source: http://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
 import math
@@ -1277,7 +1348,9 @@ class StatWing:
         # for predict from theta
         self.nxps = []
         try:    self.oq = OandaQ()
-        except: print 'offline mode'
+        except: 
+            self.oq = OandaQOffline()
+            print 'offline mode'
         self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
         self.ml = ml007()
         

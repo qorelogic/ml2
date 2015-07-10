@@ -150,7 +150,7 @@ class QsForecaster:
             #qq.main(mode=1, pair='EUR_USD', granularity='H4', iterations=10000, alpha=0.09, risk=1, stopLossPrice=[1.113, 1.10963, 1.10707, 1.0963][3], noUpdate=True)
 
             mode          = 0
-            noUpdate      = mode
+            noUpdate      = 1
             pair          = ['EUR_USD', 'EUR_NZD', 'NZD_USD', 'USD_JPY', 'USD_CHF', 'AUD_JPY', 'GBP_USD', 'AUD_USD', 'USD_CAD', 'NZD_JPY'][0]
             granularity   = ['M5', 'H4', 'H1'][1]
             iterations    = 10000
@@ -160,7 +160,7 @@ class QsForecaster:
             
             qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate)
         
-        def generateNDayForecast(self):
+        def generateNBarForecast(self):
             ''
     
 trader = QsTrader()
