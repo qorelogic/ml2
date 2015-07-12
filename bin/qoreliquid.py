@@ -376,6 +376,7 @@ class QoreQuant():
         print self.df
         y = self.df.ix[:, self.sw.keyCol].fillna(0)
         #y = list(self.sw.higherNextDay(self.df).get_values()); y.append(0)
+        #print self.df
         #print y
         #return
         
@@ -435,7 +436,7 @@ class QoreQuant():
     
     def predict(self, plotTitle=''):
         data = self.df
-        wlen = 200
+        wlen = 2000
         #self.sw.predictRegression2(mdf.ix[0:ldf-0, :], quiet=True)
         ldf = len(data.ix[:, self.sw.keyCol])
         
@@ -449,7 +450,8 @@ class QoreQuant():
         except:
             ''
         """
-        [mdf, dmean, dstd] = normalizeme(data, pinv=True)
+        mdf = data
+        #[mdf, dmean, dstd] = normalizeme(data, pinv=True)
         #tp = sw.predictRegression2(mdf.ix[0:ldf-i, :], quiet=False)
         tp = p.DataFrame(self.sw.predictRegression2(mdf.ix[:, :], quiet=True), index=data.index)
         #plot(self.de.ix[ldf-wlen: ldf, self.sw.keyCol])
@@ -824,12 +826,14 @@ class OandaQ:
             return w2.strftime(fmt)
             #return dd.datetime.fromtimestamp(tst)
 
-        try:    ddt = _timestampToDatetimeFormat(tst)
+        try:    
+            ddt = _timestampToDatetimeFormat(tst)
         except:
             ddt = []
             for i in tst: ddt.append(_timestampToDatetimeFormat(i))                
         return ddt
 
+    
     def oandaToTimestamp(self, ptime):
         
         def _oandaToTimestamp(ptime):
@@ -870,40 +874,56 @@ class OandaQ:
     def sell(self, risk, stop, instrument='EUR_USD', tp=None):
         self.order(risk, stop, 'sell', instrument=instrument, tp=tp)
 
-    def order(self, risk, stop, side, instrument='EUR_USD', tp=None):
+    def order(self, risk, stop, side, instrument='EUR_USD', tp=None, price=None, expiry=None):
         
         stop = abs(float(stop)) # pips
         risk = float(risk) # percentage risk
         
         #print self.oanda2.get_accounts()['accounts'][0]['accountId']
         acc = self.oanda2.get_account(self.aid)
-        #price = self.oanda2.get_prices(instruments='EUR_USD')['prices'][0]['ask']
+        #mprice = self.oanda2.get_prices(instruments='EUR_USD')['prices'][0]['ask']
         #leverage = 50
         
         amount = self.calculateAmount(acc['marginAvail'], risk, stop)
         
-        #print acc['marginAvail'] * float(leverage) / price
+        #print acc['marginAvail'] * float(leverage) / mprice
         #print acc
-        #print price
+        #print mprice
         print amount
         
         prc = self.oanda2.get_prices(instruments=instrument)['prices'][0]
         
+        limitprice = self.oanda2.get_prices(instruments='EUR_USD')['prices'][0]
+                
         if side == 'buy':
             stopLoss   = prc['bid'] - float(stop) / 10000
             takeProfit = prc['bid'] + float(stop) / 10000
             print takeProfit
+            limitprice = limitprice['bid']
         if side == 'sell':
             stopLoss = prc['ask'] + float(stop) / 10000
             takeProfit = prc['ask'] - float(stop) / 10000
             print takeProfit
-            
+            limitprice = limitprice['ask']
         if tp != None:
             takeProfit = tp
         else:
             takeProfit = None
         
-        order = self.oanda2.create_order(self.aid, type='market', instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
+        try:
+            print 'attempting market order'
+            order = self.oanda2.create_order(self.aid, type='market', instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
+            print 'market order success'
+        except oandapy.OandaError, e:
+            print 'attempting limit order'
+            tti = dd.datetime.now()
+            tti = tti+ dd.timedelta(days=30)
+            tti = self.datetimeToTimestamp(tti)
+            expiry = self.timestampToDatetimeFormat(tti, fmt='%Y-%m-%dT%H:%M:%S-3:00')
+            #print e
+            order = self.oanda2.create_order(self.aid, type='limit', expiry=expiry, price=limitprice, instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
+            print order
+            print 'limit order success'
 
     def calculateAmount(self, bal, pcnt, stop):
         bal  = float(bal)
@@ -1575,8 +1595,11 @@ class StatWing:
         #data = p.read_csv('quandl-BNP-EUR.csv')
         #data = X.fillna(0).ix[:,data.columns]
         data = X.ix[X.index, X.columns].fillna(0)
+        
         [data, self.dmean, self.dstd] = normalizeme(data, pinv=True)
         data = sigmoidme(data)
+        [y, self.ymean, self.ystd] = normalizeme(y, pinv=True)
+        y = sigmoidme(y)
         
         self.regression(data, y, self.keyCol, self.relatedCols, iterations=iterations, alpha=alpha, initialTheta=initialTheta, viewProgress=viewProgress, showPlot=showPlot)
         self.theta = self.ml.theta
@@ -1633,6 +1656,12 @@ class StatWing:
         
         X.ix[:,data.columns[self.relatedCols].insert(0,0)]
         #self.ml.theta.reshape(len(self.relatedCols)+1,1)            
+        
+        #print self.dmean
+        #print self.dstd
+        predict = sigmoidmePinv(predict)
+        predict = normalizemePinv(predict, self.ymean, self.ystd) #[self.keyCol]
+        print predict
         
         if quiet == False:
             #print self.dmean
