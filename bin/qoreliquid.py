@@ -826,12 +826,14 @@ class OandaQ:
             return w2.strftime(fmt)
             #return dd.datetime.fromtimestamp(tst)
 
-        try:    ddt = _timestampToDatetimeFormat(tst)
+        try:    
+            ddt = _timestampToDatetimeFormat(tst)
         except:
             ddt = []
             for i in tst: ddt.append(_timestampToDatetimeFormat(i))                
         return ddt
 
+    
     def oandaToTimestamp(self, ptime):
         
         def _oandaToTimestamp(ptime):
@@ -872,40 +874,56 @@ class OandaQ:
     def sell(self, risk, stop, instrument='EUR_USD', tp=None):
         self.order(risk, stop, 'sell', instrument=instrument, tp=tp)
 
-    def order(self, risk, stop, side, instrument='EUR_USD', tp=None):
+    def order(self, risk, stop, side, instrument='EUR_USD', tp=None, price=None, expiry=None):
         
         stop = abs(float(stop)) # pips
         risk = float(risk) # percentage risk
         
         #print self.oanda2.get_accounts()['accounts'][0]['accountId']
         acc = self.oanda2.get_account(self.aid)
-        #price = self.oanda2.get_prices(instruments='EUR_USD')['prices'][0]['ask']
+        #mprice = self.oanda2.get_prices(instruments='EUR_USD')['prices'][0]['ask']
         #leverage = 50
         
         amount = self.calculateAmount(acc['marginAvail'], risk, stop)
         
-        #print acc['marginAvail'] * float(leverage) / price
+        #print acc['marginAvail'] * float(leverage) / mprice
         #print acc
-        #print price
+        #print mprice
         print amount
         
         prc = self.oanda2.get_prices(instruments=instrument)['prices'][0]
         
+        limitprice = self.oanda2.get_prices(instruments='EUR_USD')['prices'][0]
+                
         if side == 'buy':
             stopLoss   = prc['bid'] - float(stop) / 10000
             takeProfit = prc['bid'] + float(stop) / 10000
             print takeProfit
+            limitprice = limitprice['bid']
         if side == 'sell':
             stopLoss = prc['ask'] + float(stop) / 10000
             takeProfit = prc['ask'] - float(stop) / 10000
             print takeProfit
-            
+            limitprice = limitprice['ask']
         if tp != None:
             takeProfit = tp
         else:
             takeProfit = None
         
-        order = self.oanda2.create_order(self.aid, type='market', instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
+        try:
+            print 'attempting market order'
+            order = self.oanda2.create_order(self.aid, type='market', instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
+            print 'market order success'
+        except oandapy.OandaError, e:
+            print 'attempting limit order'
+            tti = dd.datetime.now()
+            tti = tti+ dd.timedelta(days=30)
+            tti = self.datetimeToTimestamp(tti)
+            expiry = self.timestampToDatetimeFormat(tti, fmt='%Y-%m-%dT%H:%M:%S-3:00')
+            #print e
+            order = self.oanda2.create_order(self.aid, type='limit', expiry=expiry, price=limitprice, instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
+            print order
+            print 'limit order success'
 
     def calculateAmount(self, bal, pcnt, stop):
         bal  = float(bal)
