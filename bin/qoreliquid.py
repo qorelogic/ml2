@@ -314,7 +314,7 @@ class QoreQuant():
             self.oq.updateBarsFromOanda(pair=pair, granularities=' '.join(['D','H4','H1','M30','M15','M5','M1','S5','M','W']), plot=plot, noUpdate=noUpdate)
         else:
             self.oq.updateBarsFromOanda(pair=pair, granularities=' '.join([granularity]), plot=plot, noUpdate=noUpdate)
-
+        self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
     
     def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False, plot=True):
         #modes = ['train','predict','trade']
@@ -325,7 +325,6 @@ class QoreQuant():
             mstop = self.oq.calculateStopLossFromPrice(pair, stopLossPrice)
         
         self.update(pair=pair, granularity=granularity, noUpdate=noUpdate, plot=plot)
-        self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
     
         if modes[mode] == 'train':
             try:
@@ -350,7 +349,6 @@ class QoreQuant():
         #if type(self.dfdata) == type(None):
         #    self.dfdata = self.updateDatasets(pair[0:3], noUpdate=noUpdate)        
         self.update(pair=pair, granularity=granularity, noUpdate=noUpdate)
-        self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
 
         #self.sw.relatedCols = [0, 1,2,3,6,9,8,5]
         #self.sw.relatedCols = [0, 1,2,3,6,8,5, 7,9,10,11,12,13,14,16,17]
@@ -373,9 +371,10 @@ class QoreQuant():
         #dfb['b'] = self.df.ix[ct:len(self.df), 0].get_values()
         #self.df.ix[:,0] = dfb['b']
         
-        print self.df
         y = self.df.ix[:, self.sw.keyCol].fillna(0)
-        #y = list(self.sw.higherNextDay(self.df).get_values()); y.append(0)
+        
+        # shift to next bar close
+        #y = list(self.sw.higherNextDay(y, self.sw.keyCol).get_values()); y.append(0)
         #print self.df
         #print y
         #return
@@ -384,16 +383,20 @@ class QoreQuant():
         #print p.DataFrame(y)
         y.shape
         
-        self.loadTheta(iterations)
+        #initialTheta=self.sw.theta
+        initialTheta=None
         
-        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=self.sw.theta, viewProgress=False, showPlot=False)
+        self.loadTheta(iterations, pair=pair, granularity=granularity)
         
-        self.saveTheta(iterations)
+        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=initialTheta, viewProgress=False, showPlot=False)
         
-    def loadTheta(self, iterations):
+        self.saveTheta(iterations, pair=pair, granularity=granularity)
+        
+    def loadTheta(self, iterations, pair='EURUSD', granularity='H4'):
     
-        hdir = '/mldev/bin/datafeeds/models/qorequant'
-        fname = hdir+'/EURUSD-H4.theta.csv'
+        hdir  = '/mldev/bin/datafeeds/models/qorequant'
+        fname = hdir+'/{0}-{1}.theta.csv'.format(pair, granularity)
+        iter  = 0
         
         try:
             df0 = p.read_csv(fname, index_col=0)
@@ -412,7 +415,7 @@ class QoreQuant():
         #print self.sw.theta
         #print len(self.sw.theta)
    
-    def saveTheta(self, iterations):
+    def saveTheta(self, iterations, pair='EURUSD', granularity='H4'):
         
         #print list(self.df.columns)
         #print 
@@ -420,7 +423,7 @@ class QoreQuant():
         #print len(list(self.dfdata.columns))
         
         hdir = '/mldev/bin/datafeeds/models/qorequant'
-        fname = hdir+'/EURUSD-H4.theta.csv'
+        fname = hdir+'/{0}-{1}.theta.csv'.format(pair, granularity)
         
         mkdir_p(hdir)
         try:
@@ -434,9 +437,8 @@ class QoreQuant():
         df.plot(legend=None, title='EURUSD H4 theta progression'); show();
         df.to_csv(fname)        
     
-    def predict(self, plotTitle=''):
-        data = self.df
-        wlen = 2000
+    def predict(self, plotTitle='', wlen=2000):
+        data = self.df        
         #self.sw.predictRegression2(mdf.ix[0:ldf-0, :], quiet=True)
         ldf = len(data.ix[:, self.sw.keyCol])
         
@@ -461,7 +463,7 @@ class QoreQuant():
         title(plotTitle)
         show();
         #normalizemePinv(, dmean, dstd)
-        return tp.ix[len(tp)-10:len(tp)-0, :]
+        return tp.ix[len(tp)-1:len(tp)-0, :]
     
     def tradePrediction(self, pair, tp, risk=1, stop=40):
         print 'tradePrediction'
@@ -624,7 +626,16 @@ class ml007:
         self.initialIter = 0
         
     def computeCost_linearRegression(self, X, y, theta, m):
-        return 1.0/(2*m) * n.sum(n.power(n.dot(X,theta)-y,2)) # J
+        #print X.shape
+        #print y.shape
+        #print m
+        #print theta
+        #print theta.shape
+        o1 = 1.0/(2*m)
+        p1 = n.dot(X,theta)
+        o2 = n.sum(n.power(p1-y,2)) # J
+        ret = o1 * o2
+        return ret
     
     #print computeCost( n.array([1, 2, 1, 3, 1, 4, 1, 5]).reshape(4,2), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2]).reshape(2,1) )
     # 11.945
@@ -987,7 +998,10 @@ class OandaQ:
         #    print i['instrument']
         
         #print lsf
-        lsf  = list(p.DataFrame(lsf).sort(0).transpose().get_values()[0])
+        try:
+            lsf  = list(p.DataFrame(lsf).sort(0).transpose().get_values()[0])
+        except KeyError, e:
+            print e
         #print lsf
         return lsf
         
@@ -1301,18 +1315,20 @@ class StatWing:
         self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
         self.ml = ml007()
         
-    def higherNextDay(self, dfa):
-        dfc = p.DataFrame(index=dfa.index[0:len(dfa)-1])
-        dfc['a'] = dfa.ix[0:len(dfa)-1, 0].get_values()
-        dfc['b'] = dfa.ix[1:len(dfa), 0].get_values()
+    def higherNextDay(self, dfa, k):
+        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-1])
+        print type(dfc)
+        dfc['a'] = dfa.ix[0:len(dfa)-1, [k]].get_values()
+        dfc['b'] = dfa.ix[1:len(dfa),[k]].get_values()
         dfc['c'] = list(n.array((dfc['b'] > dfc['a']), dtype=int))
+        #print dfc['a']
         return dfc['c']
         #p.DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
-
-    def lowerNextDay(self, dfa):
-        dfc = p.DataFrame(index=dfa.index[0:len(dfa)-1])
-        dfc['a'] = dfa.ix[0:len(dfa)-1, 0].get_values()
-        dfc['b'] = dfa.ix[1:len(dfa), 0].get_values()
+    
+    def lowerNextDay(self, dfa, k):
+        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-1], columns=dfa.columns)
+        dfc['a'] = dfa.ix[0:len(dfa)-1, [k]].get_values()
+        dfc['b'] = dfa.ix[1:len(dfa), [k]].get_values()
         dfc['c'] = n.array((dfc['b'] < dfc['a']), dtype=int)
         return dfc['c']
         #p.DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
@@ -1458,9 +1474,13 @@ class StatWing:
         #print y
         
         if initialTheta == None:
+            print 'initializing theta'
             self.theta = n.zeros(len(X.columns))
         else:
+            print 'loading theta'
+            print initialTheta
             self.theta = initialTheta
+            
         
         #theta = n.random.randn(len(X.columns))
         print self.theta
