@@ -438,7 +438,8 @@ class QoreQuant():
         df.to_csv(fname)        
     
     def predict(self, plotTitle='', wlen=2000):
-        data = self.df        
+        data = self.df
+        wlen = 2000
         #self.sw.predictRegression2(mdf.ix[0:ldf-0, :], quiet=True)
         ldf = len(data.ix[:, self.sw.keyCol])
         
