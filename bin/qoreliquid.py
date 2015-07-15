@@ -373,7 +373,7 @@ class QoreQuant():
         #dfb['b'] = self.df.ix[ct:len(self.df), 0].get_values()
         #self.df.ix[:,0] = dfb['b']
         
-        print self.df
+        #print self.df
         y = self.df.ix[:, self.sw.keyCol].fillna(0)
         #y = list(self.sw.higherNextDay(self.df).get_values()); y.append(0)
         #print self.df
@@ -1456,6 +1456,8 @@ class StatWing:
         X = self.fixColumns(data, relatedCols, keyCol)
         
         #print y
+        
+        initialTheta = None
         
         if initialTheta == None:
             self.theta = n.zeros(len(X.columns))
