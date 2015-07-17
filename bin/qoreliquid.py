@@ -327,18 +327,20 @@ class QoreQuant():
         self.update(pair=pair, granularity=granularity, noUpdate=noUpdate, plot=plot)
     
         if modes[mode] == 'train':
-            try:
-                self.forecastCurrency(mode=2, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
-            except KeyboardInterrupt, e:
-                # save the theta state on keyboard interrupt (stop button)
-                self.saveTheta(iterations, pair=pair.replace('_', ''), granularity=granularity)
-            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
+            mmode = 2
         if modes[mode] == 'predict':
-            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
-            #print self.oq.granularities[0]
-        
+            mmode = 3
         if modes[mode] == 'trade':
-            self.forecastCurrency(mode=4, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
+            mmode = 4
+        try:
+            self.forecastCurrency(mode=mmode, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
+            #print self.oq.granularities[0]
+        except KeyboardInterrupt, e:
+            # save the theta state on keyboard interrupt (stop button)
+            self.saveTheta(self.sw.ml.iter, pair=pair.replace('_', ''), granularity=granularity)
+        
+        if modes[mode] == 'train':
+            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
         
     def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4'):
         
@@ -389,7 +391,7 @@ class QoreQuant():
         
         self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=self.sw.theta, viewProgress=False, showPlot=False)
         
-        self.saveTheta(iterations, pair=pair, granularity=granularity)
+        self.saveTheta(self.sw.ml.iter, pair=pair, granularity=granularity)
         
     def loadTheta(self, iterations, pair='EURUSD', granularity='H4'):
     
