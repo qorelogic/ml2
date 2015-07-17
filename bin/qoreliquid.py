@@ -1166,8 +1166,9 @@ class OandaQ:
         dfc = df.combine_first(dfn)
         df = dfc
         
-        #df.plot(); show();
-        dfc.plot(title=pair); show();
+        if plot == True:
+            #df.plot(); show();        
+            dfc.plot(title=pair); show();
         return dfc
         
     def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
