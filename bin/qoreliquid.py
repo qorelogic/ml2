@@ -309,7 +309,7 @@ class QoreQuant():
     
     def update(self, pair='EURUSD', granularity = None, noUpdate=False, plot=False):        
         # update from data the source
-        #self.granularityMap.keys()        
+        #self.granularityMap.keys()
         if granularity == None:
             self.oq.updateBarsFromOanda(pair=pair, granularities=' '.join(['D','H4','H1','M30','M15','M5','M1','S5','M','W']), plot=plot, noUpdate=noUpdate)
         else:
@@ -360,7 +360,7 @@ class QoreQuant():
         #self.sw.relatedCols = data.columns
         #self.sw.relatedCols = [0,1]
         
-        print self.dfdata.columns
+        #print self.dfdata.columns
         
         self.df = self.dfdata.ix[0:len(self.dfdata)-0, :].fillna(0)
         X = self.df.ix[0:len(self.df)]
@@ -384,12 +384,9 @@ class QoreQuant():
         #print p.DataFrame(y)
         y.shape
         
-        #initialTheta=self.sw.theta
-        initialTheta=None
-        
         self.loadTheta(iterations, pair=pair, granularity=granularity)
         
-        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=initialTheta, viewProgress=False, showPlot=False)
+        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=self.sw.theta, viewProgress=False, showPlot=False)
         
         self.saveTheta(iterations, pair=pair, granularity=granularity)
         
@@ -412,9 +409,9 @@ class QoreQuant():
             
         self.sw.theta = initialTheta
         self.sw.ml.initialIter = iter
-        #print self.sw.ml.initialIter
-        #print self.sw.theta
-        #print len(self.sw.theta)
+        print self.sw.ml.initialIter
+        print self.sw.theta
+        print len(self.sw.theta)
    
     def saveTheta(self, iterations, pair='EURUSD', granularity='H4'):
         
@@ -435,12 +432,11 @@ class QoreQuant():
         df = p.DataFrame(self.sw.theta, index=list(self.dfdata.columns), columns=[iterations]).transpose()
         df = df.combine_first(df0)
         #print df.transpose()
-        df.plot(legend=None, title='EURUSD H4 theta progression'); show();
+        df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); show();
         df.to_csv(fname)        
     
     def predict(self, plotTitle='', wlen=2000):
         data = self.df
-        wlen = 2000
         #self.sw.predictRegression2(mdf.ix[0:ldf-0, :], quiet=True)
         ldf = len(data.ix[:, self.sw.keyCol])
         
@@ -1176,10 +1172,9 @@ class OandaQ:
         for pair in pairs:
             try:                self.dfa[pair]
             except KeyError, e: self.dfa[pair] = {}
-            
+            ob = ''
             for granularity in self.granularities:
-                print pair
-                print granularity
+                ob += '{0} {1}'.format(pair, granularity)
                 fname = '/mldev/bin/data/oanda/ticks/{0}/{0}-{1}.csv'.format(pair, granularity)
                 try:    
                     self.dfa[pair][granularity]
@@ -1187,9 +1182,9 @@ class OandaQ:
                     # if dataframe not in memory
                     try:
                         # read from csv
-                        print 'reading from {0} {1} {2}'.format(fname, pair, granularity)
+                        ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
                         self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
-                        print 'len {0}.'.format(len(self.dfa[pair][granularity]))
+                        ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
                     except KeyError, e:
                         print e
                         self.dfa[pair] = {}
@@ -1225,7 +1220,7 @@ class OandaQ:
                         print 'saved {0} to {1}'.format(pair, fname)
                     except KeyError, e:
                         print e
-                print
+                print ob
         #print self.dfa
         return self.dfa
 
@@ -1475,9 +1470,9 @@ class StatWing:
         
         #print y
         
-        initialTheta = None
+        #initialTheta = None
         
-        if initialTheta == None:
+        if type(initialTheta) == type(None):
             print 'initializing theta'
             self.theta = n.zeros(len(X.columns))
         else:
