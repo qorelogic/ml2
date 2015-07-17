@@ -330,7 +330,8 @@ class QoreQuant():
             try:
                 self.forecastCurrency(mode=2, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
             except KeyboardInterrupt, e:
-                pass
+                # save the theta state on keyboard interrupt (stop button)
+                self.saveTheta(iterations, pair=pair.replace('_', ''), granularity=granularity)
             self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
         if modes[mode] == 'predict':
             self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
@@ -415,6 +416,7 @@ class QoreQuant():
    
     def saveTheta(self, iterations, pair='EURUSD', granularity='H4'):
         
+        print 'saving theta @ {0} iterations'.format(self.sw.ml.iter)
         #print list(self.df.columns)
         #print 
         #print 
@@ -429,7 +431,7 @@ class QoreQuant():
         except:
             df0 = p.DataFrame()
         #print len(df0)
-        df = p.DataFrame(self.sw.theta, index=list(self.dfdata.columns), columns=[iterations]).transpose()
+        df = p.DataFrame(self.sw.ml.theta, index=list(self.dfdata.columns), columns=[self.sw.ml.iter]).transpose()
         df = df.combine_first(df0)
         #print df.transpose()
         df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); show();
@@ -622,6 +624,7 @@ class ml007:
         self.J_history = []
         self.theta     = []
         self.initialIter = 0
+        self.iter        = 0
         
     def computeCost_linearRegression(self, X, y, theta, m):
         #print X.shape
@@ -647,36 +650,36 @@ class ml007:
         X = n.array(X)
         alpha_over_m = (float(alpha)/m)
         #try:
-        for iter in range(self.initialIter, num_iters):
+        for self.iter in range(self.initialIter, num_iters):
                 self.theta = self.theta - alpha_over_m * n.dot((   n.dot(X, self.theta) - y).transpose(), X).transpose()
                 #                              nx1   1xm mx1   mxn nx1      mx1           mxn
                 #if viewProgress:
-                #    if iter % b == 0:
+                #    if self.iter % b == 0:
                 #        clear_output()
                 #        print ''
                 #        print 'theta:{0}'.format(self.theta)
-                self.J_history[iter] = self.computeCost_linearRegression(X, y, self.theta, m)
+                self.J_history[self.iter] = self.computeCost_linearRegression(X, y, self.theta, m)
                 #if viewProgress:
-                #    if iter % b == 0:
-                #        print '1 J history:{0}'.format(self.J_history[iter])
-                #        print '1 iter:{0}'.format(iter)
-                #print type(self.J_history[iter])
-                #if n.isnan(self.J_history[iter]):
+                #    if self.iter % b == 0:
+                #        print '1 J history:{0}'.format(self.J_history[self.iter])
+                #        print '1 iter:{0}'.format(self.iter)
+                #print type(self.J_history[self.iter])
+                #if n.isnan(self.J_history[self.iter]):
                 #    #plot(self.J_history); show();
-                #    plt.scatter(iter, self.J_history); show();
+                #    plt.scatter(self.iter, self.J_history); show();
                 #    return [self.theta, self.J_history]
-                if iter % b == 0:
-                    print '{0} {1}'.format(iter, self.J_history[iter])
+                if self.iter % b == 0:
+                    print '{0} {1}'.format(self.iter, self.J_history[self.iter])
                     #print self.theta
                     clear_output()
                     
         #except:
         #    ''
         if viewProgress: 
-            if iter % b == 0:
+            if self.iter % b == 0:
                 #clear_output()
-                print '2 J history:{0}'.format(self.J_history[iter])
-                print '2 iter:{0}'.format(iter)
+                print '2 J history:{0}'.format(self.J_history[self.iter])
+                print '2 iter:{0}'.format(self.iter)
         
         return [self.theta, self.J_history]
         
