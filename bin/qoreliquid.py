@@ -414,7 +414,8 @@ class QoreQuant():
         self.sw.ml.initialIter = iter
         print self.sw.ml.initialIter
         print self.sw.theta
-        print len(self.sw.theta)
+        try: print len(self.sw.theta)
+        except: ''
    
     def saveTheta(self, iterations, pair='EURUSD', granularity='H4'):
         
@@ -865,6 +866,7 @@ class OandaQ:
         return dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
 
     def trade(self, risk, stop, instrument, side, tp=None):
+        """
         if instrument == 'eu':
             instrument = 'EUR_USD'
         if instrument == 'au':
@@ -875,6 +877,7 @@ class OandaQ:
             instrument = 'EUR_JPY'
         if instrument == 'uj':
             instrument = 'USD_JPY'
+        """
         if side == 'b':
             side ='buy'
             self.buy(risk, stop, instrument=instrument, tp=tp)

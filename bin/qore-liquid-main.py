@@ -14,11 +14,14 @@
 
 #%reset
 
+"""
 import pandas as p
 import numpy as n
 import time
+"""
+import sys
+from qoreliquid import QoreQuant
 from threading import Thread
-from qoreliquid import *
 
 # Trading Algorithm
 class QsTrader(Thread):
@@ -147,18 +150,40 @@ class QsForecaster:
         def getMachineLearning(self):
             
             qq = QoreQuant()
-            #qq.main(mode=1, pair='EUR_USD', granularity='H4', iterations=10000, alpha=0.09, risk=1, stopLossPrice=[1.113, 1.10963, 1.10707, 1.0963][3], noUpdate=True)
-
-            mode          = 0
-            noUpdate      = mode
-            pair          = ['EUR_USD', 'EUR_NZD', 'NZD_USD', 'USD_JPY', 'USD_CHF', 'AUD_JPY', 'GBP_USD', 'AUD_USD', 'USD_CAD', 'NZD_JPY'][0]
-            granularity   = ['M5', 'H4', 'H1'][1]
-            iterations    = 10000
-            alpha         = 0.1
-            risk          = 1
-            stopLossPrice = [1.10682, 1.113, 1.10963, 1.10707, 1.0963][0]
             
-            qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate)
+            #pairs         = ['USD_CAD','EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'GBP_JPY', 'EUR_NZD' 'USD_JPY', 'USD_CHF', 'AUD_JPY', 'AUD_USD', 'USD_CAD', 'NZD_JPY']
+            pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD']
+            granularities = [ 'H4', 'D','M5', 'H1','M30']
+            iterations    = 55000
+            alpha         = 0.125
+            risk          = 2
+            plot          = False
+            stopLossPrice = [0.73745, 0.73488, 1.07978, 1.5617, 1.1024, 1.10965, 1.102, 1.10682, 1.113, 1.10963, 1.10707, 1.0963][0]
+            
+            modes = 'update train trade'.split(' ')
+            for i in xrange(len(modes)): print '{0} {1}'.format(i, modes[i])
+            mode        = int(raw_input('select number: '))
+            
+            for i in xrange(len(pairs)): print '{0} {1}'.format(i, pairs[i])
+            pair        = int(raw_input('select number: '))
+            
+            for i in xrange(len(granularities)): print '{0} {1}'.format(i, granularities[i])
+            granularity = int(raw_input('select number: '))
+            print "{0} {1}".format(pairs[pair], granularities[0])
+
+            #mode          = 2
+            #mode          = int(sys.argv[1])
+            if mode == 0: noUpdate = 0
+            if mode == 1 or mode == 2: noUpdate = 1
+
+            pair          = pairs[pair]
+            granularity   = granularities[0]
+            #%prun qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
+            #%lprun -f qq.main -f qq.update -f qq.oq.updateBarsFromOanda -f qq.oq.appendHistoricalPrice qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
+            qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
+            
+            #qq.oq.getPairsRelatedToOandaTickers(pair.replace('_',''))
+            qq.predict(wlen=50)
         
         def generateNDayForecast(self):
             ''
