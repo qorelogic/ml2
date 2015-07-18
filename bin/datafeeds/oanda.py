@@ -101,6 +101,26 @@ def do_work( forever = True):
             
             pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
             
+            print '====='
+            pairs = oq.prepPairsForOandaStream('EUR_USD', mode=1)
+            print 'streamlen: {0}'.format(len(pairs.split(',')))
+            aa = pairs.split(',')
+            #print aa
+            print '-----'
+            
+            rtc = RealtimeChart()
+            rtc.sw.theta
+            print 'thetalen: {0}'.format(len(rtc.sw.theta))
+            bb = list(rtc.sw.theta.index)
+            #print bb
+            
+            #cc = list(set(aa) & set(bb))
+            #print len(cc)
+            #print cc
+            print list(set(aa) & set(bb))
+            print list(set(aa) - set(bb))
+            print list(set(bb) - set(aa))
+
             stream.start(accountId=accid, instruments=pairs)
         except socket.error, e:
             print '1:'
