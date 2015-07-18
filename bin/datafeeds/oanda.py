@@ -88,7 +88,7 @@ class MyStreamer(oandapy.Streamer):
 
     def on_error(self, data):
         self.disconnect()
-
+    
 # source: http://www.digi.com/wiki/developer/index.php/Handling_Socket_Error_and_Keepalive
 def do_work( forever = True):
     while True:
@@ -98,7 +98,9 @@ def do_work( forever = True):
             #pairs = ",".join(list(n.array(p.DataFrame(oanda2.get_instruments(accid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
             #pairs = ",".join(list(res))
             #res = getPricesLatest(df, oanda2, sw).index
+            
             pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
+            
             stream.start(accountId=accid, instruments=pairs)
         except socket.error, e:
             print '1:'
@@ -139,5 +141,8 @@ def do_work( forever = True):
             pass
          
 if __name__ == '__main__':
-    do_work( True)
+    try:
+        do_work( True)
+    except KeyboardInterrupt, e:
+        ''
     ''

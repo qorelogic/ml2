@@ -1011,12 +1011,29 @@ class OandaQ:
         #print lsf
         return lsf
         
+    def prepPairsForOandaStream(self, pair, mode=0):
+        
+        print pair
+        if mode == 0:
+            nmode = 'lsp'
+        if mode == 1:
+            nmode = 'lse'
+        relatedPairs = self.getPairsRelatedToOandaTickers(pair)
+        #print relatedPairs
+        df = p.DataFrame(relatedPairs[nmode])
+        pairs = list(df.ix[:,0])
+        pairs = ','.join(pairs)
+        #print pairs
+        return pairs
+
     def getPairsRelatedToOandaTickers(self, pair):
         
         # generate relatedCols from oandas tickers
+        pair = pair.replace('_', '')
         
         fname = '/mldev/bin/data/oanda/cache/instruments.csv'
         try:
+            
             inst = readcache(fname)
         except:     
             inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
@@ -1318,7 +1335,13 @@ class StatWing:
         self.nxps = []
         try:    self.oq = OandaQ()
         except: print 'offline mode'
-        self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
+        
+        #self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
+        
+        th1 = p.read_csv('/mldev/bin/datafeeds/models/qorequant/EURUSD-H4.theta.csv', index_col=0)
+        #print; print len(th1.columns)
+        self.theta = th1.ix[max(th1.index),:]
+        
         self.ml = ml007()
         
     def higherNextDay(self, dfa, k):
