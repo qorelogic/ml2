@@ -19,7 +19,6 @@ import pandas as p
 import numpy as n
 import time
 """
-import sys
 from qoreliquid import QoreQuant
 from threading import Thread
 
@@ -169,15 +168,13 @@ class QsForecaster:
             
             for i in xrange(len(granularities)): print '{0} {1}'.format(i, granularities[i])
             granularity = int(raw_input('select number: '))
-            print "{0} {1}".format(pairs[pair], granularities[0])
+            print "{0} {1}".format(pairs[pair], granularities[i])
 
-            #mode          = 2
-            #mode          = int(sys.argv[1])
             if mode == 0: noUpdate = 0
             if mode == 1 or mode == 2: noUpdate = 1
 
             pair          = pairs[pair]
-            granularity   = granularities[0]
+            granularity   = granularities[granularity]
             #%prun qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
             #%lprun -f qq.main -f qq.update -f qq.oq.updateBarsFromOanda -f qq.oq.appendHistoricalPrice qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
             qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
@@ -194,6 +191,9 @@ forecaster = QsForecaster()
 def main():
     #trader.start()
     forecaster.getMachineLearning()
+    
+    #qq = QoreQuant()
+    #qq.update(pair='EUR_USD', granularity='H4', noUpdate=False, plot=False)
 
 def test():
     trader.gotoMarket()
