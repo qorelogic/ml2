@@ -1127,8 +1127,8 @@ class OandaQ:
         return df
         
     def getHistoricalPrice(self, pair, granularity='S5', count=2, plot=True):
-        qqq = QoreQuant()
-        df = qqq.oq.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
+        
+        df = self.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid', 'volume']
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid']
         hed = ['closeAsk', 'closeBid']
