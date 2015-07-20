@@ -1174,6 +1174,7 @@ class OandaQ:
         
     def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
 
+        pair = pair.replace('_', '') # remove the underscore
         relatedPairs = self.getPairsRelatedToOandaTickers(pair)
         
         pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
