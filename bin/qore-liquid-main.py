@@ -21,6 +21,19 @@ import time
 """
 from qoreliquid import QoreQuant
 from threading import Thread
+import sys, traceback
+
+def rawInput(msg, options):
+    for i in xrange(len(options)): print '{0} {1}'.format(i, options[i])
+    while True:
+        try:
+            option = int(raw_input(msg))
+            if option in xrange(len(options)):
+                break
+        except:
+            pass
+        print 'Try again'
+    return option
 
 # Trading Algorithm
 class QsTrader(Thread):
@@ -160,25 +173,19 @@ class QsForecaster:
             
             #modes = ['train','predict','trade']
             modes = 'update train trade'.split(' ')
-            for i in xrange(len(modes)): print '{0} {1}'.format(i, modes[i])
-            mode        = int(raw_input('select number: '))
+
+            mode        = rawInput('select number: ', modes)
+            pair        = rawInput('select number: ', pairs)
+            granularity = rawInput('select number: ', granularities)
             
-            for i in xrange(len(pairs)): print '{0} {1}'.format(i, pairs[i])
-            pair        = int(raw_input('select number: '))
-            
-            for i in xrange(len(granularities)): print '{0} {1}'.format(i, granularities[i])
-            granularity = int(raw_input('select number: '))
-            print "{0} {1}".format(pairs[pair], granularities[i])
+            print "{0} {1} {2}".format(modes[mode], pairs[pair], granularities[granularity])
 
             if mode == 0: noUpdate = False
             if mode == 1 or mode == 2: noUpdate = True
 
             if mode == 2:
                 stopLossPrice = float(raw_input('stopLossPrice: '))
-                print "stopLossPrice: {0}".format(stopLossPrice)
-                
-                risk = float(raw_input('risk: '))
-                print "risk: {0}".format(risk)
+                risk          = float(raw_input('risk: '))
 
             pair          = pairs[pair]
             granularity   = granularities[granularity]
@@ -197,7 +204,15 @@ forecaster = QsForecaster()
 
 def do_work( forever = True):
     while True:
-        forecaster.getMachineLearning()
+        try:    
+            forecaster.getMachineLearning()
+        except:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print "*** print_tb:"
+            traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+            print "*** print_exception:"
+            traceback.print_exception(exc_type, exc_value, exc_traceback,
+                                      limit=2, file=sys.stdout)
 
 
 def main():
