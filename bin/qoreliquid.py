@@ -488,7 +488,8 @@ class QoreQuant():
     
     def forecastCurrency(self, mode=3, pair='EURUSD', granularity='H4', iterations=10000, alpha=0.09, risk=5, stop=20):
         # 1: update 2: train, 3: predict, 4: trade
-             
+        print 'forecastCurrency: {0} {1}'.format(pair, granularity)  
+        
         onErrorTrain = False # onErrorTrain swich
         pair = pair.replace('_', '') # remove the underscore
         
@@ -1175,13 +1176,15 @@ class OandaQ:
     def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
 
         pair = pair.replace('_', '') # remove the underscore
-        relatedPairs = self.getPairsRelatedToOandaTickers(pair)
+        relatedPairs = self.getPairsRelatedToOandaTickers(pair)        
         
         pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
+        
         self.granularities = granularities.split(' ')
         for pair in pairs:
+            print
             try:                self.dfa[pair]
-            except KeyError, e: self.dfa[pair] = {}
+            except KeyError, e: self.dfa[pair] = {}; print e
             ob = ''
             for granularity in self.granularities:
                 ob += '{0} {1}'.format(pair, granularity)
@@ -1190,23 +1193,26 @@ class OandaQ:
                     self.dfa[pair][granularity]
                 except:
                     # if dataframe not in memory
+                    print '{0} {1} dataframe not in memory'.format(pair, granularity)
                     try:
                         # read from csv
-                        ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
                         self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
+                        ob += ' reading from {0}'.format(fname)
                         ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
                     except KeyError, e:
                         print e
                         self.dfa[pair] = {}
                     except IOError, e:
                         # if no csv file, initialize memory for the dataframe
-                        print e
+                        #print e
                         self.dfa[pair] = {}
                     except:
                         print 'exception {0}'.format(pair)
                         
                 # append to current dataframe in memory
                 if noUpdate == False:
+                    print '{0} {1} attempting update {2}'.format(pair, granularity, noUpdate)
+                    print '{0} {1} updating'.format(pair, granularity)
                     try:
                         print 'len {0} before append.'.format(len(self.dfa[pair][granularity]))
                         self.dfa[pair][granularity] = self.appendHistoricalPrice(self.dfa[pair][granularity], pair, granularity=granularity, plot=plot)
