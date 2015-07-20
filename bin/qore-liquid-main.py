@@ -138,6 +138,7 @@ class QsForecaster:
             
             # setters
             self.nDayForecast = None
+            self.qq = QoreQuant()
         
         def getInformationFeed(self):
             ''
@@ -148,17 +149,16 @@ class QsForecaster:
         
         def getMachineLearning(self):
             
-            qq = QoreQuant()
-            
-            #pairs         = ['USD_CAD','EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'GBP_JPY', 'EUR_NZD' 'USD_JPY', 'USD_CHF', 'AUD_JPY', 'AUD_USD', 'USD_CAD', 'NZD_JPY']
-            pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD']
-            granularities = [ 'H4', 'D','M5', 'H1','M30']
-            iterations    = 55000
+            pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'NZD_EUR', 'USD_JPY',  'USD_CHF', 'USD_CAD','GBP_JPY', 'EUR_NZD', 'GBP_NZD', 'AUD_JPY', 'AUD_NZD', 'NZD_JPY']
+            pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD','EUR_JPY', 'GBP_JPY','USD_JPY']
+            granularities = [ 'H4', 'D','M1','M5', 'H1','M30','S5','S10']
+            iterations    = 100000
             alpha         = 0.125
-            risk          = 2
+            risk          = 1
             plot          = False
             stopLossPrice = [0.73745, 0.73488, 1.07978, 1.5617, 1.1024, 1.10965, 1.102, 1.10682, 1.113, 1.10963, 1.10707, 1.0963][0]
             
+            #modes = ['train','predict','trade']
             modes = 'update train trade'.split(' ')
             for i in xrange(len(modes)): print '{0} {1}'.format(i, modes[i])
             mode        = int(raw_input('select number: '))
@@ -170,17 +170,24 @@ class QsForecaster:
             granularity = int(raw_input('select number: '))
             print "{0} {1}".format(pairs[pair], granularities[i])
 
-            if mode == 0: noUpdate = 0
-            if mode == 1 or mode == 2: noUpdate = 1
+            if mode == 0: noUpdate = False
+            if mode == 1 or mode == 2: noUpdate = True
+
+            if mode == 2:
+                stopLossPrice = float(raw_input('stopLossPrice: '))
+                print "stopLossPrice: {0}".format(stopLossPrice)
+                
+                risk = float(raw_input('risk: '))
+                print "risk: {0}".format(risk)
 
             pair          = pairs[pair]
             granularity   = granularities[granularity]
-            #%prun qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
-            #%lprun -f qq.main -f qq.update -f qq.oq.updateBarsFromOanda -f qq.oq.appendHistoricalPrice qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
-            qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
+            #%prun self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
+            #%lprun -f self.qq.main -f self.qq.update -f self.qq.oq.updateBarsFromOanda -f self.qq.oq.appendHistoricalPrice self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
+            self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
             
-            #qq.oq.getPairsRelatedToOandaTickers(pair.replace('_',''))
-            qq.predict(wlen=50)
+            #self.qq.oq.getPairsRelatedToOandaTickers(pair.replace('_',''))
+            self.qq.predict(wlen=50)
         
         def generateNDayForecast(self):
             ''
@@ -188,17 +195,22 @@ class QsForecaster:
 trader = QsTrader()
 forecaster = QsForecaster()
 
+def do_work( forever = True):
+    while True:
+        forecaster.getMachineLearning()
+
+
 def main():
-    #trader.start()
-    forecaster.getMachineLearning()
-    
-    #qq = QoreQuant()
-    #qq.update(pair='EUR_USD', granularity='H4', noUpdate=False, plot=False)
+    trader.start()
 
 def test():
     trader.gotoMarket()
+    
+def test1():
+    qq = QoreQuant()
+    qq.update(pair='USD_JPY', granularity='S5', noUpdate=False, plot=False)
 
 if __name__ == "__main__":
-    main()
+    #main()
     #test()
-
+    do_work( True)
