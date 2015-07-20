@@ -479,8 +479,8 @@ class QoreQuant():
         
         curr1 = n.mean([float(eu[0]['ask']), float(eu[0]['bid'])])
         tp1 = float('%.5f' % tp.ix[len(tp)-1,0])
-        print curr1
-        print tp1
+        print 'current: {0}'.format(curr1)
+        print 'tp1: {0}'.format(tp1)
         if tp1 > curr1:
             self.oq.trade(risk, stop, pair, 'b', tp=tp1)
         if tp1 < curr1:
@@ -493,13 +493,15 @@ class QoreQuant():
         onErrorTrain = False # onErrorTrain swich
         pair = pair.replace('_', '') # remove the underscore
         
-        try:    self.df
-        except: onErrorTrain = True
+        try:    
+            self.df
+        except: 
+            onErrorTrain = True
         
         if mode == 1:
             self.updateDatasets('EUR', noUpdate=False)
             
-        if mode == 2 or onErrorTrain == True:
+        if mode == 2 or (onErrorTrain == True):
             self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity)
         
         if mode == 2 or mode == 3 or mode == 4:
@@ -674,7 +676,7 @@ class ml007:
                 #    return [self.theta, self.J_history]
                 if self.iter % b == 0:
                     print '{0} {1}'.format(self.iter, self.J_history[self.iter])
-                    #print self.theta
+                    #print self.theta                    
                     clear_output()
                     
         #except:
@@ -1179,12 +1181,14 @@ class OandaQ:
         relatedPairs = self.getPairsRelatedToOandaTickers(pair)        
         
         pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
-        
+        print pairs
         self.granularities = granularities.split(' ')
         for pair in pairs:
             print
             try:                self.dfa[pair]
-            except KeyError, e: self.dfa[pair] = {}; print e
+            except KeyError, e: 
+                self.dfa[pair] = {}; 
+                print e
             ob = ''
             for granularity in self.granularities:
                 ob += '{0} {1}'.format(pair, granularity)
@@ -1197,7 +1201,7 @@ class OandaQ:
                     try:
                         # read from csv
                         self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
-                        ob += ' reading from {0}'.format(fname)
+                        ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
                         ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
                     except KeyError, e:
                         print e
