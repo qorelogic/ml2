@@ -1181,6 +1181,10 @@ class OandaQ:
         except KeyError, e: self.dfa[pair] = {}
         ob = ''
         for granularity in self.granularities:
+
+            # delay the request by oanda request limit
+            time.sleep(1)
+
             ob += '{0} {1}'.format(pair, granularity)
             fname = '/mldev/bin/data/oanda/ticks/{0}/{0}-{1}.csv'.format(pair, granularity)
             try:    
@@ -1232,6 +1236,7 @@ class OandaQ:
                 except KeyError, e:
                     print e
             print ob
+
     
     def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
 
