@@ -344,8 +344,7 @@ class QoreQuant():
         if modes[mode] == 'train':
             self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
         
-    def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4'):
-        
+    def prepDf(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4'):
         #pair = 'EURGBP'
         #pair = 'EURCHF'
         
@@ -365,9 +364,14 @@ class QoreQuant():
         #self.sw.relatedCols = data.columns
         #self.sw.relatedCols = [0,1]
         
-        #print self.dfdata.columns
+        print self.dfdata.columns
         
         self.df = self.dfdata.ix[0:len(self.dfdata)-0, :].fillna(0)
+        
+    def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4'):
+        
+        self.prepDf(pair=pair, iterations=iterations, alpha=alpha, noUpdate=noUpdate, granularity=granularity)
+        
         X = self.df.ix[0:len(self.df)]
         # shift keyCol up ct cells
         #ct = 5
@@ -443,7 +447,7 @@ class QoreQuant():
         if self.verbose == True: df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); show();
         df.to_csv(fname)        
     
-    def predict(self, plotTitle='', wlen=2000):
+    def predict(self, plotTitle='', wlen=2000, showPlot=True):
         data = self.df
         #self.sw.predictRegression2(mdf.ix[0:ldf-0, :], quiet=True)
         ldf = len(data.ix[:, self.sw.keyCol])
@@ -463,7 +467,7 @@ class QoreQuant():
         #tp = sw.predictRegression2(mdf.ix[0:ldf-i, :], quiet=False)
         tp = p.DataFrame(self.sw.predictRegression2(mdf.ix[:, :], quiet=True), index=data.index)
         #plot(self.de.ix[ldf-wlen: ldf, self.sw.keyCol])
-        if self.verbose == True: 
+        if showPlot == True: 
             plot(data.ix[ldf-wlen: ldf, self.sw.keyCol])
             plot(tp.ix[ldf-wlen: ldf, :], '.')
             legend(['price', 'tp'])
@@ -485,6 +489,9 @@ class QoreQuant():
         tp1 = float('%.5f' % tp.ix[len(tp)-1,0])
         print 'current: {0}'.format(curr1)
         print 'tp1: {0}'.format(tp1)
+        
+        return
+        
         if tp1 > curr1:
             self.oq.trade(risk, stop, pair, 'b', tp=tp1)
         if tp1 < curr1:
@@ -506,8 +513,13 @@ class QoreQuant():
             self.updateDatasets('EUR', noUpdate=False)
             
         if mode == 2 or (onErrorTrain == True):
-            #if mode != 4:
-            self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity)
+            if mode != 4:
+                self.prepDf(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity)
+                self.loadTheta(iterations, pair=pair, granularity=granularity)
+                print 'self.ml.theta'
+                print self.sw.ml.theta
+            else:
+                self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity)
         
         if mode == 2 or mode == 3 or mode == 4:
             tp = self.predict(plotTitle=pair)
@@ -634,7 +646,7 @@ class ml007:
     def __init__(self):
         self.J_history = []
         self.theta     = []
-        self.initialIter = 0
+        
         self.iter        = 0
         
     def computeCost_linearRegression(self, X, y, theta, m):
@@ -816,6 +828,7 @@ class OandaQ:
     
     def debug(self, msg):
         if self.verbose == True: 
+            print
             print msg
     
     def datetimeToTimestamp(self, ddt):
@@ -1687,6 +1700,7 @@ class StatWing:
         #print X.ix[s+19,data.columns[self.relatedCols].insert(0,0)]
         #print theta
         #print 'shape theta'
+        print self.ml.theta
         #print self.theta.shape
         #print len(self.relatedCols)
         ntheta = self.ml.theta.reshape(len(self.relatedCols),1)
