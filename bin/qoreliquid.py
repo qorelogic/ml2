@@ -479,8 +479,8 @@ class QoreQuant():
         
         curr1 = n.mean([float(eu[0]['ask']), float(eu[0]['bid'])])
         tp1 = float('%.5f' % tp.ix[len(tp)-1,0])
-        print curr1
-        print tp1
+        print 'current: {0}'.format(curr1)
+        print 'tp1: {0}'.format(tp1)
         if tp1 > curr1:
             self.oq.trade(risk, stop, pair, 'b', tp=tp1)
         if tp1 < curr1:
@@ -488,17 +488,20 @@ class QoreQuant():
     
     def forecastCurrency(self, mode=3, pair='EURUSD', granularity='H4', iterations=10000, alpha=0.09, risk=5, stop=20):
         # 1: update 2: train, 3: predict, 4: trade
-             
+        print 'forecastCurrency: {0} {1}'.format(pair, granularity)  
+        
         onErrorTrain = False # onErrorTrain swich
         pair = pair.replace('_', '') # remove the underscore
         
-        try:    self.df
-        except: onErrorTrain = True
+        try:    
+            self.df
+        except: 
+            onErrorTrain = True
         
         if mode == 1:
             self.updateDatasets('EUR', noUpdate=False)
             
-        if mode == 2 or onErrorTrain == True:
+        if mode == 2 or (onErrorTrain == True):
             self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity)
         
         if mode == 2 or mode == 3 or mode == 4:
@@ -673,7 +676,7 @@ class ml007:
                 #    return [self.theta, self.J_history]
                 if self.iter % b == 0:
                     print '{0} {1}'.format(self.iter, self.J_history[self.iter])
-                    #print self.theta
+                    #print self.theta                    
                     clear_output()
                     
         #except:
@@ -1184,23 +1187,26 @@ class OandaQ:
                 self.dfa[pair][granularity]
             except:
                 # if dataframe not in memory
+                print '{0} {1} dataframe not in memory'.format(pair, granularity)
                 try:
                     # read from csv
-                    ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
                     self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
+                    ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
                     ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
                 except KeyError, e:
                     print e
                     self.dfa[pair] = {}
                 except IOError, e:
                     # if no csv file, initialize memory for the dataframe
-                    print e
+                    #print e
                     self.dfa[pair] = {}
                 except:
                     print 'exception {0}'.format(pair)
                     
             # append to current dataframe in memory
             if noUpdate == False:
+                print '{0} {1} attempting update {2}'.format(pair, granularity, noUpdate)
+                print '{0} {1} updating'.format(pair, granularity)
                 try:
                     print 'len {0} before append.'.format(len(self.dfa[pair][granularity]))
                     self.dfa[pair][granularity] = self.appendHistoricalPrice(self.dfa[pair][granularity], pair, granularity=granularity, plot=plot)
@@ -1229,9 +1235,11 @@ class OandaQ:
     
     def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
 
-        relatedPairs = self.getPairsRelatedToOandaTickers(pair)
+        pair = pair.replace('_', '') # remove the underscore
+        relatedPairs = self.getPairsRelatedToOandaTickers(pair)        
         
         pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
+        print pairs
         self.granularities = granularities.split(' ')
         tss = {}
         for pair in pairs:
