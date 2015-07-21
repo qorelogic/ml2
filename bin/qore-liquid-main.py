@@ -228,4 +228,50 @@ def test1():
 if __name__ == "__main__":
     #main()
     #test()
-    do_work( True)
+    #do_work( True)
+
+    import curses
+    stdscr = curses.initscr()
+    curses.cbreak()
+    stdscr.keypad(1)
+    
+    stdscr.addstr(0,10,"Hit 'q' to quit")
+    stdscr.refresh()
+    
+    key = ''
+    while key != ord('q'):
+        key = stdscr.getch()
+        stdscr.addch(20,25,key)
+        stdscr.refresh()
+        if key == curses.KEY_UP: 
+            stdscr.addstr(2, 20, "Up")
+        elif key == curses.KEY_DOWN: 
+            stdscr.addstr(3, 20, "Down")
+    
+    curses.endwin()
+    
+    
+    ''
+"""
+#from __future__ import print_function
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+
+def press(event):
+    print('press', event.key)
+    sys.stdout.flush()
+    if event.key=='x':
+        visible = xl.get_visible()
+        xl.set_visible(not visible)
+        fig.canvas.draw()
+
+fig, ax = plt.subplots()
+
+fig.canvas.mpl_connect('key_press_event', press)
+
+ax.plot(np.random.rand(12), np.random.rand(12), 'go')
+xl = ax.set_xlabel('easy come, easy go')
+
+plt.show()
+"""
