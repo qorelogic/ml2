@@ -1,5 +1,8 @@
 
 #from numpy import *
+#from pandas import read_csv
+
+"""
 from qore import *
 from qore_qstk import *
 from matplotlib.pylab import *
@@ -18,6 +21,19 @@ import threading,time
 import itertools as it
 
 import oandapy
+
+from IPython.display import display, clear_output
+import time
+import math
+
+import plotly.plotly as py
+from plotly.graph_objs import *
+
+from selenium import webdriver
+from selenium.selenium import selenium
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+import pandas as p
+"""
 
 def toCurrency(n):
     return '%2d' % n
@@ -97,16 +113,16 @@ class QoreQuant():
 
         co = p.read_csv(self.configfile, header=None)
         
-        env1=co.ix[0,1]
-        access_token1=co.ix[0,2]
-        self.oanda1 = oandapy.API(environment=env1, access_token=access_token1)
+        #env1=co.ix[0,1]
+        #access_token1=co.ix[0,2]
+        #self.oanda1 = oandapy.API(environment=env1, access_token=access_token1)
         
         env2=co.ix[1,1]
         access_token2=co.ix[1,2]
         self.oanda2 = oandapy.API(environment=env2, access_token=access_token2)
         
-        self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
-        self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
+        #self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
+        #self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
 
         #print 'using account: {0}'.format(self.accid1)
         
@@ -627,8 +643,6 @@ class FinancialModel:
         res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
         print res
 
-from IPython.display import display, clear_output
-import time
 class ml007:
 
     def __init__(self):
@@ -1291,7 +1305,6 @@ class OandaQ:
 
 
 # source: http://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
-import math
 def pearson_def(x, y):
     def average(x):
         assert len(x) > 0
@@ -1316,7 +1329,6 @@ def pearson_def(x, y):
 #returns
 #0.981980506062
 
-import numpy as np
 def pcc(X, Y):
    ''' Compute Pearson Correlation Coefficient. '''
    # Normalise X and Y
@@ -1326,11 +1338,11 @@ def pcc(X, Y):
    X /= X.std(0)
    Y /= Y.std(0)
    # Compute mean product
-   return np.mean(X*Y)
+   return n.mean(X*Y)
 # Using it on a random example
 #from random import random
-#X = np.array([random() for x in xrange(100)])
-#Y = np.array([random() for x in xrange(100)])
+#X = n.array([random() for x in xrange(100)])
+#Y = n.array([random() for x in xrange(100)])
 #pcc(X, Y)
 
 class StatWing:
@@ -1765,8 +1777,6 @@ class StatWing:
         return val
  
 
-import plotly.plotly as py
-from plotly.graph_objs import *
 class RealtimeChart:
     
     def __init__(self):
@@ -3003,10 +3013,6 @@ class ShapeShift(CryptoCoinBaseClass):
 # pip install -U selenium
  
 # Import the Selenium 2 namespace (aka "webdriver")
-from selenium import webdriver
-from selenium.selenium import selenium
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-import pandas as p
 
 class Etoro():
     def __init__(self):
