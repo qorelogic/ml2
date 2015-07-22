@@ -8,6 +8,7 @@ from numpy import mean as n_mean
 from numpy import std as n_std
 from numpy import e as n_e
 from numpy import ones as n_ones
+from numpy import zeros as n_zeros
 from numpy import ceil
 from numpy import dot as n_dot
 import oandapy
@@ -617,7 +618,7 @@ class FinancialModel:
         
         # shift code
         try:        
-            period = list(n.zeros(shift, dtype=int)) + list(period[0:len(period)-shift])
+            period = list(n_zeros(shift, dtype=int)) + list(period[0:len(period)-shift])
         except Exception as e:
             print e
             ''
@@ -689,7 +690,7 @@ class ml007:
     
     def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=500, ):
         m = len(y)
-        self.J_history = n.zeros(num_iters)
+        self.J_history = n_zeros(num_iters)
         self.theta = theta
         X = n_array(X)
         alpha_over_m = (float(alpha)/m)
@@ -757,7 +758,7 @@ class ml007:
         
         #% You need to return the following variables correctly 
         J = 0;
-        grad = n.zeros(size(theta));
+        grad = n_zeros(size(theta));
         
         #% ====================== YOUR CODE HERE ======================
         #% Instructions: Compute the cost of a particular choice of theta.
@@ -781,8 +782,8 @@ class ml007:
         
         return [J, grad]    
     
-    #initial_theta = n.zeros(nn + 1);
-    #initial_theta = n.zeros(nn);
+    #initial_theta = n_zeros(nn + 1);
+    #initial_theta = n_zeros(nn);
     #initial_theta
     
     #[cost, grad] = costFunction(initial_theta, X, y);
@@ -1557,7 +1558,7 @@ class StatWing:
         
         if type(initialTheta) == type(None):
             print 'initializing theta'
-            self.theta = n.zeros(len(X.columns))
+            self.theta = n_zeros(len(X.columns))
         else:
             print 'loading theta'
             print initialTheta
