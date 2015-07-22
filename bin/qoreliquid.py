@@ -93,6 +93,8 @@ class QoreQuant():
         
     def __init__(self):
 
+        self.verbose = False
+
         co = p.read_csv(self.configfile, header=None)
         
         env1=co.ix[0,1]
@@ -437,7 +439,8 @@ class QoreQuant():
         df = p.DataFrame(self.sw.ml.theta, index=list(self.dfdata.columns), columns=[self.sw.ml.iter]).transpose()
         df = df.combine_first(df0)
         #print df.transpose()
-        df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); show();
+        
+        if self.verbose == True: df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); show();
         df.to_csv(fname)        
     
     def predict(self, plotTitle='', wlen=2000):
@@ -460,11 +463,12 @@ class QoreQuant():
         #tp = sw.predictRegression2(mdf.ix[0:ldf-i, :], quiet=False)
         tp = p.DataFrame(self.sw.predictRegression2(mdf.ix[:, :], quiet=True), index=data.index)
         #plot(self.de.ix[ldf-wlen: ldf, self.sw.keyCol])
-        plot(data.ix[ldf-wlen: ldf, self.sw.keyCol])
-        plot(tp.ix[ldf-wlen: ldf, :], '.')
-        legend(['price', 'tp'])
-        title(plotTitle)
-        show();
+        if self.verbose == True: 
+            plot(data.ix[ldf-wlen: ldf, self.sw.keyCol])
+            plot(tp.ix[ldf-wlen: ldf, :], '.')
+            legend(['price', 'tp'])
+            title(plotTitle)
+            show();
         #normalizemePinv(, dmean, dstd)
         return tp.ix[len(tp)-1:len(tp)-0, :]
     
@@ -502,6 +506,7 @@ class QoreQuant():
             self.updateDatasets('EUR', noUpdate=False)
             
         if mode == 2 or (onErrorTrain == True):
+            #if mode != 4:
             self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity)
         
         if mode == 2 or mode == 3 or mode == 4:
@@ -756,6 +761,8 @@ class OandaQ:
     
     def __init__(self, verbose=False):
         
+        self.verbose = verbose
+        
         # get current quotes
         co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
         env2=co.ix[1,1]
@@ -801,6 +808,16 @@ class OandaQ:
             'M' : 1 * 2419200 # Month
         }
 
+    def log(self, msg, printDot=True):
+        if self.verbose == True: 
+            print msg
+        if printDot == True:
+            print '.',
+    
+    def debug(self, msg):
+        if self.verbose == True: 
+            print msg
+    
     def datetimeToTimestamp(self, ddt):
 
         def _datetimeToTimestamp(ddt):
@@ -1155,11 +1172,11 @@ class OandaQ:
         ddt = self.datetimeToTimestamp(dd.datetime.now()) 
         #print ddt
         ddtdiff = ddt - self.oandaToTimestamp(ti) + (60*60*3)
-        print '{0} seconds behind'.format(ddtdiff)
-        print '{0} minutes behind'.format(ddtdiff / 60)
+        self.log('{0} seconds behind'.format(ddtdiff))
+        self.log('{0} minutes behind'.format(ddtdiff / 60))
         reqcount = int(ceil(ddtdiff / self.granularityMap[granularity])) + safeShift
-        print self.granularityMap[granularity]
-        print 'requesting {0} ticks'.format(reqcount)
+        self.log(self.granularityMap[granularity])
+        self.log('requesting {0} ticks'.format(reqcount))
         if safeShift > 0:
             plotHiPr = True
         else:
@@ -1177,8 +1194,11 @@ class OandaQ:
     
     def fetchBars(self, pair, noUpdate):
 
+        self.log('')
         try:                self.dfa[pair]
-        except KeyError, e: self.dfa[pair] = {}
+        except KeyError, e: 
+            self.dfa[pair] = {}; 
+            self.debug(e)
         ob = ''
         for granularity in self.granularities:
 
@@ -1191,14 +1211,14 @@ class OandaQ:
                 self.dfa[pair][granularity]
             except:
                 # if dataframe not in memory
-                print '{0} {1} dataframe not in memory'.format(pair, granularity)
+                self.log('{0} {1} dataframe not in memory'.format(pair, granularity))
                 try:
                     # read from csv
                     self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
                     ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
                     ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
                 except KeyError, e:
-                    print e
+                    self.debug(e)
                     self.dfa[pair] = {}
                 except IOError, e:
                     # if no csv file, initialize memory for the dataframe
@@ -1209,18 +1229,18 @@ class OandaQ:
                     
             # append to current dataframe in memory
             if noUpdate == False:
-                print '{0} {1} attempting update {2}'.format(pair, granularity, noUpdate)
-                print '{0} {1} updating'.format(pair, granularity)
+                self.log('{0} {1} attempting update {2}'.format(pair, granularity, noUpdate))
+                self.log('{0} {1} updating'.format(pair, granularity))
                 try:
-                    print 'len {0} before append.'.format(len(self.dfa[pair][granularity]))
+                    self.log('len {0} before append.'.format(len(self.dfa[pair][granularity])))
                     self.dfa[pair][granularity] = self.appendHistoricalPrice(self.dfa[pair][granularity], pair, granularity=granularity, plot=plot)
-                    print 'len {0} after append.'.format(len(self.dfa[pair][granularity]))
-                    print 'appended to {0}'.format(pair)
+                    self.log('len {0} after append.'.format(len(self.dfa[pair][granularity])))
+                    self.log('appended to {0}'.format(pair))
                     # if no dataframe in memory, download from data source
                 except oandapy.OandaError, e:
                     try:
                         self.dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=plot)
-                        print 'got clean series {0}'.format(pair)
+                        self.log('got clean series {0}'.format(pair))
                     except oandapy.OandaError, e:
                         print e
                     print e
@@ -1232,11 +1252,10 @@ class OandaQ:
                     mkdir_p(hdir)
                     self.dfa[pair][granularity].to_csv(fname)
                     #self.dfa[pair][granularity].plot(); show();
-                    print 'saved {0} to {1}'.format(pair, fname)
+                    self.log('saved {0} to {1}'.format(pair, fname))
                 except KeyError, e:
                     print e
-            print ob
-
+            self.log(ob)
     
     def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
 
@@ -1244,7 +1263,7 @@ class OandaQ:
         relatedPairs = self.getPairsRelatedToOandaTickers(pair)        
         
         pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
-        print pairs
+        self.log(pairs)
         self.granularities = granularities.split(' ')
         tss = {}
         for pair in pairs:
