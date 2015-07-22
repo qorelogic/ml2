@@ -9,13 +9,15 @@ from numpy import power as n_power
 from numpy import mean as n_mean
 from numpy import std as n_std
 from numpy import e as n_e
+from numpy import log10 as n_log10
 from numpy import ones as n_ones
 from numpy import zeros as n_zeros
 from numpy import ceil
 from numpy import dot as n_dot
+from numpy import divide as n_divide
 import oandapy
 import datetime as dd
-from matplotlib.pyplot import show
+from matplotlib.pyplot import plot, legend, title, show
 from IPython.display import display, clear_output
 
 """
@@ -1951,7 +1953,7 @@ def normalizeme(dfr, pinv=False):
     #nmean = n_mean(dfr)
     #nstd = n_std(dfr)
     dfr = (dfr - nmean) / nstd
-    #dfr = n.divide((dfr - nmean), nstd)
+    #dfr = n_divide((dfr - nmean), nstd)
     if pinv == False:
         return dfr
     else:
@@ -2004,10 +2006,10 @@ def sigmoidmePinv(sigdfr):
     #sigdfr = 1.0 / (1 + pow(n_e,-dfr))
     #return pow(n_e,-dfr) = (1.0 / pinv) - 1
     #return log10((1.0 / dfr.get_values()) - 1)
-    #return n.log10((1.0/sigdfr)-1)/n.log10(n_e)
+    #return n_log10((1.0/sigdfr)-1)/n_log10(n_e)
     #pow(n_e,-dfr) = (1.0 / pinv) - 1
     #/ n.log(n_e)
-    return -n.divide(n.log10((n.divide(1.0, sigdfr))-1), n.log10(n_e))
+    return -n_divide(n_log10((n_divide(1.0, sigdfr))-1), n_log10(n_e))
 
 def sharpe(dfr):
     ''
