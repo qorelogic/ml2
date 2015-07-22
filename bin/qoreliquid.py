@@ -8,8 +8,10 @@ from numpy import mean as n_mean
 from numpy import std as n_std
 from numpy import e as n_e
 from numpy import ones as n_ones
+from numpy import ceil
 from numpy import dot as n_dot
 import oandapy
+import datetime as dd
 
 """
 from qore import *
