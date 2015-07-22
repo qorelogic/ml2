@@ -214,6 +214,9 @@ def do_work( forever = True):
             traceback.print_exception(exc_type, exc_value, exc_traceback,
                                       limit=2, file=sys.stdout)
 
+def do_work_debug( forever = True):
+    while True:
+        forecaster.getMachineLearning()
 
 def main():
     trader.start()
@@ -224,4 +227,6 @@ def test():
 if __name__ == "__main__":
     #main()
     #test()
+
     do_work( True)
+    #do_work_debug( True)
