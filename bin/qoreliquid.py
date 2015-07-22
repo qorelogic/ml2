@@ -781,7 +781,7 @@ class OandaQ:
     
     oanda2 = None
     
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, stats=False):
         
         self.verbose = verbose
         
@@ -793,12 +793,13 @@ class OandaQ:
     
         self.aid = self.oanda2.get_accounts()['accounts'][0]['accountId']
         #self.oanda2.create_order(aid, type='market', instrument='EUR_USD', side='sell', units=10)
-        res = self.oanda2.get_trades(self.aid)
-        if verbose:
-            for i in res:
-                print p_DataFrame(res[i])
-        
-            print p_DataFrame(self.oanda2.get_account(self.aid), index=[0])
+        if stats == True:
+            res = self.oanda2.get_trades(self.aid)
+            if verbose:
+                for i in res:
+                    print p_DataFrame(res[i])
+            
+                print p_DataFrame(self.oanda2.get_account(self.aid), index=[0])
     
         self.dfa = {}
         
