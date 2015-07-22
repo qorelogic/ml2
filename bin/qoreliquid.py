@@ -15,6 +15,8 @@ from numpy import ceil
 from numpy import dot as n_dot
 import oandapy
 import datetime as dd
+from matplotlib.pyplot import show
+from IPython.display import display, clear_output
 
 """
 from qore import *
@@ -476,7 +478,9 @@ class QoreQuant():
         df = df.combine_first(df0)
         #print df.transpose()
         
-        if self.verbose == True: df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); show();
+        if self.verbose == True: 
+            df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); 
+            show();
         df.to_csv(fname)        
     
     def predict(self, plotTitle='', wlen=2000):
