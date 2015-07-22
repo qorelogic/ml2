@@ -4,6 +4,8 @@ from qore import readcache, writecache, mkdir_p
 from pandas import read_csv as p_read_csv
 from pandas import DataFrame as p_DataFrame
 from numpy import array as n_array
+from numpy import sum as n_sum
+from numpy import power as n_power
 from numpy import mean as n_mean
 from numpy import std as n_std
 from numpy import e as n_e
@@ -259,7 +261,7 @@ class QoreQuant():
         #print df.stack() #.groupby(level=1, axis=2)
         # source: http://bconnelly.net/2013/10/summarizing-data-in-python-with-pandas/
         df = targetPortfolio2.groupby('instrument')
-        d0 = df['amount'].aggregate(n.sum)
+        d0 = df['amount'].aggregate(n_sum)
         d1 = df['take_profit'].aggregate(n_mean)
         d2 = df['stop_loss'].aggregate(n_mean)
         print
@@ -623,7 +625,7 @@ class FinancialModel:
             print e
             ''
         
-        return initial_capital * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
+        return initial_capital * n_power(1 + rate.reshape(size(rate), 1) / 100, period)
         
     def mdrange(self, initial, space, end):
         return n.linspace(initial,end,(1.0/space)*end+1)
@@ -659,8 +661,8 @@ class FinancialModel:
         period = range(0,100)
         rate   = n_array(rate, dtype=float64)
         period = n_array(period)    
-        #res =  100 * n.power(1 + rate / 100, period.reshape(size(period), 1))
-        res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
+        #res =  100 * n_power(1 + rate / 100, period.reshape(size(period), 1))
+        res =  100 * n_power(1 + rate.reshape(size(rate), 1) / 100, period)
         print res
 
 class ml007:
@@ -679,7 +681,7 @@ class ml007:
         #print theta.shape
         o1 = 1.0/(2*m)
         p1 = n_dot(X,theta)
-        o2 = n.sum(n.power(p1-y,2)) # J
+        o2 = n_sum(n_power(p1-y,2)) # J
         ret = o1 * o2
         return ret
     
@@ -772,9 +774,9 @@ class ml007:
         y = y.get_values()
         
         #J = (1/m)*sum(-y.*log(sigmoid(X*theta))-(1-y).*log(1-sigmoid(X*theta)));
-        J = (1.0/m) * n.sum(-y *  n.log(sigmoidme(n_dot(X, theta))) - (1 - y) *     log(  1 - sigmoidme(n_dot(X, theta))  ) );
+        J = (1.0/m) * n_sum(-y *  n.log(sigmoidme(n_dot(X, theta))) - (1 - y) *     log(  1 - sigmoidme(n_dot(X, theta))  ) );
         #grad = (1/m)*sum((sigmoid(X*theta)-y).*X)
-        grad = (1/m)*n.sum(n_dot((sigmoidme(n_dot(X, theta))-y), X))
+        grad = (1/m)*n_sum(n_dot((sigmoidme(n_dot(X, theta))-y), X))
         
         #% =============================================================
         
@@ -1325,8 +1327,8 @@ class OandaQ:
             print gran+' granularity not available, please update for '+gran
         #dfac = normalizeme(dfac)
         #dfac = sigmoidme(dfac)
-        #dfac = (1 - n.power(n_e, -dfac)) / (1 + n.power(n_e, -dfac)) # hyperbolic tangent, tanh
-        #dfac = n.log(1 + n.power(n_e, dfac)) # relu
+        #dfac = (1 - n_power(n_e, -dfac)) / (1 + n_power(n_e, -dfac)) # hyperbolic tangent, tanh
+        #dfac = n.log(1 + n_power(n_e, dfac)) # relu
         #dfac = n.tanh(dfac) # tanh
         #dfac.plot(legend=False); show();
         #dfac
@@ -1451,7 +1453,7 @@ class StatWing:
         print 'Summary:'
         sample = df.ix[:,col]  
         c = ['Sample Size', 'Median',        'Average',      'Confidence Interval of Average',  'Standard Deviation', 'Minimum',      'Maximum',      'Sum']
-        d = [len(sample),   n.median(sample),n_mean(sample), '0.53784 to 0.54679',                    n_std(sample),       n.min(sample), n.max(sample), n.sum(sample)]
+        d = [len(sample),   n.median(sample),n_mean(sample), '0.53784 to 0.54679',                    n_std(sample),       n.min(sample), n.max(sample), n_sum(sample)]
         #110.279 to 110.636
         summary = p_DataFrame(d, index=c)#.transpose()
         print summary
@@ -1643,7 +1645,7 @@ class StatWing:
         dn = n_array(dp.get_values()[:,[0,2]], dtype=float)
         #print dn
         n_dot(dn[:,0], dn[:,1])
-        pred = n.sum(dn[:,0] * dn[:,1])
+        pred = n_sum(dn[:,0] * dn[:,1])
         print pred
         """
         predictions.append(pred)
