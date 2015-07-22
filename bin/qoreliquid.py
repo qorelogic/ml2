@@ -117,7 +117,9 @@ class QoreQuant():
         self.sw = StatWing()
 
         try:    self.oq = OandaQ(verbose=self.verbose)
-        except: print 'offline mode'
+        except Exception as e:
+            print e
+            print 'offline mode'
         
         self.dfdata = None
         
@@ -127,7 +129,9 @@ class QoreQuant():
         save = True
         mode = 2
         try: print self.et.getEtoroTraderPositions(username, save=save, mode=mode)
-        except: print self.et.getEtoroTraderPositions('manapana', save=save, mode=mode)
+        except Exception as e:
+            print e
+            print self.et.getEtoroTraderPositions('manapana', save=save, mode=mode)
         targetPortfolio2 = self.prepTargetPortfolio()
         df = self.generateTargetPortfolio(targetPortfolio2)
         df0 = self.prepSendToMarket(df)
@@ -193,7 +197,7 @@ class QoreQuant():
             gain = float(tarp.ix[i,'gain'].replace('$', ''))
             tarp.ix[i,'leverage'] = abs(floor((gain/(openp-currentp))/amount / 25)) * 25
             tarp.ix[i,'units0'] = amount * tarp.ix[i,'leverage']
-            #except:
+            #except Exception as e:
             #    ''
             
             #tarp.ix[i,2] = float(str(tarp.ix[i,1])) / balance
@@ -408,7 +412,8 @@ class QoreQuant():
             #print iterations - iter    
             initialTheta = df0.ix[iter, :].get_values()
             #print initialTheta
-        except:
+        except Exception as e:
+            print e
             df0 = p.DataFrame()
             initialTheta = None
             
@@ -417,7 +422,8 @@ class QoreQuant():
         print self.sw.ml.initialIter
         print self.sw.theta
         try: print len(self.sw.theta)
-        except: ''
+        except Exception as e:
+            print e
    
     def saveTheta(self, iterations, pair='EURUSD', granularity='H4'):
         
@@ -433,7 +439,8 @@ class QoreQuant():
         mkdir_p(hdir)
         try:
             df0 = p.read_csv(fname, index_col=0)
-        except:
+        except Exception as e:
+            print e
             df0 = p.DataFrame()
         #print len(df0)
         df = p.DataFrame(self.sw.ml.theta, index=list(self.dfdata.columns), columns=[self.sw.ml.iter]).transpose()
@@ -455,8 +462,8 @@ class QoreQuant():
             #print data.ix[p.tslib.Timestamp('2015-06-10'), self.sw.relatedCols]
             #print data
             print nprices
-        except:
-            ''
+        except Exception as e:
+            print e
         """
         mdf = data
         #[mdf, dmean, dstd] = normalizeme(data, pinv=True)
@@ -499,7 +506,8 @@ class QoreQuant():
         
         try:    
             self.df
-        except: 
+        except Exception as e:
+            print e 
             onErrorTrain = True
         
         if mode == 1:
@@ -584,7 +592,8 @@ class FinancialModel:
         # shift code
         try:        
             period = list(n.zeros(shift, dtype=int)) + list(period[0:len(period)-shift])
-        except:
+        except Exception as e:
+            print e
             ''
         
         return initial_capital * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
@@ -684,8 +693,8 @@ class ml007:
                     #print self.theta                    
                     clear_output()
                     
-        #except:
-        #    ''
+        #except Exception as e:
+        #    print e
         if viewProgress: 
             if self.iter % b == 0:
                 #clear_output()
@@ -824,7 +833,8 @@ class OandaQ:
             return (ddt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
         
         try:    tstmp = _datetimeToTimestamp(ddt)
-        except:
+        except Exception as e:
+            print e
             tstmp = []
             for i in ddt: tstmp.append(_datetimeToTimestamp(i))
         return tstmp
@@ -835,7 +845,8 @@ class OandaQ:
             return dd.datetime.fromtimestamp(tst)
 
         try:    ddt = _timestampToDatetime(tst)
-        except:
+        except Exception as e:
+            print e
             ddt = []
             for i in tst: ddt.append(_timestampToDatetime(i))                
         return ddt
@@ -863,7 +874,8 @@ class OandaQ:
 
         try:    
             ddt = _timestampToDatetimeFormat(tst)
-        except:
+        except Exception as e:
+            print e
             ddt = []
             for i in tst: ddt.append(_timestampToDatetimeFormat(i))                
         return ddt
@@ -877,7 +889,8 @@ class OandaQ:
             
         try:
             tstmp = _oandaToTimestamp(ptime)
-        except:
+        except Exception as e:
+            print e
             tstmp = []
             for i in ptime: tstmp.append(_oandaToTimestamp(i))                
         return tstmp
@@ -998,7 +1011,8 @@ class OandaQ:
         fname = '/mldev/bin/data/oanda/cache/instruments.csv'
         try:
             inst = readcache(fname)
-        except:     
+        except Exception as e:
+            print e
             inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
             writecache(inst, fname)
         lse = []
@@ -1018,7 +1032,8 @@ class OandaQ:
         for i in lse:
             try:    
                 lsf.append(list(data.columns).index(i))
-            except: ''
+            except Exception as e:
+                print e
                 
         #for i in inst:
         #    print i['instrument']
@@ -1038,7 +1053,8 @@ class OandaQ:
         fname = '/mldev/bin/data/oanda/cache/instruments.csv'
         try:
             inst = readcache(fname)
-        except:     
+        except Exception as e:
+            print e     
             inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
             writecache(inst, fname)
 
@@ -1062,7 +1078,8 @@ class OandaQ:
         for i in lse:
             try:    
                 lsf.append(list(data.columns).index(i))
-            except: ''
+            except Exception as e:
+                print e
         
         r = {}
         r['lse'] = lse
@@ -1212,7 +1229,8 @@ class OandaQ:
                 fname = '/mldev/bin/data/oanda/ticks/{0}/{0}-{1}.csv'.format(pair, granularity)
                 try:    
                     self.dfa[pair][granularity]
-                except:
+                except Exception as e:
+                    print e
                     # if dataframe not in memory
                     self.log('{0} {1} dataframe not in memory'.format(pair, granularity))
                     try:
@@ -1227,7 +1245,8 @@ class OandaQ:
                         # if no csv file, initialize memory for the dataframe
                         #print e
                         self.dfa[pair] = {}
-                    except:
+                    except Exception as e:
+                        print e
                         print 'exception {0}'.format(pair)
                         
                 # append to current dataframe in memory
@@ -1240,7 +1259,8 @@ class OandaQ:
                         self.log('len {0} after append.'.format(len(self.dfa[pair][granularity])))
                         self.log('appended to {0}'.format(pair))
                         # if no dataframe in memory, download from data source
-                    except:
+                    except Exception as e:
+                        print e
                         try:
                             self.dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=plot)
                             self.log('got clean series {0}'.format(pair))
@@ -1274,7 +1294,8 @@ class OandaQ:
                 #print dfa[i][gran].ix[:,[2,3]].tail(1)#.transpose()
                 #dfac = dfac.combine_first(dfa[i][gran].ix[:,[2,3,4]]) #.tail(1)#.transpose()
                 dfac = dfac.combine_first(dfa[i][gran].ix[:,[par]]) #.tail(1)#.transpose()
-        except:
+        except Exception as e:
+            print e
             print gran+' granularity not available, please update for '+gran
         #dfac = normalizeme(dfac)
         #dfac = sigmoidme(dfac)
@@ -1345,7 +1366,9 @@ class StatWing:
         # for predict from theta
         self.nxps = []
         try:    self.oq = OandaQ()
-        except: print 'offline mode'
+        except Exception as e:
+            print e
+            print 'offline mode'
         self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
         self.ml = ml007()
         
@@ -1481,8 +1504,8 @@ class StatWing:
         #print 'removing {0}'.format(keyCol)
         #print Xc
         Xc.remove(keyCol)
-        #except:
-        #    ''
+        #except Exception as e:
+        #    print e
         X = X[Xc]
         #print list(X.columns)
         return X
@@ -1751,8 +1774,8 @@ class StatWing:
         val = 0
         try:
             val = n.dot( nXbias, self.theta )[0][0]
-        except:
-            ''
+        except Exception as e:
+            print e
             #print 'eerr'
         if val != 0:
             self.nxps.append( val )
@@ -1803,18 +1826,18 @@ class RealtimeChart:
         try:
             imax = n.max(self.sw.nxps)
             imax = imax + n.std(self.sw.nxps)
-        except:
-            ''
+        except Exception as e:
+            print e
         try:
             imin = n.min(self.sw.nxps)
             imin = imin - n.std(self.sw.nxps)
-        except:
-            ''
+        except Exception as e:
+            print e
         """
         try:
             plt.axis([0, len(self.sw.nxps)+10, imin, imax])
-        except:
-            ''
+        except Exception as e:
+            print e
         plt.scatter(self.i, y)
         plt.draw()
         """
@@ -1997,8 +2020,8 @@ def quickPlot(tks, headers=None, listcolumns=False, title=None):
         try:        
             hdrs = list(d.columns[[headers]])
             legend(hdrs, 2)
-        except:
-            ''
+        except Exception as e:
+            print e
     #else:
     #    legend(None, 2)
     #print type(title)
@@ -2095,7 +2118,8 @@ def quandlCode2DatasetCode(tk, hdir='./', include_path=True, suffix='.csv'):
         else:
             fname = mt[0]+'-'+mt[1]+'_'+mt[2]+suffix            
         #fname = path+'/'+mt[2]+'.csv'
-    except:
+    except Exception as e:
+        print e
         mt = re.match(re.compile(r'(.*)\/(.*)', re.S), tk).groups()
         path = hdir+'/'+mt[0]+'/'+mt[1]
         if include_path:
@@ -2609,8 +2633,8 @@ Peercoin	PPC	6	3600
                     #    print i[0:3]
                     #if i[4:7] == fc:
                     #    print i[4:7]
-                except:
-                    ''
+                except Exception as e:
+                    print e
         """
         return tis
     
@@ -2652,8 +2676,8 @@ Peercoin	PPC	6	3600
             try:
                 ti = self.getTicker(i); #print ti.transpose()
                 pc = pc.combine_first(ti)
-            except:
-                ''
+            except Exception as e:
+                print e
         #print pc
         return pc.transpose()
     
@@ -2774,7 +2798,8 @@ Peercoin	PPC	6	3600
         # show the fastest coin to arbitrage
         try:
             arr
-        except:
+        except Exception as e:
+            print e
             arr = self.getMostProfitablePair()
         arrSortedAR = arr.sort('arbitrageRate', ascending=False)
         print p.DataFrame(arrSortedAR.ix[list(arrSortedAR.ix[:,'p1']).index(self.p1), :]).transpose(); print
@@ -2785,7 +2810,8 @@ Peercoin	PPC	6	3600
         fcs = []
         try:
             arbRates
-        except:
+        except Exception as e:
+            print e
             arbRates = self.getArbRates()
         arr = arbRates.transpose()
         po1 = []; po2 = []
@@ -2797,9 +2823,11 @@ Peercoin	PPC	6	3600
         for i in range(0,len(arr)):
             #if arr.ix[i,'p1']
             try: arr.ix[i,'p11'] = fastestCoins.index(arr.ix[i,'p1'].upper())
-            except: ''
+            except Exception as e:
+                print e
             try: arr.ix[i,'p22'] = fastestCoins.index(arr.ix[i,'p2'].upper())
-            except: ''
+            except Exception as e:
+                print e
         arr1 = arr.sort('p11', ascending=True);
         arr2 = arr.sort('p22', ascending=True);
         self.p1 = arr1.ix[0,'p1']; debug(self.p1)
@@ -2866,8 +2894,8 @@ class ShapeShift(CryptoCoinBaseClass):
             try:
                 debug('fetching:'+url)
                 fetchURL(url, cachemode='a')
-            except:
-                ''
+            except Exception as e:
+                print e
         
         li = url
         li = list(it.permutations(li, 2))
@@ -3061,7 +3089,8 @@ class Etoro():
         except NoSuchElementException, e:
             return True
             #print e
-        except:
+        except Exception as e:
+            print e
             return False
     
     def etoroLogout():
@@ -3107,9 +3136,9 @@ class Etoro():
             submit_button = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/div[1]/div/input')[0]
             #submit_button = driver.find_element_by_name('submit')
             submit_button.click()
-        except:
+        except Exception as e:
+            print e
             if verbose == True: flow.append(6);
-            ''
         if verbose == True: flow.append(7);
             
         if verbose == True: print flow
@@ -3135,7 +3164,8 @@ class Etoro():
             self.driver.quit()
             self.driver = None
             
-        except:
+        except Exception as e:
+            print e
             self.driver = None
         if self.driver == None:
             return True
@@ -3149,8 +3179,8 @@ class Etoro():
             els.append(i.text)
         try:
             return p.DataFrame(els, columns=[column])
-        except:
-            ''
+        except Exception as e:
+            print e
     
     # todo:
     #https://openbook.etoro.com/markets/stocks/
@@ -3208,8 +3238,8 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
                     ilss = self.find_elements_by_xpath_return_list(iss[1], iss[0])
                     print len(ilss)
                     lss.append(ilss)
-                except:
-                    ''
+                except Exception as e:
+                    print e
             """
             xps = xps.split('\n')
             for i in xrange(len(xps)):
@@ -3291,24 +3321,24 @@ gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-
         for i in range(len(df.ix[:,0])):
             try:
                 col = 'take_profit'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
-            except:
-                ''
+            except Exception as e:
+                print e
             try:
                 col = 'stop_loss'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
-            except:
-                ''
+            except Exception as e:
+                print e
             try:
                 col = 'amount'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
-            except:
-                ''
+            except Exception as e:
+                print e
             try:
                 col = 'netprofit'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
-            except:
-                ''
+            except Exception as e:
+                print e
             try:
                 col = 'gain'; df.ix[i,col] = re.match(re.compile(r'(-?[\d\.]+).*'), df.ix[i,col]).groups()[0]
-            except:
-                ''
+            except Exception as e:
+                print e
             
         # remove the extra table column
         df = df.ix[:,list(df.columns[1:])]            
@@ -3428,7 +3458,8 @@ class Bancor:
             #print n
             return float(n)
         #float(str(n).replace(',', ''))
-        except:
+        except Exception as e:
+            print e
             return n
         #return n
     
@@ -3497,9 +3528,8 @@ class Bancor:
         try:
             python_link = self.et.driver.find_elements_by_xpath('/html/body/div[3]/div/div[5]/div[1]/table/tbody/tr/td[3]/div/a/span/span')[0]
             python_link.click()
-        except Exception, e:
+        except Exception as e:
             print e
-        except:
             pass
         
         # clear the filters
