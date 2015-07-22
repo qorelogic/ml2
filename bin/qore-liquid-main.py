@@ -151,7 +151,7 @@ class QsForecaster:
             
             # setters
             self.nDayForecast = None
-            self.qq = QoreQuant()
+            self.qq = QoreQuant(verbose=True)
         
         def getInformationFeed(self):
             ''
@@ -164,7 +164,7 @@ class QsForecaster:
             
             pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'NZD_EUR', 'USD_JPY',  'USD_CHF', 'USD_CAD','GBP_JPY', 'EUR_NZD', 'GBP_NZD', 'AUD_JPY', 'AUD_NZD', 'NZD_JPY']
             pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD','EUR_JPY', 'GBP_JPY','USD_JPY']
-            granularities = [ 'H4', 'D','M1','M5', 'H1','M30','S5','S10']
+            granularities = [ 'D','H4','H1','M30','M15','M5','M1','S10','S5']
             iterations    = 100000
             alpha         = 0.125
             risk          = 1
@@ -192,7 +192,7 @@ class QsForecaster:
             #%prun self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
             #%lprun -f self.qq.main -f self.qq.update -f self.qq.oq.updateBarsFromOanda -f self.qq.oq.appendHistoricalPrice self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
             self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
-            
+
             #self.qq.oq.getPairsRelatedToOandaTickers(pair.replace('_',''))
             self.qq.predict(wlen=50)
         
@@ -204,7 +204,7 @@ forecaster = QsForecaster()
 
 def do_work( forever = True):
     while True:
-        try:    
+        try:
             forecaster.getMachineLearning()
         except:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -220,10 +220,6 @@ def main():
 
 def test():
     trader.gotoMarket()
-    
-def test1():
-    qq = QoreQuant()
-    qq.update(pair='USD_JPY', granularity='S5', noUpdate=False, plot=False)
 
 if __name__ == "__main__":
     #main()

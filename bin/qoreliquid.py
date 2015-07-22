@@ -115,9 +115,9 @@ class QoreQuant():
     configfile       = '/mldev/bin/datafeeds/config.csv'
     quandlAuthtoken  = "WVsyCxwHeYZZyhf5RHs2"
         
-    def __init__(self):
+    def __init__(self, verbose=False):
 
-        self.verbose = False
+        self.verbose = verbose
 
         co = p_read_csv(self.configfile, header=None)
         
@@ -140,7 +140,7 @@ class QoreQuant():
         
         self.sw = StatWing()
 
-        try:    self.oq = OandaQ()
+        try:    self.oq = OandaQ(verbose=self.verbose)
         except: print 'offline mode'
         
         self.dfdata = None
