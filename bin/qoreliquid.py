@@ -1198,16 +1198,19 @@ class OandaQ:
             plotHiPr = True
         else:
             plotHiPr = False
-        dfn = self.getHistoricalPrice(pair, count=reqcount, granularity=granularity, plot=plotHiPr)#.tail()
-        #print df.tail()
-        #print dfn.tail()
-        dfc = df.combine_first(dfn)
-        df = dfc
+
+        if reqcount > 1:
+            dfn = self.getHistoricalPrice(pair, count=reqcount, granularity=granularity, plot=plotHiPr)#.tail()
+            #print df.tail()
+            #print dfn.tail()
+            dfc = df.combine_first(dfn)
+            df = dfc
         
-        if plot == True:
-            #df.plot(); show();        
-            dfc.plot(title=pair); show();
-        return dfc
+            if plot == True:
+                #df.plot(); show();
+                dfc.plot(title=pair); show();
+            return dfc
+        return df
         
     def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
 
