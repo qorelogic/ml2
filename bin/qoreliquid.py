@@ -1554,7 +1554,7 @@ class StatWing:
         #print type(self.theta)
         #print X.columns
         #print self.theta.to_frame().columns
-        self.theta = self.theta.to_frame('o').combine_first(p.DataFrame(n.zeros(len(X.columns)), index=X.columns, columns=['o'])).ix[X.columns, 'o']#.get_values()
+        self.theta = p.Series(self.theta).to_frame('o').combine_first(p.DataFrame(n.zeros(len(X.columns)), index=X.columns, columns=['o'])).ix[X.columns, 'o']#.get_values()
         #print relatedCols
         #print len(relatedCols)
         #print self.theta.shape
