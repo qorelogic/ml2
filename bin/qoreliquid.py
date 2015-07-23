@@ -3,6 +3,7 @@
 from qore import readcache, writecache, mkdir_p
 from pandas import read_csv as p_read_csv
 from pandas import DataFrame as p_DataFrame
+from pandas import Series as p_Series
 from numpy import array as n_array
 from numpy import sum as n_sum
 from numpy import power as n_power
