@@ -410,7 +410,7 @@ class QoreQuant():
             iter = max(df0.index[df0.index < iterations])
             #print iter
             #print iterations - iter    
-            initialTheta = df0.ix[iter, :].get_values()
+            initialTheta = df0.ix[iter, :]#.get_values()
             #print initialTheta
         except Exception as e:
             print e
@@ -420,7 +420,7 @@ class QoreQuant():
         self.sw.theta = initialTheta
         self.sw.ml.initialIter = iter
         print self.sw.ml.initialIter
-        print self.sw.theta
+        #print self.sw.theta
         try: print len(self.sw.theta)
         except Exception as e:
             print e
@@ -647,14 +647,14 @@ class ml007:
         self.iter        = 0
         
     def computeCost_linearRegression(self, X, y, theta, m):
+        #print 'cost'
         #print X.shape
-        #print y.shape
-        #print m
-        #print theta
+        #print type(X.shape)
         #print theta.shape
         o1 = 1.0/(2*m)
         p1 = n.dot(X,theta)
         o2 = n.sum(n.power(p1-y,2)) # J
+        #print type(theta)
         ret = o1 * o2
         return ret
     
@@ -1543,10 +1543,30 @@ class StatWing:
             print 'loading theta'
             print initialTheta
             self.theta = initialTheta
-            
+
+        #print y.shape
+        #print m
+        #print 'test======'
+        #print data.shape
+        #print X.shape
+        #print type(X)
+        #print self.theta.shape
+        #print type(self.theta)
+        #print X.columns
+        #print self.theta.to_frame().columns
+        self.theta = self.theta.to_frame('o').combine_first(p.DataFrame(n.zeros(len(X.columns)), index=X.columns, columns=['o'])).ix[X.columns, 'o']#.get_values()
+        #print relatedCols
+        #print len(relatedCols)
+        #print self.theta.shape
+        #print self.theta
+        #print type(self.theta)
+        #print '===='        
+        #import sys
+        #sys.exit()
+        #raise(e)
         
         #theta = n.random.randn(len(X.columns))
-        print self.theta
+        #print self.theta
         
         #% compute and display initial cost
         self.ml.computeCost_linearRegression(X, y, self.theta, len(y))
