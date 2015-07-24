@@ -165,7 +165,7 @@ class QsForecaster:
             pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'NZD_EUR', 'USD_JPY',  'USD_CHF', 'USD_CAD','GBP_JPY', 'EUR_NZD', 'GBP_NZD', 'AUD_JPY', 'AUD_NZD', 'NZD_JPY']
             pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD','EUR_JPY', 'GBP_JPY','USD_JPY']
             granularities = [ 'D','H4','H1','M30','M15','M5','M1','S10','S5']
-            iterations    = 100000
+            iterations    = 300000
             alpha         = 0.125
             risk          = 1
             plot          = False
@@ -228,5 +228,5 @@ if __name__ == "__main__":
     #main()
     #test()
 
-    do_work( True)
-    #do_work_debug( True)
+    #do_work( True)
+    do_work_debug( True)

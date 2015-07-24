@@ -1981,7 +1981,7 @@ def normalizeme2(ds, index=None, columns=None):
         dss = ds
     if type(ds) == type([]):
     #    print 't2'
-        dss = n.array(ds)
+        dss = n.array(ds, dtype=float)
     #print type(dss)
     #import sys
     #sys.exit()
