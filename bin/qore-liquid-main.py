@@ -23,16 +23,26 @@ from qoreliquid import QoreQuant
 from threading import Thread
 import sys, traceback
 
-def rawInput(msg, options):
+def rawInput(msg, options, option=None):
     for i in xrange(len(options)): print '{0} {1}'.format(i, options[i])
     while True:
         try:
-            option = int(raw_input(msg))
+            if option == None:
+                option = int(raw_input(msg))
             if option in xrange(len(options)):
                 break
         except:
             pass
         print 'Try again'
+    return option
+
+def argvOrRawInput(msg, options, argv):
+    try:
+        option = int(sys.argv[argv])
+        option = rawInput(msg, options, option=option)
+    except Exception as e:
+        print e
+        option = rawInput(msg, options)
     return option
 
 # Trading Algorithm
@@ -174,9 +184,9 @@ class QsForecaster:
             #modes = ['train','predict','trade']
             modes = 'update train trade'.split(' ')
 
-            mode        = rawInput('select number: ', modes)
-            pair        = rawInput('select number: ', pairs)
-            granularity = rawInput('select number: ', granularities)
+            mode        = argvOrRawInput('select number: ', modes, 1)
+            pair        = argvOrRawInput('select number: ', pairs, 2)
+            granularity = argvOrRawInput('select number: ', granularities, 3)
             
             print "{0} {1} {2}".format(modes[mode], pairs[pair], granularities[granularity])
 
