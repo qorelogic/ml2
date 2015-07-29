@@ -175,7 +175,7 @@ class QoreQuant():
         pr0 = self.oanda1.get_prices(instruments=[instrument])['prices'][0]
         return n.mean([pr0['ask'], pr0['bid']])
     
-    def prepTargetPortfolio(self):
+    def prepTargetPortfolio(self):        
         self.qd._getMethod()
         
         """
@@ -343,7 +343,7 @@ class QoreQuant():
             self.oq.updateBarsFromOanda(pair=pair, granularities=' '.join([granularity]), plot=plot, noUpdate=noUpdate)
         self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
     
-    def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False, plot=True):
+    def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False, showPlot=True):
         self.qd._getMethod()
         
         #modes = ['train','predict','trade']
@@ -362,16 +362,16 @@ class QoreQuant():
         if modes[mode] == 'trade':
             mmode = 4
         try:
-            self.forecastCurrency(mode=mmode, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
+            self.forecastCurrency(mode=mmode, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity, showPlot=showPlot)
             #print self.oq.granularities[0]
         except KeyboardInterrupt, e:
             # save the theta state on keyboard interrupt (stop button)
             self.saveTheta(self.sw.ml.iter, pair=pair.replace('_', ''), granularity=granularity)
         
         if modes[mode] == 'train':
-            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
+            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity, showPlot=showPlot)
         
-    def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4'):
+    def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4', showPlot=False):
         self.qd._getMethod()
         
         #pair = 'EURGBP'
@@ -415,11 +415,11 @@ class QoreQuant():
         
         y = n.array(y)
         #print p.DataFrame(y)
-        y.shape
+        print y.shape
         
         self.loadTheta(iterations, pair=pair, granularity=granularity)
         
-        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=self.sw.theta, viewProgress=False, showPlot=False)
+        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=self.sw.theta, viewProgress=False, showPlot=showPlot)
         
         self.saveTheta(self.sw.ml.iter, pair=pair, granularity=granularity)
         
@@ -476,7 +476,7 @@ class QoreQuant():
         if self.verbose == True: df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); show();
         df.to_csv(fname)        
     
-    def predict(self, plotTitle='', wlen=2000):
+    def predict(self, plotTitle='', wlen=2000, showPlot=True):
         self.qd._getMethod()
         
         data = self.df
@@ -498,7 +498,7 @@ class QoreQuant():
         #tp = sw.predictRegression2(mdf.ix[0:ldf-i, :], quiet=False)
         tp = p.DataFrame(self.sw.predictRegression2(mdf.ix[:, :], quiet=True), index=data.index)
         #plot(self.de.ix[ldf-wlen: ldf, self.sw.keyCol])
-        if self.verbose == True: 
+        if self.verbose == True or showPlot == True: 
             plot(data.ix[ldf-wlen: ldf, self.sw.keyCol])
             plot(tp.ix[ldf-wlen: ldf, :], '.')
             legend(['price', 'tp'])
@@ -526,7 +526,7 @@ class QoreQuant():
         if tp1 < curr1:
             self.oq.trade(risk, stop, pair, 's', tp=tp1)
     
-    def forecastCurrency(self, mode=3, pair='EURUSD', granularity='H4', iterations=10000, alpha=0.09, risk=5, stop=20):
+    def forecastCurrency(self, mode=3, pair='EURUSD', granularity='H4', iterations=10000, alpha=0.09, risk=5, stop=20, showPlot=True):
         self.qd._getMethod()
         
         # 1: update 2: train, 3: predict, 4: trade
@@ -546,10 +546,10 @@ class QoreQuant():
             
         if mode == 2 or (onErrorTrain == True):
             #if mode != 4:
-            self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity)
+            self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity, showPlot=showPlot)
         
         if mode == 2 or mode == 3 or mode == 4:
-            tp = self.predict(plotTitle=pair)
+            tp = self.predict(plotTitle=pair, showPlot=showPlot)
             print 'Price forecast for {0} {1}'.format(pair, granularity)
             print p.DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
         
