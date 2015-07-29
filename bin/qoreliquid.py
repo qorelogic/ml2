@@ -126,6 +126,8 @@ class QoreQuant():
     quandlAuthtoken  = "WVsyCxwHeYZZyhf5RHs2"
         
     def __init__(self, verbose=False):
+        self.qd = QoreDebug()
+        self.qd._getMethod()
 
         self.verbose = verbose
 
@@ -158,6 +160,8 @@ class QoreQuant():
         self.dfdata = None
         
     def synchonizeTrades(self, dryrun=True):
+        self.qd._getMethod()
+        
         # send to market works
         username = 'manapana'
         save = True
@@ -178,6 +182,8 @@ class QoreQuant():
     livePortfolio = [['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]]
     """
     def toTrade(self, livePortfolio, targetPortfolio, returnList=False):
+        self.qd._getMethod()
+        
         print 'target portfolio'
         print targetPortfolio
         if type(targetPortfolio) != type(p_DataFrame([])):
@@ -198,10 +204,14 @@ class QoreQuant():
     #assert toTrade([['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]], [['AAPL', 'BAC', 'BOA', 'DAL'], [1032, 123, 98, 9812]], returnList=True) == [['AAPL', 'BAC', 'BOA', 'DAL'], [102, -107, -11, 7682]]
 
     def getMeanPrice(self, instrument):
+        self.qd._getMethod()
+        
         pr0 = self.oanda1.get_prices(instruments=[instrument])['prices'][0]
         return n_mean([pr0['ask'], pr0['bid']])
     
     def prepTargetPortfolio(self):
+        self.qd._getMethod()
+        
         """
         test
         """
@@ -254,6 +264,8 @@ class QoreQuant():
     
     
     def generateTargetPortfolio(self, targetPortfolio2):
+        self.qd._getMethod()
+        
         #print "Account: {0}".format(self.accid1); print targetPortfolio1; print
         print "Account: {0}".format(self.accid2); #print targetPortfolio2; print
         targetPortfolio2.ix[:,'take_profit'] = n_array(targetPortfolio2.ix[:,'take_profit'], dtype=float)
@@ -276,6 +288,8 @@ class QoreQuant():
         
 
     def prepSendToMarket(self, df):
+        self.qd._getMethod()
+        
         df2 = self.oanda2.get_positions(self.accid2)
         df2 = p_DataFrame(df2['positions']).sort('instrument', ascending=True).ix[:,['instrument','side','units']]
         polarizePortfolio(df2, 'units', 'amount', 'side')
@@ -295,6 +309,8 @@ class QoreQuant():
         return df0
 
     def sendToMarket(self, df, dryrun=True):
+        self.qd._getMethod()
+        
         #pp0 = list(df.ix[:,'instrument'].get_values())
         #pp1 = list(df.ix[:,'amount'].get_values())
         #print pp0;
@@ -331,6 +347,7 @@ class QoreQuant():
         print
         
     def updateDatasets(self, code, noUpdate=False):
+        self.qd._getMethod()
 
         #self.da = getDataAUD(noUpdate=noUpdate)
         #self.dg = getDataGBP(noUpdate=noUpdate)
@@ -345,9 +362,13 @@ class QoreQuant():
             return self.du
         
     def setDfData(self, dfdata):
+        self.qd._getMethod()
+        
         self.dfdata = dfdata
     
-    def update(self, pair='EURUSD', granularity = None, noUpdate=False, plot=False):        
+    def update(self, pair='EURUSD', granularity = None, noUpdate=False, plot=False):
+        self.qd._getMethod()
+        
         # update from data the source
         #self.granularityMap.keys()
         if granularity == None:
@@ -357,6 +378,8 @@ class QoreQuant():
         self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
     
     def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False, plot=True):
+        self.qd._getMethod()
+        
         #modes = ['train','predict','trade']
         #alpha = 0.09 # 0.3
         
@@ -383,6 +406,7 @@ class QoreQuant():
             self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
         
     def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4'):
+        self.qd._getMethod()
         
         #pair = 'EURGBP'
         #pair = 'EURCHF'
@@ -434,6 +458,7 @@ class QoreQuant():
         self.saveTheta(self.sw.ml.iter, pair=pair, granularity=granularity)
         
     def loadTheta(self, iterations, pair='EURUSD', granularity='H4'):
+        self.qd._getMethod()
     
         hdir  = '/mldev/bin/datafeeds/models/qorequant'
         fname = hdir+'/{0}-{1}.theta.csv'.format(pair, granularity)
@@ -460,6 +485,7 @@ class QoreQuant():
             print e
    
     def saveTheta(self, iterations, pair='EURUSD', granularity='H4'):
+        self.qd._getMethod()
         
         print 'saving theta @ {0} iterations'.format(self.sw.ml.iter)
         #print list(self.df.columns)
@@ -487,6 +513,8 @@ class QoreQuant():
         df.to_csv(fname)        
     
     def predict(self, plotTitle='', wlen=2000):
+        self.qd._getMethod()
+        
         data = self.df
         #self.sw.predictRegression2(mdf.ix[0:ldf-0, :], quiet=True)
         ldf = len(data.ix[:, self.sw.keyCol])
@@ -516,7 +544,8 @@ class QoreQuant():
         return tp.ix[len(tp)-1:len(tp)-0, :]
     
     def tradePrediction(self, pair, tp, risk=1, stop=40):
-        print 'tradePrediction'
+        self.qd._getMethod()
+
         print pair
         pair = pair.replace('_','')
         print pair
@@ -534,6 +563,8 @@ class QoreQuant():
             self.oq.trade(risk, stop, pair, 's', tp=tp1)
     
     def forecastCurrency(self, mode=3, pair='EURUSD', granularity='H4', iterations=10000, alpha=0.09, risk=5, stop=20):
+        self.qd._getMethod()
+        
         # 1: update 2: train, 3: predict, 4: trade
         print 'forecastCurrency: {0} {1}'.format(pair, granularity)  
         

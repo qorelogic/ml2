@@ -1,7 +1,7 @@
 
 import urllib2 as u
 import json as j
-import os, errno
+import os, errno, sys
 import logging
 import re
 import pandas as p
@@ -18,6 +18,23 @@ def debug(str, verbosity=8):
         logging.debug(str)
 
         return str
+
+class QoreDebug:
+    
+    def __init__(self):
+        self.on = True
+        
+    def _getMethod(self):
+        
+        if self.on == True:
+            print
+            print '=============================='
+            print '{1} for {0}():'.format(sys._getframe(1).f_code.co_name, 'call stack')
+            for i in range(2,10):
+                try:    print ' - {0}()'.format(sys._getframe(i).f_code.co_name)
+                except: break
+            print '------------------------------'
+
 
 def cleanJsonContent(t):
     return re.sub(re.compile(r'[\s]+'), ' ', ''.join(t.split('\n')))
