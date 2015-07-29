@@ -550,6 +550,7 @@ class QoreQuant():
         
         if mode == 2 or mode == 3 or mode == 4:
             tp = self.predict(plotTitle=pair, showPlot=showPlot)
+            self.predict(wlen=50, showPlot=showPlot)
             print 'Price forecast for {0} {1}'.format(pair, granularity)
             print p.DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
         
