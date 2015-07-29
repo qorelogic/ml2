@@ -413,7 +413,7 @@ class QoreQuant():
         #y = list(self.sw.nextBar(self.df, self.sw.keyCol).get_values()); #y.append(0)
         #print self.df
 
-        barsForward = 3
+        barsForward = 1
         y = list(self.sw.nextBar(self.df, self.sw.keyCol, barsForward=barsForward))
         self.df = self.df.ix[0:len(self.df)-barsForward,:]
 
