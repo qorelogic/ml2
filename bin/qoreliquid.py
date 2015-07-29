@@ -1,6 +1,6 @@
 
 #from numpy import *
-from qore import readcache, writecache, mkdir_p
+from qore import readcache, writecache, mkdir_p, QoreDebug
 from pandas import read_csv as p_read_csv
 from pandas import DataFrame as p_DataFrame
 from pandas import Series as p_Series
@@ -16,7 +16,7 @@ from numpy import zeros as n_zeros
 from numpy import ceil
 from numpy import dot as n_dot
 from numpy import divide as n_divide
-import oandapy
+import sys, oandapy
 import datetime as dd
 from matplotlib.pyplot import plot, legend, title, show
 from IPython.display import display, clear_output
