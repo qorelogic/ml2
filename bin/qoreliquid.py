@@ -681,7 +681,7 @@ class ml007:
         self.iter        = 0
         
     def computeCost_linearRegression(self, X, y, theta, m):
-        self.qd._getMethod()
+        #self.qd._getMethod()
         
         #print 'cost'
         #print X.shape
@@ -1134,11 +1134,6 @@ class OandaQ:
                 
         #print lse
         #print lsp
-        for i in lse:
-            try:    
-                lsf.append(list(data.columns).index(i))
-            except Exception as e:
-                print e
         
         r = {}
         r['lse'] = lse
@@ -1284,7 +1279,7 @@ class OandaQ:
         relatedPairs = self.getPairsRelatedToOandaTickers(pair)        
         
         pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
-        self.log(pairs)
+        #self.log(pairs)
         self.granularities = granularities.split(' ')
         for pair in pairs:
             self.log('')
@@ -1294,7 +1289,7 @@ class OandaQ:
                 self.debug(e)
             ob = ''
             for granularity in self.granularities:
-                ob += '{0} {1}'.format(pair, granularity)
+                #ob += '{0} {1}'.format(pair, granularity)
                 fname = '/mldev/bin/data/oanda/ticks/{0}/{0}-{1}.csv'.format(pair, granularity)
                 try:    
                     self.dfa[pair][granularity]
@@ -1626,21 +1621,24 @@ class StatWing:
             self.theta = n.zeros(len(X.columns))
             print 'theta initialized'
         else:
-            #print initialTheta
-            #print 'theta loaded'
+            print initialTheta
+            print 'theta loaded'
             self.theta = initialTheta
 
         #print y.shape
         #print m
         #print 'test======'
-        #print data.shape
-        #print X.shape
+        print 'data.shape: {0}'.format(data.shape)
+        print 'X.shape: {0}'.format(X.shape)
         #print type(X)
-        #print self.theta.shape
+        #print self.theta
+        print 'theta.shape: {0}'.format(self.theta.shape)
         #print type(self.theta)
         #print X.columns
         #print self.theta.to_frame().columns
-        self.theta = p.Series(self.theta).to_frame('o').combine_first(p.DataFrame(n.zeros(len(X.columns)), index=X.columns, columns=['o'])).ix[X.columns, 'o']#.get_values()
+        self.theta = p.Series(self.theta).to_frame('o').fillna(0).combine_first(p.DataFrame(n.zeros(len(X.columns)), index=X.columns, columns=['o'])).ix[X.columns, 'o'].get_values()
+        print self.theta
+        print 'theta2.shape: {0}'.format(self.theta.shape)
         #print relatedCols
         #print len(relatedCols)
         #print self.theta.shape
