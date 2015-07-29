@@ -384,8 +384,9 @@ class QoreQuant():
         #alpha = 0.09 # 0.3
         
         modes = ['train','predict','trade']
+        mstop = None
         if stopLossPrice != None:
-            mstop = self.oq.calculateStopLossFromPrice(pair, stopLossPrice)
+            mstop = self.oq.calculateStopLossFromPrice(pair, stopLossPrice)        
         
         self.update(pair=pair, granularity=granularity, noUpdate=noUpdate, plot=plot)
     
@@ -443,9 +444,16 @@ class QoreQuant():
         
         # shift to next bar close
         #y = list(self.sw.higherNextDay(y, self.sw.keyCol).get_values()); y.append(0)
+        #y = list(self.sw.nextBar(self.df, self.sw.keyCol).get_values()); #y.append(0)
         #print self.df
-        #print y
-        #return
+
+        barsForward = 1
+        y = list(self.sw.nextBar(self.df, self.sw.keyCol, barsForward=barsForward))
+        self.df = self.df.ix[0:len(self.df)-barsForward,:]
+
+        #self.df['y'] = y        
+        #print p_DataFrame(self.df.ix[:,[self.sw.keyCol, 'y']])
+        #import sys
         
         y = n_array(y)
         #print p_DataFrame(y)
@@ -462,10 +470,12 @@ class QoreQuant():
     
         hdir  = '/mldev/bin/datafeeds/models/qorequant'
         fname = hdir+'/{0}-{1}.theta.csv'.format(pair, granularity)
+        print fname
         iter  = 0
         
         try:
             df0 = p_read_csv(fname, index_col=0)
+            print df0
             iter = max(df0.index[df0.index < iterations])
             #print iter
             #print iterations - iter    
@@ -477,6 +487,7 @@ class QoreQuant():
             initialTheta = None
             
         self.sw.theta = initialTheta
+        self.sw.ml.theta = initialTheta
         self.sw.ml.initialIter = iter
         print self.sw.ml.initialIter
         #print self.sw.theta
@@ -505,7 +516,8 @@ class QoreQuant():
         #print len(df0)
         df = p_DataFrame(self.sw.ml.theta, index=list(self.dfdata.columns), columns=[self.sw.ml.iter]).transpose()
         df = df.combine_first(df0)
-        #print df.transpose()
+        print df.transpose()
+        print 'save theta'
         
         if self.verbose == True: 
             df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); 
@@ -586,6 +598,7 @@ class QoreQuant():
         
         if mode == 2 or mode == 3 or mode == 4:
             tp = self.predict(plotTitle=pair, showPlot=showPlot)
+            self.predict(wlen=50, showPlot=showPlot)
             print 'Price forecast for {0} {1}'.format(pair, granularity)
             print p_DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
         
@@ -1471,9 +1484,25 @@ class StatWing:
         except Exception as e:
             print e
             print 'offline mode'
-        self.theta = p_read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
+        #self.theta = p_read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
+        self.theta = p_DataFrame()
         self.ml = ml007()
         
+    def nextBar(self, dfa, k, barsForward=3):
+        self.qd._getMethod()
+        
+        dfc = p_DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward])
+        #print type(dfc)
+        a = dfa.ix[0:len(dfa)-barsForward, [k]].get_values()
+        b = dfa.ix[barsForward:len(dfa),[k]].get_values()
+        #print len(a)
+        #print len(b)
+        dfc['a'] = a
+        dfc['b'] = b
+        dfc['c'] = dfc['b']
+        #print dfc.ix[1:len(dfa),['a','b','c']]
+        return dfc['c']
+
     def higherNextDay(self, dfa, k):
         self.qd._getMethod()
 

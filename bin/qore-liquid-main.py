@@ -203,9 +203,9 @@ class QsForecaster:
             #%prun self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
             #%lprun -f self.qq.main -f self.qq.update -f self.qq.oq.updateBarsFromOanda -f self.qq.oq.appendHistoricalPrice self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
             self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, showPlot=plot)
+            #print self.qq.loadTheta(1000, granularity=granularity)
 
             #self.qq.oq.getPairsRelatedToOandaTickers(pair.replace('_',''))
-            #self.qq.predict(wlen=50, showPlot=plot)
         
         def generateNDayForecast(self):
             ''
