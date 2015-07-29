@@ -1451,7 +1451,8 @@ class StatWing:
         except Exception as e:
             print e
             print 'offline mode'
-        self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
+        #self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
+        self.theta = p.DataFrame()
         self.ml = ml007()
         
     def nextBar(self, dfa, k, barsForward=3):
