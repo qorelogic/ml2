@@ -179,6 +179,7 @@ class QsForecaster:
             alpha         = 0.125
             risk          = 1
             plot          = False
+            self.qq.verbose = True
             stopLossPrice = [0.73745, 0.73488, 1.07978, 1.5617, 1.1024, 1.10965, 1.102, 1.10682, 1.113, 1.10963, 1.10707, 1.0963][0]
             
             #modes = ['train','predict','trade']
@@ -212,7 +213,7 @@ class QsForecaster:
 trader = QsTrader()
 forecaster = QsForecaster()
 
-def do_work( forever = True):
+def do_work(forever=True):
     while True:
         try:
             forecaster.getMachineLearning()
@@ -224,9 +225,12 @@ def do_work( forever = True):
             traceback.print_exception(exc_type, exc_value, exc_traceback,
                                       limit=2, file=sys.stdout)
 
-def do_work_debug( forever = True):
+def do_work_debug(forever=True):
     while True:
         forecaster.getMachineLearning()
+        if forever == False:
+            print 'end'
+            break
 
 def main():
     trader.start()
@@ -238,5 +242,5 @@ if __name__ == "__main__":
     #main()
     #test()
 
-    #do_work( True)
-    do_work_debug( True)
+    do_work(True)
+    #do_work_debug(False)
