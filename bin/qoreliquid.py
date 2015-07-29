@@ -1601,11 +1601,11 @@ class StatWing:
         #initialTheta = None
         
         if type(initialTheta) == type(None):
-            print 'initializing theta'
             self.theta = n_zeros(len(X.columns))
+            print 'theta initialized'
         else:
-            print 'loading theta'
-            print initialTheta
+            #print initialTheta
+            #print 'theta loaded'
             self.theta = initialTheta
 
         #print y.shape
