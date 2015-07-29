@@ -706,12 +706,17 @@ class FinancialModel:
 class ml007:
 
     def __init__(self):
+        self.qd = QoreDebug()
+        self.qd._getMethod()
+
         self.J_history = []
         self.theta     = []
         self.initialIter = 0
         self.iter        = 0
         
     def computeCost_linearRegression(self, X, y, theta, m):
+        self.qd._getMethod()
+        
         #print 'cost'
         #print X.shape
         #print type(X.shape)
@@ -729,6 +734,8 @@ class ml007:
     # 7.0175
     
     def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=500, ):
+        self.qd._getMethod()
+
         m = len(y)
         self.J_history = n_zeros(num_iters)
         self.theta = theta
@@ -788,6 +795,8 @@ class ml007:
     #    0.3999
 
     def costFunction_logisticRegression(self, theta, X, y):
+        self.qd._getMethod()
+
         #%COSTFUNCTION Compute cost and gradient for logistic regression
         #%   J = COSTFUNCTION(theta, X, y) computes the cost of using theta as the
         #%   parameter for logistic regression and the gradient of the cost
@@ -834,6 +843,8 @@ class OandaQ:
     oanda2 = None
     
     def __init__(self, verbose=False, stats=False):
+        self.qd = QoreDebug()
+        self.qd._getMethod()
         
         self.verbose = verbose
         
@@ -894,6 +905,7 @@ class OandaQ:
             print msg
     
     def datetimeToTimestamp(self, ddt):
+        self.qd._getMethod()
 
         def _datetimeToTimestamp(ddt):
             return (ddt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
@@ -906,6 +918,7 @@ class OandaQ:
         return tstmp
         
     def timestampToDatetime(self, tst):
+        self.qd._getMethod()
 
         def _timestampToDatetime(tst):
             return dd.datetime.fromtimestamp(tst)
@@ -932,6 +945,7 @@ class OandaQ:
      '2015-07-07 02:00:00']
      """
     def timestampToDatetimeFormat(self, tst, fmt='%Y-%m-%d %H:%M:%S %Z'):
+        self.qd._getMethod()
 
         def _timestampToDatetimeFormat(tst):
             w2 = dd.datetime.fromtimestamp(tst)
@@ -948,6 +962,7 @@ class OandaQ:
 
     
     def oandaToTimestamp(self, ptime):
+        self.qd._getMethod()
         
         def _oandaToTimestamp(ptime):
             dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -962,9 +977,11 @@ class OandaQ:
         return tstmp
 
     def oandaToDatetime(self, ptime):
+        self.qd._getMethod()
         return dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
 
     def trade(self, risk, stop, instrument, side, tp=None):
+        self.qd._getMethod()
         """
         if instrument == 'eu':
             instrument = 'EUR_USD'
@@ -985,12 +1002,17 @@ class OandaQ:
             self.sell(risk, stop, instrument=instrument, tp=tp)
         
     def buy(self, risk, stop, instrument='EUR_USD', tp=None):
+        self.qd._getMethod()
+        
         self.order(risk, stop, 'buy', instrument=instrument, tp=tp)
         
     def sell(self, risk, stop, instrument='EUR_USD', tp=None):
+        self.qd._getMethod()
+        
         self.order(risk, stop, 'sell', instrument=instrument, tp=tp)
 
     def order(self, risk, stop, side, instrument='EUR_USD', tp=None, price=None, expiry=None):
+        self.qd._getMethod()
         
         stop = abs(float(stop)) # pips
         risk = float(risk) # percentage risk
@@ -1042,6 +1064,8 @@ class OandaQ:
             print 'limit order success'
 
     def calculateAmount(self, bal, pcnt, stop):
+        self.qd._getMethod()
+
         bal  = float(bal)
         lev  = 30.0
         stop = float(stop)
@@ -1062,12 +1086,15 @@ class OandaQ:
         return amount
         
     def calculateStopLossFromPrice(self, pair, mprice):
+        self.qd._getMethod()
+
         current = self.oanda2.get_prices(instruments=[pair])['prices'][0]['bid']
         mstop = (mprice-current) * 10000
         #print 'mstop {0}'.format(mstop)
         return mstop
         
     def generateRelatedColsFromOandaTickers(self, data, pair):
+        self.qd._getMethod()
         
         if type(data) == type(None):
             print data
@@ -1113,6 +1140,7 @@ class OandaQ:
         return lsf
         
     def getPairsRelatedToOandaTickers(self, pair):
+        self.qd._getMethod()
         
         # generate relatedCols from oandas tickers
         
@@ -1155,6 +1183,7 @@ class OandaQ:
         return r
     
     def getPricesLatest(self, data, sw, trueprices=False):
+        self.qd._getMethod()
         
         ins = []
         pairs = []
@@ -1186,6 +1215,8 @@ class OandaQ:
         return nprices
 
     def oandaTransactionHistory(self, plot=True):
+        self.qd._getMethod()
+
         # oanda transaction history (long-term)
         rcParams['figure.figsize'] = 20, 5
         # oanda equity viz
@@ -1230,6 +1261,7 @@ class OandaQ:
         return df
         
     def getHistoricalPrice(self, pair, granularity='S5', count=2, plot=True):
+        self.qd._getMethod()
         
         df = self.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid', 'volume']
@@ -1248,6 +1280,7 @@ class OandaQ:
         return df
     
     def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True):
+        self.qd._getMethod()
 
         safeShift = 0
         
@@ -1279,6 +1312,7 @@ class OandaQ:
         return df
         
     def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
+        self.qd._getMethod()
 
         print 'updateBarsFromOanda()'
         pair = pair.replace('_', '') # remove the underscore
@@ -1351,7 +1385,9 @@ class OandaQ:
         #print self.dfa
         return self.dfa
 
-    def prepareDfData(self, dfa):
+    def prepareDfData(self, dfa): 
+        self.qd._getMethod()
+
         dfac = p_DataFrame()
         gran = self.granularities[0]
         
@@ -1425,6 +1461,9 @@ def pcc(X, Y):
 class StatWing:
     
     def __init__(self):
+        self.qd = QoreDebug()
+        self.qd._getMethod()
+
         self.keyCol = ''
         self.relatedCols = []
         self.theta = n_array([])
@@ -1441,6 +1480,8 @@ class StatWing:
         self.ml = ml007()
         
     def higherNextDay(self, dfa, k):
+        self.qd._getMethod()
+
         dfc = p_DataFrame(dfa, index=dfa.index[0:len(dfa)-1])
         print type(dfc)
         dfc['a'] = dfa.ix[0:len(dfa)-1, [k]].get_values()
@@ -1451,6 +1492,8 @@ class StatWing:
         #p_DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
     
     def lowerNextDay(self, dfa, k):
+        self.qd._getMethod()
+
         dfc = p_DataFrame(dfa, index=dfa.index[0:len(dfa)-1], columns=dfa.columns)
         dfc['a'] = dfa.ix[0:len(dfa)-1, [k]].get_values()
         dfc['b'] = dfa.ix[1:len(dfa), [k]].get_values()
@@ -1460,14 +1503,20 @@ class StatWing:
     
     # export dataset to csv for analysis (statwing)
     def higherPrev(self, a):
+        self.qd._getMethod()
+
         a = sigmoidme(a) > 0.5
         return n_array(a, dtype=int)
     
     def lowerPrev(self, a):
+        self.qd._getMethod()
+
         a = sigmoidme(a) < 0.5
         return n_array(a, dtype=int)
     
     def exportToStatwing(self, de, currency_code):
+        self.qd._getMethod()
+
         #dff = n.matrix('1;2;3;4;-4;-5;-3;2;9').A
         #print higherPrev(dff)
         #print lowerPrev(dff)
@@ -1484,6 +1533,8 @@ class StatWing:
         return de1
 
     def getCol(self, col, df):
+        self.qd._getMethod()
+
         if type(col) == type(0):
             column = df.columns[col]
         elif type(col) == type(''):
@@ -1491,6 +1542,7 @@ class StatWing:
         return column
     
     def describe(self, df, col):
+        self.qd._getMethod()
 
         print 'Summary:'
         sample = df.ix[:,col]  
@@ -1512,6 +1564,7 @@ class StatWing:
         show();
         
     def relate(self, sample, keyCol, relatedCol):
+        self.qd._getMethod()
 
         #print n.corrcoef(sample.ix[:, keyCol], sample.ix[:, relatedCol])[0, 1]
         #print pearson_def(sample.ix[:, keyCol], sample.ix[:, relatedCol])
@@ -1551,7 +1604,8 @@ class StatWing:
         show();
     
     def fixColumns(self, data, relatedCols, keyCol):
-        
+        self.qd._getMethod()
+
         #print 'relatedCols'
         #print relatedCols
         
@@ -1579,6 +1633,7 @@ class StatWing:
         return X
     
     def regression(self, data, y, keyCol, relatedCols, initialTheta=None, iterations=1000, alpha=0.01, viewProgress=True, showPlot=True, verbose=False):
+        self.qd._getMethod()
 
         data = data.fillna(0)
         #X = data.ix[:,0]; y = data.ix[:,1]
@@ -1601,11 +1656,11 @@ class StatWing:
         #initialTheta = None
         
         if type(initialTheta) == type(None):
-            print 'initializing theta'
             self.theta = n_zeros(len(X.columns))
+            print 'theta initialized'
         else:
-            print 'loading theta'
-            print initialTheta
+            #print initialTheta
+            #print 'theta loaded'
             self.theta = initialTheta
 
         #print y.shape
@@ -1656,7 +1711,8 @@ class StatWing:
         return self.ml.theta
 
     def predictRegression(self, te1, te2, mode=1):
-        
+        self.qd._getMethod()
+
         if len(te1) > len(te2):
             #te2.append(0)
             te2.insert(0,0)
@@ -1717,6 +1773,8 @@ class StatWing:
         
     # m2e() { fc="`echo "$1" | perl -pe 's/.xlsx/.csv/g'`"; echo $1; echo $fc; xlsx2csv $1 $fc; }    
     def statwingExportPredict(self, fns, ):
+        self.qd._getMethod()
+
         for fn in fns:
             print '================================================='
             print fn
@@ -1741,6 +1799,8 @@ class StatWing:
             
     #def regression2(self, de=None, du=None, da=None):
     def regression2(self, X=None, y=None, iterations=1000, alpha=0.01, initialTheta=None, viewProgress=True, showPlot=True):
+        self.qd._getMethod()
+
         #if X == None:
         #    X = getDatasetEUR()
         #if du == None:
@@ -1776,7 +1836,8 @@ class StatWing:
             plot(data, '.'); show();
 
     def predictRegression2(self, data, quiet=False):
-        
+        self.qd._getMethod()
+
         #if len(self.theta) == 0:
         #    self.regression2(de=data)
         [data, self.dmean, self.dstd] = normalizeme(data, pinv=True)
@@ -1841,7 +1902,8 @@ class StatWing:
 
     # real-time theta
     def predictFromTheta(self, df=None, nX=None, save=False):
-        
+        self.qd._getMethod()
+
         if type(nX) == type(None):
             nX = self.oq.getPricesLatest(df, self, trueprices=True)
             #print nX
