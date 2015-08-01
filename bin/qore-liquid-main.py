@@ -172,7 +172,7 @@ class QsForecaster:
         
         def getMachineLearning(self):
             
-            pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD','EUR_JPY', 'GBP_JPY','USD_JPY']
+            pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD','EUR_JPY', 'GBP_JPY','USD_JPY','USD_CAD']
             pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'NZD_EUR', 'USD_JPY',  'USD_CHF', 'USD_CAD','GBP_JPY', 'EUR_NZD', 'GBP_NZD', 'AUD_JPY', 'AUD_NZD', 'NZD_JPY','AUD_USD', 'USD_CAD', 'USD_CHF']
             granularities = [ 'D','H4','H1','M30','M15','M5','M1','S10','S5']
             iterations    = 300000
@@ -207,6 +207,7 @@ class QsForecaster:
             #print self.qq.loadTheta(1000, granularity=granularity)
 
             #self.qq.oq.getPairsRelatedToOandaTickers(pair.replace('_',''))
+            #self.qq.predict(wlen=50)
 
             #pair = pair.replace('_', '')
             #self.qq.update(pair=pair, granularity=granularity, noUpdate=noUpdate, plot=plot)
