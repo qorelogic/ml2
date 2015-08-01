@@ -22,7 +22,8 @@ def debug(str, verbosity=8):
 class QoreDebug:
     
     def __init__(self):
-        self.on = True
+        self.on = False
+        self.stackTrace = False
         
     def _getMethod(self):
         
@@ -30,9 +31,10 @@ class QoreDebug:
             print
             print '=============================='
             print '{1} for {0}():'.format(sys._getframe(1).f_code.co_name, 'call stack')
-            for i in range(2,10):
-                try:    print ' - {0}()'.format(sys._getframe(i).f_code.co_name)
-                except: break
+            if self.stackTrace == True:
+                for i in range(2,10):
+                    try:    print ' - {0}()'.format(sys._getframe(i).f_code.co_name)
+                    except: break
             print '------------------------------'
 
 
