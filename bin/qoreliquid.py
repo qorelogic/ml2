@@ -447,6 +447,7 @@ class QoreQuant():
             df0 = p.read_csv(fname, index_col=0)
             #print df0#.get_values()
             print 'df0 load'
+            #print df0
             iter = max(df0.index[df0.index < iterations])
             #print iter
             #print iterations - iter    
@@ -497,6 +498,7 @@ class QoreQuant():
         
         df = df.combine_first(df0)
         #print df
+        print df.transpose()
         print 'save theta'
         
         if self.verbose == True: df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); show();
