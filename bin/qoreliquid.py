@@ -1205,6 +1205,7 @@ class OandaQ:
         self.qd._getMethod()
 
         # oanda transaction history (long-term)
+        from pylab import rcParams
         rcParams['figure.figsize'] = 20, 5
         # oanda equity viz
         df0 = p.read_csv('/home/qore/sec-svn.git/assets/oanda/kpql/primary/statement.csv')

@@ -56,4 +56,4 @@ def test_answer():
     y = sigmoidme(y)
     y = sigmoidmePinv(y)
     y = normalizemePinv(y, ymean, ystd)
-    assertSequenceEqual(n.array(y), n.array(li)
+    assertSequenceEqual(n.array(y), n.array(li))
