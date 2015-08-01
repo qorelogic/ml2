@@ -125,6 +125,10 @@ class QoreQuant():
     configfile       = '/mldev/bin/datafeeds/config.csv'
     quandlAuthtoken  = "WVsyCxwHeYZZyhf5RHs2"
         
+    def setVerbose(self, verbose=False):
+        self.verbose = verbose
+        self.oq.verbose = self.verbose
+        
     def __init__(self, verbose=False):
         self.qd = QoreDebug()
         self.qd._getMethod()
@@ -475,12 +479,13 @@ class QoreQuant():
         
         try:
             df0 = p_read_csv(fname, index_col=0)
-            print df0
+            #print df0#.get_values()
+            print 'df0 load'
             iter = max(df0.index[df0.index < iterations])
             #print iter
             #print iterations - iter    
             initialTheta = df0.ix[iter, :]#.get_values()
-            #print initialTheta
+            print 'loaded initialTheta..'
         except Exception as e:
             print e
             df0 = p_DataFrame()
@@ -489,6 +494,7 @@ class QoreQuant():
         self.sw.theta = initialTheta
         self.sw.ml.theta = initialTheta
         self.sw.ml.initialIter = iter
+        self.sw.ml.iter = iter
         print self.sw.ml.initialIter
         #print self.sw.theta
         try: print len(self.sw.theta)
@@ -498,7 +504,7 @@ class QoreQuant():
     def saveTheta(self, iterations, pair='EURUSD', granularity='H4'):
         self.qd._getMethod()
         
-        print 'saving theta @ {0} iterations'.format(self.sw.ml.iter)
+        print 'saving theta @ {0} iterations {1}-{2}'.format(self.sw.ml.iter, pair, granularity)
         #print list(self.df.columns)
         #print 
         #print 
@@ -506,17 +512,25 @@ class QoreQuant():
         
         hdir = '/mldev/bin/datafeeds/models/qorequant'
         fname = hdir+'/{0}-{1}.theta.csv'.format(pair, granularity)
+        print fname
         
         mkdir_p(hdir)
         try:
             df0 = p_read_csv(fname, index_col=0)
+            #print df0
         except Exception as e:
             print e
             df0 = p_DataFrame()
-        #print len(df0)
-        df = p_DataFrame(self.sw.ml.theta, index=list(self.dfdata.columns), columns=[self.sw.ml.iter]).transpose()
+        print len(df0)
+        #print self.sw.ml.theta.get_values()
+        try:    theta = self.sw.ml.theta.get_values()
+        except: theta = self.sw.ml.theta
+        df = p_DataFrame(theta, index=list(self.dfdata.columns), columns=[self.sw.ml.iter]).transpose()
+        #print df.ix[self.sw.ml.iter, :]#.get_values()
+        #print self.sw.ml.theta
+        
         df = df.combine_first(df0)
-        print df.transpose()
+        #print df
         print 'save theta'
         
         if self.verbose == True: 
@@ -1226,6 +1240,7 @@ class OandaQ:
         self.qd._getMethod()
 
         # oanda transaction history (long-term)
+        from pylab import rcParams
         rcParams['figure.figsize'] = 20, 5
         # oanda equity viz
         df0 = p_read_csv('/home/qore/sec-svn.git/assets/oanda/kpql/primary/statement.csv')
