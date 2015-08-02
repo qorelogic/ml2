@@ -8,6 +8,7 @@ from numpy import array as n_array
 from numpy import sum as n_sum
 from numpy import power as n_power
 from numpy import mean as n_mean
+from numpy import convolve as n_convolve
 from numpy import std as n_std
 from numpy import e as n_e
 from numpy import log10 as n_log10
@@ -16,6 +17,8 @@ from numpy import zeros as n_zeros
 from numpy import ceil
 from numpy import dot as n_dot
 from numpy import divide as n_divide
+from numpy import float16 as n_float16
+
 import sys, oandapy
 import datetime as dd
 from matplotlib.pyplot import plot, legend, title, show
@@ -625,9 +628,9 @@ class QoreQuant():
     # volume trades
     # source: http://stackoverflow.com/questions/13728392/moving-average-or-running-mean
     def runningMean(self, x, N):
-        y = np.zeros((len(x),))
+        y = n_zeros((len(x),))
         for ctr in range(len(x)):
-             y[ctr] = np.sum(x[ctr:(ctr+N)])
+             y[ctr] = n_sum(x[ctr:(ctr+N)])
         return y/N
     
     # source: http://stackoverflow.com/questions/13728392/moving-average-or-running-mean
@@ -1369,7 +1372,7 @@ class OandaQ:
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid', 'volume']
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid']
         hed = ['closeAsk', 'closeBid', 'volume']
-        df = p.DataFrame(df['candles'], dtype=n.float16)
+        df = p_DataFrame(df['candles'], dtype=n_float16)
         df = df.set_index('time')
         #print df
         df = df.ix[:,hed]
