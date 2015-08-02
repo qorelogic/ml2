@@ -1413,6 +1413,66 @@ class OandaQ:
             return dfc
         return df
         
+    def updatePairGranularity(self, pair, granularity, noUpdate=False, plot=True):
+        self.qd._getMethod()
+
+        ob = ''
+        #ob += '{0} {1}'.format(pair, granularity)
+        fname = '/mldev/bin/data/oanda/ticks/{0}/{0}-{1}.csv'.format(pair, granularity)
+        try:    
+            self.dfa[pair][granularity]
+        except Exception as e:
+            print e
+            # if dataframe not in memory
+            self.log('{0} {1} dataframe not in memory'.format(pair, granularity))
+            try:
+                # read from csv
+                self.dfa[pair][granularity] = p_read_csv(fname, index_col=0)
+                ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
+                ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
+            except KeyError, e:
+                self.debug(e)
+                self.dfa[pair] = {}
+            except IOError, e:
+                # if no csv file, initialize memory for the dataframe
+                #print e
+                self.dfa[pair] = {}
+            except Exception as e:
+                print e
+                print 'exception {0}'.format(pair)
+                
+        # append to current dataframe in memory
+        if noUpdate == False:
+            self.log('{0} {1} attempting update {2}'.format(pair, granularity, noUpdate))
+            self.log('{0} {1} updating'.format(pair, granularity))
+            try:
+                self.log('len {0} before append.'.format(len(self.dfa[pair][granularity])))
+                self.dfa[pair][granularity] = self.appendHistoricalPrice(self.dfa[pair][granularity], pair, granularity=granularity, plot=plot)
+                self.log('len {0} after append.'.format(len(self.dfa[pair][granularity])))
+                self.log('appended to {0}'.format(pair))
+                # if no dataframe in memory, download from data source
+            except Exception as e:
+                print e
+                try:
+                    self.dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=plot)
+                    self.log('got clean series {0}'.format(pair))
+                except oandapy.OandaError, e:
+                    print e                        
+        
+        if noUpdate == False:
+            try:
+                # save to csv file
+                li = fname.split('/'); li.pop(); hdir = '/'.join(li);
+                mkdir_p(hdir)
+                self.dfa[pair][granularity].to_csv(fname)
+                #self.dfa[pair][granularity].plot(); show();
+                self.log('saved {0} to {1}'.format(pair, fname))
+            except KeyError, e:
+                print e
+        self.log(ob)
+        #print self.dfa[pair][granularity]
+        return self.dfa[pair][granularity]
+        
     def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
         self.qd._getMethod()
 
@@ -1429,61 +1489,9 @@ class OandaQ:
             except KeyError, e: 
                 self.dfa[pair] = {}; 
                 self.debug(e)
-            ob = ''
             for granularity in self.granularities:
-                #ob += '{0} {1}'.format(pair, granularity)
-                fname = '/mldev/bin/data/oanda/ticks/{0}/{0}-{1}.csv'.format(pair, granularity)
-                try:    
-                    self.dfa[pair][granularity]
-                except Exception as e:
-                    print e
-                    # if dataframe not in memory
-                    self.log('{0} {1} dataframe not in memory'.format(pair, granularity))
-                    try:
-                        # read from csv
-                        self.dfa[pair][granularity] = p_read_csv(fname, index_col=0)
-                        ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
-                        ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
-                    except KeyError, e:
-                        self.debug(e)
-                        self.dfa[pair] = {}
-                    except IOError, e:
-                        # if no csv file, initialize memory for the dataframe
-                        #print e
-                        self.dfa[pair] = {}
-                    except Exception as e:
-                        print e
-                        print 'exception {0}'.format(pair)
-                        
-                # append to current dataframe in memory
-                if noUpdate == False:
-                    self.log('{0} {1} attempting update {2}'.format(pair, granularity, noUpdate))
-                    self.log('{0} {1} updating'.format(pair, granularity))
-                    try:
-                        self.log('len {0} before append.'.format(len(self.dfa[pair][granularity])))
-                        self.dfa[pair][granularity] = self.appendHistoricalPrice(self.dfa[pair][granularity], pair, granularity=granularity, plot=plot)
-                        self.log('len {0} after append.'.format(len(self.dfa[pair][granularity])))
-                        self.log('appended to {0}'.format(pair))
-                        # if no dataframe in memory, download from data source
-                    except Exception as e:
-                        print e
-                        try:
-                            self.dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=plot)
-                            self.log('got clean series {0}'.format(pair))
-                        except oandapy.OandaError, e:
-                            print e                        
+                self.updatePairGranularity(pair, granularity, noUpdate=noUpdate, plot=plot)
                 
-                if noUpdate == False:
-                    try:
-                        # save to csv file
-                        li = fname.split('/'); li.pop(); hdir = '/'.join(li);
-                        mkdir_p(hdir)
-                        self.dfa[pair][granularity].to_csv(fname)
-                        #self.dfa[pair][granularity].plot(); show();
-                        self.log('saved {0} to {1}'.format(pair, fname))
-                    except KeyError, e:
-                        print e
-                self.log(ob)
         #print self.dfa
         return self.dfa
 
