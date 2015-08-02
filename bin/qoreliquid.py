@@ -622,6 +622,83 @@ class QoreQuant():
             self.tradePrediction(pair, tp, risk=risk, stop=stop)
         
 
+    # volume trades
+    # source: http://stackoverflow.com/questions/13728392/moving-average-or-running-mean
+    def runningMean(self, x, N):
+        y = np.zeros((len(x),))
+        for ctr in range(len(x)):
+             y[ctr] = np.sum(x[ctr:(ctr+N)])
+        return y/N
+    
+    # source: http://stackoverflow.com/questions/13728392/moving-average-or-running-mean
+    
+    def runningMeanFast(self, x, N):
+        x = x.transpose().get_values()[0]
+        return n_convolve(x, n_ones((N,))/N)[(N-1):]
+    
+    def visualizeVolume(self, dff, pair, granularity):
+        period = 20
+        dfa = dff.copy()
+        dfa = dfa.sort(ascending=False)
+        #dfa['ma {0} volume'.format(period)] = self.runningMean(dfa.ix[:,['volume']], period)
+        dfa['ma {0} volume'.format(period)] = self.runningMeanFast(dfa.ix[:,['volume']], period)
+        dfa['wqe'] = dfa.ix[:,'volume'] / dfa.ix[:, 'ma {0} volume'.format(period)]
+        dfa = dfa.sort(ascending=True)
+        
+        dfa = dfa.ix[20:, :].ix[len(dfa)-200: len(dfa)]
+        dfa = normalizeme(dfa)
+        dfa = sigmoidme(dfa)
+        dfa.plot(title='{0} {1}'.format(pair, granularity));    
+        #show()
+        
+        #trade = raw_input('trade?: ')
+        #trade
+        
+        #print dfa
+    
+    def sweepCharts(self, pair=None, granularity=None):
+        #if pair == None:
+           
+        #df = self.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
+        #break
+        #dff = p.DataFrame(df['candles'])
+        dff = self.oq.updatePairGranularity(pair, granularity, noUpdate=False, plot=False)
+        #return
+        dff = dff.ix[:, 'closeAsk closeBid volume'.split(' ')]
+        #dff = normalizeme(dff)
+        #dff = sigmoidme(dff)
+        #dff.plot(); show()
+        self.visualizeVolume(dff, pair, granularity)
+        #print dff
+        #break
+    
+    def sweepChartsConstantPair(self):
+        # contant pair, variable granularity
+        pair = pairs[0]
+        for granularity in granularities:
+            #try:
+            sweepCharts(pair=pair, granularity=granularity)
+            #except: ''
+    
+    def sweepChartsConstantGranularity(self, granularity, pairs, onlyTradedPairs=False):
+        # constant granularity, variable pair
+        #granularity = granularities[5]
+        opairs = pairs
+        
+        # view only pairs with open positions
+        if onlyTradedPairs == True:
+            try:
+                pairs = list(p_DataFrame(self.oq.oanda2.get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
+            except:
+                pairs = opairs
+        
+        for pair in pairs:
+            try:    
+                self.sweepCharts(pair=pair, granularity=granularity)
+            except: ''
+            #break
+
+
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
 
@@ -1291,8 +1368,8 @@ class OandaQ:
         df = self.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid', 'volume']
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid']
-        hed = ['closeAsk', 'closeBid']
-        df = p_DataFrame(df['candles'])
+        hed = ['closeAsk', 'closeBid', 'volume']
+        df = p.DataFrame(df['candles'], dtype=n.float16)
         df = df.set_index('time')
         #print df
         df = df.ix[:,hed]
