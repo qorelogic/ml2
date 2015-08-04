@@ -1346,7 +1346,7 @@ class OandaQ:
         
         return df
     
-    def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True):
+    def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True, count=None):
         self.qd._getMethod()
 
         safeShift = 0
@@ -1357,7 +1357,10 @@ class OandaQ:
         ddtdiff = ddt - self.oandaToTimestamp(ti) + (60*60*3)
         self.log('{0} seconds behind'.format(ddtdiff))
         self.log('{0} minutes behind'.format(ddtdiff / 60))
-        reqcount = int(ceil(ddtdiff / self.granularityMap[granularity])) + safeShift
+        if count == None:
+            reqcount = int(ceil(ddtdiff / self.granularityMap[granularity])) + safeShift
+        else:
+            reqcount = count
         self.log(self.granularityMap[granularity])
         self.log('requesting {0} ticks'.format(reqcount))
         if safeShift > 0:
