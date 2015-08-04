@@ -965,7 +965,7 @@ class OandaQ:
             'M' : 1 * 2419200 # Month
         }
 
-    def log(self, msg, printDot=True):
+    def log(self, msg, printDot=False):
         if self.verbose == True: 
             print msg
         if printDot == True:
@@ -1417,12 +1417,12 @@ class OandaQ:
                 self.log('appended to {0}'.format(pair))
                 # if no dataframe in memory, download from data source
             except Exception as e:
-                print e
+                self.debug(e)
                 try:
                     self.dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=plot)
                     self.log('got clean series {0}'.format(pair))
                 except oandapy.OandaError, e:
-                    print e                        
+                    self.debug(e)
         
         if noUpdate == False:
             try:
