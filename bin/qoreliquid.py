@@ -600,7 +600,44 @@ class QoreQuant():
         x = x.transpose().get_values()[0]
         return n_convolve(x, n_ones((N,))/N)[(N-1):]
     
-    def visualizeVolume(self, dff, pair, granularity):
+    # visualize multi-pair volume
+    def visualizeVolumeMultiPair(self, granularity = 'M30', pairs=[], tailn=400):
+        df = p_DataFrame()
+        period = 20
+        #for i in self.oq.dfa:
+        for i in pairs:
+            #for j in self.oq.dfa[i]:
+            #    print '{0} {1}'.format(i,j)
+            #print '{0} {1}'.format(i,granularity)
+            try:
+                nl = '{0}:{1}'.format(i, granularity)
+                nlma20 = '{0}:{1}:ma volume'.format(nl, period)
+                self.oq.updatePairGranularity(i, granularity, noUpdate=False, plot=False)
+                dfi = self.oq.dfa[i][granularity]#.ix[:,['volume']]
+                dfi = dfi.sort(ascending=False)
+                dfi[nlma20] = self.runningMeanFast(dfi.ix[:,['volume']], period)
+                dfi = dfi.sort(ascending=True)
+                dfi[nl] = dfi['volume']
+                df = df.combine_first(dfi.ix[:,[nl, nlma20]])
+            except Exception as e: print e
+        df = normalizeme(df)
+        df = df.tail(tailn)
+        #print df.tail(2).transpose()
+        df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
+        
+        df = sigmoidme(df)
+        #from numpy import tanh as n_tanh
+        #df = n_tanh(df)
+        df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
+
+    def vizVolume(self, fper=0, tper=2):
+        
+        for i in xrange(fper, tper+1):
+            self.visualizeVolumeMultiPair(granularity=self.granularities[i], pairs=self.pairs)
+            self.sweepChartsConstantGranularity(self.granularities[i], self.pairs, onlyTradedPairs=True)
+            #break
+        
+    def visualizeVolume(self, dff, pair, granularity, tailn=400):
         period = 20
         dfa = dff.copy()
         dfa = dfa.sort(ascending=False)
@@ -609,12 +646,12 @@ class QoreQuant():
         dfa['wqe'] = dfa.ix[:,'volume'] / dfa.ix[:, 'ma {0} volume'.format(period)]
         dfa = dfa.sort(ascending=True)
         
-        dfa = dfa.ix[20:, :].ix[len(dfa)-200: len(dfa)]
         dfa = normalizeme(dfa)
         dfa = sigmoidme(dfa)
-        dfa.plot(title='{0} {1}'.format(pair, granularity));    
-        #show()
-        
+        dfa = dfa.ix[20:, :].tail(tailn)
+        #dfa.plot(title='{0} {1}'.format(pair, granularity)).legend(loc=2);
+        dfa.plot(title='{0} {1}'.format(pair, granularity)).legend(bbox_to_anchor=(1.3, 1));
+       
         #trade = raw_input('trade?: ')
         #trade
         
@@ -629,6 +666,7 @@ class QoreQuant():
         dff = self.oq.updatePairGranularity(pair, granularity, noUpdate=False, plot=False)
         #return
         dff = dff.ix[:, 'closeAsk closeBid volume'.split(' ')]
+        #print dff.tail(5)
         #dff = normalizeme(dff)
         #dff = sigmoidme(dff)
         #dff.plot(); show()
@@ -1433,7 +1471,8 @@ class OandaQ:
                 li = fname.split('/'); li.pop(); hdir = '/'.join(li);
                 mkdir_p(hdir)
                 self.dfa[pair][granularity].to_csv(fname)
-                #self.dfa[pair][granularity].plot(); show();
+                #if plot == True:
+                #    self.dfa[pair][granularity].plot(); show();
                 self.log('saved {0} to {1}'.format(pair, fname))
             except KeyError, e:
                 print e
