@@ -422,7 +422,7 @@ class QoreQuant():
         self.df = self.df.ix[0:len(self.df)-barsForward,:]
 
         #self.df['y'] = y        
-        #print p_DataFrame(self.df.ix[:,[self.sw.keyCol, 'y']])
+        #print p.DataFrame(self.df.ix[:,[self.sw.keyCol, 'y']])
         #import sys
         
         y = n.array(y)
@@ -598,11 +598,11 @@ class QoreQuant():
     
     def runningMeanFast(self, x, N):
         x = x.transpose().get_values()[0]
-        return n_convolve(x, n_ones((N,))/N)[(N-1):]
+        return n.convolve(x, n.ones((N,))/N)[(N-1):]
     
     # visualize multi-pair volume
     def visualizeVolumeMultiPair(self, granularity = 'M30', pairs=[], tailn=400):
-        df = p_DataFrame()
+        df = p.DataFrame()
         period = 20
         #for i in self.oq.dfa:
         for i in pairs:
@@ -626,8 +626,8 @@ class QoreQuant():
         df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
         
         df = sigmoidme(df)
-        #from numpy import tanh as n_tanh
-        #df = n_tanh(df)
+        #from numpy import tanh as n.tanh
+        #df = n.tanh(df)
         df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
 
     def vizVolume(self, fper=0, tper=2):
@@ -690,7 +690,7 @@ class QoreQuant():
         # view only pairs with open positions
         if onlyTradedPairs == True:
             try:
-                pairs = list(p_DataFrame(self.oq.oanda2.get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
+                pairs = list(p.DataFrame(self.oq.oanda2.get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
             except:
                 pairs = opairs
         
@@ -1433,7 +1433,7 @@ class OandaQ:
             self.log('{0} {1} dataframe not in memory'.format(pair, granularity))
             try:
                 # read from csv
-                self.dfa[pair][granularity] = p_read_csv(fname, index_col=0)
+                self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
                 ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
                 ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
             except KeyError, e:
@@ -1602,7 +1602,7 @@ class StatWing:
     def nextBar(self, dfa, k, barsForward=3):
         self.qd._getMethod()
         
-        dfc = p_DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward])
+        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward])
         #print type(dfc)
         a = dfa.ix[0:len(dfa)-barsForward, [k]].get_values()
         b = dfa.ix[barsForward:len(dfa),[k]].get_values()
