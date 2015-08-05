@@ -330,7 +330,7 @@ class QoreQuant():
         for i in df.index:
             dfi = df.ix[i,:]
             instrument = i
-            amount     = int(ceil(n.abs(dfi['amount'])))
+            amount     = int(ceil(n_abs(dfi['amount'])))
             if dfi['amount'] > 0:
                 side = 'buy'
             elif dfi['amount'] < 0:
@@ -459,7 +459,7 @@ class QoreQuant():
         self.df = self.df.ix[0:len(self.df)-barsForward,:]
 
         #self.df['y'] = y        
-        #print p.DataFrame(self.df.ix[:,[self.sw.keyCol, 'y']])
+        #print p_DataFrame(self.df.ix[:,[self.sw.keyCol, 'y']])
         #import sys
         
         y = n_array(y)
@@ -553,8 +553,8 @@ class QoreQuant():
         """
         try:
             nprices = getPricesLatest(data, trueprices=True)
-            data.ix[p.tslib.Timestamp('2015-06-10').date(), self.sw.relatedCols] = list(nprices.transpose().ix[0,:])
-            #print data.ix[p.tslib.Timestamp('2015-06-10'), self.sw.relatedCols]
+            data.ix[p_tslib.Timestamp('2015-06-10').date(), self.sw.relatedCols] = list(nprices.transpose().ix[0,:])
+            #print data.ix[p_tslib.Timestamp('2015-06-10'), self.sw.relatedCols]
             #print data
             print nprices
         except Exception as e:
@@ -637,11 +637,11 @@ class QoreQuant():
     
     def runningMeanFast(self, x, N):
         x = x.transpose().get_values()[0]
-        return n.convolve(x, n.ones((N,))/N)[(N-1):]
+        return n_convolve(x, n_ones((N,))/N)[(N-1):]
     
     # visualize multi-pair volume
     def visualizeVolumeMultiPair(self, granularity = 'M30', pairs=[], tailn=400):
-        df = p.DataFrame()
+        df = p_DataFrame()
         period = 20
         #for i in self.oq.dfa:
         for i in pairs:
@@ -665,8 +665,8 @@ class QoreQuant():
         df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
         
         df = sigmoidme(df)
-        #from numpy import tanh as n.tanh
-        #df = n.tanh(df)
+        #from numpy import tanh as n_tanh
+        #df = n_tanh(df)
         df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
 
     def vizVolume(self, fper=0, tper=2):
@@ -701,7 +701,7 @@ class QoreQuant():
            
         #df = self.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
         #break
-        #dff = p.DataFrame(df['candles'])
+        #dff = p_DataFrame(df['candles'])
         dff = self.oq.updatePairGranularity(pair, granularity, noUpdate=False, plot=False)
         #return
         dff = dff.ix[:, 'closeAsk closeBid volume'.split(' ')]
@@ -729,7 +729,7 @@ class QoreQuant():
         # view only pairs with open positions
         if onlyTradedPairs == True:
             try:
-                pairs = list(p.DataFrame(self.oq.oanda2.get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
+                pairs = list(p_DataFrame(self.oq.oanda2.get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
             except:
                 pairs = opairs
         
@@ -813,7 +813,7 @@ class FinancialModel:
         return initial_capital * n_power(1 + rate.reshape(size(rate), 1) / 100, period)
         
     def mdrange(self, initial, space, end):
-        return n.linspace(initial,end,(1.0/space)*end+1)
+        return n_linspace(initial,end,(1.0/space)*end+1)
         
     def rateSpectra(self):
         rate   = self.mdrange(0, 0.1, 10)
@@ -841,7 +841,7 @@ class FinancialModel:
         vc = fm.compoundVestedCapital(r_month, 1)[0][0]
         print vc
 
-        n.linspace(0,1,100).T
+        n_linspace(0,1,100).T
         rate = range(0,23)
         period = range(0,100)
         rate   = n_array(rate, dtype=float64)
@@ -903,7 +903,7 @@ class ml007:
                 #        print '1 J history:{0}'.format(self.J_history[self.iter])
                 #        print '1 iter:{0}'.format(self.iter)
                 #print type(self.J_history[self.iter])
-                #if n.isnan(self.J_history[self.iter]):
+                #if n_isnan(self.J_history[self.iter]):
                 #    #plot(self.J_history); show();
                 #    plt.scatter(self.iter, self.J_history); show();
                 #    return [self.theta, self.J_history]
@@ -968,7 +968,7 @@ class ml007:
         y = y.get_values()
         
         #J = (1/m)*sum(-y.*log(sigmoid(X*theta))-(1-y).*log(1-sigmoid(X*theta)));
-        J = (1.0/m) * n_sum(-y *  n.log(sigmoidme(n_dot(X, theta))) - (1 - y) *     log(  1 - sigmoidme(n_dot(X, theta))  ) );
+        J = (1.0/m) * n_sum(-y *  n_log(sigmoidme(n_dot(X, theta))) - (1 - y) *     log(  1 - sigmoidme(n_dot(X, theta))  ) );
         #grad = (1/m)*sum((sigmoid(X*theta)-y).*X)
         grad = (1/m)*n_sum(n_dot((sigmoidme(n_dot(X, theta))-y), X))
         
@@ -1471,7 +1471,7 @@ class OandaQ:
             self.log('{0} {1} dataframe not in memory'.format(pair, granularity))
             try:
                 # read from csv
-                self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
+                self.dfa[pair][granularity] = p_read_csv(fname, index_col=0)
                 ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
                 ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
             except KeyError, e:
@@ -1561,8 +1561,8 @@ class OandaQ:
         #dfac = normalizeme(dfac)
         #dfac = sigmoidme(dfac)
         #dfac = (1 - n_power(n_e, -dfac)) / (1 + n_power(n_e, -dfac)) # hyperbolic tangent, tanh
-        #dfac = n.log(1 + n_power(n_e, dfac)) # relu
-        #dfac = n.tanh(dfac) # tanh
+        #dfac = n_log(1 + n_power(n_e, dfac)) # relu
+        #dfac = n_tanh(dfac) # tanh
         #dfac.plot(legend=False); show();
         #dfac
         
@@ -1638,7 +1638,7 @@ class StatWing:
     def nextBar(self, dfa, k, barsForward=3):
         self.qd._getMethod()
         
-        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward])
+        dfc = p_DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward])
         #print type(dfc)
         a = dfa.ix[0:len(dfa)-barsForward, [k]].get_values()
         b = dfa.ix[barsForward:len(dfa),[k]].get_values()
@@ -1688,7 +1688,7 @@ class StatWing:
     def exportToStatwing(self, de, currency_code):
         self.qd._getMethod()
 
-        #dff = n.matrix('1;2;3;4;-4;-5;-3;2;9').A
+        #dff = n_matrix('1;2;3;4;-4;-5;-3;2;9').A
         #print higherPrev(dff)
         #print lowerPrev(dff)
         s1 = 0
@@ -1718,7 +1718,7 @@ class StatWing:
         print 'Summary:'
         sample = df.ix[:,col]  
         c = ['Sample Size', 'Median',        'Average',      'Confidence Interval of Average',  'Standard Deviation', 'Minimum',      'Maximum',      'Sum']
-        d = [len(sample),   n.median(sample),n_mean(sample), '0.53784 to 0.54679',                    n_std(sample),       n.min(sample), n.max(sample), n_sum(sample)]
+        d = [len(sample),   n_median(sample),n_mean(sample), '0.53784 to 0.54679',                    n_std(sample),       n_min(sample), n_max(sample), n_sum(sample)]
         #110.279 to 110.636
         summary = p_DataFrame(d, index=c)#.transpose()
         print summary
@@ -1726,7 +1726,7 @@ class StatWing:
         print 'Percentiles:'
         pctl = []
         for i in [0,1,5,10,25,50,75,90,95,99,100]:
-            pctl.append(n.percentile(df.ix[:,1], i))
+            pctl.append(n_percentile(df.ix[:,1], i))
         print p_DataFrame(pctl, index=['0th (Minimum)', '1st','5th','10th','25th (Lower Quartile)','50th (Median)','75th (Upper Quartile)','90th','95th','99th','100th (Maximum)'])#.transpose()
         
         sample.hist(bins=100);
@@ -1737,7 +1737,7 @@ class StatWing:
     def relate(self, sample, keyCol, relatedCol):
         self.qd._getMethod()
 
-        #print n.corrcoef(sample.ix[:, keyCol], sample.ix[:, relatedCol])[0, 1]
+        #print n_corrcoef(sample.ix[:, keyCol], sample.ix[:, relatedCol])[0, 1]
         #print pearson_def(sample.ix[:, keyCol], sample.ix[:, relatedCol])
         # source: http://stackoverflow.com/questions/19428029/how-to-get-correlation-of-two-vectors-in-python
         from scipy.stats.stats import pearsonr, spearmanr
@@ -1745,27 +1745,26 @@ class StatWing:
         d = [pearsonr(sample.ix[:, keyCol], sample.ix[:, relatedCol]), spearmanr(sample.ix[:, keyCol], sample.ix[:, relatedCol])]
         print p_DataFrame(d, index=ind)
         
-        import numpy as np
         x = sample.ix[:, relatedCol].fillna(0)
         y = sample.ix[:, keyCol].fillna(0)
         
         deg = 1
         weight = 1
-        theta = np.polynomial.polynomial.polyfit(x,y,deg,weight)#w=weight of each observation)
+        theta = n_polynomial.polynomial.polyfit(x,y,deg,weight)#w=weight of each observation)
         print 'theta:{0}'.format(theta)
-        #p_DataFrame(theta[0] + theta[1] * n_array(range(0, int(n.max(x.ix[:,1]))))).plot()
-        #p_DataFrame(theta[0] + theta[1] * n_array(range(0, ceil(n.max(x.get_values()))))).plot()
+        #p_DataFrame(theta[0] + theta[1] * n_array(range(0, int(n_max(x.ix[:,1]))))).plot()
+        #p_DataFrame(theta[0] + theta[1] * n_array(range(0, ceil(n_max(x.get_values()))))).plot()
         #print [min(y), max(y)]
         #print [min(x), max(x)]
-        #p_DataFrame(theta[0] + theta[1] * n_array( n.linspace(0, int(ceil(n.max(x.get_values()))), 5) )).plot()
-        mini = int(ceil(n.min(x.get_values())))#-10
-        maxi = int(ceil(n.max(x.get_values())))#+10
+        #p_DataFrame(theta[0] + theta[1] * n_array( n_linspace(0, int(ceil(n_max(x.get_values()))), 5) )).plot()
+        mini = int(ceil(n_min(x.get_values())))#-10
+        maxi = int(ceil(n_max(x.get_values())))#+10
         plot(linspace(mini, maxi, 10), theta[0] + theta[1] * linspace(mini, maxi, 10), '-r');
-        #p_DataFrame(theta[0] + theta[1] * n_array( n.linspace(mini, maxi, maxi-mini) )).plot()
-        #p_DataFrame(theta[0] + theta[1] * n_array( n.linspace(-120, 60, 180) )).plot()
+        #p_DataFrame(theta[0] + theta[1] * n_array( n_linspace(mini, maxi, maxi-mini) )).plot()
+        #p_DataFrame(theta[0] + theta[1] * n_array( n_linspace(-120, 60, 180) )).plot()
         
-        #print n.linspace(int(ceil(n.max(x.get_values()))), int(ceil(n.max(x.get_values()))), 5)
-        #print n.linspace(min(x)-10, int(ceil(n.max(x.get_values())))+10, len(x))
+        #print n_linspace(int(ceil(n_max(x.get_values()))), int(ceil(n_max(x.get_values()))), 5)
+        #print n_linspace(min(x)-10, int(ceil(n_max(x.get_values())))+10, len(x))
         
         scatter(x,y, vmin=0, vmax=(100));
         #print ceil(max(x))
@@ -1858,7 +1857,7 @@ class StatWing:
         #sys.exit()
         #raise(e)
         
-        #theta = n.random.randn(len(X.columns))
+        #theta = n_random.randn(len(X.columns))
         #print self.theta
         
         #% compute and display initial cost
@@ -2082,14 +2081,14 @@ class StatWing:
             nX = self.oq.getPricesLatest(df, self, trueprices=True)
             #print nX
         
-        #print n.c_[n_ones(1), nX.ix[1:,:].get_values().T].T
+        #print n_c_[n_ones(1), nX.ix[1:,:].get_values().T].T
         #print nX.shape
         #print n_dot(nX.T, theta)
         if type(self.theta) == type(p_DataFrame()):
             theta = self.theta.get_values()
         else:
             theta = self.theta
-        nXbias = n.c_[n_ones(1), nX.ix[1:,:].get_values().T]
+        nXbias = n_c_[n_ones(1), nX.ix[1:,:].get_values().T]
         #print nXbias
         #print theta
         #print nXbias.shape
@@ -2146,12 +2145,12 @@ class RealtimeChart:
         y  = self.sw.predictFromTheta(nX=nX)
         
         try:
-            imax = n.max(self.sw.nxps)
+            imax = n_max(self.sw.nxps)
             imax = imax + n_std(self.sw.nxps)
         except Exception as e:
             print e
         try:
-            imin = n.min(self.sw.nxps)
+            imin = n_min(self.sw.nxps)
             imin = imin - n_std(self.sw.nxps)
         except Exception as e:
             print e
@@ -2279,7 +2278,7 @@ def normalizeme2(ds, index=None, columns=None):
         dss = ds
     if type(ds) == type([]):
     #    print 't2'
-        dss = n.array(ds, dtype=float)
+        dss = n_array(ds, dtype=float)
     #print type(dss)
     #import sys
     #sys.exit()
@@ -2300,7 +2299,7 @@ def sigmoidmePinv(sigdfr):
     #return log10((1.0 / dfr.get_values()) - 1)
     #return n_log10((1.0/sigdfr)-1)/n_log10(n_e)
     #pow(n_e,-dfr) = (1.0 / pinv) - 1
-    #/ n.log(n_e)
+    #/ n_log(n_e)
     return -n_divide(n_log10((n_divide(1.0, sigdfr))-1), n_log10(n_e))
 
 def sharpe(dfr):
@@ -3075,7 +3074,7 @@ Peercoin	PPC	6	3600
 
     def getArbTable(self, pk):
         self.check()
-        arbtable1 = n.random.randn(len(pk)*len(self.exchanges)).reshape(len(pk),len(self.exchanges));
+        arbtable1 = n_random.randn(len(pk)*len(self.exchanges)).reshape(len(pk),len(self.exchanges));
         return arbtable1
 
     def getArbRates(self, doPlot=False):
@@ -3095,13 +3094,13 @@ Peercoin	PPC	6	3600
             debug(m)
             m = p_DataFrame(n_array(m).reshape(len(m),1) / n_array(m) * 100 - 100, index=self.exchanges, columns=self.exchanges); 
             debug(m); debug('');
-            m1 = n.max(m,0); #print m1;
+            m1 = n_max(m,0); #print m1;
             exhds = list(m1.index)
-            #print (n.nonzero(m == m1))
-            #print (n.nonzero(m1 == n.max(m1)))
-            maxIndx = n.max(n.nonzero(m1 == n.max(m1)))
-            maxNum = n.max(m1,0); #print maxNum;
-            indx = (n.nonzero(n_array(m == maxNum, dtype=int)))
+            #print (n_nonzero(m == m1))
+            #print (n_nonzero(m1 == n_max(m1)))
+            maxIndx = n_max(n_nonzero(m1 == n_max(m1)))
+            maxNum = n_max(m1,0); #print maxNum;
+            indx = (n_nonzero(n_array(m == maxNum, dtype=int)))
             arbRate = p_DataFrame([exhds[indx[0][0]], exhds[indx[1][0]], maxNum], index=arbHdr, columns=[self.pk[ind]])
             arbRates = arbRates.combine_first(arbRate)
             debug(arbRate.transpose())
@@ -3204,7 +3203,7 @@ class ShapeShift(CryptoCoinBaseClass):
             
         """
         abc = 'a b c d e f g h i j k l m n o p q r s t u v w x y z'.split(' ')
-        #rin = p_DataFrame(n.int0(n.abs(n.random.randn(26)*10)))
+        #rin = p_DataFrame(n_int0(n_abs(n_random.randn(26)*10)))
         abc = list(it.permutations(abc, 3))
         abc = n_array(abc).tolist()
         li = []
@@ -3663,7 +3662,7 @@ gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-
             
         if save == True:
             try:
-                allPositions2 = p.read_json(self.fname_trader_positions)
+                allPositions2 = p_read_json(self.fname_trader_positions)
                 #print allPositions2
             except ValueError, e:
                 allPositions2 = p_DataFrame()
@@ -3796,7 +3795,7 @@ class Bancor:
         p0 = p_DataFrame()
         if mode == 1:
             print idx.transpose().get_values()
-            print n.diff(idx)
+            print n_diff(idx)
             print idx[0]
             for [i, j] in enumerate(res):
                 print "{0} {1}".format(i,j)
