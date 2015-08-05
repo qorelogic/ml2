@@ -22,6 +22,10 @@ import requests
 import socket
 import matplotlib.pyplot as plt
 
+qd = QoreDebug()
+qd.off()
+qd.stackTraceOff()
+
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # todo: fix jbd2 io read write issue
@@ -54,6 +58,8 @@ oq = OandaQ()
 # tick streamer (data feed)
 class MyStreamer(oandapy.Streamer):
     def __init__(self, *args, **kwargs):
+        qd._getMethod()
+        
         oandapy.Streamer.__init__(self, *args, **kwargs)
         self.ticks = 0
         self.hdir = '/ml.dev/bin/data/oanda/datafeed'
@@ -62,6 +68,8 @@ class MyStreamer(oandapy.Streamer):
         self.rtc = RealtimeChart()
 
     def on_success(self, data):
+        qd._getMethod()
+        
         #self.ticks += 1
         #if self.ticks == 2: self.disconnect()
         try:
@@ -80,17 +88,23 @@ class MyStreamer(oandapy.Streamer):
             self.rtc.update(csvc)
             
         except requests.ConnectionError, e:
+            qd.printTraceBack()
             ''
             #print e
         except KeyError, e:
+            qd.printTraceBack()
             ''
             #print e
-
+            
     def on_error(self, data):
+        qd._getMethod()
+        
         self.disconnect()
 
 # source: http://www.digi.com/wiki/developer/index.php/Handling_Socket_Error_and_Keepalive
 def do_work( forever = True):
+    qd._getMethod()
+    
     while True:
         print 'receiving feed..'
         try:
@@ -103,31 +117,39 @@ def do_work( forever = True):
         except socket.error, e:
             print '1:'
             print e
+            qd.printTraceBack()
         except TypeError, e:
             ''
             print '2:'
             print e
+            qd.printTraceBack()
         except NameError, e:
             ''
             print '3:'
             print e
+            qd.printTraceBack()
         except IndexError, e:
             #print 'usage: python oanda.py'
             ''
             print '4:'
             print e
+            qd.printTraceBack()
         except requests.exceptions.ChunkedEncodingError, e:
             print '5:'
             print e
+            qd.printTraceBack()
         except requests.ConnectionError, e:
             print '6:'
             print e
+            qd.printTraceBack()
             stream.disconnect()
         except KeyboardInterrupt, e:
             'disconnecting'
+            qd.printTraceBack()
             stream.disconnect()
-        #except:
-        #    print 'unhandled error'
+        except:
+            qd.printTraceBack()
+            print 'unhandled error'
         #------------------------------
         
         try:
@@ -136,8 +158,11 @@ def do_work( forever = True):
             print 'attempting disconnect before reconnecting'
             stream.disconnect()
         except:
+            qd.printTraceBack()
             pass
          
 if __name__ == '__main__':
+    qd._getMethod()
+    
     do_work( True)
     ''
