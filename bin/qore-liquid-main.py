@@ -172,6 +172,9 @@ class QsForecaster:
         
         def getMachineLearning(self):
             
+            self.qq.qd.on()
+            self.qq.setVerbose(verbose=False)
+
             pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD','EUR_JPY', 'GBP_JPY','USD_JPY','USD_CAD']
             pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'NZD_EUR', 'USD_JPY',  'USD_CHF', 'USD_CAD','GBP_JPY', 'EUR_NZD', 'GBP_NZD', 'AUD_JPY', 'AUD_NZD', 'NZD_JPY','AUD_USD', 'USD_CAD', 'USD_CHF']
             granularities = [ 'D','H4','H1','M30','M15','M5','M1','S10','S5']
@@ -179,8 +182,6 @@ class QsForecaster:
             alpha         = 0.125
             risk          = 1
             plot          = False
-            self.qq.qd.on = True
-            self.qq.setVerbose(verbose=False)
             stopLossPrice = [0.73745, 0.73488, 1.07978, 1.5617, 1.1024, 1.10965, 1.102, 1.10682, 1.113, 1.10963, 1.10707, 1.0963][0]
             
             #modes = ['train','predict','trade']

@@ -459,7 +459,7 @@ class QoreQuant():
         self.df = self.df.ix[0:len(self.df)-barsForward,:]
 
         #self.df['y'] = y        
-        #print p_DataFrame(self.df.ix[:,[self.sw.keyCol, 'y']])
+        #print p.DataFrame(self.df.ix[:,[self.sw.keyCol, 'y']])
         #import sys
         
         y = n_array(y)
@@ -637,9 +637,46 @@ class QoreQuant():
     
     def runningMeanFast(self, x, N):
         x = x.transpose().get_values()[0]
-        return n_convolve(x, n_ones((N,))/N)[(N-1):]
+        return n.convolve(x, n.ones((N,))/N)[(N-1):]
     
-    def visualizeVolume(self, dff, pair, granularity):
+    # visualize multi-pair volume
+    def visualizeVolumeMultiPair(self, granularity = 'M30', pairs=[], tailn=400):
+        df = p.DataFrame()
+        period = 20
+        #for i in self.oq.dfa:
+        for i in pairs:
+            #for j in self.oq.dfa[i]:
+            #    print '{0} {1}'.format(i,j)
+            #print '{0} {1}'.format(i,granularity)
+            try:
+                nl = '{0}:{1}'.format(i, granularity)
+                nlma20 = '{0}:{1}:ma volume'.format(nl, period)
+                self.oq.updatePairGranularity(i, granularity, noUpdate=False, plot=False)
+                dfi = self.oq.dfa[i][granularity]#.ix[:,['volume']]
+                dfi = dfi.sort(ascending=False)
+                dfi[nlma20] = self.runningMeanFast(dfi.ix[:,['volume']], period)
+                dfi = dfi.sort(ascending=True)
+                dfi[nl] = dfi['volume']
+                df = df.combine_first(dfi.ix[:,[nl, nlma20]])
+            except Exception as e: print e
+        df = normalizeme(df)
+        df = df.tail(tailn)
+        #print df.tail(2).transpose()
+        df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
+        
+        df = sigmoidme(df)
+        #from numpy import tanh as n.tanh
+        #df = n.tanh(df)
+        df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
+
+    def vizVolume(self, fper=0, tper=2):
+        
+        for i in xrange(fper, tper+1):
+            self.visualizeVolumeMultiPair(granularity=self.granularities[i], pairs=self.pairs)
+            self.sweepChartsConstantGranularity(self.granularities[i], self.pairs, onlyTradedPairs=True)
+            #break
+        
+    def visualizeVolume(self, dff, pair, granularity, tailn=400):
         period = 20
         dfa = dff.copy()
         dfa = dfa.sort(ascending=False)
@@ -648,12 +685,12 @@ class QoreQuant():
         dfa['wqe'] = dfa.ix[:,'volume'] / dfa.ix[:, 'ma {0} volume'.format(period)]
         dfa = dfa.sort(ascending=True)
         
-        dfa = dfa.ix[20:, :].ix[len(dfa)-200: len(dfa)]
         dfa = normalizeme(dfa)
         dfa = sigmoidme(dfa)
-        dfa.plot(title='{0} {1}'.format(pair, granularity));    
-        #show()
-        
+        dfa = dfa.ix[20:, :].tail(tailn)
+        #dfa.plot(title='{0} {1}'.format(pair, granularity)).legend(loc=2);
+        dfa.plot(title='{0} {1}'.format(pair, granularity)).legend(bbox_to_anchor=(1.3, 1));
+       
         #trade = raw_input('trade?: ')
         #trade
         
@@ -668,6 +705,7 @@ class QoreQuant():
         dff = self.oq.updatePairGranularity(pair, granularity, noUpdate=False, plot=False)
         #return
         dff = dff.ix[:, 'closeAsk closeBid volume'.split(' ')]
+        #print dff.tail(5)
         #dff = normalizeme(dff)
         #dff = sigmoidme(dff)
         #dff.plot(); show()
@@ -691,7 +729,7 @@ class QoreQuant():
         # view only pairs with open positions
         if onlyTradedPairs == True:
             try:
-                pairs = list(p_DataFrame(self.oq.oanda2.get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
+                pairs = list(p.DataFrame(self.oq.oanda2.get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
             except:
                 pairs = opairs
         
@@ -1003,7 +1041,7 @@ class OandaQ:
             'M' : 1 * 2419200 # Month
         }
 
-    def log(self, msg, printDot=True):
+    def log(self, msg, printDot=False):
         if self.verbose == True: 
             print msg
         if printDot == True:
@@ -1384,7 +1422,7 @@ class OandaQ:
         
         return df
     
-    def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True):
+    def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True, count=None):
         self.qd._getMethod()
 
         safeShift = 0
@@ -1395,7 +1433,10 @@ class OandaQ:
         ddtdiff = ddt - self.oandaToTimestamp(ti) + (60*60*3)
         self.log('{0} seconds behind'.format(ddtdiff))
         self.log('{0} minutes behind'.format(ddtdiff / 60))
-        reqcount = int(ceil(ddtdiff / self.granularityMap[granularity])) + safeShift
+        if count == None:
+            reqcount = int(ceil(ddtdiff / self.granularityMap[granularity])) + safeShift
+        else:
+            reqcount = count
         self.log(self.granularityMap[granularity])
         self.log('requesting {0} ticks'.format(reqcount))
         if safeShift > 0:
@@ -1430,7 +1471,7 @@ class OandaQ:
             self.log('{0} {1} dataframe not in memory'.format(pair, granularity))
             try:
                 # read from csv
-                self.dfa[pair][granularity] = p_read_csv(fname, index_col=0)
+                self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
                 ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
                 ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
             except KeyError, e:
@@ -1455,12 +1496,12 @@ class OandaQ:
                 self.log('appended to {0}'.format(pair))
                 # if no dataframe in memory, download from data source
             except Exception as e:
-                print e
+                self.debug(e)
                 try:
                     self.dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=plot)
                     self.log('got clean series {0}'.format(pair))
                 except oandapy.OandaError, e:
-                    print e                        
+                    self.debug(e)
         
         if noUpdate == False:
             try:
@@ -1468,7 +1509,8 @@ class OandaQ:
                 li = fname.split('/'); li.pop(); hdir = '/'.join(li);
                 mkdir_p(hdir)
                 self.dfa[pair][granularity].to_csv(fname)
-                #self.dfa[pair][granularity].plot(); show();
+                #if plot == True:
+                #    self.dfa[pair][granularity].plot(); show();
                 self.log('saved {0} to {1}'.format(pair, fname))
             except KeyError, e:
                 print e
@@ -1596,7 +1638,7 @@ class StatWing:
     def nextBar(self, dfa, k, barsForward=3):
         self.qd._getMethod()
         
-        dfc = p_DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward])
+        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward])
         #print type(dfc)
         a = dfa.ix[0:len(dfa)-barsForward, [k]].get_values()
         b = dfa.ix[barsForward:len(dfa),[k]].get_values()

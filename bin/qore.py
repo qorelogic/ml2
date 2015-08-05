@@ -5,6 +5,7 @@ import os, errno, sys
 import logging
 import re
 import pandas as p
+import traceback
 
 #logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
 logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
@@ -21,13 +22,31 @@ def debug(str, verbosity=8):
 
 class QoreDebug:
     
-    def __init__(self):
-        self.on = False
+    def __init__(self, on=False, stackTrace=False):
+        self._on        = on
+        self.stackTrace = stackTrace
+        
+    def on(self):
+        self.debugOn()
+        
+    def off(self):
+        self.debugOff()
+        
+    def debugOn(self):
+        self._on = True
+        
+    def debugOff(self):
+        self._on = False
+        
+    def stackTraceOn(self):
+        self.stackTrace = True
+        
+    def stackTraceOff(self):
         self.stackTrace = False
         
     def _getMethod(self):
         
-        if self.on == True:
+        if self._on == True:
             print
             print '=============================='
             print '{1} for {0}():'.format(sys._getframe(1).f_code.co_name, 'call stack')
@@ -36,6 +55,24 @@ class QoreDebug:
                     try:    print ' - {0}()'.format(sys._getframe(i).f_code.co_name)
                     except: break
             print '------------------------------'
+
+    def printTraceBack(self):
+        if self._on == True:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print "*** print_tb:"
+            traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+            print "*** print_exception:"
+            traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
+
+
+class switch(object):
+    value = None
+    def __new__(class_, value):
+        class_.value = value
+        return True
+
+def case(*args):
+    return any((arg == switch.value for arg in args))
 
 
 def cleanJsonContent(t):
