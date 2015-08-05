@@ -589,7 +589,9 @@ class QoreQuant():
     # volume trades
     # source: http://stackoverflow.com/questions/13728392/moving-average-or-running-mean
     def runningMean(self, x, N):
-        y = np.zeros((len(x),))
+        self.qd._getMethod()
+        
+        y = n.zeros((len(x),))
         for ctr in range(len(x)):
              y[ctr] = np.sum(x[ctr:(ctr+N)])
         return y/N
@@ -597,11 +599,15 @@ class QoreQuant():
     # source: http://stackoverflow.com/questions/13728392/moving-average-or-running-mean
     
     def runningMeanFast(self, x, N):
+        self.qd._getMethod()
+        
         x = x.transpose().get_values()[0]
         return n.convolve(x, n.ones((N,))/N)[(N-1):]
     
     # visualize multi-pair volume
     def visualizeVolumeMultiPair(self, granularity = 'M30', pairs=[], tailn=400):
+        self.qd._getMethod()
+        
         df = p.DataFrame()
         period = 20
         #for i in self.oq.dfa:
@@ -631,6 +637,7 @@ class QoreQuant():
         df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
 
     def vizVolume(self, fper=0, tper=2):
+        self.qd._getMethod()
         
         for i in xrange(fper, tper+1):
             self.visualizeVolumeMultiPair(granularity=self.granularities[i], pairs=self.pairs)
@@ -638,6 +645,8 @@ class QoreQuant():
             #break
         
     def visualizeVolume(self, dff, pair, granularity, tailn=400):
+        self.qd._getMethod()
+        
         period = 20
         dfa = dff.copy()
         dfa = dfa.sort(ascending=False)
@@ -658,6 +667,8 @@ class QoreQuant():
         #print dfa
     
     def sweepCharts(self, pair=None, granularity=None):
+        self.qd._getMethod()
+        
         #if pair == None:
            
         #df = self.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
@@ -675,6 +686,8 @@ class QoreQuant():
         #break
     
     def sweepChartsConstantPair(self):
+        self.qd._getMethod()
+        
         # contant pair, variable granularity
         pair = pairs[0]
         for granularity in granularities:
@@ -683,6 +696,8 @@ class QoreQuant():
             #except: ''
     
     def sweepChartsConstantGranularity(self, granularity, pairs, onlyTradedPairs=False):
+        self.qd._getMethod()
+        
         # constant granularity, variable pair
         #granularity = granularities[5]
         opairs = pairs
