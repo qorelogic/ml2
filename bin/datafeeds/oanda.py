@@ -54,6 +54,12 @@ accid = acc[0]['accountId']
 
 oq = OandaQ()
 
+modes = 'demo,plotly,csv'.split(',')
+
+def usage():
+    qd._getMethod()
+    return "usage: demo | plotly | csv"
+
 #------------------------------
 # tick streamer (data feed)
 class MyStreamer(oandapy.Streamer):
@@ -65,7 +71,21 @@ class MyStreamer(oandapy.Streamer):
         self.hdir = '/ml.dev/bin/data/oanda/datafeed'
         mkdir_p(self.hdir)
         
-        self.rtc = RealtimeChart()
+    def init(self, mode):
+        qd._getMethod()
+        
+        self.mode = mode        
+
+        while switch(self.mode):
+            if case('demo'):
+                break
+            if case('csv'):
+                break
+            if case('plotly'):
+                self.rtc = RealtimeChart()
+                break
+            print usage()
+            break
 
     def on_success(self, data):
         qd._getMethod()
@@ -73,19 +93,27 @@ class MyStreamer(oandapy.Streamer):
         #self.ticks += 1
         #if self.ticks == 2: self.disconnect()
         try:
-            pair = data['tick']['instrument']
-            #print p.DataFrame(data['tick'], index=[0]).to_string(index=False).split('\n')[1]
             tick = p.DataFrame(data['tick'], index=[0])
             tick['timestamp'] = oq.oandaToTimestamp(tick['time'].ix[0])
             csvc = n.array(tick.ix[:,[2,0,1,3,4]].get_values()[0], dtype=str)
-            
-            csv = ",".join(csvc)            
-            #fp = open('{0}/{1}.csv'.format(self.hdir, pair), 'a')
-            #fp.write(csv+'\n')
-            #fp.close()
-            #print csv
-            
-            self.rtc.update(csvc)
+            while switch(self.mode):
+                if case('demo'):
+                    print data
+                    break
+                if case('csv'):
+                    csv = ",".join(csvc)            
+                    #print p.DataFrame(data['tick'], index=[0]).to_string(index=False).split('\n')[1]
+                    #pair = data['tick']['instrument']
+                    #fp = open('{0}/{1}.csv'.format(self.hdir, pair), 'a')
+                    #fp.write(csv+'\n')
+                    #fp.close()
+                    print csv
+                    break
+                if case('plotly'):
+                    self.rtc.update(csvc)
+                    break
+                print usage()
+                break
             
         except requests.ConnectionError, e:
             qd.printTraceBack()
@@ -102,18 +130,32 @@ class MyStreamer(oandapy.Streamer):
         self.disconnect()
 
 # source: http://www.digi.com/wiki/developer/index.php/Handling_Socket_Error_and_Keepalive
-def do_work( forever = True):
+def do_work(mode, forever = True):
     qd._getMethod()
     
     while True:
         print 'receiving feed..'
         try:
             stream = MyStreamer(environment=env2, access_token=access_token2)
-            #pairs = ",".join(list(n.array(p.DataFrame(oanda2.get_instruments(accid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
+            stream.init(mode)
             #pairs = ",".join(list(res))
             #res = getPricesLatest(df, oanda2, sw).index
-            pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
+
+            while switch(stream.mode):
+                if case('demo'):
+                    pairs = ",".join(list(n.array(p.DataFrame(oanda2.get_instruments(accid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
+                    break
+                if case('csv'):
+                    pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
+                    break
+                if case('plotly'):
+                    pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
+                    break
+                print "options: demo, plotly"
+                break
+            
             stream.start(accountId=accid, instruments=pairs)
+            
         except socket.error, e:
             print '1:'
             print e
@@ -164,5 +206,10 @@ def do_work( forever = True):
 if __name__ == '__main__':
     qd._getMethod()
     
-    do_work( True)
-    ''
+    try:
+        if sys.argv[1] not in modes:
+            raise
+        do_work(sys.argv[1], True)
+    except:
+        print usage()
+        

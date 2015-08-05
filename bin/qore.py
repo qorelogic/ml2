@@ -65,6 +65,16 @@ class QoreDebug:
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
 
 
+class switch(object):
+    value = None
+    def __new__(class_, value):
+        class_.value = value
+        return True
+
+def case(*args):
+    return any((arg == switch.value for arg in args))
+
+
 def cleanJsonContent(t):
     return re.sub(re.compile(r'[\s]+'), ' ', ''.join(t.split('\n')))
 
