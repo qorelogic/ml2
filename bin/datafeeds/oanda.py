@@ -6,8 +6,8 @@ def defp(pt):
     try:    sys.path.index(pt)
     except: sys.path.append(pt)
 
-defp('/ml.dev/bin')
-defp('/ml.dev/lib/oanda/oandapy')
+defp('/mllive/bin')
+defp('/mllive/lib/oanda/oandapy')
     
 from qore import *
 from qoreliquid import *
