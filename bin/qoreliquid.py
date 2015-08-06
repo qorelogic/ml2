@@ -1,5 +1,6 @@
 
 #from numpy import *
+from numpy import nan_to_num as n_nan_to_num
 from qore import *
 from qore_qstk import *
 from matplotlib.pylab import *
@@ -376,7 +377,7 @@ class QoreQuant():
         if modes[mode] == 'train':
             self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity, showPlot=showPlot)
         
-    def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4', showPlot=False):
+    def train(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4', showPlot=False, trainingOn=True):
         self.qd._getMethod()
         
         #pair = 'EURGBP'
@@ -431,9 +432,10 @@ class QoreQuant():
         
         self.loadTheta(iterations, pair=pair, granularity=granularity)
         
-        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=self.sw.theta, viewProgress=False, showPlot=showPlot)
+        if trainingOn == True:
+            self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=self.sw.theta, viewProgress=False, showPlot=showPlot)
         
-        self.saveTheta(self.sw.ml.iter, pair=pair, granularity=granularity)
+            self.saveTheta(self.sw.ml.iter, pair=pair, granularity=granularity)
         
     def loadTheta(self, iterations, pair='EURUSD', granularity='H4'):
         self.qd._getMethod()
@@ -554,7 +556,7 @@ class QoreQuant():
         if tp1 < curr1:
             self.oq.trade(risk, stop, pair, 's', tp=tp1)
     
-    def forecastCurrency(self, mode=3, pair='EURUSD', granularity='H4', iterations=10000, alpha=0.09, risk=5, stop=20, showPlot=True):
+    def forecastCurrency(self, mode=3, pair='EURUSD', granularity='H4', iterations=10000, alpha=0.09, risk=5, stop=20, showPlot=True, trainingOn=True):
         self.qd._getMethod()
         
         # 1: update 2: train, 3: predict, 4: trade
@@ -574,11 +576,11 @@ class QoreQuant():
             
         if mode == 2 or (onErrorTrain == True):
             #if mode != 4:
-            self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity, showPlot=showPlot)
+            self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity, showPlot=showPlot, trainingOn=trainingOn)
         
-        if mode == 2 or mode == 3 or mode == 4:
-            tp = self.predict(plotTitle=pair, showPlot=showPlot)
-            self.predict(wlen=50, showPlot=showPlot)
+        if mode == 2 or mode == 3 or mode == 4:    
+            self.loadTheta(iterations, pair=pair, granularity=granularity)
+            tp = self.predict(plotTitle=pair, showPlot=showPlot)#, wlen=50)
             print 'Price forecast for {0} {1}'.format(pair, granularity)
             print p.DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
         
@@ -1772,12 +1774,14 @@ class StatWing:
         X['bias'] = n.ones(len(data))
         Xc = X.columns.tolist()
         Xc.insert(0, Xc.pop())
-        #try:
-        #print 'removing {0}'.format(keyCol)
-        #print Xc
-        Xc.remove(keyCol)
-        #except Exception as e:
-        #    print e
+        try:
+            print 'removing {0}'.format(keyCol)
+            Xc.remove(keyCol)
+        except Exception as e:
+            print Xc
+            print keyCol
+            print e
+            #raise Exception(e)
         X = X[Xc]
         #print list(X.columns)
         return X
@@ -1976,11 +1980,17 @@ class StatWing:
         #data = X.fillna(0).ix[:,data.columns]
         data = X.ix[X.index, X.columns].fillna(0)
         
+        #"""
         [data, self.dmean, self.dstd] = normalizeme(data, pinv=True)
         data = sigmoidme(data)
+        #"""
+        #[data, self.dmean, self.dstd] = filterDataset(data)
+        #"""
         [y, self.ymean, self.ystd] = normalizeme(y, pinv=True)
         y = sigmoidme(y)
-        
+        #"""
+        #[y, self.ymean, self.ystd] = filterDataset(y)
+
         self.regression(data, y, self.keyCol, self.relatedCols, iterations=iterations, alpha=alpha, initialTheta=initialTheta, viewProgress=viewProgress, showPlot=showPlot)
         self.theta = self.ml.theta
         #p1 = list(data.columns[self.relatedCols])
@@ -1995,7 +2005,7 @@ class StatWing:
         #    self.regression2(de=data)
         [data, self.dmean, self.dstd] = normalizeme(data, pinv=True)
         data = sigmoidme(data)
-
+        quiet=False
         # predict regression
         if quiet == False:
             print 'related cols'
@@ -2010,38 +2020,55 @@ class StatWing:
         s = len(X)-1
         #print X.ix[s:s+20, data.columns[[0]].insert(0,0)]
         #print X.ix[s+19,data.columns[self.relatedCols].insert(0,0)]
-        #print theta
-        #print 'shape theta'
-        #print self.theta.shape
-        #print len(self.relatedCols)
-        ntheta = self.ml.theta.reshape(len(self.relatedCols),1)
+        
+        #self.theta = self.fixColumns(self.theta.to_frame('123').transpose(), self.relatedCols, self.keyCol)
+        #self.ml.theta = self.fixColumns(self.ml.theta.to_frame('123').transpose(), self.relatedCols, self.keyCol).transpose()['123']
+        if quiet == False:
+            print 'shape X'
+            print X.shape
+            print list(X.columns)
+            print 'shape theta'
+            print self.ml.theta.shape
+            print list(self.ml.theta.index)
+            #print self.ml.theta
+            print type(self.ml.theta)
+            #print self.ml.theta
+            print len(self.relatedCols)
+            print self.relatedCols
+        ntheta = self.theta.reshape(len(self.relatedCols),1)
+        #ntheta = self.ml.theta.reshape(len(self.ml.theta),1)
+        ntheta = n_nan_to_num(ntheta)
         #ntheta = self.ml.theta.reshape(len(self.relatedCols)+1,1)
         #nX = X.ix[:,data.columns[self.relatedCols].insert(0,0)]
         nX = X
         #nX = X.ix[s,data.columns[self.relatedCols].insert(0,0)]
-        
         if quiet == False:
             #print nX
             #print ntheta
-            print 'theta shape:'
-            print self.ml.theta.shape
-            print self.ml.theta
-            print 'X:'
-            print X.shape
+            print 'theta shape:{0}'.format(self.ml.theta.shape)
+            #print self.ml.theta
+            print 'X:{0}'.format(X.shape)
             print list(X.columns)
         
         predict = n.dot(nX, ntheta)
+
         if quiet == False:
-            print ntheta
-            print nX.ix[len(nX)-1, :]
+            print ntheta.reshape(1, len(ntheta))
+            #print nX.ix[len(nX)-1, :]
+            
+            print predict
+            print 'ymean:{0}'.format(self.ymean)
+            print 'ystd:{0}'.format(self.ystd)
         
         X.ix[:,data.columns[self.relatedCols].insert(0,0)]
         #self.ml.theta.reshape(len(self.relatedCols)+1,1)            
         
-        #print self.dmean
-        #print self.dstd
         predict = sigmoidmePinv(predict)
+        print 'predict post sigmoidPinv'
+        print predict
         predict = normalizemePinv(predict, self.ymean, self.ystd) #[self.keyCol]
+        print predict
+        print 'predict post normalizemePinv'
         print predict
         
         if quiet == False:
@@ -2283,6 +2310,11 @@ def sigmoidmePinv(sigdfr):
     #pow(n.e,-dfr) = (1.0 / pinv) - 1
     #/ n.log(n.e)
     return -n.divide(n.log10((n.divide(1.0, sigdfr))-1), n.log10(n.e))
+
+def filterDataset(Z):
+    [Z, Zmean, Zstd] = normalizeme(Z, pinv=True)
+    Z = sigmoidme(Z)
+    return [Z, Zmean, Zstd]
 
 def sharpe(dfr):
     ''
