@@ -197,6 +197,8 @@ class QsForecaster:
             if mode == 1 or mode == 2: noUpdate = True
 
             if mode == 2:
+                noUpdate = False
+                self.qq.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=10, granularity=granularity, showPlot=False, trainingOn=False)
                 stopLossPrice = float(raw_input('stopLossPrice: '))
                 risk          = float(raw_input('risk: '))
 
