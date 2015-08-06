@@ -91,9 +91,15 @@ class QoreQuant():
     configfile       = '/mldev/bin/datafeeds/config.csv'
     quandlAuthtoken  = "WVsyCxwHeYZZyhf5RHs2"
         
-    def __init__(self):
+    def setVerbose(self, verbose=False):
+        self.verbose = verbose
+        self.oq.verbose = self.verbose
+        
+    def __init__(self, verbose=False):
+        self.qd = QoreDebug()
+        self.qd._getMethod()
 
-        self.verbose = False
+        self.verbose = verbose
 
         co = p.read_csv(self.configfile, header=None)
         
@@ -116,18 +122,24 @@ class QoreQuant():
         
         self.sw = StatWing()
 
-        try:    self.oq = OandaQ()
-        except: print 'offline mode'
+        try:    self.oq = OandaQ(verbose=self.verbose)
+        except Exception as e:
+            print e
+            print 'offline mode'
         
         self.dfdata = None
         
     def synchonizeTrades(self, dryrun=True):
+        self.qd._getMethod()
+        
         # send to market works
         username = 'manapana'
         save = True
         mode = 2
         try: print self.et.getEtoroTraderPositions(username, save=save, mode=mode)
-        except: print self.et.getEtoroTraderPositions('manapana', save=save, mode=mode)
+        except Exception as e:
+            print e
+            print self.et.getEtoroTraderPositions('manapana', save=save, mode=mode)
         targetPortfolio2 = self.prepTargetPortfolio()
         df = self.generateTargetPortfolio(targetPortfolio2)
         df0 = self.prepSendToMarket(df)
@@ -140,6 +152,8 @@ class QoreQuant():
     livePortfolio = [['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]]
     """
     def toTrade(self, livePortfolio, targetPortfolio, returnList=False):
+        self.qd._getMethod()
+        
         print 'target portfolio'
         print targetPortfolio
         if type(targetPortfolio) != type(p.DataFrame([])):
@@ -160,10 +174,14 @@ class QoreQuant():
     #assert toTrade([['AAPL', 'BAC', 'BOA', 'DAL'], [930, 230, 109, 2130]], [['AAPL', 'BAC', 'BOA', 'DAL'], [1032, 123, 98, 9812]], returnList=True) == [['AAPL', 'BAC', 'BOA', 'DAL'], [102, -107, -11, 7682]]
 
     def getMeanPrice(self, instrument):
+        self.qd._getMethod()
+        
         pr0 = self.oanda1.get_prices(instruments=[instrument])['prices'][0]
         return n.mean([pr0['ask'], pr0['bid']])
     
-    def prepTargetPortfolio(self):
+    def prepTargetPortfolio(self):        
+        self.qd._getMethod()
+        
         """
         test
         """
@@ -193,7 +211,7 @@ class QoreQuant():
             gain = float(tarp.ix[i,'gain'].replace('$', ''))
             tarp.ix[i,'leverage'] = abs(floor((gain/(openp-currentp))/amount / 25)) * 25
             tarp.ix[i,'units0'] = amount * tarp.ix[i,'leverage']
-            #except:
+            #except Exception as e:
             #    ''
             
             #tarp.ix[i,2] = float(str(tarp.ix[i,1])) / balance
@@ -216,6 +234,8 @@ class QoreQuant():
     
     
     def generateTargetPortfolio(self, targetPortfolio2):
+        self.qd._getMethod()
+        
         #print "Account: {0}".format(self.accid1); print targetPortfolio1; print
         print "Account: {0}".format(self.accid2); #print targetPortfolio2; print
         targetPortfolio2.ix[:,'take_profit'] = n.array(targetPortfolio2.ix[:,'take_profit'], dtype=float)
@@ -238,6 +258,8 @@ class QoreQuant():
         
 
     def prepSendToMarket(self, df):
+        self.qd._getMethod()
+        
         df2 = self.oanda2.get_positions(self.accid2)
         df2 = p.DataFrame(df2['positions']).sort('instrument', ascending=True).ix[:,['instrument','side','units']]
         polarizePortfolio(df2, 'units', 'amount', 'side')
@@ -257,6 +279,8 @@ class QoreQuant():
         return df0
 
     def sendToMarket(self, df, dryrun=True):
+        self.qd._getMethod()
+        
         #pp0 = list(df.ix[:,'instrument'].get_values())
         #pp1 = list(df.ix[:,'amount'].get_values())
         #print pp0;
@@ -293,6 +317,7 @@ class QoreQuant():
         print
         
     def updateDatasets(self, code, noUpdate=False):
+        self.qd._getMethod()
 
         #self.da = getDataAUD(noUpdate=noUpdate)
         #self.dg = getDataGBP(noUpdate=noUpdate)
@@ -307,9 +332,13 @@ class QoreQuant():
             return self.du
         
     def setDfData(self, dfdata):
+        self.qd._getMethod()
+        
         self.dfdata = dfdata
     
-    def update(self, pair='EURUSD', granularity = None, noUpdate=False, plot=False):        
+    def update(self, pair='EURUSD', granularity = None, noUpdate=False, plot=False):
+        self.qd._getMethod()
+        
         # update from data the source
         #self.granularityMap.keys()
         if granularity == None:
@@ -318,13 +347,16 @@ class QoreQuant():
             self.oq.updateBarsFromOanda(pair=pair, granularities=' '.join([granularity]), plot=plot, noUpdate=noUpdate)
         self.setDfData(self.oq.prepareDfData(self.oq.dfa).bfill().ffill())
     
-    def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False, plot=True):
+    def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False, showPlot=True):
+        self.qd._getMethod()
+        
         #modes = ['train','predict','trade']
         #alpha = 0.09 # 0.3
         
         modes = ['train','predict','trade']
+        mstop = None
         if stopLossPrice != None:
-            mstop = self.oq.calculateStopLossFromPrice(pair, stopLossPrice)
+            mstop = self.oq.calculateStopLossFromPrice(pair, stopLossPrice)        
         
         self.update(pair=pair, granularity=granularity, noUpdate=noUpdate, plot=plot)
     
@@ -335,16 +367,18 @@ class QoreQuant():
         if modes[mode] == 'trade':
             mmode = 4
         try:
-            self.forecastCurrency(mode=mmode, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
+            self.forecastCurrency(mode=mmode, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity, showPlot=showPlot)
             #print self.oq.granularities[0]
         except KeyboardInterrupt, e:
             # save the theta state on keyboard interrupt (stop button)
             self.saveTheta(self.sw.ml.iter, pair=pair.replace('_', ''), granularity=granularity)
         
         if modes[mode] == 'train':
-            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity)
+            self.forecastCurrency(mode=3, pair=pair, iterations=iterations, alpha=alpha, risk=risk, stop=mstop, granularity=granularity, showPlot=showPlot)
         
-    def prepDf(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4'):
+    def prepDf(self, pair='EURUSD', iterations=10000, alpha=0.09, noUpdate=False, granularity='H4', showPlot=False):
+        self.qd._getMethod()
+        
         #pair = 'EURGBP'
         #pair = 'EURCHF'
         
@@ -385,47 +419,64 @@ class QoreQuant():
         
         # shift to next bar close
         #y = list(self.sw.higherNextDay(y, self.sw.keyCol).get_values()); y.append(0)
+        #y = list(self.sw.nextBar(self.df, self.sw.keyCol).get_values()); #y.append(0)
         #print self.df
-        #print y
-        #return
+
+        barsForward = 1
+        y = list(self.sw.nextBar(self.df, self.sw.keyCol, barsForward=barsForward))
+        self.df = self.df.ix[0:len(self.df)-barsForward,:]
+
+        #self.df['y'] = y        
+        #print p.DataFrame(self.df.ix[:,[self.sw.keyCol, 'y']])
+        #import sys
         
         y = n.array(y)
         #print p.DataFrame(y)
-        y.shape
+        print y.shape
         
         self.loadTheta(iterations, pair=pair, granularity=granularity)
         
-        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=self.sw.theta, viewProgress=False, showPlot=False)
+        self.sw.regression2(X=self.df.ix[0:len(self.df), :], y=y, iterations=iterations, alpha=alpha, initialTheta=self.sw.theta, viewProgress=False, showPlot=showPlot)
         
         self.saveTheta(self.sw.ml.iter, pair=pair, granularity=granularity)
         
     def loadTheta(self, iterations, pair='EURUSD', granularity='H4'):
+        self.qd._getMethod()
     
         hdir  = '/mldev/bin/datafeeds/models/qorequant'
         fname = hdir+'/{0}-{1}.theta.csv'.format(pair, granularity)
+        print fname
         iter  = 0
         
         try:
             df0 = p.read_csv(fname, index_col=0)
+            #print df0#.get_values()
+            print 'df0 load'
+            #print df0
             iter = max(df0.index[df0.index < iterations])
             #print iter
             #print iterations - iter    
-            initialTheta = df0.ix[iter, :].get_values()
-            #print initialTheta
-        except:
+            initialTheta = df0.ix[iter, :]#.get_values()
+            print 'loaded initialTheta..'
+        except Exception as e:
+            print e
             df0 = p.DataFrame()
             initialTheta = None
             
         self.sw.theta = initialTheta
+        self.sw.ml.theta = initialTheta
         self.sw.ml.initialIter = iter
+        self.sw.ml.iter = iter
         print self.sw.ml.initialIter
-        print self.sw.theta
+        #print self.sw.theta
         try: print len(self.sw.theta)
-        except: ''
+        except Exception as e:
+            print e
    
     def saveTheta(self, iterations, pair='EURUSD', granularity='H4'):
+        self.qd._getMethod()
         
-        print 'saving theta @ {0} iterations'.format(self.sw.ml.iter)
+        print 'saving theta @ {0} iterations {1}-{2}'.format(self.sw.ml.iter, pair, granularity)
         #print list(self.df.columns)
         #print 
         #print 
@@ -433,21 +484,34 @@ class QoreQuant():
         
         hdir = '/mldev/bin/datafeeds/models/qorequant'
         fname = hdir+'/{0}-{1}.theta.csv'.format(pair, granularity)
+        print fname
         
         mkdir_p(hdir)
         try:
             df0 = p.read_csv(fname, index_col=0)
-        except:
+            #print df0
+        except Exception as e:
+            print e
             df0 = p.DataFrame()
-        #print len(df0)
-        df = p.DataFrame(self.sw.ml.theta, index=list(self.dfdata.columns), columns=[self.sw.ml.iter]).transpose()
+        print len(df0)
+        #print self.sw.ml.theta.get_values()
+        try:    theta = self.sw.ml.theta.get_values()
+        except: theta = self.sw.ml.theta
+        df = p.DataFrame(theta, index=list(self.dfdata.columns), columns=[self.sw.ml.iter]).transpose()
+        #print df.ix[self.sw.ml.iter, :]#.get_values()
+        #print self.sw.ml.theta
+        
         df = df.combine_first(df0)
-        #print df.transpose()
+        #print df
+        print df.transpose()
+        print 'save theta'
         
         if self.verbose == True: df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); show();
         df.to_csv(fname)        
     
     def predict(self, plotTitle='', wlen=2000, showPlot=True):
+        self.qd._getMethod()
+        
         data = self.df
         #self.sw.predictRegression2(mdf.ix[0:ldf-0, :], quiet=True)
         ldf = len(data.ix[:, self.sw.keyCol])
@@ -459,15 +523,15 @@ class QoreQuant():
             #print data.ix[p.tslib.Timestamp('2015-06-10'), self.sw.relatedCols]
             #print data
             print nprices
-        except:
-            ''
+        except Exception as e:
+            print e
         """
         mdf = data
         #[mdf, dmean, dstd] = normalizeme(data, pinv=True)
         #tp = sw.predictRegression2(mdf.ix[0:ldf-i, :], quiet=False)
         tp = p.DataFrame(self.sw.predictRegression2(mdf.ix[:, :], quiet=True), index=data.index)
         #plot(self.de.ix[ldf-wlen: ldf, self.sw.keyCol])
-        if showPlot == True: 
+        if self.verbose == True or showPlot == True: 
             plot(data.ix[ldf-wlen: ldf, self.sw.keyCol])
             plot(tp.ix[ldf-wlen: ldf, :], '.')
             legend(['price', 'tp'])
@@ -477,7 +541,8 @@ class QoreQuant():
         return tp.ix[len(tp)-1:len(tp)-0, :]
     
     def tradePrediction(self, pair, tp, risk=1, stop=40):
-        print 'tradePrediction'
+        self.qd._getMethod()
+
         print pair
         pair = pair.replace('_','')
         print pair
@@ -497,7 +562,9 @@ class QoreQuant():
         if tp1 < curr1:
             self.oq.trade(risk, stop, pair, 's', tp=tp1)
     
-    def forecastCurrency(self, mode=3, pair='EURUSD', granularity='H4', iterations=10000, alpha=0.09, risk=5, stop=20):
+    def forecastCurrency(self, mode=3, pair='EURUSD', granularity='H4', iterations=10000, alpha=0.09, risk=5, stop=20, showPlot=True):
+        self.qd._getMethod()
+        
         # 1: update 2: train, 3: predict, 4: trade
         print 'forecastCurrency: {0} {1}'.format(pair, granularity)  
         
@@ -506,7 +573,8 @@ class QoreQuant():
         
         try:    
             self.df
-        except: 
+        except Exception as e:
+            print e 
             onErrorTrain = True
         
         if mode == 1:
@@ -514,7 +582,7 @@ class QoreQuant():
             
         if mode == 2 or (onErrorTrain == True):
             if mode != 4:
-                self.prepDf(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity)
+                self.prepDf(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity, showPlot=showPlot)
                 self.loadTheta(iterations, pair=pair, granularity=granularity)
                 print 'self.ml.theta'
                 print self.sw.ml.theta
@@ -522,13 +590,144 @@ class QoreQuant():
                 self.train(pair=pair, iterations=iterations, alpha=alpha, noUpdate=True, granularity=granularity)
         
         if mode == 2 or mode == 3 or mode == 4:
-            tp = self.predict(plotTitle=pair)
+            tp = self.predict(plotTitle=pair, showPlot=showPlot)
+            self.predict(wlen=50, showPlot=showPlot)
             print 'Price forecast for {0} {1}'.format(pair, granularity)
             print p.DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
         
         if mode == 4:
             self.tradePrediction(pair, tp, risk=risk, stop=stop)
         
+
+    # volume trades
+    # source: http://stackoverflow.com/questions/13728392/moving-average-or-running-mean
+    def runningMean(self, x, N):
+        self.qd._getMethod()
+        
+        y = n.zeros((len(x),))
+        for ctr in range(len(x)):
+             y[ctr] = np.sum(x[ctr:(ctr+N)])
+        return y/N
+    
+    # source: http://stackoverflow.com/questions/13728392/moving-average-or-running-mean
+    
+    def runningMeanFast(self, x, N):
+        self.qd._getMethod()
+        
+        x = x.transpose().get_values()[0]
+        return n.convolve(x, n.ones((N,))/N)[(N-1):]
+    
+    # visualize multi-pair volume
+    def visualizeVolumeMultiPair(self, granularity = 'M30', pairs=[], tailn=400):
+        self.qd._getMethod()
+        
+        df = p.DataFrame()
+        period = 20
+        #for i in self.oq.dfa:
+        for i in pairs:
+            #for j in self.oq.dfa[i]:
+            #    print '{0} {1}'.format(i,j)
+            #print '{0} {1}'.format(i,granularity)
+            try:
+                nl = '{0}:{1}'.format(i, granularity)
+                nlma20 = '{0}:{1}:ma volume'.format(nl, period)
+                self.oq.updatePairGranularity(i, granularity, noUpdate=False, plot=False)
+                dfi = self.oq.dfa[i][granularity]#.ix[:,['volume']]
+                dfi = dfi.sort(ascending=False)
+                dfi[nlma20] = self.runningMeanFast(dfi.ix[:,['volume']], period)
+                dfi = dfi.sort(ascending=True)
+                dfi[nl] = dfi['volume']
+                df = df.combine_first(dfi.ix[:,[nl, nlma20]])
+            except Exception as e: print e
+        df = normalizeme(df)
+        df = df.tail(tailn)
+        #print df.tail(2).transpose()
+        df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
+        
+        df = sigmoidme(df)
+        #from numpy import tanh as n.tanh
+        #df = n.tanh(df)
+        df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
+
+    def vizVolume(self, fper=0, tper=2):
+        self.qd._getMethod()
+        
+        for i in xrange(fper, tper+1):
+            self.visualizeVolumeMultiPair(granularity=self.granularities[i], pairs=self.pairs)
+            self.sweepChartsConstantGranularity(self.granularities[i], self.pairs, onlyTradedPairs=True)
+            #break
+        
+    def visualizeVolume(self, dff, pair, granularity, tailn=400):
+        self.qd._getMethod()
+        
+        period = 20
+        dfa = dff.copy()
+        dfa = dfa.sort(ascending=False)
+        #dfa['ma {0} volume'.format(period)] = self.runningMean(dfa.ix[:,['volume']], period)
+        dfa['ma {0} volume'.format(period)] = self.runningMeanFast(dfa.ix[:,['volume']], period)
+        dfa['wqe'] = dfa.ix[:,'volume'] / dfa.ix[:, 'ma {0} volume'.format(period)]
+        dfa = dfa.sort(ascending=True)
+        
+        dfa = normalizeme(dfa)
+        dfa = sigmoidme(dfa)
+        dfa = dfa.ix[20:, :].tail(tailn)
+        #dfa.plot(title='{0} {1}'.format(pair, granularity)).legend(loc=2);
+        dfa.plot(title='{0} {1}'.format(pair, granularity)).legend(bbox_to_anchor=(1.3, 1));
+       
+        #trade = raw_input('trade?: ')
+        #trade
+        
+        #print dfa
+    
+    def sweepCharts(self, pair=None, granularity=None):
+        self.qd._getMethod()
+        
+        #if pair == None:
+           
+        #df = self.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
+        #break
+        #dff = p.DataFrame(df['candles'])
+        dff = self.oq.updatePairGranularity(pair, granularity, noUpdate=False, plot=False)
+        #return
+        dff = dff.ix[:, 'closeAsk closeBid volume'.split(' ')]
+        #print dff.tail(5)
+        #dff = normalizeme(dff)
+        #dff = sigmoidme(dff)
+        #dff.plot(); show()
+        self.visualizeVolume(dff, pair, granularity)
+        #print dff
+        #break
+    
+    def sweepChartsConstantPair(self):
+        self.qd._getMethod()
+        
+        # contant pair, variable granularity
+        pair = pairs[0]
+        for granularity in granularities:
+            #try:
+            sweepCharts(pair=pair, granularity=granularity)
+            #except: ''
+    
+    def sweepChartsConstantGranularity(self, granularity, pairs, onlyTradedPairs=False):
+        self.qd._getMethod()
+        
+        # constant granularity, variable pair
+        #granularity = granularities[5]
+        opairs = pairs
+        
+        # view only pairs with open positions
+        if onlyTradedPairs == True:
+            try:
+                pairs = list(p.DataFrame(self.oq.oanda2.get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
+            except:
+                pairs = opairs
+        
+        for pair in pairs:
+            try:    
+                self.sweepCharts(pair=pair, granularity=granularity)
+            except: ''
+            #break
+
 
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
@@ -596,7 +795,8 @@ class FinancialModel:
         # shift code
         try:        
             period = list(n.zeros(shift, dtype=int)) + list(period[0:len(period)-shift])
-        except:
+        except Exception as e:
+            print e
             ''
         
         return initial_capital * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
@@ -644,20 +844,25 @@ import time
 class ml007:
 
     def __init__(self):
+        self.qd = QoreDebug()
+        self.qd._getMethod()
+
         self.J_history = []
         self.theta     = []
         
         self.iter        = 0
         
     def computeCost_linearRegression(self, X, y, theta, m):
+        #self.qd._getMethod()
+        
+        #print 'cost'
         #print X.shape
-        #print y.shape
-        #print m
-        #print theta
+        #print type(X.shape)
         #print theta.shape
         o1 = 1.0/(2*m)
         p1 = n.dot(X,theta)
         o2 = n.sum(n.power(p1-y,2)) # J
+        #print type(theta)
         ret = o1 * o2
         return ret
     
@@ -667,6 +872,8 @@ class ml007:
     # 7.0175
     
     def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=500, ):
+        self.qd._getMethod()
+
         m = len(y)
         self.J_history = n.zeros(num_iters)
         self.theta = theta
@@ -696,8 +903,8 @@ class ml007:
                     #print self.theta                    
                     clear_output()
                     
-        #except:
-        #    ''
+        #except Exception as e:
+        #    print e
         if viewProgress: 
             if self.iter % b == 0:
                 #clear_output()
@@ -726,6 +933,8 @@ class ml007:
     #    0.3999
 
     def costFunction_logisticRegression(self, theta, X, y):
+        self.qd._getMethod()
+
         #%COSTFUNCTION Compute cost and gradient for logistic regression
         #%   J = COSTFUNCTION(theta, X, y) computes the cost of using theta as the
         #%   parameter for logistic regression and the gradient of the cost
@@ -772,6 +981,8 @@ class OandaQ:
     oanda2 = None
     
     def __init__(self, verbose=False):
+        self.qd = QoreDebug()
+        self.qd._getMethod()
         
         self.verbose = verbose
         
@@ -820,7 +1031,7 @@ class OandaQ:
             'M' : 1 * 2419200 # Month
         }
 
-    def log(self, msg, printDot=True):
+    def log(self, msg, printDot=False):
         if self.verbose == True: 
             print msg
         if printDot == True:
@@ -832,23 +1043,27 @@ class OandaQ:
             print msg
     
     def datetimeToTimestamp(self, ddt):
+        self.qd._getMethod()
 
         def _datetimeToTimestamp(ddt):
             return (ddt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
         
         try:    tstmp = _datetimeToTimestamp(ddt)
-        except:
+        except Exception as e:
+            print e
             tstmp = []
             for i in ddt: tstmp.append(_datetimeToTimestamp(i))
         return tstmp
         
     def timestampToDatetime(self, tst):
+        self.qd._getMethod()
 
         def _timestampToDatetime(tst):
             return dd.datetime.fromtimestamp(tst)
 
         try:    ddt = _timestampToDatetime(tst)
-        except:
+        except Exception as e:
+            print e
             ddt = []
             for i in tst: ddt.append(_timestampToDatetime(i))                
         return ddt
@@ -868,6 +1083,7 @@ class OandaQ:
      '2015-07-07 02:00:00']
      """
     def timestampToDatetimeFormat(self, tst, fmt='%Y-%m-%d %H:%M:%S %Z'):
+        self.qd._getMethod()
 
         def _timestampToDatetimeFormat(tst):
             w2 = dd.datetime.fromtimestamp(tst)
@@ -876,13 +1092,15 @@ class OandaQ:
 
         try:    
             ddt = _timestampToDatetimeFormat(tst)
-        except:
+        except Exception as e:
+            print e
             ddt = []
             for i in tst: ddt.append(_timestampToDatetimeFormat(i))                
         return ddt
 
     
     def oandaToTimestamp(self, ptime):
+        self.qd._getMethod()
         
         def _oandaToTimestamp(ptime):
             dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -890,15 +1108,18 @@ class OandaQ:
             
         try:
             tstmp = _oandaToTimestamp(ptime)
-        except:
+        except Exception as e:
+            print e
             tstmp = []
             for i in ptime: tstmp.append(_oandaToTimestamp(i))                
         return tstmp
 
     def oandaToDatetime(self, ptime):
+        self.qd._getMethod()
         return dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
 
     def trade(self, risk, stop, instrument, side, tp=None):
+        self.qd._getMethod()
         """
         if instrument == 'eu':
             instrument = 'EUR_USD'
@@ -919,12 +1140,17 @@ class OandaQ:
             self.sell(risk, stop, instrument=instrument, tp=tp)
         
     def buy(self, risk, stop, instrument='EUR_USD', tp=None):
+        self.qd._getMethod()
+        
         self.order(risk, stop, 'buy', instrument=instrument, tp=tp)
         
     def sell(self, risk, stop, instrument='EUR_USD', tp=None):
+        self.qd._getMethod()
+        
         self.order(risk, stop, 'sell', instrument=instrument, tp=tp)
 
     def order(self, risk, stop, side, instrument='EUR_USD', tp=None, price=None, expiry=None):
+        self.qd._getMethod()
         
         stop = abs(float(stop)) # pips
         risk = float(risk) # percentage risk
@@ -976,6 +1202,8 @@ class OandaQ:
             print 'limit order success'
 
     def calculateAmount(self, bal, pcnt, stop):
+        self.qd._getMethod()
+
         bal  = float(bal)
         lev  = 30.0
         stop = float(stop)
@@ -996,12 +1224,15 @@ class OandaQ:
         return amount
         
     def calculateStopLossFromPrice(self, pair, mprice):
+        self.qd._getMethod()
+
         current = self.oanda2.get_prices(instruments=[pair])['prices'][0]['bid']
         mstop = (mprice-current) * 10000
         #print 'mstop {0}'.format(mstop)
         return mstop
         
     def generateRelatedColsFromOandaTickers(self, data, pair):
+        self.qd._getMethod()
         
         if type(data) == type(None):
             print data
@@ -1011,7 +1242,8 @@ class OandaQ:
         fname = '/mldev/bin/data/oanda/cache/instruments.csv'
         try:
             inst = readcache(fname)
-        except:     
+        except Exception as e:
+            print e
             inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
             writecache(inst, fname)
         lse = []
@@ -1031,7 +1263,8 @@ class OandaQ:
         for i in lse:
             try:    
                 lsf.append(list(data.columns).index(i))
-            except: ''
+            except Exception as e:
+                print e
                 
         #for i in inst:
         #    print i['instrument']
@@ -1045,13 +1278,15 @@ class OandaQ:
         return lsf
         
     def getPairsRelatedToOandaTickers(self, pair):
+        self.qd._getMethod()
         
         # generate relatedCols from oandas tickers
         
         fname = '/mldev/bin/data/oanda/cache/instruments.csv'
         try:
             inst = readcache(fname)
-        except:     
+        except Exception as e:
+            print e     
             inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
             writecache(inst, fname)
 
@@ -1072,10 +1307,6 @@ class OandaQ:
                 
         #print lse
         #print lsp
-        for i in lse:
-            try:    
-                lsf.append(list(data.columns).index(i))
-            except: ''
         
         r = {}
         r['lse'] = lse
@@ -1085,6 +1316,7 @@ class OandaQ:
         return r
     
     def getPricesLatest(self, data, sw, trueprices=False):
+        self.qd._getMethod()
         
         ins = []
         pairs = []
@@ -1116,7 +1348,10 @@ class OandaQ:
         return nprices
 
     def oandaTransactionHistory(self, plot=True):
+        self.qd._getMethod()
+
         # oanda transaction history (long-term)
+        from pylab import rcParams
         rcParams['figure.figsize'] = 20, 5
         # oanda equity viz
         df0 = p.read_csv('/home/qore/sec-svn.git/assets/oanda/kpql/primary/statement.csv')
@@ -1160,12 +1395,13 @@ class OandaQ:
         return df
         
     def getHistoricalPrice(self, pair, granularity='S5', count=2, plot=True):
+        self.qd._getMethod()
         
         df = self.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid', 'volume']
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid']
-        hed = ['closeAsk', 'closeBid']
-        df = p.DataFrame(df['candles'])
+        hed = ['closeAsk', 'closeBid', 'volume']
+        df = p.DataFrame(df['candles'], dtype=n.float16)
         df = df.set_index('time')
         #print df
         df = df.ix[:,hed]
@@ -1177,7 +1413,8 @@ class OandaQ:
         
         return df
     
-    def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True):
+    def appendHistoricalPrice(self, df, pair, granularity='S5', plot=True, count=None):
+        self.qd._getMethod()
 
         safeShift = 0
         
@@ -1187,31 +1424,100 @@ class OandaQ:
         ddtdiff = ddt - self.oandaToTimestamp(ti) + (60*60*3)
         self.log('{0} seconds behind'.format(ddtdiff))
         self.log('{0} minutes behind'.format(ddtdiff / 60))
-        reqcount = int(ceil(ddtdiff / self.granularityMap[granularity])) + safeShift
+        if count == None:
+            reqcount = int(ceil(ddtdiff / self.granularityMap[granularity])) + safeShift
+        else:
+            reqcount = count
         self.log(self.granularityMap[granularity])
         self.log('requesting {0} ticks'.format(reqcount))
         if safeShift > 0:
             plotHiPr = True
         else:
             plotHiPr = False
-        dfn = self.getHistoricalPrice(pair, count=reqcount, granularity=granularity, plot=plotHiPr)#.tail()
-        #print df.tail()
-        #print dfn.tail()
-        dfc = df.combine_first(dfn)
-        df = dfc
+
+        if reqcount > 1:
+            dfn = self.getHistoricalPrice(pair, count=reqcount, granularity=granularity, plot=plotHiPr)#.tail()
+            #print df.tail()
+            #print dfn.tail()
+            dfc = df.combine_first(dfn)
+            df = dfc
         
-        if plot == True:
-            #df.plot(); show();        
-            dfc.plot(title=pair); show();
-        return dfc
+            if plot == True:
+                #df.plot(); show();
+                dfc.plot(title=pair); show();
+            return dfc
+        return df
+        
+    def updatePairGranularity(self, pair, granularity, noUpdate=False, plot=True):
+        self.qd._getMethod()
+
+        ob = ''
+        #ob += '{0} {1}'.format(pair, granularity)
+        fname = '/mldev/bin/data/oanda/ticks/{0}/{0}-{1}.csv'.format(pair, granularity)
+        try:    
+            self.dfa[pair][granularity]
+        except Exception as e:
+            print e
+            # if dataframe not in memory
+            self.log('{0} {1} dataframe not in memory'.format(pair, granularity))
+            try:
+                # read from csv
+                self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
+                ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
+                ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
+            except KeyError, e:
+                self.debug(e)
+                self.dfa[pair] = {}
+            except IOError, e:
+                # if no csv file, initialize memory for the dataframe
+                #print e
+                self.dfa[pair] = {}
+            except Exception as e:
+                print e
+                print 'exception {0}'.format(pair)
+                
+        # append to current dataframe in memory
+        if noUpdate == False:
+            self.log('{0} {1} attempting update {2}'.format(pair, granularity, noUpdate))
+            self.log('{0} {1} updating'.format(pair, granularity))
+            try:
+                self.log('len {0} before append.'.format(len(self.dfa[pair][granularity])))
+                self.dfa[pair][granularity] = self.appendHistoricalPrice(self.dfa[pair][granularity], pair, granularity=granularity, plot=plot)
+                self.log('len {0} after append.'.format(len(self.dfa[pair][granularity])))
+                self.log('appended to {0}'.format(pair))
+                # if no dataframe in memory, download from data source
+            except Exception as e:
+                self.debug(e)
+                try:
+                    self.dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=plot)
+                    self.log('got clean series {0}'.format(pair))
+                except oandapy.OandaError, e:
+                    self.debug(e)
+        
+        if noUpdate == False:
+            try:
+                # save to csv file
+                li = fname.split('/'); li.pop(); hdir = '/'.join(li);
+                mkdir_p(hdir)
+                self.dfa[pair][granularity].to_csv(fname)
+                #if plot == True:
+                #    self.dfa[pair][granularity].plot(); show();
+                self.log('saved {0} to {1}'.format(pair, fname))
+            except KeyError, e:
+                print e
+        self.log(ob)
+        #print self.dfa[pair][granularity]
+        return self.dfa[pair][granularity]
         
     def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
+        self.qd._getMethod()
 
+        print 'updateBarsFromOanda()'
         pair = pair.replace('_', '') # remove the underscore
         relatedPairs = self.getPairsRelatedToOandaTickers(pair)        
         
         pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
-        self.log(pairs)
+        #self.log(pairs)
         self.granularities = granularities.split(' ')
         for pair in pairs:
             self.log('')
@@ -1219,62 +1525,15 @@ class OandaQ:
             except KeyError, e: 
                 self.dfa[pair] = {}; 
                 self.debug(e)
-            ob = ''
             for granularity in self.granularities:
-                ob += '{0} {1}'.format(pair, granularity)
-                fname = '/mldev/bin/data/oanda/ticks/{0}/{0}-{1}.csv'.format(pair, granularity)
-                try:    
-                    self.dfa[pair][granularity]
-                except:
-                    # if dataframe not in memory
-                    self.log('{0} {1} dataframe not in memory'.format(pair, granularity))
-                    try:
-                        # read from csv
-                        self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
-                        ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
-                        ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
-                    except KeyError, e:
-                        self.debug(e)
-                        self.dfa[pair] = {}
-                    except IOError, e:
-                        # if no csv file, initialize memory for the dataframe
-                        #print e
-                        self.dfa[pair] = {}
-                    except:
-                        print 'exception {0}'.format(pair)
-                        
-                # append to current dataframe in memory
-                if noUpdate == False:
-                    self.log('{0} {1} attempting update {2}'.format(pair, granularity, noUpdate))
-                    self.log('{0} {1} updating'.format(pair, granularity))
-                    try:
-                        self.log('len {0} before append.'.format(len(self.dfa[pair][granularity])))
-                        self.dfa[pair][granularity] = self.appendHistoricalPrice(self.dfa[pair][granularity], pair, granularity=granularity, plot=plot)
-                        self.log('len {0} after append.'.format(len(self.dfa[pair][granularity])))
-                        self.log('appended to {0}'.format(pair))
-                        # if no dataframe in memory, download from data source
-                    except:
-                        try:
-                            self.dfa[pair][granularity] = self.getHistoricalPrice(pair, count=5000, granularity=granularity, plot=plot)
-                            self.log('got clean series {0}'.format(pair))
-                        except oandapy.OandaError, e:
-                            print e                        
+                self.updatePairGranularity(pair, granularity, noUpdate=noUpdate, plot=plot)
                 
-                if noUpdate == False:
-                    try:
-                        # save to csv file
-                        li = fname.split('/'); li.pop(); hdir = '/'.join(li);
-                        mkdir_p(hdir)
-                        self.dfa[pair][granularity].to_csv(fname)
-                        #self.dfa[pair][granularity].plot(); show();
-                        self.log('saved {0} to {1}'.format(pair, fname))
-                    except KeyError, e:
-                        print e
-                self.log(ob)
         #print self.dfa
         return self.dfa
 
     def prepareDfData(self, dfa):
+        self.qd._getMethod()
+
         dfac = p.DataFrame()
         gran = self.granularities[0]
         
@@ -1287,7 +1546,8 @@ class OandaQ:
                 #print dfa[i][gran].ix[:,[2,3]].tail(1)#.transpose()
                 #dfac = dfac.combine_first(dfa[i][gran].ix[:,[2,3,4]]) #.tail(1)#.transpose()
                 dfac = dfac.combine_first(dfa[i][gran].ix[:,[par]]) #.tail(1)#.transpose()
-        except:
+        except Exception as e:
+            print e
             print gran+' granularity not available, please update for '+gran
         #dfac = normalizeme(dfac)
         #dfac = sigmoidme(dfac)
@@ -1349,6 +1609,9 @@ def pcc(X, Y):
 class StatWing:
     
     def __init__(self):
+        self.qd = QoreDebug()
+        self.qd._getMethod()
+
         self.keyCol = ''
         self.relatedCols = []
         self.theta = n.array([])
@@ -1358,11 +1621,31 @@ class StatWing:
         # for predict from theta
         self.nxps = []
         try:    self.oq = OandaQ()
-        except: print 'offline mode'
-        self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
+        except Exception as e:
+            print e
+            print 'offline mode'
+        #self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
+        self.theta = p.DataFrame()
         self.ml = ml007()
         
+    def nextBar(self, dfa, k, barsForward=3):
+        self.qd._getMethod()
+        
+        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward])
+        #print type(dfc)
+        a = dfa.ix[0:len(dfa)-barsForward, [k]].get_values()
+        b = dfa.ix[barsForward:len(dfa),[k]].get_values()
+        #print len(a)
+        #print len(b)
+        dfc['a'] = a
+        dfc['b'] = b
+        dfc['c'] = dfc['b']
+        #print dfc.ix[1:len(dfa),['a','b','c']]
+        return dfc['c']
+
     def higherNextDay(self, dfa, k):
+        self.qd._getMethod()
+
         dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-1])
         print type(dfc)
         dfc['a'] = dfa.ix[0:len(dfa)-1, [k]].get_values()
@@ -1373,6 +1656,8 @@ class StatWing:
         #p.DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
     
     def lowerNextDay(self, dfa, k):
+        self.qd._getMethod()
+
         dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-1], columns=dfa.columns)
         dfc['a'] = dfa.ix[0:len(dfa)-1, [k]].get_values()
         dfc['b'] = dfa.ix[1:len(dfa), [k]].get_values()
@@ -1382,14 +1667,20 @@ class StatWing:
     
     # export dataset to csv for analysis (statwing)
     def higherPrev(self, a):
+        self.qd._getMethod()
+
         a = sigmoidme(a) > 0.5
         return n.array(a, dtype=int)
     
     def lowerPrev(self, a):
+        self.qd._getMethod()
+
         a = sigmoidme(a) < 0.5
         return n.array(a, dtype=int)
     
     def exportToStatwing(self, de, currency_code):
+        self.qd._getMethod()
+
         #dff = n.matrix('1;2;3;4;-4;-5;-3;2;9').A
         #print higherPrev(dff)
         #print lowerPrev(dff)
@@ -1406,6 +1697,8 @@ class StatWing:
         return de1
 
     def getCol(self, col, df):
+        self.qd._getMethod()
+
         if type(col) == type(0):
             column = df.columns[col]
         elif type(col) == type(''):
@@ -1413,6 +1706,7 @@ class StatWing:
         return column
     
     def describe(self, df, col):
+        self.qd._getMethod()
 
         print 'Summary:'
         sample = df.ix[:,col]  
@@ -1434,6 +1728,7 @@ class StatWing:
         show();
         
     def relate(self, sample, keyCol, relatedCol):
+        self.qd._getMethod()
 
         #print n.corrcoef(sample.ix[:, keyCol], sample.ix[:, relatedCol])[0, 1]
         #print pearson_def(sample.ix[:, keyCol], sample.ix[:, relatedCol])
@@ -1473,7 +1768,8 @@ class StatWing:
         show();
     
     def fixColumns(self, data, relatedCols, keyCol):
-        
+        self.qd._getMethod()
+
         #print 'relatedCols'
         #print relatedCols
         
@@ -1494,13 +1790,14 @@ class StatWing:
         #print 'removing {0}'.format(keyCol)
         #print Xc
         Xc.remove(keyCol)
-        #except:
-        #    ''
+        #except Exception as e:
+        #    print e
         X = X[Xc]
         #print list(X.columns)
         return X
     
     def regression(self, data, y, keyCol, relatedCols, initialTheta=None, iterations=1000, alpha=0.01, viewProgress=True, showPlot=True, verbose=False):
+        self.qd._getMethod()
 
         data = data.fillna(0)
         #X = data.ix[:,0]; y = data.ix[:,1]
@@ -1523,16 +1820,39 @@ class StatWing:
         #initialTheta = None
         
         if type(initialTheta) == type(None):
-            print 'initializing theta'
             self.theta = n.zeros(len(X.columns))
+            print 'theta initialized'
         else:
-            print 'loading theta'
             print initialTheta
+            print 'theta loaded'
             self.theta = initialTheta
-            
+
+        #print y.shape
+        #print m
+        #print 'test======'
+        print 'data.shape: {0}'.format(data.shape)
+        print 'X.shape: {0}'.format(X.shape)
+        #print type(X)
+        #print self.theta
+        print 'theta.shape: {0}'.format(self.theta.shape)
+        #print type(self.theta)
+        #print X.columns
+        #print self.theta.to_frame().columns
+        self.theta = p.Series(self.theta).to_frame('o').fillna(0).combine_first(p.DataFrame(n.zeros(len(X.columns)), index=X.columns, columns=['o'])).ix[X.columns, 'o'].get_values()
+        print self.theta
+        print 'theta2.shape: {0}'.format(self.theta.shape)
+        #print relatedCols
+        #print len(relatedCols)
+        #print self.theta.shape
+        #print self.theta
+        #print type(self.theta)
+        #print '===='        
+        #import sys
+        #sys.exit()
+        #raise(e)
         
         #theta = n.random.randn(len(X.columns))
-        print self.theta
+        #print self.theta
         
         #% compute and display initial cost
         self.ml.computeCost_linearRegression(X, y, self.theta, len(y))
@@ -1558,7 +1878,8 @@ class StatWing:
         return self.ml.theta
 
     def predictRegression(self, te1, te2, mode=1):
-        
+        self.qd._getMethod()
+
         if len(te1) > len(te2):
             #te2.append(0)
             te2.insert(0,0)
@@ -1619,6 +1940,8 @@ class StatWing:
         
     # m2e() { fc="`echo "$1" | perl -pe 's/.xlsx/.csv/g'`"; echo $1; echo $fc; xlsx2csv $1 $fc; }    
     def statwingExportPredict(self, fns, ):
+        self.qd._getMethod()
+
         for fn in fns:
             print '================================================='
             print fn
@@ -1643,6 +1966,8 @@ class StatWing:
             
     #def regression2(self, de=None, du=None, da=None):
     def regression2(self, X=None, y=None, iterations=1000, alpha=0.01, initialTheta=None, viewProgress=True, showPlot=True):
+        self.qd._getMethod()
+
         #if X == None:
         #    X = getDatasetEUR()
         #if du == None:
@@ -1678,7 +2003,8 @@ class StatWing:
             plot(data, '.'); show();
 
     def predictRegression2(self, data, quiet=False):
-        
+        self.qd._getMethod()
+
         #if len(self.theta) == 0:
         #    self.regression2(de=data)
         [data, self.dmean, self.dstd] = normalizeme(data, pinv=True)
@@ -1744,7 +2070,8 @@ class StatWing:
 
     # real-time theta
     def predictFromTheta(self, df=None, nX=None, save=False):
-        
+        self.qd._getMethod()
+
         if type(nX) == type(None):
             nX = self.oq.getPricesLatest(df, self, trueprices=True)
             #print nX
@@ -1765,8 +2092,8 @@ class StatWing:
         val = 0
         try:
             val = n.dot( nXbias, self.theta )[0][0]
-        except:
-            ''
+        except Exception as e:
+            print e
             #print 'eerr'
         if val != 0:
             self.nxps.append( val )
@@ -1817,18 +2144,18 @@ class RealtimeChart:
         try:
             imax = n.max(self.sw.nxps)
             imax = imax + n.std(self.sw.nxps)
-        except:
-            ''
+        except Exception as e:
+            print e
         try:
             imin = n.min(self.sw.nxps)
             imin = imin - n.std(self.sw.nxps)
-        except:
-            ''
+        except Exception as e:
+            print e
         """
         try:
             plt.axis([0, len(self.sw.nxps)+10, imin, imax])
-        except:
-            ''
+        except Exception as e:
+            print e
         plt.scatter(self.i, y)
         plt.draw()
         """
@@ -1948,7 +2275,7 @@ def normalizeme2(ds, index=None, columns=None):
         dss = ds
     if type(ds) == type([]):
     #    print 't2'
-        dss = n.array(ds)
+        dss = n.array(ds, dtype=float)
     #print type(dss)
     #import sys
     #sys.exit()
@@ -2011,8 +2338,8 @@ def quickPlot(tks, headers=None, listcolumns=False, title=None):
         try:        
             hdrs = list(d.columns[[headers]])
             legend(hdrs, 2)
-        except:
-            ''
+        except Exception as e:
+            print e
     #else:
     #    legend(None, 2)
     #print type(title)
@@ -2109,7 +2436,8 @@ def quandlCode2DatasetCode(tk, hdir='./', include_path=True, suffix='.csv'):
         else:
             fname = mt[0]+'-'+mt[1]+'_'+mt[2]+suffix            
         #fname = path+'/'+mt[2]+'.csv'
-    except:
+    except Exception as e:
+        print e
         mt = re.match(re.compile(r'(.*)\/(.*)', re.S), tk).groups()
         path = hdir+'/'+mt[0]+'/'+mt[1]
         if include_path:
@@ -2623,8 +2951,8 @@ Peercoin	PPC	6	3600
                     #    print i[0:3]
                     #if i[4:7] == fc:
                     #    print i[4:7]
-                except:
-                    ''
+                except Exception as e:
+                    print e
         """
         return tis
     
@@ -2666,8 +2994,8 @@ Peercoin	PPC	6	3600
             try:
                 ti = self.getTicker(i); #print ti.transpose()
                 pc = pc.combine_first(ti)
-            except:
-                ''
+            except Exception as e:
+                print e
         #print pc
         return pc.transpose()
     
@@ -2788,7 +3116,8 @@ Peercoin	PPC	6	3600
         # show the fastest coin to arbitrage
         try:
             arr
-        except:
+        except Exception as e:
+            print e
             arr = self.getMostProfitablePair()
         arrSortedAR = arr.sort('arbitrageRate', ascending=False)
         print p.DataFrame(arrSortedAR.ix[list(arrSortedAR.ix[:,'p1']).index(self.p1), :]).transpose(); print
@@ -2799,7 +3128,8 @@ Peercoin	PPC	6	3600
         fcs = []
         try:
             arbRates
-        except:
+        except Exception as e:
+            print e
             arbRates = self.getArbRates()
         arr = arbRates.transpose()
         po1 = []; po2 = []
@@ -2811,9 +3141,11 @@ Peercoin	PPC	6	3600
         for i in range(0,len(arr)):
             #if arr.ix[i,'p1']
             try: arr.ix[i,'p11'] = fastestCoins.index(arr.ix[i,'p1'].upper())
-            except: ''
+            except Exception as e:
+                print e
             try: arr.ix[i,'p22'] = fastestCoins.index(arr.ix[i,'p2'].upper())
-            except: ''
+            except Exception as e:
+                print e
         arr1 = arr.sort('p11', ascending=True);
         arr2 = arr.sort('p22', ascending=True);
         self.p1 = arr1.ix[0,'p1']; debug(self.p1)
@@ -2880,8 +3212,8 @@ class ShapeShift(CryptoCoinBaseClass):
             try:
                 debug('fetching:'+url)
                 fetchURL(url, cachemode='a')
-            except:
-                ''
+            except Exception as e:
+                print e
         
         li = url
         li = list(it.permutations(li, 2))
@@ -3075,7 +3407,8 @@ class Etoro():
         except NoSuchElementException, e:
             return True
             #print e
-        except:
+        except Exception as e:
+            print e
             return False
     
     def etoroLogout():
@@ -3121,9 +3454,9 @@ class Etoro():
             submit_button = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div/form/div[1]/div/input')[0]
             #submit_button = driver.find_element_by_name('submit')
             submit_button.click()
-        except:
+        except Exception as e:
+            print e
             if verbose == True: flow.append(6);
-            ''
         if verbose == True: flow.append(7);
             
         if verbose == True: print flow
@@ -3149,7 +3482,8 @@ class Etoro():
             self.driver.quit()
             self.driver = None
             
-        except:
+        except Exception as e:
+            print e
             self.driver = None
         if self.driver == None:
             return True
@@ -3163,8 +3497,8 @@ class Etoro():
             els.append(i.text)
         try:
             return p.DataFrame(els, columns=[column])
-        except:
-            ''
+        except Exception as e:
+            print e
     
     # todo:
     #https://openbook.etoro.com/markets/stocks/
@@ -3222,8 +3556,8 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
                     ilss = self.find_elements_by_xpath_return_list(iss[1], iss[0])
                     print len(ilss)
                     lss.append(ilss)
-                except:
-                    ''
+                except Exception as e:
+                    print e
             """
             xps = xps.split('\n')
             for i in xrange(len(xps)):
@@ -3305,24 +3639,24 @@ gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-
         for i in range(len(df.ix[:,0])):
             try:
                 col = 'take_profit'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
-            except:
-                ''
+            except Exception as e:
+                print e
             try:
                 col = 'stop_loss'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
-            except:
-                ''
+            except Exception as e:
+                print e
             try:
                 col = 'amount'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
-            except:
-                ''
+            except Exception as e:
+                print e
             try:
                 col = 'netprofit'; df.ix[i,col] = re.match(re.compile(r'.*?([\d\.]+)'), df.ix[i,col]).groups()[0]
-            except:
-                ''
+            except Exception as e:
+                print e
             try:
                 col = 'gain'; df.ix[i,col] = re.match(re.compile(r'(-?[\d\.]+).*'), df.ix[i,col]).groups()[0]
-            except:
-                ''
+            except Exception as e:
+                print e
             
         # remove the extra table column
         df = df.ix[:,list(df.columns[1:])]            
@@ -3442,7 +3776,8 @@ class Bancor:
             #print n
             return float(n)
         #float(str(n).replace(',', ''))
-        except:
+        except Exception as e:
+            print e
             return n
         #return n
     
@@ -3511,9 +3846,8 @@ class Bancor:
         try:
             python_link = self.et.driver.find_elements_by_xpath('/html/body/div[3]/div/div[5]/div[1]/table/tbody/tr/td[3]/div/a/span/span')[0]
             python_link.click()
-        except Exception, e:
+        except Exception as e:
             print e
-        except:
             pass
         
         # clear the filters
