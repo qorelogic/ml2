@@ -190,6 +190,8 @@ class QsForecaster:
             mode        = argvOrRawInput('select number: ', modes, 1)
             pair        = argvOrRawInput('select number: ', pairs, 2)
             granularity = argvOrRawInput('select number: ', granularities, 3)
+            pair        = pairs[pair]
+            granularity = granularities[granularity]
             
             print "{0} {1} {2}".format(modes[mode], pairs[pair], granularities[granularity])
 
@@ -200,8 +202,6 @@ class QsForecaster:
                 stopLossPrice = float(raw_input('stopLossPrice: '))
                 risk          = float(raw_input('risk: '))
 
-            pair          = pairs[pair]
-            granularity   = granularities[granularity]
             #%prun self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
             #%lprun -f self.qq.main -f self.qq.update -f self.qq.oq.updateBarsFromOanda -f self.qq.oq.appendHistoricalPrice self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
             self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, showPlot=plot)
