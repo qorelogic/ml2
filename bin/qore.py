@@ -12,6 +12,96 @@ logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
 
 hdir = '/ml.live/bin/data/cache'
 
+from numpy import array as n_array
+from numpy import rint as n_rint
+from numpy import tanh as n_tanh
+from numpy import power as n_power
+from numpy import e as n_e
+from numpy import string0 as n_string0
+def monpos2(df, pr):
+
+    #print pr
+    pr = pr['bid']
+    #print 
+    #print pr
+    
+    mdf = p.DataFrame()
+    
+    for i in df:
+        dfi = p.DataFrame(i, index=[0]).set_index('id')#.transpose()
+        #print dfi
+        dfi['pr'] = pr
+        mdf = mdf.combine_first(dfi.ix[:,['price','side', 'pr']])
+
+    if len(mdf) > 0:
+        
+        print 'shape:'.format(mdf.shape)
+        print 'lenmdf:'.format(len(mdf))
+        mdf['pole'] = list(n_array(n_array(mdf.ix[:,'side']) == 'buy', dtype=int))
+    
+        # inspired source: http://brenocon.com/blog/2013/10/tanh-is-a-rescaled-logistic-sigmoid-function/
+        # gx = ((2.*(e.^z./(1+e.^z))) .* (2.*z)) - 1
+        #z = n.matrix('1;0.1').A
+        z = mdf['pole']
+        mdf['poleTanh'] = n_rint(n_tanh((2*(n_power(n_e, z) / (1 + n_power(n_e, z))) * (2*z))-1))    
+        mdf['pips'] = 10000 * (mdf.ix[:,'pr'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']
+        mdf['trail'] = mdf['pips'] - 2
+    
+        print mdf
+        """
+        for i in xrange(len(mdf)):
+            print mdf['trail'][i]
+            if mdf['trail'][i] > 0:
+                #qq.oq.oanda2.modify_trade(qq.oq.aid, tid, trailingStop=10)
+                print 'setting trailstop'
+        """
+        """
+        if pl > 0:
+            print pl
+            print 'setting trailstop'
+            tid = trade['id']
+            #qq.oq.oanda2.modify_trade(qq.oq.aid, tid, trailingStop=10)
+        else:
+            print 'trailstop too small, patience!'
+        """
+        
+        #print mdf.ix[:,'side'].get_values()
+        return mdf#.transpose()
+    #else:
+    #    return n.empty()
+
+def babysitTrades2(qq, acc):
+    #acc = qq.oq.oanda2.get_account(qq.oq.aid)
+    bal = acc['balance']
+
+    relatedPairs = qq.oq.getPairsRelatedToOandaTickers('EUR_USD')
+    pairs = list(n_array(p.DataFrame(relatedPairs['lsp']).ix[:,0], dtype=n_string0))
+    prices = p.DataFrame(qq.oq.oanda2.get_prices(instruments=','.join(pairs))['prices'])
+    cupris = prices.set_index('instrument').ix['EUR_USD',['ask','bid']].transpose().describe()['top']#.ix['EUR_USD',:]
+
+    trades = p.DataFrame(qq.oq.oanda2.get_trades(qq.oq.aid)['trades'])
+    trades['cprice'] = cupris
+    pl = (trades['price'] - cupris) * trades['units'] * cupris
+    trades['pl'] = pl
+    trades['pips'] = (trades['price'] - cupris) * 10000
+    trades['pcnt'] = pl / bal * 100
+
+    print list((trades['instrument'] == 'EUR_USD').index)
+    for i in xrange(len(trades)):
+        trade = trades.ix[i,:]
+        pl = trade['pl']
+        #print trade
+        if pl > 0:
+            print pl
+            print 'setting trailstop'
+            tid = trade['id']
+            #qq.oq.oanda2.modify_trade(qq.oq.aid, tid, trailingStop=10)
+        else:
+            print 'trailstop too small, patience!'
+            
+        #break
+    print trades.transpose()
+
 def debug(str, verbosity=8):
     #if verbosity == 9:
     if verbosity == 8:
