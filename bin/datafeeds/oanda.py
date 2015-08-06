@@ -54,11 +54,11 @@ accid = acc[0]['accountId']
 
 oq = OandaQ()
 
-modes = 'demo,plotly,csv'.split(',')
+modes = 'demo,plotly,csv,babysit'.split(',')
 
 def usage():
     qd._getMethod()
-    return "usage: demo | plotly | csv"
+    return "usage: demo | plotly | csv | babysit"
 
 #------------------------------
 # tick streamer (data feed)
@@ -83,6 +83,10 @@ class MyStreamer(oandapy.Streamer):
                 break
             if case('plotly'):
                 self.rtc = RealtimeChart()
+                break
+            if case('babysit'):
+                self.trades = oq.oanda2.get_trades(oq.aid)['trades']
+                self.account = oq.oanda2.get_account(oq.aid)
                 break
             print usage()
             break
@@ -111,6 +115,11 @@ class MyStreamer(oandapy.Streamer):
                     break
                 if case('plotly'):
                     self.rtc.update(csvc)
+                    break
+                if case('babysit'):
+                    res = monpos2(self.trades, data['tick'])
+                    #if res == False:
+                    #    print data
                     break
                 print usage()
                 break
@@ -151,7 +160,10 @@ def do_work(mode, forever = True):
                 if case('plotly'):
                     pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
                     break
-                print "options: demo, plotly"
+                if case('babysit'):
+                    pairs = 'EUR_USD'
+                    break
+                print usage()
                 break
             
             stream.start(accountId=accid, instruments=pairs)
