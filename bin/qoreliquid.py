@@ -19,6 +19,9 @@ import itertools as it
 
 import oandapy
 
+# source: http://stackoverflow.com/questions/15639779/why-does-multiprocessing-use-only-a-single-core-after-i-import-numpy
+os.system("taskset -p 0xff %d" % os.getpid())
+
 def toCurrency(n):
     return '%2d' % n
 

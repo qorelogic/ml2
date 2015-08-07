@@ -23,6 +23,9 @@ from qoreliquid import QoreQuant
 from threading import Thread
 import sys, traceback
 
+#import os
+#os.system("taskset -p 0xff %d" % os.getpid())
+
 def rawInput(msg, options, option=None):
     for i in xrange(len(options)): print '{0} {1}'.format(i, options[i])
     while True:
