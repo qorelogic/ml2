@@ -190,10 +190,11 @@ class QsForecaster:
             mode        = argvOrRawInput('select number: ', modes, 1)
             pair        = argvOrRawInput('select number: ', pairs, 2)
             granularity = argvOrRawInput('select number: ', granularities, 3)
-            pair        = pairs[pair]
-            granularity = granularities[granularity]
             
             print "{0} {1} {2}".format(modes[mode], pairs[pair], granularities[granularity])
+
+            pair        = pairs[pair]
+            granularity = granularities[granularity]
 
             if mode == 0: noUpdate = False
             if mode == 1 or mode == 2: noUpdate = True
