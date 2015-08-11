@@ -250,9 +250,66 @@ def main():
 def test():
     trader.gotoMarket()
 
+def theanoTest():
+    from theano import function
+    import theano.tensor as T
+    from numpy import matrix as n_matrix
+    from numpy import float32 as n_float32
+    
+    x = T.fmatrix('x')
+    y = T.fmatrix('y')
+    z = T.dot(x, y)
+    f = function([x,y], z)
+    
+    
+    X = T.fmatrix('X')
+    y = T.fmatrix('y')
+    theta = T.fmatrix('theta')
+    m = T.fmatrix('m')
+    z = 1.0/(2*m) * n_sum(n_power(n_dot(X,theta)-y,2))
+    computeCost = function([X,y,theta,m], z)
+
+    # ret = 1.0/(2*m) * n_sum(n_power(n_dot(X,theta)-y,2))
+    ret = 1.0/(2*m) * n_sum(n_power(n_dot(X,theta)-y,2))
+    #print computeCost( n_array([1, 2, 1, 3, 1, 4, 1, 5]).reshape(4,2), n_array([7, 6, 5, 4]).reshape(4,1), n_array([0.1,0.2]).reshape(2,1) )
+    # 11.945
+    #print computeCost( n_array([1,2,3,1,3,4,1,4,5,1,5,6]).reshape(4,3), n_array([7, 6, 5, 4]).reshape(4,1), n_array([0.1,0.2,0.3]).reshape(3,1))
+    # 7.0175
+
+def theanoTest2():
+    from theano import function
+    import theano.tensor as T
+    from numpy import matrix as n_matrix
+    from numpy import float32 as n_float32
+    
+    tX     = T.fmatrix('tX')
+    ty     = T.fmatrix('ty')
+    ttheta = T.fmatrix('ttheta')
+    tm     = T.fscalar('tm')
+    z     = 1.0/(2*tm) * T.sum((T.dot(tX,ttheta)-ty) ** 2)
+    computeCost = function([tX,ty,ttheta,tm], z)
+
+    # ret = 1.0/(2*m) * n_sum(n_power(n_dot(X,theta)-y,2))
+
+    cX = n_matrix('1, 2; 1, 3; 1, 4; 1, 5', dtype=n_float32) #.reshape(4,2)
+    cy = n_matrix('7; 6; 5; 4', dtype=n_float32) #.reshape(4,1)
+    ctheta = n_matrix('0.1;0.2', dtype=n_float32) #.reshape(2,1)
+    cm = len(cy)
+    print computeCost(cX, cy, ctheta, cm)
+    #print computeCost( mm )
+    # 11.945
+    cX = n_matrix('1,2,3;1,3,4;1,4,5;1,5,6', dtype=n_float32) 
+    cy = n_matrix('7; 6; 5; 4', dtype=n_float32)
+    ctheta = n_matrix('0.1;0.2;0.3', dtype=n_float32) 
+    cm = len(cy)
+    print computeCost(cX, cy, ctheta, cm)
+    # 7.0175
+    
 if __name__ == "__main__":
     #main()
     #test()
 
-    do_work(True)
-    #do_work_debug(False)
+    #do_work(True)
+    do_work_debug(False)
+
+    #theanoTest2()

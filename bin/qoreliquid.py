@@ -828,6 +828,10 @@ class FinancialModel:
 
 from IPython.display import display, clear_output
 import time
+from theano import function
+import theano.tensor as T
+from numpy import matrix as n_matrix
+from numpy import float32 as n_float32
 class ml007:
 
     def __init__(self):
@@ -839,18 +843,51 @@ class ml007:
         self.initialIter = 0
         self.iter        = 0
         
-    def computeCost_linearRegression(self, X, y, theta, m):
+    def computeCost_linearRegression3(self, X, y, theta, m):
         #self.qd._getMethod()
         
         #print 'cost'
         #print X.shape
-        #print type(X.shape)
+        #print type(X)
+        #print y.shape
+        #print type(y)
         #print theta.shape
+        
         o1 = 1.0/(2*m)
         p1 = n.dot(X,theta)
         o2 = n.sum(n.power(p1-y,2)) # J
         #print type(theta)
         ret = o1 * o2
+
+        return ret
+
+    def computeCost_linearRegressionTdef(self):
+        tX     = T.fmatrix('tX')
+        ty     = T.fmatrix('ty')
+        ttheta = T.fmatrix('ttheta')
+        tm     = T.fscalar('tm')
+        z      = 1.0/(2*tm) * T.sum((T.dot(tX,ttheta)-ty) ** 2)
+        computeCost_linearRegressionT = function([tX,ty,ttheta,tm], z)
+        return computeCost_linearRegressionT
+
+    def computeCost_linearRegression(self, cX, y, theta, m):
+        #self.qd._getMethod()
+        
+        #print 'cost'
+        #print X.shape
+        #print type(X)
+        #print y.shape
+        #print type(y)
+        #print theta.shape
+        
+        cy     = n_array(y.reshape(len(y),1), dtype=n_float32)
+        ctheta = n_array(theta.reshape(len(theta),1), dtype=n_float32)
+        #cX = X
+        #cy = y
+        #ctheta = theta
+        cm = len(y)
+        ret = self.computeCost_linearRegressionT(cX, cy, ctheta, cm)
+
         return ret
     
     #print computeCost( n.array([1, 2, 1, 3, 1, 4, 1, 5]).reshape(4,2), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2]).reshape(2,1) )
@@ -866,6 +903,11 @@ class ml007:
         self.theta = theta
         X = n.array(X)
         alpha_over_m = (float(alpha)/m)
+
+        # theano cost function def
+        self.computeCost_linearRegressionT = self.computeCost_linearRegressionTdef()
+        cX = n_array(X, dtype=n_float32)
+        
         #try:
         for self.iter in range(self.initialIter, num_iters):
                 self.theta = self.theta - alpha_over_m * n.dot((   n.dot(X, self.theta) - y).transpose(), X).transpose()
@@ -875,7 +917,8 @@ class ml007:
                 #        clear_output()
                 #        print ''
                 #        print 'theta:{0}'.format(self.theta)
-                self.J_history[self.iter] = self.computeCost_linearRegression(X, y, self.theta, m)
+                #self.J_history[self.iter] = self.computeCost_linearRegression(X, y, self.theta, m)
+                self.J_history[self.iter] = self.computeCost_linearRegression(cX, y, self.theta, m)
                 #if viewProgress:
                 #    if self.iter % b == 0:
                 #        print '1 J history:{0}'.format(self.J_history[self.iter])
@@ -1840,8 +1883,13 @@ class StatWing:
         #theta = n.random.randn(len(X.columns))
         #print self.theta
         
+        # define theano cost function 
+        self.ml.computeCost_linearRegressionT = self.ml.computeCost_linearRegressionTdef()
+        cX = n_array(X, dtype=n_float32)
+
+
         #% compute and display initial cost
-        self.ml.computeCost_linearRegression(X, y, self.theta, len(y))
+        self.ml.computeCost_linearRegression(cX, y, self.theta, len(y))
         
         #% run gradient descent
         [self.theta, self.J_hist] = self.ml.gradientDescent_linearRegression(X, y, self.theta, alpha, iterations, viewProgress=viewProgress);
