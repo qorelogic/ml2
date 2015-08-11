@@ -895,8 +895,10 @@ class ml007:
     #print computeCost( n_array([1,2,3,1,3,4,1,4,5,1,5,6]).reshape(4,3), n_array([7, 6, 5, 4]).reshape(4,1), n_array([0.1,0.2,0.3]).reshape(3,1))
     # 7.0175
     
-    def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=500, ):
+    def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=500, sw=None):
         self.qd._getMethod()
+        
+        mdf = X
 
         m = len(y)
         self.J_history = n_zeros(num_iters)
@@ -923,7 +925,10 @@ class ml007:
                 #    plt.scatter(self.iter, self.J_history); show();
                 #    return [self.theta, self.J_history]
                 if self.iter % b == 0:
-                    print '{0} {1}'.format(self.iter, self.J_history[self.iter])
+                    if sw != None:
+                        tp = sw.predictRegression2(mdf.ix[:, :], quiet=True)
+                        tp = tp.reshape(1,len(tp))[:,len(tp)-2:]
+                    print '{0} {1} {2}'.format(self.iter, self.J_history[self.iter], tp)
                     #print self.theta                    
                     clear_output()
                     
@@ -1807,12 +1812,13 @@ class StatWing:
         X['bias'] = n_ones(len(data))
         Xc = X.columns.tolist()
         Xc.insert(0, Xc.pop())
-        #try:
+        try:
         #print 'removing {0}'.format(keyCol)
         #print Xc
-        Xc.remove(keyCol)
-        #except Exception as e:
-        #    print e
+            Xc.remove(keyCol)
+        except Exception as e:
+            #print e
+            ''
         X = X[Xc]
         #print list(X.columns)
         return X
@@ -1879,7 +1885,7 @@ class StatWing:
         self.ml.computeCost_linearRegression(X, y, self.theta, len(y))
         
         #% run gradient descent
-        [self.theta, self.J_hist] = self.ml.gradientDescent_linearRegression(X, y, self.theta, alpha, iterations, viewProgress=viewProgress);
+        [self.theta, self.J_hist] = self.ml.gradientDescent_linearRegression(X, y, self.theta, alpha, iterations, viewProgress=viewProgress, sw=self);
         
         if verbose == True:
             #% print theta to screen
@@ -2077,7 +2083,6 @@ class StatWing:
         #print self.dstd
         predict = sigmoidmePinv(predict)
         predict = normalizemePinv(predict, self.ymean, self.ystd) #[self.keyCol]
-        print predict
         
         if quiet == False:
             #print self.dmean
@@ -2113,7 +2118,8 @@ class StatWing:
         try:
             val = n_dot( nXbias, self.theta )[0][0]
         except Exception as e:
-            print e
+            ''
+            #print e
             #print 'eerr'
         if val != 0:
             self.nxps.append( val )
