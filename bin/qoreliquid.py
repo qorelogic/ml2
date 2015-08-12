@@ -350,6 +350,14 @@ class QoreQuant():
     def main(self, mode=1, pair='EUR_USD', granularity='H4', iterations=200, alpha=0.09, risk=1, stopLossPrice=None, noUpdate=False, showPlot=True):
         self.qd._getMethod()
         
+        self.pair              = pair
+        self.sw.pair           = pair
+        self.sw.ml.pair        = pair
+        
+        self.granularity       = granularity
+        self.sw.granularity    = granularity
+        self.sw.ml.granularity = granularity
+        
         #modes = ['train','predict','trade']
         #alpha = 0.09 # 0.3
         
@@ -891,7 +899,7 @@ class ml007:
                     if sw != None:
                         tp = sw.predictRegression2(mdf.ix[:, :], quiet=True)
                         tp = tp.reshape(1,len(tp))[:,len(tp)-2:]
-                    print '{0} {1} {2}'.format(self.iter, self.J_history[self.iter], tp)
+                    print '{0}:{1} {2} {3} {4}'.format(self.pair, self.granularity, self.iter, self.J_history[self.iter], tp)
                     #print self.theta                    
                     clear_output()
                     
