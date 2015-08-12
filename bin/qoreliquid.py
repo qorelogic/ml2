@@ -1503,7 +1503,6 @@ class OandaQ:
     def updateBarsFromOanda(self, pair='EURUSD', granularities = 'H4', plot=True, noUpdate=False):
         self.qd._getMethod()
 
-        print 'updateBarsFromOanda()'
         pair = pair.replace('_', '') # remove the underscore
         relatedPairs = self.getPairsRelatedToOandaTickers(pair)        
         
