@@ -178,9 +178,9 @@ class QsForecaster:
             self.qq.setVerbose(verbose=False)
 
             pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD','EUR_JPY', 'GBP_JPY','USD_JPY','USD_CAD']
-            pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'NZD_EUR', 'USD_JPY',  'USD_CHF', 'USD_CAD','GBP_JPY', 'EUR_NZD', 'GBP_NZD', 'AUD_JPY', 'AUD_NZD', 'NZD_JPY','AUD_USD', 'USD_CAD', 'USD_CHF']
+            pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'NZD_EUR', 'USD_JPY',  'USD_CHF', 'USD_CAD','GBP_JPY', 'EUR_NZD', 'GBP_NZD', 'AUD_JPY', 'AUD_NZD', 'NZD_JPY','AUD_USD', 'USD_CAD', 'USD_CHF','EUR_JPY']
             granularities = [ 'D','H4','H1','M30','M15','M5','M1','S10','S5']
-            iterations    = 300000
+            iterations    = 3000000
             alpha         = 0.125
             risk          = 1
             plot          = False
@@ -212,7 +212,7 @@ class QsForecaster:
 
             if runGranularitiesInParallel == 1:
                 
-                import threading
+                import threading, time
                 
                 def tmain(mode, pair, granularity, iterations, alpha, risk, stopLossPrice, noUpdate, plot):
                     qq = QoreQuant(verbose=False)
@@ -228,6 +228,8 @@ class QsForecaster:
                     th[i] = threading.Thread(target=tmain, args=(mode, pair, i, iterations, alpha, risk, stopLossPrice, noUpdate, plot))
                     th[i].daemon = False
                     th[i].start()
+                    # fixes the oanda call limit
+                    time.sleep(1)
                     
             if runGranularitiesInParallel == 0:
                 
