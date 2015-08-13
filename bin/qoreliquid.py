@@ -898,8 +898,12 @@ class ml007:
                 if self.iter % b == 0:
                     if sw != None:
                         tp = sw.predictRegression2(mdf.ix[:, :], quiet=True)
-                        tp = tp.reshape(1,len(tp))[:,len(tp)-2:]
+                        tp = tp.reshape(1,len(tp))[:,len(tp)-1:]
                     print '{0}:{1} {2} {3} {4}'.format(self.pair, self.granularity, self.iter, self.J_history[self.iter], tp)
+                    fp = open('datafeeds/models/qorequant/{0}-{1}.train.csv'.format(self.pair, self.granularity), 'a')
+                    csv = ','.join([self.pair, self.granularity, str(self.iter), str(self.J_history[self.iter]), str(list(tp[0])[0])])
+                    fp.write(csv+'\n')
+                    fp.close()
                     #print self.theta                    
                     clear_output()
                     
