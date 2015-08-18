@@ -19,6 +19,7 @@ import itertools as it
 
 import oandapy
 
+
 def toCurrency(n):
     return '%2d' % n
 
@@ -3355,7 +3356,178 @@ class ShapeShift(CryptoCoinBaseClass):
 from selenium import webdriver
 from selenium.selenium import selenium
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+from selenium.webdriver.common.action_chains import ActionChains
 import pandas as p
+
+class Bloomberg():
+    def __init__(self):
+        self.driver = None
+        self.billionaires = p.DataFrame()
+
+    def start(self):
+        """
+        checks whether the browser is running, returns boolean
+        """
+        # iPhone
+        #driver = webdriver.Remote(browser_name="iphone", command_executor='http://172.24.101.36:3001/hub')
+        # Android
+        #driver = webdriver.Remote(browser_name="android", command_executor='http://127.0.0.1:8080/hub')
+        # Google Chrome 
+        #driver = webdriver.Chrome()
+        # Firefox 
+        #FirefoxProfile fp = new FirefoxProfile();
+        #fp.setPreference("webdriver.load.strategy", "unstable");
+        #WebDriver driver = new FirefoxDriver(fp);
+        
+        #driver = webdriver.Firefox(firefox_profile=self.disableImages())
+        driver = webdriver.Firefox()
+        
+        self.driver = driver
+
+    def mclean(s):
+        try:
+            s = s.replace('$','')
+            try:
+                if s.index('B') > 0:
+                    s = s.replace('B', '')
+                    s = float(s)*1e9
+            except:
+                ''
+            try:
+                if s.index('M') > 0:
+                    s = s.replace('M', '')
+                    s = float(s)*1e6
+            except:
+                ''
+        except:
+            ''
+        try:
+            return float(s)
+        except:
+            return 0
+    
+    def getProfile(self, rank):
+        print 'Fetching BBGB profile for rank:{0}'.format(rank)
+        
+        self.driver.find_elements_by_xpath('//*[@id="menu"]/ul/li[1]')[0].click() # click explore
+        self.driver.find_elements_by_xpath('//*[@id="views"]/div[1]/div['+str(rank)+']/div[3]')[0].click()
+        
+        li = {}
+        li['rank'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/ul/li[1]')[0].text.replace('#','')
+        li['name'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/ul/li[2]')[0].text
+        li['networth'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/ul/li[3]/span')[0].text
+        li['age'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[1]/span[2]')[0].text
+        li['biggestasset'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[2]/span[2]')[0].text
+        li['source'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[3]/span[2]')[0].text
+        li['lastchange'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[4]/span[2]/span[1]')[0].text
+        li['YTD change'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[5]/span[2]/span[1]')[0].text
+        li['funfact'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[3]')[0].text
+        li['country'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[4]/span[1]')[0].text
+        li['industry'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[4]/span[2]')[0].text
+        li['overview'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[1]/span/p')[0].text
+        li['intel'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[3]/ul')[0].text
+        li['dob'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/ul/li[1]/span')[0].text
+        li['education'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/ul/li[2]/span')[0].text
+        li['family'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/ul/li[3]/span')[0].text
+        li['story'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/span')[0].text
+        li['milestones'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[2]/ul')[0].text
+        li['networth-story'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[2]')[0].text
+        
+        #li['portfolio'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[1]/@style')[0].text    
+        #print self.driver.find_element_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[1]')
+        
+        #li['portfolio-public'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[1]')[0].html
+        li['portfolio-private'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[2]')[0].text
+        li['portfolio-liabilities'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[2]')[0].text
+        #li[''] = self.driver.find_elements_by_xpath('')[0].text
+        #li[''] = self.driver.find_elements_by_xpath('')[0].text
+        
+        df = p.DataFrame(li, index=[0])#.transpose()
+        df['indx'] = n.array(df.ix[:,'rank'], dtype=int16)
+        df = df.set_index('indx')
+        hdir = '/mldev/bin/data/bloomberg/billionaires/'
+        mkdir_p(hdir)
+        #df.to_csv('{0}rank.{1}.csv'.format(hdir, rank))
+        #import ujson as j
+        #jdf = j.dumps(df)
+        #print jdf
+        return df
+
+    def getAllBillionaires(self, fromn=1):
+        num = 200+2
+        dfs = list(xrange(1, num))
+        #self.billionaires = p.DataFrame()
+        for i in xrange(fromn, num):
+            try:
+                dfs[i] = self.getProfile(i)
+                self.billionaires = self.billionaires.combine_first(dfs[i])
+                indx = xrange(0,4)
+                hdir = '/mldev/bin/data/bloomberg/billionaires/'
+                self.billionaires.ix[:,indx].to_csv('{0}/bloomberg-billionaires-index.csv'.format(hdir))
+            except IndexError, e:
+                print e
+        
+        for i in xrange(len(self.billionaires.ix[:,0])):
+            self.billionaires.ix[i,'YTD change'] = mclean(self.billionaires.ix[i,'YTD change'])
+            self.billionaires.ix[i,'networth'] = mclean(self.billionaires.ix[i,'networth'])
+            self.billionaires.ix[i,'age'] = mclean(self.billionaires.ix[i,'age'])
+        return self.billionaires
+    
+    def apad(self, a, num):
+        a = n.array(a, dtype=int16)
+        #print a
+        az = n.zeros(num)
+        #print az
+        az[0:len(a)] = a
+        return list(az)
+    #apad([45,56,76], 5)
+    
+    def getPortfolio(self):
+        ps = {}
+        dfs = {}
+        
+        xp = '//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div'
+        res = self.driver.find_elements_by_xpath(xp)
+        for i in res:
+            nclass = i.get_attribute('class')
+            print nclass
+        
+            xp = '//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[@class="'+nclass+'"]/div[@class="item"]'
+            psn = []
+            for i in self.driver.find_elements_by_xpath(xp): 
+                psn.append(int(i.value_of_css_property('width').replace('px', '')))
+            ps[nclass] = psn
+        
+            xp = '//div[@class="'+nclass+'"]/div[@class="item"]'
+            els = self.driver.find_elements_by_xpath(xp)
+            df = p.DataFrame()
+            li = {}
+            for i in xrange(len(els)):
+                #print i
+                #print els[i]
+                ActionChains(self.driver).move_to_element(els[i]).perform()
+                xp = '//*[@id="billionaires"]//div[@class="bubble"]/ul/li'
+                res = self.driver.find_elements_by_xpath(xp)
+                reso = res[0].text.split(' ')
+                try:
+                    li[i] = [res[0].text, res[1].text, reso[0], reso[1], reso[2]]
+                except:
+                    li[i] = [res[0].text, res[1].text, '', '', '']
+                df = df.combine_first(p.DataFrame(li).transpose())
+            df['px'] = psn
+            print df
+            dfs[nclass] = df
+            print
+        #print dfs
+        
+        #print p.DataFrame(ps)
+        a = n.array(ps['cash'])
+        li = []
+        for i in ps:
+            li.append(len(ps[i]))
+        for i in ps:
+            ps[i] = self.apad(ps[i], n.max(li))
+        print p.DataFrame(ps)
 
 class Etoro():
     def __init__(self):
