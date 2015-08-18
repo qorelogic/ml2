@@ -54,6 +54,14 @@ minstall() {
             sudo pip install selenium
 	fi
 
+	# still testing on ipython notebook
+      if [ "`python -c 'import bitstampy' 2>&1`" != "" ]; then
+            sudo pip install bitstampy
+	fi
+      if [ "`python -c 'import krakenex' 2>&1`" != "" ]; then
+            sudo pip install krakenex
+	fi
+
 	echo ''
 	echo 'install complete.'
 }
