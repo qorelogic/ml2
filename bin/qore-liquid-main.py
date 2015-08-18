@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 # -*- coding: utf-8 -*-
 # <nbformat>3.0</nbformat>
 
@@ -176,9 +178,9 @@ class QsForecaster:
             self.qq.setVerbose(verbose=False)
 
             pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD','EUR_JPY', 'GBP_JPY','USD_JPY','USD_CAD']
-            pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'NZD_EUR', 'USD_JPY',  'USD_CHF', 'USD_CAD','GBP_JPY', 'EUR_NZD', 'GBP_NZD', 'AUD_JPY', 'AUD_NZD', 'NZD_JPY','AUD_USD', 'USD_CAD', 'USD_CHF']
+            pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'NZD_EUR', 'USD_JPY',  'USD_CHF', 'USD_CAD','GBP_JPY', 'EUR_NZD', 'GBP_NZD', 'AUD_JPY', 'AUD_NZD', 'NZD_JPY','AUD_USD', 'USD_CAD', 'USD_CHF','EUR_JPY']
             granularities = [ 'D','H4','H1','M30','M15','M5','M1','S10','S5']
-            iterations    = 300000
+            iterations    = 6000000
             alpha         = 0.125
             risk          = 1
             plot          = False
@@ -189,12 +191,15 @@ class QsForecaster:
 
             mode        = argvOrRawInput('select number: ', modes, 1)
             pair        = argvOrRawInput('select number: ', pairs, 2)
-            granularity = argvOrRawInput('select number: ', granularities, 3)
+            runGranularitiesInParallel = argvOrRawInput('runGranularitiesInParallel: ', ['no','yes'], 4)
+            if runGranularitiesInParallel == 0:
+                granularity = argvOrRawInput('select number: ', granularities, 3)
             
-            print "{0} {1} {2}".format(modes[mode], pairs[pair], granularities[granularity])
+                print "{0} {1} {2}".format(modes[mode], pairs[pair], granularities[granularity])
 
-            pair        = pairs[pair]
-            granularity = granularities[granularity]
+                granularity = granularities[granularity]
+                
+            pair = pairs[pair]
 
             if mode == 0: noUpdate = False
             if mode == 1 or mode == 2: noUpdate = True
@@ -203,10 +208,35 @@ class QsForecaster:
                 stopLossPrice = float(raw_input('stopLossPrice: '))
                 risk          = float(raw_input('risk: '))
 
-            #%prun self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
-            #%lprun -f self.qq.main -f self.qq.update -f self.qq.oq.updateBarsFromOanda -f self.qq.oq.appendHistoricalPrice self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
-            self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, showPlot=plot)
             #print self.qq.loadTheta(1000, granularity=granularity)
+
+            if runGranularitiesInParallel == 1:
+                
+                import threading, time
+                
+                def tmain(mode, pair, granularity, iterations, alpha, risk, stopLossPrice, noUpdate, plot):
+                    qq = QoreQuant(verbose=False)
+                    qq.qd.off()
+                    qq.setVerbose(verbose=False)
+                    qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, showPlot=plot)
+                
+                grs = granularities[1:4+1]
+                #print grs
+    
+                th = {}
+                for i in grs:                
+                    th[i] = threading.Thread(target=tmain, args=(mode, pair, i, iterations, alpha, risk, stopLossPrice, noUpdate, plot))
+                    th[i].daemon = False
+                    th[i].start()
+                    # fixes the oanda call limit
+                    time.sleep(1)
+                    
+            if runGranularitiesInParallel == 0:
+                
+                #%prun self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
+                #%lprun -f self.qq.main -f self.qq.update -f self.qq.oq.updateBarsFromOanda -f self.qq.oq.appendHistoricalPrice self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, plot=plot)
+                self.qq.main(mode=mode, pair=pair, granularity=granularity, iterations=iterations, alpha=alpha, risk=risk, stopLossPrice=stopLossPrice, noUpdate=noUpdate, showPlot=plot)
+            
 
             #self.qq.oq.getPairsRelatedToOandaTickers(pair.replace('_',''))
             #self.qq.predict(wlen=50)
