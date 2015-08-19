@@ -97,6 +97,9 @@ class QoreQuant():
         self.oq.verbose = self.verbose
         
     def __init__(self, verbose=False):
+
+        self.thetaDir = '/mldev/bin/datafeeds/models/qorequant'
+
         self.qd = QoreDebug()
         self.qd._getMethod()
 
@@ -447,9 +450,7 @@ class QoreQuant():
         
     def loadTheta(self, iterations, pair='EURUSD', granularity='H4'):
         self.qd._getMethod()
-    
-        hdir  = '/mldev/bin/datafeeds/models/qorequant'
-        fname = hdir+'/{0}-{1}.theta.csv'.format(pair, granularity)
+        fname = self.thetaDir+'/{0}-{1}.theta.csv'.format(pair, granularity)
         print fname
         iter  = 0
         
@@ -487,11 +488,10 @@ class QoreQuant():
         #print 
         #print len(list(self.dfdata.columns))
         
-        hdir = '/mldev/bin/datafeeds/models/qorequant'
-        fname = hdir+'/{0}-{1}.theta.csv'.format(pair, granularity)
+        fname = self.thetaDir+'/{0}-{1}.theta.csv'.format(pair, granularity)
         print fname
         
-        mkdir_p(hdir)
+        mkdir_p(self.thetaDir)
         try:
             df0 = p.read_csv(fname, index_col=0)
             #print df0
@@ -902,7 +902,7 @@ class ml007:
                         tp = sw.predictRegression2(mdf.ix[:, :], quiet=True)
                         tp = tp.reshape(1,len(tp))[:,len(tp)-1:]
                     print '{0}:{1} {2} {3} {4}'.format(self.pair, self.granularity, self.iter, self.J_history[self.iter], tp)
-                    fp = open('datafeeds/models/qorequant/{0}-{1}.train.csv'.format(self.pair, self.granularity), 'a')
+                    fp = open(self.thetaDir+'/{0}-{1}.train.csv'.format(self.pair, self.granularity), 'a')
                     csv = ','.join([self.pair, self.granularity, str(self.iter), str(self.J_history[self.iter]), str(list(tp[0])[0])])
                     fp.write(csv+'\n')
                     fp.close()
