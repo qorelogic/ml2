@@ -98,7 +98,7 @@ class QoreQuant():
         
     def __init__(self, verbose=False):
 
-        self.thetaDir = '/mldev/bin/datafeeds/models/qorequant'
+        self.thetaDir = '/mldev/bin/data/oanda/qorequant'
 
         self.qd = QoreDebug()
         self.qd._getMethod()
