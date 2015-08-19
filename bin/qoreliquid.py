@@ -162,6 +162,7 @@ class QoreQuant():
         self.et = Etoro()
         
         self.sw = StatWing()
+        self.sw.thetaDir = self.thetaDir
 
         try:    self.oq = OandaQ(verbose=self.verbose)
         except Exception as e:
@@ -1667,6 +1668,7 @@ class StatWing:
         #self.theta = p_read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
         self.theta = p_DataFrame()
         self.ml = ml007()
+        self.ml.thetaDir = self.thetaDir
         
     def nextBar(self, dfa, k, barsForward=3):
         self.qd._getMethod()
