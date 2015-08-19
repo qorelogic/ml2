@@ -44,6 +44,7 @@ class QoreDebug:
     def stackTraceOff(self):
         self.stackTrace = False
         
+    # source: http://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     def _getMethod(self):
         
         if self._on == True:
@@ -64,7 +65,7 @@ class QoreDebug:
             print "*** print_exception:"
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
 
-
+# source: http://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python
 class switch(object):
     value = None
     def __new__(class_, value):
