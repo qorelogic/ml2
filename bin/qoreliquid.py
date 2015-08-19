@@ -161,8 +161,7 @@ class QoreQuant():
         #driver = webdriver.Chrome()
         self.et = Etoro()
         
-        self.sw = StatWing()
-        self.sw.thetaDir = self.thetaDir
+        self.sw = StatWing(thetaDir=self.thetaDir)
 
         try:    self.oq = OandaQ(verbose=self.verbose)
         except Exception as e:
@@ -878,7 +877,7 @@ class FinancialModel:
 
 class ml007:
 
-    def __init__(self):
+    def __init__(self, thetaDir=None):
         self.qd = QoreDebug()
         self.qd._getMethod()
 
@@ -886,6 +885,8 @@ class ml007:
         self.theta     = []
         self.initialIter = 0
         self.iter        = 0
+
+        self.thetaDir = thetaDir
         
     def computeCost_linearRegression(self, X, y, theta, m):
         #self.qd._getMethod()
@@ -1649,10 +1650,11 @@ def pcc(X, Y):
 
 class StatWing:
     
-    def __init__(self):
+    def __init__(self, thetaDir=None):
         self.qd = QoreDebug()
         self.qd._getMethod()
 
+        self.thetaDir = thetaDir
         self.keyCol = ''
         self.relatedCols = []
         self.theta = n_array([])
@@ -1667,8 +1669,7 @@ class StatWing:
             print 'offline mode'
         #self.theta = p_read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
         self.theta = p_DataFrame()
-        self.ml = ml007()
-        self.ml.thetaDir = self.thetaDir
+        self.ml = ml007(thetaDir=self.thetaDir)
         
     def nextBar(self, dfa, k, barsForward=3):
         self.qd._getMethod()
