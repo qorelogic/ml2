@@ -725,6 +725,72 @@ class QoreQuant():
             except: ''
             #break
 
+    def returnTraining(self, fname, showPlot=False):
+        df = p.read_csv(fname, header=None)
+        #print df.columns
+        df = df.ix[:,[2,3,4]]
+        #df.ix[:,[2]].plot()
+        #df.ix[:,[3]].plot()
+        #df.ix[:,[4]].plot()
+        #print df
+        #if showPlot == True: plt.scatter(df.ix[:,[3]], df.ix[:,[4]]); plt.show();
+        if showPlot == True: df.ix[:,[4]].plot(); plt.show();
+        #if showPlot == True: df.ix[:,[3,4]].plot(); plt.show();
+        
+        dfp = df
+        df = normalizeme(df)
+        #if showPlot == True: plt.scatter(df.ix[:,[3]], df.ix[:,[4]]); plt.show();
+        #if showPlot == True: df.plot(); plt.show();
+    
+        df = sigmoidme(df)
+        #if showPlot == True: plt.scatter(df.ix[:,[3]], df.ix[:,[4]]); plt.show();
+        if showPlot == True: df.plot(); plt.show();
+        #print dfp
+        return dfp
+    
+    def viewTraining(self, pair, gran):
+        #hdir = '/home/qore2/data-oanda/qorequant'
+        hdir = '/ml.dev/bin/data/oanda/qorequant'
+        fname = hdir+'/{0}-{1}.train.csv'.format(pair, gran)
+        #print fname
+        df = self.returnTraining(fname)
+        print '{0} {1} {2}'.format(pair, gran, len(df))
+        title('{0} {1}'.format(pair, gran))
+        dfn = df.ix[:,[3,4]]
+        #dfn = normalizeme(dfn)
+        #dfn = sigmoidme(dfn)
+        dfn = dfn.set_index(3).sort(ascending=False).tail(50)
+        #plot(dfn);
+        #scatter(dfn.ix[:,3], dfn.ix[:,4])
+        #legend(list(dfn.columns))
+        #legend([df1.columns, df2.columns])
+        #show();
+        #print len(df)
+        return dfn
+    
+    def showLevels(self):
+        """
+        merges all granularity forecasts onto a single plot
+        """
+
+        pa = 'EUR_USD GBP_USD AUD_USD USD_CAD'.split(' ')
+        gr = 'D H4 H1 M30 M15'.split(' ')
+        dfs = {}
+        for i in xrange(len(pa)):
+            for j in xrange(len(gr)):
+                try:
+                    df = self.viewTraining(pa[i], gr[j])
+                    dfs[j] = (df.get_values())
+                    plot(df.get_values())
+                except: 
+                    ''
+                    #print dfs
+            dfp = p.read_csv('/ml.dev/bin/data/oanda/ticks/{0}/{0}-M1.csv'.format(pa[i])).sort(ascending=True).tail(50).ix[:,'closeAsk']
+            plot(dfp)
+            legend(gr)
+            show();
+            #break
+
 
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
