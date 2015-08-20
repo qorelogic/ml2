@@ -33,9 +33,10 @@ class HPC:
         #print
         #print 'nodes:'
         my_droplets = self.manager.get_all_droplets()
-        droplets = []
+        droplets = {}
         for droplet in my_droplets:
-            droplets.append(droplet)
+            droplets[droplet.id] = droplet
+            #droplets.append(droplet)
             if quiet == False:
                 print droplet.id
                 print 'ssh -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
@@ -60,13 +61,7 @@ class HPC:
         droplet.create()
     
     def makeNewSnapshot(self, droplet):
-        images = self.getImages()
-        lastImage = images[self.getLastImage()].name.split(' ')[0]
-        str1 = lastImage.split('rc')[0]
-        str2 = '%02.f' % (int(lastImage.split('rc')[1])+1)
-        print type(str1)
-        print type(str2)
-        newSnapshotName = '{0}rc{1}'.format(str1, str2)
+        newSnapshotName = self.createNextSnapshotname()
         try:
             droplet.take_snapshot(newSnapshotName)
         except:
@@ -75,3 +70,24 @@ class HPC:
             droplet.power_off()
             droplet.take_snapshot(newSnapshotName)
     
+    def createNextSnapshotname(self):
+        lastImage = self.getImages()[self.getLastImage()]
+        #print lastImage.created_at
+        #print lastImage.name
+        lim = lastImage.name.split('rc')
+        return '{0}{1}{2}'.format(lim[0], 'rc', '%02d' % (int(lim[1])+1))
+
+    def createNextSnapshotname2(self):
+        images = self.getImages()
+        lastImage = images[self.getLastImage()].name.split(' ')[0]
+        str1 = lastImage.split('rc')[0]
+        str2 = '%02.f' % (int(lastImage.split('rc')[1])+1)
+        #print type(str1)
+        #print type(str2)
+        return '{0}rc{1}'.format(str1, str2)
+
+if __name__ == "__main__":
+    c = HPC()
+    print c.getImages()
+
+#    if argv[1] == 'off':
