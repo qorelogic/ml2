@@ -764,6 +764,81 @@ class QoreQuant():
             except: ''
             #break
 
+    def returnTraining(self, fname, showPlot=False):
+        df = p.read_csv(fname, header=None)
+        #print df.columns
+        df = df.ix[:,[2,3,4]]
+        #df.ix[:,[2]].plot()
+        #df.ix[:,[3]].plot()
+        #df.ix[:,[4]].plot()
+        #print df
+        #if showPlot == True: plt.scatter(df.ix[:,[3]], df.ix[:,[4]]); plt.show();
+        if showPlot == True: df.ix[:,[4]].plot(); plt.show();
+        #if showPlot == True: df.ix[:,[3,4]].plot(); plt.show();
+        
+        dfp = df
+        df = normalizeme(df)
+        #if showPlot == True: plt.scatter(df.ix[:,[3]], df.ix[:,[4]]); plt.show();
+        #if showPlot == True: df.plot(); plt.show();
+    
+        df = sigmoidme(df)
+        #if showPlot == True: plt.scatter(df.ix[:,[3]], df.ix[:,[4]]); plt.show();
+        if showPlot == True: df.plot(); plt.show();
+        #print dfp
+        return dfp
+    
+    def viewTraining(self, pair, gran):
+        #hdir = '/home/qore2/data-oanda/qorequant'
+        hdir = '/ml.dev/bin/data/oanda/qorequant'
+        fname = hdir+'/{0}-{1}.train.csv'.format(pair, gran)
+        #print fname
+        df = self.returnTraining(fname)
+        dfn = df.ix[:,[3,4]]
+        dfn = dfn.set_index(3).sort(ascending=False).tail(50)
+        forecastPrice = list(dfn.tail(1).get_values())[0][0]
+        #print '{0} {1} {2} {3}'.format(pair, gran, len(df), forecastPrice)
+        columns = 'pair timeframe iterations forecast'.split(' ')
+        manifest = p.DataFrame([pair, gran, len(df), forecastPrice], index=columns).transpose()
+        #title('{0} {1} Forecast'.format(pair, gran))
+        #dfn = normalizeme(dfn)
+        #dfn = sigmoidme(dfn)
+        #plot(dfn);
+        #scatter(dfn.ix[:,3], dfn.ix[:,4])
+        #legend(list(dfn.columns))
+        #legend([df1.columns, df2.columns])
+        #show();
+        #print len(df)
+        return [dfn, manifest]
+    
+    def showLevels(self):
+        """
+        merges all granularity forecasts onto a single plot
+        """
+
+        pa = 'EUR_USD GBP_USD AUD_USD USD_CAD'.split(' ')
+        gr = 'D H4 H1 M30 M15'.split(' ')
+        for i in xrange(len(pa)):
+            dfs = p.DataFrame()
+            for j in xrange(len(gr)):
+                try:
+                    training = self.viewTraining(pa[i], gr[j])
+                    df = training[0]
+                    manifest = training[1]
+                    dfs = dfs.combine_first(manifest.set_index('timeframe'))
+                    plot(df.get_values())
+                except: 
+                    ''
+            try:
+                dfs['timeframe'] = dfs.index # save the lost field before calling set_index()
+                print dfs.set_index('forecast').sort(ascending=False)
+            except: ''
+            dfp = p.read_csv('/ml.dev/bin/data/oanda/ticks/{0}/{0}-M5.csv'.format(pa[i])).sort(ascending=True).tail(50).ix[:,'closeAsk']
+            plot(dfp)
+            title('{0} Forecast'.format(pa[i]))
+            legend(gr)
+            show();
+            #break
+
 
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
