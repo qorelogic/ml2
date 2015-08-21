@@ -51,12 +51,12 @@ class HPC:
         dkey = key.load_by_pub_key(self.pkey)
 
         droplet = digitalocean.Droplet(token=self.token,
-                                       name='liquid-rc07',
+                                       name=self.createNextSnapshotname(), #'liquid-rc07',
                                        #region='nyc2', # New York 2
                                        region=self.getImages()[self.getLastImage()].regions[0],
                                        #image='ubuntu-14-04-x64', # Ubuntu 14.04 x64
                                        image=self.getLastImage(),
-                                       size_slug='512mb',  # 512MB
+                                       size_slug='1024mb', #'512mb',  # 512MB
                                        backups=True, ssh_keys=[dkey])
         droplet.create()
     
@@ -70,6 +70,10 @@ class HPC:
             droplet.power_off()
             droplet.take_snapshot(newSnapshotName)
     
+    def getLastImageName(self):
+        lastImage = self.getImages()[self.getLastImage()]
+        return lastImage.name
+
     def createNextSnapshotname(self):
         lastImage = self.getImages()[self.getLastImage()]
         #print lastImage.created_at

@@ -760,7 +760,7 @@ class QoreQuant():
         #print '{0} {1} {2} {3}'.format(pair, gran, len(df), forecastPrice)
         columns = 'pair timeframe iterations forecast'.split(' ')
         manifest = p.DataFrame([pair, gran, len(df), forecastPrice], index=columns).transpose()
-        title('{0} {1} Forecast'.format(pair, gran))
+        #title('{0} {1} Forecast'.format(pair, gran))
         #dfn = normalizeme(dfn)
         #dfn = sigmoidme(dfn)
         #plot(dfn);
@@ -795,6 +795,7 @@ class QoreQuant():
             except: ''
             dfp = p.read_csv('/ml.dev/bin/data/oanda/ticks/{0}/{0}-M5.csv'.format(pa[i])).sort(ascending=True).tail(50).ix[:,'closeAsk']
             plot(dfp)
+            title('{0} Forecast'.format(pa[i]))
             legend(gr)
             show();
             #break
