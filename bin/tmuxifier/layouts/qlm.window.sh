@@ -17,7 +17,7 @@ run_cmd "cd data" 1
 run_cmd ".gpull" 1
 run_cmd "htop" 2
 
-send_keys "./qlm.py" 0
+send_keys "./qlm.sh" 0
 send_keys "./push.sh" 1
 
 # Set active pane.
