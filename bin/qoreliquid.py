@@ -1180,7 +1180,43 @@ class OandaQ:
             for i in tst: ddt.append(_timestampToDatetimeFormat(i))                
         return ddt
 
-    
+    # source: http://stackoverflow.com/questions/14695309/conversion-from-numpy-datetime64-to-pandas-tslib-timestamp-bug
+    def timestampToNumpyTimestamp(self, ts):
+        self.qd._getMethod()
+
+        def _timestampToNumpyTimestamp(ts):
+            return ts * 1e9
+           
+        try:
+            tss = _timestampToNumpyTimestamp(ts)
+        except Exception as e:
+            self.log(e)
+            tss = []
+            for i in ts: tss.append(_timestampToNumpyTimestamp(i))                
+        return tss
+            
+    def numpyTimestampToTslibTimestamp(self, ts):
+        self.qd._getMethod()
+
+        def _numpyTimestampToTslibTimestamp(ts):
+            return p.tslib.Timestamp(ts, tz=None)
+
+        try:
+            tss = _numpyTimestampToTslibTimestamp(ts)
+        except Exception as e:
+            self.log(e)
+            tss = []
+            for i in ts: tss.append(_numpyTimestampToTslibTimestamp(i))                
+        return tss
+
+    def oandaToTslibTimeStamp(self, dfin):
+        self.qd._getMethod()
+        
+        dfin = self.oandaToTimestamp(dfin)
+        dfin = self.timestampToNumpyTimestamp(dfin)
+        dfin = self.numpyTimestampToTslibTimestamp(dfin)
+        return dfin
+
     def oandaToTimestamp(self, ptime):
         self.qd._getMethod()
         
@@ -1191,7 +1227,7 @@ class OandaQ:
         try:
             tstmp = _oandaToTimestamp(ptime)
         except Exception as e:
-            print e
+            self.log(e)
             tstmp = []
             for i in ptime: tstmp.append(_oandaToTimestamp(i))                
         return tstmp
