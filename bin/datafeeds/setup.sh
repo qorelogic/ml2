@@ -23,8 +23,11 @@ minstall() {
 	#if [ -f $MPWD/tmuxifier/layouts/datafeeds.window.sh ]; then
 	if [ ! -f $mlocal/layouts/datafeeds.window.sh ]; then
 		ln -s $MPWD/tmuxifier/layouts/datafeeds.window.sh $mlocal/layouts/ 2> /dev/null
-		ln -s $MPWD/tmuxifier/layouts/qlm.window.sh $mlocal/layouts/ 2> /dev/null
 		echo 'linked datafeeds tmuxifier layout.'
+	fi
+	if [ ! -f $mlocal/layouts/qlm.window.sh ]; then
+		ln -s $MPWD/../tmuxifier/layouts/qlm.window.sh $mlocal/layouts/ 2> /dev/null
+		echo 'linked qlm tmuxifier layout.'
 	fi
 	if [ ! -f $mldir/lib/oanda/oandapy/oandapy.py ]; then
 		mkdir -p $mldir/lib/oanda/
