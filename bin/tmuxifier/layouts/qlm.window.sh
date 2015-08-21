@@ -12,7 +12,7 @@ split_v 50 1
 
 # Run commands.
 run_cmd ".gpull" 0
-run_cmd ".gb" 0
+run_cmd "git branch" 0
 run_cmd "cd data" 1
 run_cmd ".gpull" 1
 run_cmd "htop" 2
