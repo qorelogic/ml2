@@ -25,6 +25,10 @@ minstall() {
 		ln -s $MPWD/tmuxifier/layouts/datafeeds.window.sh $mlocal/layouts/ 2> /dev/null
 		echo 'linked datafeeds tmuxifier layout.'
 	fi
+	if [ ! -f $mlocal/layouts/qlm.window.sh ]; then
+		ln -s $MPWD/../tmuxifier/layouts/qlm.window.sh $mlocal/layouts/ 2> /dev/null
+		echo 'linked qlm tmuxifier layout.'
+	fi
 	if [ ! -f $mldir/lib/oanda/oandapy/oandapy.py ]; then
 		mkdir -p $mldir/lib/oanda/
 		echo 'oandapy'
@@ -52,6 +56,14 @@ minstall() {
 	fi
 	if [ "`python -c 'import selenium' 2>&1`" != "" ]; then
             sudo pip install selenium
+	fi
+
+	# still testing on ipython notebook
+      if [ "`python -c 'import bitstampy' 2>&1`" != "" ]; then
+            sudo pip install bitstampy
+	fi
+      if [ "`python -c 'import krakenex' 2>&1`" != "" ]; then
+            sudo pip install krakenex
 	fi
 
 	echo ''

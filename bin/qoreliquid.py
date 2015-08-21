@@ -56,6 +56,7 @@ from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 import pandas as p
 """
 
+
 def toCurrency(n):
     return '%2d' % n
 
@@ -133,6 +134,9 @@ class QoreQuant():
         self.oq.verbose = self.verbose
         
     def __init__(self, verbose=False):
+
+        self.thetaDir = '/mldev/bin/data/oanda/qorequant'
+
         self.qd = QoreDebug()
         self.qd._getMethod()
 
@@ -157,7 +161,7 @@ class QoreQuant():
         #driver = webdriver.Chrome()
         self.et = Etoro()
         
-        self.sw = StatWing()
+        self.sw = StatWing(thetaDir=self.thetaDir)
 
         try:    self.oq = OandaQ(verbose=self.verbose)
         except Exception as e:
@@ -483,9 +487,7 @@ class QoreQuant():
         
     def loadTheta(self, iterations, pair='EURUSD', granularity='H4'):
         self.qd._getMethod()
-    
-        hdir  = '/mldev/bin/datafeeds/models/qorequant'
-        fname = hdir+'/{0}-{1}.theta.csv'.format(pair, granularity)
+        fname = self.thetaDir+'/{0}-{1}.theta.csv'.format(pair, granularity)
         print fname
         iter  = 0
         
@@ -523,11 +525,10 @@ class QoreQuant():
         #print 
         #print len(list(self.dfdata.columns))
         
-        hdir = '/mldev/bin/datafeeds/models/qorequant'
-        fname = hdir+'/{0}-{1}.theta.csv'.format(pair, granularity)
+        fname = self.thetaDir+'/{0}-{1}.theta.csv'.format(pair, granularity)
         print fname
         
-        mkdir_p(hdir)
+        mkdir_p(self.thetaDir)
         try:
             df0 = p_read_csv(fname, index_col=0)
             #print df0
@@ -763,6 +764,81 @@ class QoreQuant():
             except: ''
             #break
 
+    def returnTraining(self, fname, showPlot=False):
+        df = p.read_csv(fname, header=None)
+        #print df.columns
+        df = df.ix[:,[2,3,4]]
+        #df.ix[:,[2]].plot()
+        #df.ix[:,[3]].plot()
+        #df.ix[:,[4]].plot()
+        #print df
+        #if showPlot == True: plt.scatter(df.ix[:,[3]], df.ix[:,[4]]); plt.show();
+        if showPlot == True: df.ix[:,[4]].plot(); plt.show();
+        #if showPlot == True: df.ix[:,[3,4]].plot(); plt.show();
+        
+        dfp = df
+        df = normalizeme(df)
+        #if showPlot == True: plt.scatter(df.ix[:,[3]], df.ix[:,[4]]); plt.show();
+        #if showPlot == True: df.plot(); plt.show();
+    
+        df = sigmoidme(df)
+        #if showPlot == True: plt.scatter(df.ix[:,[3]], df.ix[:,[4]]); plt.show();
+        if showPlot == True: df.plot(); plt.show();
+        #print dfp
+        return dfp
+    
+    def viewTraining(self, pair, gran):
+        #hdir = '/home/qore2/data-oanda/qorequant'
+        hdir = '/ml.dev/bin/data/oanda/qorequant'
+        fname = hdir+'/{0}-{1}.train.csv'.format(pair, gran)
+        #print fname
+        df = self.returnTraining(fname)
+        dfn = df.ix[:,[3,4]]
+        dfn = dfn.set_index(3).sort(ascending=False).tail(50)
+        forecastPrice = list(dfn.tail(1).get_values())[0][0]
+        #print '{0} {1} {2} {3}'.format(pair, gran, len(df), forecastPrice)
+        columns = 'pair timeframe iterations forecast'.split(' ')
+        manifest = p.DataFrame([pair, gran, len(df), forecastPrice], index=columns).transpose()
+        #title('{0} {1} Forecast'.format(pair, gran))
+        #dfn = normalizeme(dfn)
+        #dfn = sigmoidme(dfn)
+        #plot(dfn);
+        #scatter(dfn.ix[:,3], dfn.ix[:,4])
+        #legend(list(dfn.columns))
+        #legend([df1.columns, df2.columns])
+        #show();
+        #print len(df)
+        return [dfn, manifest]
+    
+    def showLevels(self):
+        """
+        merges all granularity forecasts onto a single plot
+        """
+
+        pa = 'EUR_USD GBP_USD AUD_USD USD_CAD'.split(' ')
+        gr = 'D H4 H1 M30 M15'.split(' ')
+        for i in xrange(len(pa)):
+            dfs = p.DataFrame()
+            for j in xrange(len(gr)):
+                try:
+                    training = self.viewTraining(pa[i], gr[j])
+                    df = training[0]
+                    manifest = training[1]
+                    dfs = dfs.combine_first(manifest.set_index('timeframe'))
+                    plot(df.get_values())
+                except: 
+                    ''
+            try:
+                dfs['timeframe'] = dfs.index # save the lost field before calling set_index()
+                print dfs.set_index('forecast').sort(ascending=False)
+            except: ''
+            dfp = p.read_csv('/ml.dev/bin/data/oanda/ticks/{0}/{0}-M5.csv'.format(pa[i])).sort(ascending=True).tail(50).ix[:,'closeAsk']
+            plot(dfp)
+            title('{0} Forecast'.format(pa[i]))
+            legend(gr)
+            show();
+            #break
+
 
 class FinancialModel:
     """The summary line for a class docstring should fit on one line.
@@ -876,7 +952,7 @@ class FinancialModel:
 
 class ml007:
 
-    def __init__(self):
+    def __init__(self, thetaDir=None):
         self.qd = QoreDebug()
         self.qd._getMethod()
 
@@ -884,6 +960,8 @@ class ml007:
         self.theta     = []
         self.initialIter = 0
         self.iter        = 0
+
+        self.thetaDir = thetaDir
         
     def computeCost_linearRegression(self, X, y, theta, m):
         #self.qd._getMethod()
@@ -938,7 +1016,7 @@ class ml007:
                         tp = sw.predictRegression2(mdf.ix[:, :], quiet=True)
                         tp = tp.reshape(1,len(tp))[:,len(tp)-1:]
                     print '{0}:{1} {2} {3} {4}'.format(self.pair, self.granularity, self.iter, self.J_history[self.iter], tp)
-                    fp = open('datafeeds/models/qorequant/{0}-{1}.train.csv'.format(self.pair, self.granularity), 'a')
+                    fp = open(self.thetaDir+'/{0}-{1}.train.csv'.format(self.pair, self.granularity), 'a')
                     csv = ','.join([self.pair, self.granularity, str(self.iter), str(self.J_history[self.iter]), str(list(tp[0])[0])])
                     fp.write(csv+'\n')
                     fp.close()
@@ -1647,10 +1725,11 @@ def pcc(X, Y):
 
 class StatWing:
     
-    def __init__(self):
+    def __init__(self, thetaDir=None):
         self.qd = QoreDebug()
         self.qd._getMethod()
 
+        self.thetaDir = thetaDir
         self.keyCol = ''
         self.relatedCols = []
         self.theta = n_array([])
@@ -1665,7 +1744,7 @@ class StatWing:
             print 'offline mode'
         #self.theta = p_read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
         self.theta = p_DataFrame()
-        self.ml = ml007()
+        self.ml = ml007(thetaDir=self.thetaDir)
         
     def nextBar(self, dfa, k, barsForward=3):
         self.qd._getMethod()
@@ -3385,6 +3464,181 @@ class ShapeShift(CryptoCoinBaseClass):
 # pip install -U selenium
  
 # Import the Selenium 2 namespace (aka "webdriver")
+from selenium import webdriver
+from selenium.selenium import selenium
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+from selenium.webdriver.common.action_chains import ActionChains
+import pandas as p
+
+class Bloomberg():
+    def __init__(self):
+        self.driver = None
+        self.billionaires = p.DataFrame()
+
+    def start(self):
+        """
+        checks whether the browser is running, returns boolean
+        """
+        # iPhone
+        #driver = webdriver.Remote(browser_name="iphone", command_executor='http://172.24.101.36:3001/hub')
+        # Android
+        #driver = webdriver.Remote(browser_name="android", command_executor='http://127.0.0.1:8080/hub')
+        # Google Chrome 
+        #driver = webdriver.Chrome()
+        # Firefox 
+        #FirefoxProfile fp = new FirefoxProfile();
+        #fp.setPreference("webdriver.load.strategy", "unstable");
+        #WebDriver driver = new FirefoxDriver(fp);
+        
+        #driver = webdriver.Firefox(firefox_profile=self.disableImages())
+        driver = webdriver.Firefox()
+        
+        self.driver = driver
+
+    def mclean(s):
+        try:
+            s = s.replace('$','')
+            try:
+                if s.index('B') > 0:
+                    s = s.replace('B', '')
+                    s = float(s)*1e9
+            except:
+                ''
+            try:
+                if s.index('M') > 0:
+                    s = s.replace('M', '')
+                    s = float(s)*1e6
+            except:
+                ''
+        except:
+            ''
+        try:
+            return float(s)
+        except:
+            return 0
+    
+    def getProfile(self, rank):
+        print 'Fetching BBGB profile for rank:{0}'.format(rank)
+        
+        self.driver.find_elements_by_xpath('//*[@id="menu"]/ul/li[1]')[0].click() # click explore
+        self.driver.find_elements_by_xpath('//*[@id="views"]/div[1]/div['+str(rank)+']/div[3]')[0].click()
+        
+        li = {}
+        li['rank'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/ul/li[1]')[0].text.replace('#','')
+        li['name'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/ul/li[2]')[0].text
+        li['networth'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/ul/li[3]/span')[0].text
+        li['age'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[1]/span[2]')[0].text
+        li['biggestasset'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[2]/span[2]')[0].text
+        li['source'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[3]/span[2]')[0].text
+        li['lastchange'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[4]/span[2]/span[1]')[0].text
+        li['YTD change'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[2]/ul/li[5]/span[2]/span[1]')[0].text
+        li['funfact'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[3]')[0].text
+        li['country'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[4]/span[1]')[0].text
+        li['industry'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[1]/div[4]/span[2]')[0].text
+        li['overview'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[1]/span/p')[0].text
+        li['intel'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[3]/ul')[0].text
+        li['dob'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/ul/li[1]/span')[0].text
+        li['education'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/ul/li[2]/span')[0].text
+        li['family'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/ul/li[3]/span')[0].text
+        li['story'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[1]/span')[0].text
+        li['milestones'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[5]/div[2]/ul')[0].text
+        li['networth-story'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[2]')[0].text
+        
+        #li['portfolio'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[1]/@style')[0].text    
+        #print self.driver.find_element_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[1]')
+        
+        #li['portfolio-public'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[1]')[0].html
+        li['portfolio-private'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[2]')[0].text
+        li['portfolio-liabilities'] = self.driver.find_elements_by_xpath('//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[2]')[0].text
+        #li[''] = self.driver.find_elements_by_xpath('')[0].text
+        #li[''] = self.driver.find_elements_by_xpath('')[0].text
+        
+        df = p.DataFrame(li, index=[0])#.transpose()
+        df['indx'] = n.array(df.ix[:,'rank'], dtype=int16)
+        df = df.set_index('indx')
+        hdir = '/mldev/bin/data/bloomberg/billionaires/'
+        mkdir_p(hdir)
+        #df.to_csv('{0}rank.{1}.csv'.format(hdir, rank))
+        #import ujson as j
+        #jdf = j.dumps(df)
+        #print jdf
+        return df
+
+    def getAllBillionaires(self, fromn=1):
+        num = 200+2
+        dfs = list(xrange(1, num))
+        #self.billionaires = p.DataFrame()
+        for i in xrange(fromn, num):
+            try:
+                dfs[i] = self.getProfile(i)
+                self.billionaires = self.billionaires.combine_first(dfs[i])
+                indx = xrange(0,4)
+                hdir = '/mldev/bin/data/bloomberg/billionaires/'
+                self.billionaires.ix[:,indx].to_csv('{0}/bloomberg-billionaires-index.csv'.format(hdir))
+            except IndexError, e:
+                print e
+        
+        for i in xrange(len(self.billionaires.ix[:,0])):
+            self.billionaires.ix[i,'YTD change'] = mclean(self.billionaires.ix[i,'YTD change'])
+            self.billionaires.ix[i,'networth'] = mclean(self.billionaires.ix[i,'networth'])
+            self.billionaires.ix[i,'age'] = mclean(self.billionaires.ix[i,'age'])
+        return self.billionaires
+    
+    def apad(self, a, num):
+        a = n.array(a, dtype=int16)
+        #print a
+        az = n.zeros(num)
+        #print az
+        az[0:len(a)] = a
+        return list(az)
+    #apad([45,56,76], 5)
+    
+    def getPortfolio(self):
+        ps = {}
+        dfs = {}
+        
+        xp = '//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div'
+        res = self.driver.find_elements_by_xpath(xp)
+        for i in res:
+            nclass = i.get_attribute('class')
+            print nclass
+        
+            xp = '//*[@id="profile"]/div/div[2]/div[6]/div[1]/div[1]/div[@class="'+nclass+'"]/div[@class="item"]'
+            psn = []
+            for i in self.driver.find_elements_by_xpath(xp): 
+                psn.append(int(i.value_of_css_property('width').replace('px', '')))
+            ps[nclass] = psn
+        
+            xp = '//div[@class="'+nclass+'"]/div[@class="item"]'
+            els = self.driver.find_elements_by_xpath(xp)
+            df = p.DataFrame()
+            li = {}
+            for i in xrange(len(els)):
+                #print i
+                #print els[i]
+                ActionChains(self.driver).move_to_element(els[i]).perform()
+                xp = '//*[@id="billionaires"]//div[@class="bubble"]/ul/li'
+                res = self.driver.find_elements_by_xpath(xp)
+                reso = res[0].text.split(' ')
+                try:
+                    li[i] = [res[0].text, res[1].text, reso[0], reso[1], reso[2]]
+                except:
+                    li[i] = [res[0].text, res[1].text, '', '', '']
+                df = df.combine_first(p.DataFrame(li).transpose())
+            df['px'] = psn
+            print df
+            dfs[nclass] = df
+            print
+        #print dfs
+        
+        #print p.DataFrame(ps)
+        a = n.array(ps['cash'])
+        li = []
+        for i in ps:
+            li.append(len(ps[i]))
+        for i in ps:
+            ps[i] = self.apad(ps[i], n.max(li))
+        print p.DataFrame(ps)
 
 class Etoro():
     def __init__(self):
