@@ -782,7 +782,7 @@ class QoreQuant():
         merges all granularity forecasts onto a single plot
         """
 
-        pa = 'EUR_USD GBP_USD AUD_USD USD_CAD'.split(' ')
+        pa = 'EUR_USD GBP_USD AUD_USD USD_CAD USD_CHF NZD_USD'.split(' ')
         gr = 'D H4 H1 M30 M15'.split(' ')
         for i in xrange(len(pa)):
             dfs = p.DataFrame()
