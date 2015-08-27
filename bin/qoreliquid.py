@@ -455,18 +455,24 @@ class QoreQuant():
         iter  = 0
         
         try:
-            df0 = p.read_csv(fname, index_col=0)
-            #print df0#.get_values()
-            print 'df0 load'
-            #print df0
-            iter = max(df0.index[df0.index < iterations])
-            #print iter
+            self.df0 = p.read_csv(fname, index_col=0)
+            #print self.df0#.get_values()
+            #print 'self.df0 load'
+            #print 'loadtheta iterations:{0}'.format(iterations)
+            #print self.df0.index < iterations
+            #print self.df0.index#[self.df0.index < iterations]
+            try:
+                iter = max(self.df0.index[self.df0.index < iterations])
+                #print 'iter:{0}'.format(iter)
+            except:
+                iter = max(self.df0.index)
+                #print 'last iteration:{0}'.format(iter)
             #print iterations - iter    
-            initialTheta = df0.ix[iter, :]#.get_values()
-            print 'loaded initialTheta..'
+            initialTheta = self.df0.ix[iter, :]#.get_values()
+            #print 'loaded initialTheta: {0}'.format(initialTheta.get_values())
         except Exception as e:
             print e
-            df0 = p.DataFrame()
+            self.df0 = p.DataFrame()
             initialTheta = None
             
         self.sw.theta = initialTheta
@@ -474,7 +480,7 @@ class QoreQuant():
         self.sw.ml.initialIter = iter
         self.sw.ml.iter = iter
         print self.sw.ml.initialIter
-        #print self.sw.theta
+        print self.sw.theta
         try: print len(self.sw.theta)
         except Exception as e:
             print e
@@ -493,12 +499,12 @@ class QoreQuant():
         
         mkdir_p(self.thetaDir)
         try:
-            df0 = p.read_csv(fname, index_col=0)
-            #print df0
+            self.df0 = p.read_csv(fname, index_col=0)
+            #print self.df0
         except Exception as e:
             print e
-            df0 = p.DataFrame()
-        print len(df0)
+            self.df0 = p.DataFrame()
+        print len(self.df0)
         #print self.sw.ml.theta.get_values()
         try:    theta = self.sw.ml.theta.get_values()
         except: theta = self.sw.ml.theta
@@ -506,7 +512,7 @@ class QoreQuant():
         #print df.ix[self.sw.ml.iter, :]#.get_values()
         #print self.sw.ml.theta
         
-        df = df.combine_first(df0)
+        df = df.combine_first(self.df0)
         #print df
         print df.transpose()
         print 'save theta'
@@ -2203,16 +2209,20 @@ class StatWing:
         nXbias = n.c_[n.ones(1), nX.ix[1:,:].get_values().T]
         #print nXbias
         #print theta
-        #print nXbias.shape
-        #print self.theta.shape
+        print nXbias.shape
+        print theta.shape
         
         val = 0
         try:
-            val = n.dot( nXbias, self.theta )[0][0]
+            nd = n.dot( nXbias, self.theta )
+            try:    val = nd[0][0]
+            except: val = nd[0]
+            #print nd
         except Exception as e:
             ''
-            #print e
+            print e
             #print 'eerr'
+        #print val
         if val != 0:
             self.nxps.append( val )
         
@@ -2229,12 +2239,18 @@ from plotly.graph_objs import *
 class RealtimeChart:
     
     def __init__(self):
+        self.qd = QoreDebug()
+        self.qd._getMethod()
         
         ####
         # real time chart
         ####
         self.df = p.DataFrame()
-        self.sw = StatWing()
+        
+        self.qq = QoreQuant()
+        self.qq.loadTheta(0)
+        
+        self.sw = self.qq.sw
         
         """
         # real time plot
@@ -2249,25 +2265,37 @@ class RealtimeChart:
         # end real time chart
         ####
         
+    def getInstruments(self):
+        rs = list(self.qq.sw.theta.index)
+        for i in xrange(len(rs)):
+            rs[i] = rs[i].split(' ')[2].split('_')[0].replace('/','_')
+        return ','.join(rs)
+    
     # source: http://stackoverflow.com/questions/4098131/how-to-update-a-plot-in-matplotlib
     def update(self, csvc):
+        self.qd._getMethod()
         
         ####
         # real time chart
         ####
+        print csvc
         self.df[csvc[0]] = [float(csvc[1])]
+        print self.df
         nX =   self.df.transpose()
+        
         y  = self.sw.predictFromTheta(nX=nX)
         
         try:
             imax = n.max(self.sw.nxps)
             imax = imax + n.std(self.sw.nxps)
         except Exception as e:
+            print 'exception:1'
             print e
         try:
             imin = n.min(self.sw.nxps)
             imin = imin - n.std(self.sw.nxps)
         except Exception as e:
+            print 'exception:2'
             print e
         """
         try:
@@ -2291,6 +2319,8 @@ class RealtimeChart:
         #clear_output()
         
     def startPlotly(self):
+        self.qd._getMethod()
+        
         # auto sign-in with credentials or use py.sign_in()
         #py.sign_in('<plotly username>', '<plotly API key>')
         py.sign_in('cilixian', 'ks48f6mysz')
@@ -2306,6 +2336,8 @@ class RealtimeChart:
         self.s.open()
         
     def sendToPlotly(self, x, y):
+        self.qd._getMethod()
+
         #print 'x:'+str(x)
         print 'y:'+str(y)
         if self.i % 20 == 0:
