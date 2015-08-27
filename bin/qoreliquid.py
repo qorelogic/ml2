@@ -18,6 +18,12 @@ from numpy import ceil
 from numpy import dot as n_dot
 from numpy import divide as n_divide
 from numpy import float16 as n_float16
+from numpy import c_ as n_c_
+from numpy import min as n_min
+from numpy import max as n_max
+
+import plotly.plotly as py
+from plotly.graph_objs import *
 
 import sys, oandapy
 import datetime as dd
@@ -46,9 +52,6 @@ import itertools as it
 from IPython.display import display, clear_output
 import time
 import math
-
-import plotly.plotly as py
-from plotly.graph_objs import *
 
 from selenium import webdriver
 from selenium.selenium import selenium
@@ -2272,6 +2275,7 @@ class StatWing:
 class RealtimeChart:
     
     def __init__(self):
+        
         self.qd = QoreDebug()
         self.qd._getMethod()
         
