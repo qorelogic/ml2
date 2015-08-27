@@ -83,6 +83,9 @@ class MyStreamer(oandapy.Streamer):
                 break
             if case('plotly'):
                 self.rtc = RealtimeChart()
+                #self.rtc.qd.on()
+                #self.rtc.qd.stackTraceOn()
+                return self.rtc
                 break
             print usage()
             break
@@ -137,7 +140,7 @@ def do_work(mode, forever = True):
         print 'receiving feed..'
         try:
             stream = MyStreamer(environment=env2, access_token=access_token2)
-            stream.init(mode)
+            rtc = stream.init(mode)
             #pairs = ",".join(list(res))
             #res = getPricesLatest(df, oanda2, sw).index
 
@@ -149,7 +152,8 @@ def do_work(mode, forever = True):
                     pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
                     break
                 if case('plotly'):
-                    pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
+                    #pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
+                    pairs = rtc.getInstruments()
                     break
                 print "options: demo, plotly"
                 break
