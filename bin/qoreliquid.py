@@ -479,8 +479,8 @@ class QoreQuant():
         self.sw.ml.theta = initialTheta
         self.sw.ml.initialIter = iter
         self.sw.ml.iter = iter
-        print self.sw.ml.initialIter
-        print self.sw.theta
+        #print self.sw.ml.initialIter
+        #print self.sw.theta
         try: print len(self.sw.theta)
         except Exception as e:
             print e
@@ -2209,8 +2209,8 @@ class StatWing:
         nXbias = n.c_[n.ones(1), nX.ix[1:,:].get_values().T]
         #print nXbias
         #print theta
-        print nXbias.shape
-        print theta.shape
+        #print nXbias.shape
+        #print theta.shape
         
         val = 0
         try:
@@ -2278,9 +2278,9 @@ class RealtimeChart:
         ####
         # real time chart
         ####
-        print csvc
+        #print csvc
         self.df[csvc[0]] = [float(csvc[1])]
-        print self.df
+        #print self.df
         nX =   self.df.transpose()
         
         y  = self.sw.predictFromTheta(nX=nX)
@@ -2338,8 +2338,7 @@ class RealtimeChart:
     def sendToPlotly(self, x, y):
         self.qd._getMethod()
 
-        #print 'x:'+str(x)
-        print 'y:'+str(y)
+        print 'x:{0}, y:{1}'.format(x, y)
         if self.i % 20 == 0:
              self.s.write(dict(x=x, y=y))
         #self.s.close()
