@@ -25,10 +25,12 @@ from numpy import max as n_max
 import plotly.plotly as py
 from plotly.graph_objs import *
 
-import sys, oandapy
+import os, sys, oandapy
 import datetime as dd
-from matplotlib.pyplot import plot, legend, title, show
+from matplotlib.pyplot import plot, legend, title, show, imshow, tight_layout
+from pylab import rcParams
 from IPython.display import display, clear_output
+import ujson as j
 
 """
 from qore import *
@@ -40,7 +42,6 @@ import pandas as p
 import Quandl as q
 import datetime as dd
 import urllib2 as u
-import json as j
 import html2text
 import exceptions as ex
 import re, sys
@@ -847,6 +848,58 @@ class QoreQuant():
             legend(gr)
             show();
             #break
+
+    def analyseInvestingTechnical(self, showPlot=True):
+        
+        import ujson as j
+
+        fname = '/mldev/lib/crawlers/finance/dataPipeline.scrapy/investingTechnical_numbeo.csv'
+        df = p.read_csv(fname)
+        #print df.sort(['name','period'])
+    
+        #di = {'strong sell':0, 'sell':1, 'neutral':2, 'buy':3, 'strong buy':4}
+        di = {'strong sell':-2, 'sell':-1, 'neutral':0, 'buy':1, 'strong buy':2}
+        df['summaryCode'] = df['summary']
+        li = list(df.ix[:,'summary'])
+        for i in xrange(len(li)): df.ix[i,'summaryCode'] = di[li[i].lower()]
+        sdf = df.pivot('name', 'period', 'summaryCode').transpose()
+        sdf = j.dumps(sdf.to_dict())
+        #print repr(sdf)
+        cdate = os.path.getctime(fname)
+        fp = open('/mldev/lib/crawlers/finance/dataPipeline.scrapy/investingTechnical_numbeo.csv.log', 'a')
+        #fp.write('{0},{1}\n'.format(cdate,sdf))
+        fp.close()
+    
+        dfa = df.set_index('name').ix[:,['period','summaryCode']]
+        #dfa = normalizeme(dfa)
+        #dfa = sigmoidme(dfa)
+        #print dfa
+        #if showPlot == True: scatter(dfa['period'], dfa['summaryCode']); show();
+        #if showPlot == True: .plot(style='-'); show();
+    
+        dfs = df.pivot('name', 'period', 'summaryCode').transpose()
+        nm = n.array(dfs, dtype=n.float16)
+        #print nm
+        header = n.concatenate([list(dfs.columns), n.sum(nm, 0)])
+        print 
+        header = p.DataFrame(header.reshape(2, header.shape[0] / 2)).transpose().set_index(0).transpose()
+        print header
+        if showPlot == True: 
+            imshow(n.array(dfs, dtype=n.float16), extent=[1,7,1,9], aspect=0.517)
+            #title('Manually Set Aspect')
+            tight_layout()
+            show()
+    
+        headerT = header.transpose()
+        headerT[1] = n.array(headerT[1], dtype=n.float16)
+        rcParams['figure.figsize'] = 7.8, 5
+        #headerT = normalizeme(headerT)
+        #headerT = n.tanh(headerT)
+        if showPlot == True: 
+            headerT.plot(); show()
+        
+        return header
+        
 
 
 class FinancialModel:
