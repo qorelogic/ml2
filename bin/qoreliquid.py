@@ -21,6 +21,8 @@ from numpy import float16 as n_float16
 from numpy import c_ as n_c_
 from numpy import min as n_min
 from numpy import max as n_max
+from numpy import tanh as n_tanh
+from numpy import concatenate as n_concatenate
 
 import plotly.plotly as py
 from plotly.graph_objs import *
@@ -878,23 +880,23 @@ class QoreQuant():
         #if showPlot == True: .plot(style='-'); show();
     
         dfs = df.pivot('name', 'period', 'summaryCode').transpose()
-        nm = n.array(dfs, dtype=n.float16)
+        nm = n_array(dfs, dtype=n_float16)
         #print nm
-        header = n.concatenate([list(dfs.columns), n.sum(nm, 0)])
+        header = n_concatenate([list(dfs.columns), n_sum(nm, 0)])
         print 
         header = p.DataFrame(header.reshape(2, header.shape[0] / 2)).transpose().set_index(0).transpose()
         print header
         if showPlot == True: 
-            imshow(n.array(dfs, dtype=n.float16), extent=[1,7,1,9], aspect=0.517)
+            imshow(n_array(dfs, dtype=n_float16), extent=[1,7,1,9], aspect=0.517)
             #title('Manually Set Aspect')
             tight_layout()
             show()
     
         headerT = header.transpose()
-        headerT[1] = n.array(headerT[1], dtype=n.float16)
+        headerT[1] = n_array(headerT[1], dtype=n_float16)
         rcParams['figure.figsize'] = 7.8, 5
         #headerT = normalizeme(headerT)
-        #headerT = n.tanh(headerT)
+        #headerT = n_tanh(headerT)
         if showPlot == True: 
             headerT.plot(); show()
         
