@@ -830,11 +830,7 @@ class QoreQuant():
         li = list(df.ix[:,'summary'])
         for i in xrange(len(li)): df.ix[i,'summaryCode'] = di[li[i].lower()]
         sdf = df.pivot('name', 'period', 'summaryCode').transpose()
-        print sdf
-        sdf = sdf.to_dict()
-        #sdf = {str(k): v for k, v in sdf.iteritems()}
-        print sdf
-        sdf = j.dumps(sdf)
+        sdf = j.dumps(sdf.to_dict())
         #print repr(sdf)
         cdate = os.path.getctime(fname)
         fp = open('/mldev/lib/crawlers/finance/dataPipeline.scrapy/investingTechnical_numbeo.csv.log', 'a')
