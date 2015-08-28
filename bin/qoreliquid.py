@@ -834,7 +834,7 @@ class QoreQuant():
         #print repr(sdf)
         cdate = os.path.getctime(fname)
         fp = open('/mldev/lib/crawlers/finance/dataPipeline.scrapy/investingTechnical_numbeo.csv.log', 'a')
-        #fp.write('{0},{1}\n'.format(cdate,sdf))
+        fp.write('{0},{1}\n'.format(cdate,sdf))
         fp.close()
     
         dfa = df.set_index('name').ix[:,['period','summaryCode']]
