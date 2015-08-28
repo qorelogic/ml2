@@ -44,7 +44,7 @@ minstall() {
 		echo 'adding PYTHONPATH export ~/.bashrc'
 	fi
 
-	# python packacges for datafeeds
+	# python packages for datafeeds
 	if [ "`python -c 'import QSTK' 2>&1`" != "" ]; then
             sudo pip install QSTK
 	fi
