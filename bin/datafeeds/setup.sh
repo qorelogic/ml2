@@ -19,15 +19,21 @@ mdependencies() {
 }
 
 minstall() {
+
 	sleep 1
+	if [ "`which puppet`" == "" ]; then
+            sudo apt-get update
+            sudo apt-get -y install puppet
+	fi
 	if [ ! -f $mlocal/layouts/qlm.window.sh ]; then
 		echo "$mlocal/layouts contents:"
 		ls -l $mlocal/layouts
 		echo "need to fix $mlocal/layouts, sure you want to remove directory $mlocal/layouts? y/n: "
 		read ans
 		if [ "$ans" == "y" ]; then
+			rm -r $mlocal/layouts
 			rm -rfv $mlocal/layouts
-			ln -s $MPWD/../tmuxifier/layouts $mlocal/layouts 2> /dev/null
+			ln -s $mldir/bin/tmuxifier/layouts $mlocal/layouts 2> /dev/null
 			echo 'linked mldev/bin/tmuxifier/layouts to ~/.tmuxifier/layouts'
 		fi
 	fi
@@ -47,6 +53,7 @@ minstall() {
 	fi
 
 	# python packages for datafeeds
+	sudo pip install --upgrade pip
 	if [ "`python -c 'import QSTK' 2>&1`" != "" ]; then
             sudo pip install QSTK
 	fi
