@@ -1,6 +1,9 @@
+#!/usr/bin/env python
 
 import digitalocean
 import numpy as n
+import time
+
 class HPC:
     
     def __init__(self):
@@ -21,6 +24,9 @@ class HPC:
         ims = {}
         for i in im:
             ims[i.id] = i#.name
+        for img in ims:
+            print '{0} {1} {2}'.format(ims[img].id, ims[img].name, ims[img].created_at)
+        print
         return ims
 
     def getLastImage(self):
@@ -33,13 +39,16 @@ class HPC:
         #print
         #print 'nodes:'
         my_droplets = self.manager.get_all_droplets()
-        droplets = []
+        droplets = {}
         for droplet in my_droplets:
-            droplets.append(droplet)
+            droplets[droplet.id] = droplet
+            #droplets.append(droplet)
             if quiet == False:
                 print droplet.id
-                print 'ssh -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
-                print 'ipython notebook --ip={0}'.format(droplet.ip_address)
+                print '  ping {0}'.format(droplet.ip_address)
+                print '  ssh -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
+                print '  ipython notebook --ip={0}'.format(droplet.ip_address)
+                print '  ping {0}'.format(droplet.ip_address)
         return droplets
 
         #    #droplet.shutdown()
@@ -50,7 +59,7 @@ class HPC:
         dkey = key.load_by_pub_key(self.pkey)
 
         droplet = digitalocean.Droplet(token=self.token,
-                                       name='liquid-rc07',
+                                       name=self.createNextSnapshotname(), #'liquid-rc07',
                                        #region='nyc2', # New York 2
                                        region=self.getImages()[self.getLastImage()].regions[0],
                                        #image='ubuntu-14-04-x64', # Ubuntu 14.04 x64
@@ -60,13 +69,7 @@ class HPC:
         droplet.create()
     
     def makeNewSnapshot(self, droplet):
-        images = self.getImages()
-        lastImage = images[self.getLastImage()].name.split(' ')[0]
-        str1 = lastImage.split('rc')[0]
-        str2 = '%02.f' % (int(lastImage.split('rc')[1])+1)
-        print type(str1)
-        print type(str2)
-        newSnapshotName = '{0}rc{1}'.format(str1, str2)
+        newSnapshotName = self.createNextSnapshotname()
         try:
             droplet.take_snapshot(newSnapshotName)
         except:
@@ -75,3 +78,102 @@ class HPC:
             droplet.power_off()
             droplet.take_snapshot(newSnapshotName)
     
+
+    
+    def snapshotAllDroplets(self):
+        
+        # make snapshot of droplets
+        wait = 5
+        
+        droplets = self.getNodes(quiet=True)
+        for id in droplets:
+            
+            droplet = droplets[id]
+            ans = raw_input('turn off droplet {1}({0})? y/n: '.format(droplet.id, droplet.name))
+            #ans = 'y'
+            if ans == 'y':
+                while True:
+                    try:
+                        print 
+                        print 'events:'
+                        for i in droplet.get_events():
+                            print i
+                        print
+                        print 'attempting snapshot({0}) '.format(droplet.id)
+                        #droplet.power_off()
+                        self.makeNewSnapshot(droplet)
+                        print 'waiting {0} secs'.format(wait)
+                        time.sleep(5)
+                        clear_output()
+                    except Exception as e:
+                        print e
+                        break
+            else:
+                print 'nothing done'
+
+    def destroyAllDroplets(self):
+        
+        # destroy droplets
+        wait = 5
+        
+        droplets = self.getNodes(quiet=True)
+        for id in droplets:
+            
+            droplet = droplets[id]
+            ans = raw_input('destroy droplet {0}[{1}:{2}]? y/n: '.format(droplet.id, droplet.name, droplet.ip_address))
+            #ans = 'y'
+            if ans == 'y':
+                while True:
+                    try:
+                        print 
+                        print 'events:'
+                        for i in droplet.get_events():
+                            print i
+                        print
+                        droplet.destroy()
+                        time.sleep(5)
+                        clear_output()
+                    except Exception as e:
+                        print e
+                        break
+            else:
+                print 'nothing done'
+
+    def getLastImageName(self):
+        lastImage = self.getImages()[self.getLastImage()]
+        return lastImage.name
+
+    def createNextSnapshotname(self):
+        lastImage = self.getImages()[self.getLastImage()]
+        #print lastImage.created_at
+        #print lastImage.name
+        lim = lastImage.name.split('rc')
+        return '{0}{1}{2}'.format(lim[0], 'rc', '%02d' % (int(lim[1])+1))
+
+    def createNextSnapshotname2(self):
+        images = self.getImages()
+        lastImage = images[self.getLastImage()].name.split(' ')[0]
+        str1 = lastImage.split('rc')[0]
+        str2 = '%02.f' % (int(lastImage.split('rc')[1])+1)
+        #print type(str1)
+        #print type(str2)
+        return '{0}rc{1}'.format(str1, str2)
+
+if __name__ == "__main__":
+    import sys
+    c = HPC()
+    try:
+        if sys.argv[1] == 'on':
+            c.createNode()
+        if sys.argv[1] == 'nodes':
+            # running nodes
+            res = c.getNodes()
+        if sys.argv[1] == 'images':
+            c.getImages()
+        if sys.argv[1] == 'snapshot':
+            print c.snapshotAllDroplets()
+        if sys.argv[1] == 'destroy':
+            print c.destroyAllDroplets()
+    except Exception as e:
+        print 'usage: <hpc.py on | nodes | images | snapshot | destroy>'
+        print e

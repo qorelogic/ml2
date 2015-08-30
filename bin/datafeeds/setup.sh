@@ -25,6 +25,10 @@ minstall() {
 		ln -s $MPWD/tmuxifier/layouts/datafeeds.window.sh $mlocal/layouts/ 2> /dev/null
 		echo 'linked datafeeds tmuxifier layout.'
 	fi
+	if [ ! -f $mlocal/layouts/qlm.window.sh ]; then
+		ln -s $MPWD/../tmuxifier/layouts/qlm.window.sh $mlocal/layouts/ 2> /dev/null
+		echo 'linked qlm tmuxifier layout.'
+	fi
 	if [ ! -f $mldir/lib/oanda/oandapy/oandapy.py ]; then
 		mkdir -p $mldir/lib/oanda/
 		echo 'oandapy'
@@ -40,7 +44,7 @@ minstall() {
 		echo 'adding PYTHONPATH export ~/.bashrc'
 	fi
 
-	# python packacges for datafeeds
+	# python packages for datafeeds
 	if [ "`python -c 'import QSTK' 2>&1`" != "" ]; then
             sudo pip install QSTK
 	fi
