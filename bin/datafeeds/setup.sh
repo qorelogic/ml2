@@ -20,10 +20,16 @@ mdependencies() {
 
 minstall() {
 	sleep 1
-	#if [ -f $MPWD/tmuxifier/layouts/datafeeds.window.sh ]; then
-	if [ ! -f $mlocal/layouts/datafeeds.window.sh ]; then
-		ln -s $MPWD/tmuxifier/layouts/datafeeds.window.sh $mlocal/layouts/ 2> /dev/null
-		echo 'linked datafeeds tmuxifier layout.'
+	if [ ! -f $mlocal/layouts/qlm.window.sh ]; then
+		echo "$mlocal/layouts contents:"
+		ls -l $mlocal/layouts
+		echo "need to fix $mlocal/layouts, sure you want to remove directory $mlocal/layouts? y/n: "
+		read ans
+		if [ "$ans" == "y" ]; then
+			rm -rfv $mlocal/layouts
+			ln -s $MPWD/../tmuxifier/layouts $mlocal/layouts 2> /dev/null
+			echo 'linked mldev/bin/tmuxifier/layouts to ~/.tmuxifier/layouts'
+		fi
 	fi
 	if [ ! -f $mlocal/layouts/qlm.window.sh ]; then
 		ln -s $MPWD/../tmuxifier/layouts/qlm.window.sh $mlocal/layouts/ 2> /dev/null
