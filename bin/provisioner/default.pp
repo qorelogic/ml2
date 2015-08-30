@@ -2,9 +2,9 @@
 Exec { path => [ "/bin/", "/sbin/" , "/usr/bin/", "/usr/sbin/" ] }
 
 $hdir        = "/mldev"
-$installHdir = "/mldev/lib/ml"
-$h2oHdir     = "$installHdir/h2o/"
-$sparkHdir   = "$installHdir/spark/"
+$installHdir = "$hdir/lib/ml"
+$h2oHdir     = "$installHdir/h2o"
+$sparkHdir   = "$installHdir/spark"
 
 $h2oTarball   = "http://h2o-release.s3.amazonaws.com/h2o/rel-simons/7/h2o-3.0.1.7.zip"
 $sparkTarball = "http://d3kbcqa49mib13.cloudfront.net/spark-1.4.0-bin-hadoop2.4.tgz"
@@ -49,24 +49,43 @@ class unzip {
 }
 
 class h2o {
-	exec { "mkdir -p $h2oHdir": command => "mkdir -p $h2oHdir" }
-	exec { "wget $h2oTarball":
-	  command => "wget $h2oTarball -P $h2oHdir",
-	  timeout => 60,
-	  tries   => 3
+	exec { "mkdir_${h2oHdir}": command => "mkdir -p $h2oHdir" }
+	exec { "wget_${h2oTarball}":
+		command => "wget -nc $h2oTarball -P $h2oHdir/",
+		#command => "wget -nc $h2oTarball",
+		#cwd => "$h2oHdir",
+		timeout => 60,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+		#refreshonly => true,
+		#notify => Exec['unzip h2o'],
+		before  => Exec["unzip h2o"],
 	}
-	exec { 'unzipping h2o': command => "unzip $h2oHdir/h2o-3.0.1.7.zip -d $h2oHdir/", timeout => 60, tries   => 3 }
+	exec { 'unzip h2o': 
+		command => "unzip -o $h2oHdir/h2o-3.0.1.7.zip -d $h2oHdir/", 
+		#command => "/usr/bin/unzip -o $h2oHdir/h2o-3.0.1.7.zip",
+		#cwd => "$h2oHdir",
+		timeout => 60, 
+		tries   => 3,
+		require => Class["unzip"],
+	}
 	#exec { 'run h2o':      command => "java -jar $h2oHdir/h2o-3.0.1.7/h2o.jar",      timeout => 5, tries   => 3 }
 }
 
 class spark {
 	exec { "mkdir -p $sparkHdir": command => "mkdir -p $sparkHdir" }
-	exec { "wget $sparkTarball":
-	  command => "wget $sparkTarball -P $sparkHdir",
-	  timeout => 60,
-	  tries   => 3
+	exec { "wget -nc $sparkTarball":
+		command => "wget -nc $sparkTarball -P $sparkHdir/",
+		timeout => 60,
+		tries   => 3,
+		before  => Exec["untar spark"],
 	}
-	exec { 'unzipping h2o': command => "unzip $sparkHdir/spark-1.4.0-bin-hadoop2.4.tgz -d $sparkHdir/", timeout => 60, tries   => 3 }
+	exec { 'untar spark': 
+		command => "tar zxf $sparkHdir/spark-1.4.0-bin-hadoop2.4.tgz -C $sparkHdir/", 
+		timeout => 60, 
+		tries   => 3,
+		#require => File["$sparkHdir/spark-1.4.0-bin-hadoop2.4.tgz"],
+	}
 	#exec { 'run h2o':      command => "java -jar $sparkHdir/spark-1.4.0-bin-hadoop2.4/bin/...",        timeout => 60, tries   => 3 }
 }
 
