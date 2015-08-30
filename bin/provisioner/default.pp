@@ -47,12 +47,24 @@ class h2o {
 	  tries   => 3
 	}
 	exec { 'unzipping h2o': command => 'unzip /home/qore/h2o-3.0.1.7.zip -d /home/qore/', timeout => 60, tries   => 3 }
-	exec { 'run h2o':       command => 'java -jar /home/qore/h2o-3.0.1.7/h2o.jar',     timeout => 5, tries   => 3 }
+	#exec { 'run h2o':       command => 'java -jar /home/qore/h2o-3.0.1.7/h2o.jar',     timeout => 5, tries   => 3 }
+}
+
+class spark {
+	exec { 'wget http://d3kbcqa49mib13.cloudfront.net/spark-1.4.0-bin-hadoop2.4.tgz':
+	  command => 'wget http://d3kbcqa49mib13.cloudfront.net/spark-1.4.0-bin-hadoop2.4.tgz -P /home/qore/',
+	  timeout => 60,
+	  tries   => 3
+	}
+	exec { 'unzipping h2o': command => 'unzip /home/qore/spark-1.4.0-bin-hadoop2.4.tgz -d /home/qore/', timeout => 60, tries   => 3 }
+	#exec { 'run h2o':       command => 'java -jar /home/qore/spark-1.4.0-bin-hadoop2.4/bin/...',        timeout => 60, tries   => 3 }
 }
 
 
 #include apache
+
 include system-update
-include javart
 include unzip
+include javart
 include h2o
+include spark
