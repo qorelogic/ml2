@@ -50,6 +50,7 @@ class unzip {
   }
 }
 
+# source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
 	exec { "mkdir_${h2oHdir}": command => "mkdir -p $h2oHdir" }
 	exec { "wget_${h2oTarball}":
