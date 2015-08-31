@@ -1,5 +1,7 @@
 
 #from numpy import *
+from numpy import divide as n_divide
+from numpy import float16 as n_float16
 
 import plotly.plotly as py
 from plotly.graph_objs import *
@@ -28,7 +30,6 @@ import threading,time
 import itertools as it
 
 import oandapy
-
 
 def toCurrency(n):
     return '%2d' % n
@@ -1183,6 +1184,10 @@ class OandaQ:
             'M' : 1 * 2419200 # Month
         }
 
+        self.instruments = self.oanda2.get_instruments(self.aid)['instruments']
+        #self.oq = OandaQ()
+        self.ticks = {}
+
     def log(self, msg, printDot=False):
         if self.verbose == True: 
             print msg
@@ -1748,6 +1753,83 @@ class OandaQ:
         
         return dfac
 
+    def getPipValue(self, instrument):
+        return p.DataFrame(self.instruments).set_index('instrument').ix[instrument, 'pip']
+
+    def babysitTrades(self, df, tick):
+    
+        #print tick
+        self.ticks[tick['instrument']] = tick 
+        #print p.DataFrame(self.ticks).transpose()
+        #print df
+        
+        mdf = p.DataFrame()
+        
+        for i in df:
+            
+            dfi = p.DataFrame(i, index=[0]).set_index('id')
+            pair = dfi.ix[:,'instrument'].get_values()[0]
+            side = dfi.ix[:,'side'].get_values()[0]
+            mside = 'ask' if side == 'buy' else 'bid'
+            try:
+                dfi['openprice'] = self.ticks[pair][mside]
+                dfi['pipval']    = self.getPipValue(pair)
+                mdf = mdf.combine_first(dfi.ix[:,['instrument','price','side', 'openprice', 'pipval']])
+                #print dfi
+            except:
+                ''
+    
+        if len(mdf) > 0:
+            
+            #print 'shape:'.format(mdf.shape)
+            #print 'lenmdf:'.format(len(mdf))
+            mdf['pole'] = list(n_array(n_array(mdf.ix[:,'side']) == 'buy', dtype=int))
+        
+            # inspired source: http://brenocon.com/blog/2013/10/tanh-is-a-rescaled-logistic-sigmoid-function/
+            # gx = ((2.*(e.^z./(1+e.^z))) .* (2.*z)) - 1
+            #z = n.matrix('1;0.1').A
+            z = mdf['pole']
+            
+            mdf['poleTanh'] = n_rint(n_tanh((2*(n_power(n_e, z) / (1 + n_power(n_e, z))) * (2*z))-1))    
+            mdf['pips'] = n_divide(1.0, n_array(mdf.ix[:,'pipval'], dtype=n_float16)) * (mdf.ix[:,'openprice'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']
+            mdf['trailpips'] = 2
+            mdf['trail']     = mdf['pips'] - mdf['trailpips']
+    
+            #print mdf.ix[:,'poleTanh']
+            #print mdf.ix[:,'openprice']
+            #print mdf.ix[:,'price']
+            #print (mdf.ix[:,'openprice'] - mdf.ix[:,'price'])
+            #print (mdf.ix[:,'openprice'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']
+            #print mdf['pips']
+        
+            print mdf.ix[:, 'instrument price side openprice pips trail trailpips'.split(' ')]
+            print '---------------------------------------------------------------------'
+
+            #for res in n_array(mdf, dtype=n_string0):
+            #    print ' '.join(list(res))
+            #print '-----'
+            
+            """
+            for i in xrange(len(mdf)):
+                print mdf['trail'][i]
+                if mdf['trail'][i] > 0:
+                    #self.oanda2.modify_trade(self.aid, tid, trailingStop=10)
+                    print 'setting trailstop'
+            """
+            """
+            if pl > 0:
+                print pl
+                print 'setting trailstop'
+                tid = trade['id']
+                #self.oanda2.modify_trade(self.aid, tid, trailingStop=10)
+            else:
+                print 'trailstop too small, patience!'
+            """
+            
+            #print mdf.ix[:,'side'].get_values()
+            return mdf#.transpose()
+        #else:
+        #    return n.empty()
 
 # source: http://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
 import math
