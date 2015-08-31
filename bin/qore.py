@@ -24,6 +24,7 @@ def monpos2(df, pr):
     pr = pr['bid']
     #print 
     #print pr
+    #print df
     
     mdf = p.DataFrame()
     
@@ -31,12 +32,12 @@ def monpos2(df, pr):
         dfi = p.DataFrame(i, index=[0]).set_index('id')#.transpose()
         #print dfi
         dfi['pr'] = pr
-        mdf = mdf.combine_first(dfi.ix[:,['price','side', 'pr']])
+        mdf = mdf.combine_first(dfi.ix[:,['instrument','price','side', 'pr']])
 
     if len(mdf) > 0:
         
-        print 'shape:'.format(mdf.shape)
-        print 'lenmdf:'.format(len(mdf))
+        #print 'shape:'.format(mdf.shape)
+        #print 'lenmdf:'.format(len(mdf))
         mdf['pole'] = list(n_array(n_array(mdf.ix[:,'side']) == 'buy', dtype=int))
     
         # inspired source: http://brenocon.com/blog/2013/10/tanh-is-a-rescaled-logistic-sigmoid-function/
@@ -47,7 +48,11 @@ def monpos2(df, pr):
         mdf['pips'] = 10000 * (mdf.ix[:,'pr'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']
         mdf['trail'] = mdf['pips'] - 2
     
-        print mdf
+        #print mdf
+        for res in n_array(mdf, dtype=n_string0):
+            print ' '.join(list(res))
+        print '-----'
+        
         """
         for i in xrange(len(mdf)):
             print mdf['trail'][i]
