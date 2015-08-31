@@ -141,7 +141,8 @@ class QoreQuant():
         
     def __init__(self, verbose=False):
 
-        self.thetaDir = '/mldev/bin/data/oanda/qorequant'
+        self.thetaDir         = '/mldev/bin/data/oanda/qorequant'
+        self.hdirDatapipeline = '/mldev/lib/crawlers/finance/dataPipeline.scrapy'
 
         self.qd = QoreDebug()
         self.qd._getMethod()
@@ -854,8 +855,8 @@ class QoreQuant():
     def analyseInvestingTechnical(self, showPlot=True):
         
         import ujson as j
-
-        fname = '/mldev/lib/crawlers/finance/dataPipeline.scrapy/investingTechnical_numbeo.csv'
+        
+        fname = self.hdirDatapipeline+'/investingTechnical_numbeo.csv'
         df = p.read_csv(fname)
         #print df.sort(['name','period'])
     
@@ -868,8 +869,8 @@ class QoreQuant():
         sdf = j.dumps(sdf.to_dict())
         #print repr(sdf)
         cdate = os.path.getctime(fname)
-        fp = open('/mldev/lib/crawlers/finance/dataPipeline.scrapy/investingTechnical_numbeo.csv.log', 'a')
-        #fp.write('{0},{1}\n'.format(cdate,sdf))
+        fp = open(self.hdirDatapipeline+'/investingTechnical_numbeo.csv.log', 'a')
+        fp.write('{0},{1}\n'.format(cdate,sdf))
         fp.close()
     
         dfa = df.set_index('name').ix[:,['period','summaryCode']]
