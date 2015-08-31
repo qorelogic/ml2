@@ -11,6 +11,7 @@ defp('/ml.dev/lib/oanda/oandapy')
     
 from qore import *
 from qoreliquid import *
+from oandaq import OandaQ
 import oandapy
 import pandas as p
 import numpy as n
