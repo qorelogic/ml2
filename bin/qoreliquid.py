@@ -2,6 +2,12 @@
 #from numpy import *
 from numpy import divide as n_divide
 from numpy import float16 as n_float16
+from numpy import rint as n_rint
+from numpy import c_ as n_c_
+from numpy import min as n_min
+from numpy import max as n_max
+from numpy import tanh as n_tanh
+from numpy import concatenate as n_concatenate
 
 import plotly.plotly as py
 from plotly.graph_objs import *
@@ -1772,9 +1778,9 @@ class OandaQ:
             side = dfi.ix[:,'side'].get_values()[0]
             mside = 'ask' if side == 'buy' else 'bid'
             try:
-                dfi['openprice'] = self.ticks[pair][mside]
+                dfi['currentprice'] = self.ticks[pair][mside]
                 dfi['pipval']    = self.getPipValue(pair)
-                mdf = mdf.combine_first(dfi.ix[:,['instrument','price','side', 'openprice', 'pipval']])
+                mdf = mdf.combine_first(dfi.ix[:,['instrument','price','side', 'currentprice', 'pipval']])
                 #print dfi
             except:
                 ''
@@ -1791,18 +1797,18 @@ class OandaQ:
             z = mdf['pole']
             
             mdf['poleTanh'] = n_rint(n_tanh((2*(n_power(n_e, z) / (1 + n_power(n_e, z))) * (2*z))-1))    
-            mdf['pips'] = n_divide(1.0, n_array(mdf.ix[:,'pipval'], dtype=n_float16)) * (mdf.ix[:,'openprice'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']
+            mdf['pips'] = n_divide(1.0, n_array(mdf.ix[:,'pipval'], dtype=n_float16)) * (mdf.ix[:,'currentprice'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']
             mdf['trailpips'] = 2
             mdf['trail']     = mdf['pips'] - mdf['trailpips']
     
             #print mdf.ix[:,'poleTanh']
-            #print mdf.ix[:,'openprice']
+            #print mdf.ix[:,'currentprice']
             #print mdf.ix[:,'price']
-            #print (mdf.ix[:,'openprice'] - mdf.ix[:,'price'])
-            #print (mdf.ix[:,'openprice'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']
+            #print (mdf.ix[:,'currentprice'] - mdf.ix[:,'price'])
+            #print (mdf.ix[:,'currentprice'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']
             #print mdf['pips']
         
-            print mdf.ix[:, 'instrument price side openprice pips trail trailpips'.split(' ')]
+            print mdf.ix[:, 'instrument price side currentprice pips trail trailpips'.split(' ')]
             print '---------------------------------------------------------------------'
 
             #for res in n_array(mdf, dtype=n_string0):
