@@ -23,7 +23,7 @@ import socket
 import matplotlib.pyplot as plt
 
 qd = QoreDebug()
-qd.on()
+qd.off()
 qd.stackTraceOff()
 
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
