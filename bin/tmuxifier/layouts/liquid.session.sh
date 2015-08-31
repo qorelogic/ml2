@@ -11,6 +11,7 @@ if initialize_session "liquid"; then
 
   # Load a defined window layout.
   load_window "qlm"
+  load_window "babysit"
   #load_window "h2o"
   load_window "datafeeds"
 
@@ -28,7 +29,7 @@ if initialize_session "liquid"; then
 
 
   # Select the default active window on session creation.
-  #select_window 1
+  select_window 1
 
 fi
 
