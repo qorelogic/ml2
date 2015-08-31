@@ -28,7 +28,7 @@ if initialize_session "Datamining"; then
 
 
   # Select the default active window on session creation.
-  #select_window 1
+  select_window 1
 
 fi
 
