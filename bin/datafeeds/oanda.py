@@ -120,7 +120,7 @@ class MyStreamer(oandapy.Streamer):
                     self.rtc.update(csvc)
                     break
                 if case('babysit'):
-                    res = monpos2(self.trades, data['tick'])
+                    res = oq.babysitTrades(self.trades, data['tick'])
                     #if res == False:
                     #    print data
                     break
