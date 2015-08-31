@@ -1,5 +1,28 @@
 
 #from numpy import *
+from qore import readcache, writecache, mkdir_p, QoreDebug
+from pandas import read_csv as p_read_csv
+from pandas import DataFrame as p_DataFrame
+from pandas import Series as p_Series
+from numpy import array as n_array
+from numpy import sum as n_sum
+from numpy import power as n_power
+from numpy import mean as n_mean
+from numpy import convolve as n_convolve
+from numpy import std as n_std
+from numpy import e as n_e
+from numpy import log10 as n_log10
+from numpy import ones as n_ones
+from numpy import zeros as n_zeros
+from numpy import ceil
+from numpy import dot as n_dot
+from numpy import divide as n_divide
+from numpy import float16 as n_float16
+from numpy import c_ as n_c_
+from numpy import min as n_min
+from numpy import max as n_max
+from numpy import tanh as n_tanh
+from numpy import concatenate as n_concatenate
 
 import plotly.plotly as py
 from plotly.graph_objs import *
@@ -11,6 +34,7 @@ from pylab import rcParams
 from IPython.display import display, clear_output
 import ujson as j
 
+"""
 from qore import *
 from qore_qstk import *
 from matplotlib.pylab import *
@@ -27,7 +51,16 @@ import StringIO as sio
 import threading,time
 import itertools as it
 
-import oandapy
+
+from IPython.display import display, clear_output
+import time
+import math
+
+from selenium import webdriver
+from selenium.selenium import selenium
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+import pandas as p
+"""
 
 
 def toCurrency(n):
@@ -116,18 +149,18 @@ class QoreQuant():
 
         self.verbose = verbose
 
-        co = p.read_csv(self.configfile, header=None)
+        co = p_read_csv(self.configfile, header=None)
         
-        env1=co.ix[0,1]
-        access_token1=co.ix[0,2]
-        self.oanda1 = oandapy.API(environment=env1, access_token=access_token1)
+        #env1=co.ix[0,1]
+        #access_token1=co.ix[0,2]
+        #self.oanda1 = oandapy.API(environment=env1, access_token=access_token1)
         
         env2=co.ix[1,1]
         access_token2=co.ix[1,2]
         self.oanda2 = oandapy.API(environment=env2, access_token=access_token2)
         
-        self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
-        self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
+        #self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
+        #self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
 
         #print 'using account: {0}'.format(self.accid1)
         
@@ -171,17 +204,17 @@ class QoreQuant():
         
         print 'target portfolio'
         print targetPortfolio
-        if type(targetPortfolio) != type(p.DataFrame([])):
-            targetPortfolio = p.DataFrame(targetPortfolio).transpose()
+        if type(targetPortfolio) != type(p_DataFrame([])):
+            targetPortfolio = p_DataFrame(targetPortfolio).transpose()
         #print type(targetPortfolio)
         print 'live portfolio'
         print livePortfolio    
-        if type(livePortfolio) != type(p.DataFrame([])):
-            livePortfolio = p.DataFrame(livePortfolio).transpose()
+        if type(livePortfolio) != type(p_DataFrame([])):
+            livePortfolio = p_DataFrame(livePortfolio).transpose()
         #print type(livePortfolio)
         
         print 'to trade'
-        tt = p.DataFrame([list(targetPortfolio.ix[:,0].get_values()), list((targetPortfolio.ix[:,1] - livePortfolio.ix[:,1]).get_values())]).transpose()
+        tt = p_DataFrame([list(targetPortfolio.ix[:,0].get_values()), list((targetPortfolio.ix[:,1] - livePortfolio.ix[:,1]).get_values())]).transpose()
         if returnList == True:
             [list(tt.transpose().get_values()[0]), list(tt.transpose().get_values()[1])]    
         else:
@@ -192,7 +225,7 @@ class QoreQuant():
         self.qd._getMethod()
         
         pr0 = self.oanda1.get_prices(instruments=[instrument])['prices'][0]
-        return n.mean([pr0['ask'], pr0['bid']])
+        return n_mean([pr0['ask'], pr0['bid']])
     
     def prepTargetPortfolio(self):        
         self.qd._getMethod()
@@ -204,9 +237,9 @@ class QoreQuant():
         # source: http://pandas.pydata.org/pandas-docs/dev/indexing.html#the-where-method-and-masking
         #tarp = tarp.query('username == "noasnoas"')
         #print tarp
-        tarp2 = [list(n.array(tarp.ix[:,'pair'].get_values(), dtype=str)), list(n.array(tarp.ix[:,'amount'].get_values(), dtype=str))]
+        tarp2 = [list(n_array(tarp.ix[:,'pair'].get_values(), dtype=str)), list(n_array(tarp.ix[:,'amount'].get_values(), dtype=str))]
         #print tarp
-        #tarp = p.DataFrame(tarp).transpose()
+        #tarp = p_DataFrame(tarp).transpose()
         
         balance = 200
         
@@ -253,8 +286,8 @@ class QoreQuant():
         
         #print "Account: {0}".format(self.accid1); print targetPortfolio1; print
         print "Account: {0}".format(self.accid2); #print targetPortfolio2; print
-        targetPortfolio2.ix[:,'take_profit'] = n.array(targetPortfolio2.ix[:,'take_profit'], dtype=float)
-        targetPortfolio2.ix[:,'stop_loss']   = n.array(targetPortfolio2.ix[:,'stop_loss'],   dtype=float)
+        targetPortfolio2.ix[:,'take_profit'] = n_array(targetPortfolio2.ix[:,'take_profit'], dtype=float)
+        targetPortfolio2.ix[:,'stop_loss']   = n_array(targetPortfolio2.ix[:,'stop_loss'],   dtype=float)
         targetPortfolio2 = polarizePortfolio(targetPortfolio2, 'risk2', 'amount', 'bias')
         
         # group positions by aggregate pairs
@@ -263,20 +296,20 @@ class QoreQuant():
         #print df.stack() #.groupby(level=1, axis=2)
         # source: http://bconnelly.net/2013/10/summarizing-data-in-python-with-pandas/
         df = targetPortfolio2.groupby('instrument')
-        d0 = df['amount'].aggregate(n.sum)
-        d1 = df['take_profit'].aggregate(n.mean)
-        d2 = df['stop_loss'].aggregate(n.mean)
+        d0 = df['amount'].aggregate(n_sum)
+        d1 = df['take_profit'].aggregate(n_mean)
+        d2 = df['stop_loss'].aggregate(n_mean)
         print
         #print df.describe()
-        df = p.DataFrame([d0, d1, d2]).transpose()
-        return p.DataFrame(df)
+        df = p_DataFrame([d0, d1, d2]).transpose()
+        return p_DataFrame(df)
         
 
     def prepSendToMarket(self, df):
         self.qd._getMethod()
         
         df2 = self.oanda2.get_positions(self.accid2)
-        df2 = p.DataFrame(df2['positions']).sort('instrument', ascending=True).ix[:,['instrument','side','units']]
+        df2 = p_DataFrame(df2['positions']).sort('instrument', ascending=True).ix[:,['instrument','side','units']]
         polarizePortfolio(df2, 'units', 'amount', 'side')
         
         df2 = df2.set_index('instrument').ix[:,['amount']] 
@@ -308,7 +341,7 @@ class QoreQuant():
         for i in df.index:
             dfi = df.ix[i,:]
             instrument = i
-            amount     = int(ceil(n.abs(dfi['amount'])))
+            amount     = int(ceil(n_abs(dfi['amount'])))
             if dfi['amount'] > 0:
                 side = 'buy'
             elif dfi['amount'] < 0:
@@ -427,7 +460,7 @@ class QoreQuant():
         X = self.df.ix[0:len(self.df)]
         # shift keyCol up ct cells
         #ct = 5
-        #dfb = p.DataFrame(index=self.df.ix[0:len(self.df)-ct, 0].index)
+        #dfb = p_DataFrame(index=self.df.ix[0:len(self.df)-ct, 0].index)
         #dfb['a'] = self.df.ix[0:len(self.df)-ct, 0].get_values()
         #dfb['b'] = self.df.ix[ct:len(self.df), 0].get_values()
         #self.df.ix[:,0] = dfb['b']
@@ -446,11 +479,11 @@ class QoreQuant():
         self.df = self.df.ix[0:len(self.df)-barsForward,:]
 
         #self.df['y'] = y        
-        #print p.DataFrame(self.df.ix[:,[self.sw.keyCol, 'y']])
+        #print p_DataFrame(self.df.ix[:,[self.sw.keyCol, 'y']])
         #import sys
         
-        y = n.array(y)
-        #print p.DataFrame(y)
+        y = n_array(y)
+        #print p_DataFrame(y)
         print y.shape
         
         self.loadTheta(iterations, pair=pair, granularity=granularity)
@@ -466,7 +499,7 @@ class QoreQuant():
         iter  = 0
         
         try:
-            self.df0 = p.read_csv(fname, index_col=0)
+            self.df0 = p_read_csv(fname, index_col=0)
             #print self.df0#.get_values()
             #print 'self.df0 load'
             #print 'loadtheta iterations:{0}'.format(iterations)
@@ -483,7 +516,7 @@ class QoreQuant():
             #print 'loaded initialTheta: {0}'.format(initialTheta.get_values())
         except Exception as e:
             print e
-            self.df0 = p.DataFrame()
+            self.df0 = p_DataFrame()
             initialTheta = None
             
         self.sw.theta = initialTheta
@@ -510,16 +543,16 @@ class QoreQuant():
         
         mkdir_p(self.thetaDir)
         try:
-            self.df0 = p.read_csv(fname, index_col=0)
+            self.df0 = p_read_csv(fname, index_col=0)
             #print self.df0
         except Exception as e:
             print e
-            self.df0 = p.DataFrame()
+            self.df0 = p_DataFrame()
         print len(self.df0)
         #print self.sw.ml.theta.get_values()
         try:    theta = self.sw.ml.theta.get_values()
         except: theta = self.sw.ml.theta
-        df = p.DataFrame(theta, index=list(self.dfdata.columns), columns=[self.sw.ml.iter]).transpose()
+        df = p_DataFrame(theta, index=list(self.dfdata.columns), columns=[self.sw.ml.iter]).transpose()
         #print df.ix[self.sw.ml.iter, :]#.get_values()
         #print self.sw.ml.theta
         
@@ -528,7 +561,9 @@ class QoreQuant():
         print df.transpose()
         print 'save theta'
         
-        if self.verbose == True: df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); show();
+        if self.verbose == True: 
+            df.plot(legend=None, title='{0} {1} theta progression'.format(pair, granularity)); 
+            show();
         df.to_csv(fname)        
     
     def predict(self, plotTitle='', wlen=2000, showPlot=True):
@@ -541,8 +576,8 @@ class QoreQuant():
         """
         try:
             nprices = getPricesLatest(data, trueprices=True)
-            data.ix[p.tslib.Timestamp('2015-06-10').date(), self.sw.relatedCols] = list(nprices.transpose().ix[0,:])
-            #print data.ix[p.tslib.Timestamp('2015-06-10'), self.sw.relatedCols]
+            data.ix[p_tslib.Timestamp('2015-06-10').date(), self.sw.relatedCols] = list(nprices.transpose().ix[0,:])
+            #print data.ix[p_tslib.Timestamp('2015-06-10'), self.sw.relatedCols]
             #print data
             print nprices
         except Exception as e:
@@ -551,7 +586,7 @@ class QoreQuant():
         mdf = data
         #[mdf, dmean, dstd] = normalizeme(data, pinv=True)
         #tp = sw.predictRegression2(mdf.ix[0:ldf-i, :], quiet=False)
-        tp = p.DataFrame(self.sw.predictRegression2(mdf.ix[:, :], quiet=True), index=data.index)
+        tp = p_DataFrame(self.sw.predictRegression2(mdf.ix[:, :], quiet=True), index=data.index)
         #plot(self.de.ix[ldf-wlen: ldf, self.sw.keyCol])
         if self.verbose == True or showPlot == True: 
             plot(data.ix[ldf-wlen: ldf, self.sw.keyCol])
@@ -572,7 +607,7 @@ class QoreQuant():
         print pair
         eu =  self.oq.oanda2.get_prices(instruments=pair)['prices']
         
-        curr1 = n.mean([float(eu[0]['ask']), float(eu[0]['bid'])])
+        curr1 = n_mean([float(eu[0]['ask']), float(eu[0]['bid'])])
         tp1 = float('%.5f' % tp.ix[len(tp)-1,0])
         print 'current: {0}'.format(curr1)
         print 'tp1: {0}'.format(tp1)
@@ -607,7 +642,7 @@ class QoreQuant():
             tp = self.predict(plotTitle=pair, showPlot=showPlot)
             self.predict(wlen=50, showPlot=showPlot)
             print 'Price forecast for {0} {1}'.format(pair, granularity)
-            print p.DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
+            print p_DataFrame(tp.get_values(), index=self.oq.timestampToDatetimeFormat(self.oq.oandaToTimestamp(list(tp.index))), columns=[pair])
         
         if mode == 4:
             self.tradePrediction(pair, tp, risk=risk, stop=stop)
@@ -618,9 +653,9 @@ class QoreQuant():
     def runningMean(self, x, N):
         self.qd._getMethod()
         
-        y = n.zeros((len(x),))
+        y = n_zeros((len(x),))
         for ctr in range(len(x)):
-             y[ctr] = np.sum(x[ctr:(ctr+N)])
+             y[ctr] = n_sum(x[ctr:(ctr+N)])
         return y/N
     
     # source: http://stackoverflow.com/questions/13728392/moving-average-or-running-mean
@@ -629,13 +664,13 @@ class QoreQuant():
         self.qd._getMethod()
         
         x = x.transpose().get_values()[0]
-        return n.convolve(x, n.ones((N,))/N)[(N-1):]
+        return n_convolve(x, n_ones((N,))/N)[(N-1):]
     
     # visualize multi-pair volume
     def visualizeVolumeMultiPair(self, granularity = 'M30', pairs=[], tailn=400):
         self.qd._getMethod()
         
-        df = p.DataFrame()
+        df = p_DataFrame()
         period = 20
         #for i in self.oq.dfa:
         for i in pairs:
@@ -659,8 +694,8 @@ class QoreQuant():
         df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
         
         df = sigmoidme(df)
-        #from numpy import tanh as n.tanh
-        #df = n.tanh(df)
+        #from numpy import tanh as n_tanh
+        #df = n_tanh(df)
         df.plot(title='Multi-pair volume {0}'.format(granularity)).legend(bbox_to_anchor=(1.4, 1));# show();
 
     def vizVolume(self, fper=0, tper=2):
@@ -700,7 +735,7 @@ class QoreQuant():
            
         #df = self.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
         #break
-        #dff = p.DataFrame(df['candles'])
+        #dff = p_DataFrame(df['candles'])
         dff = self.oq.updatePairGranularity(pair, granularity, noUpdate=False, plot=False)
         #return
         dff = dff.ix[:, 'closeAsk closeBid volume'.split(' ')]
@@ -732,7 +767,7 @@ class QoreQuant():
         # view only pairs with open positions
         if onlyTradedPairs == True:
             try:
-                pairs = list(p.DataFrame(self.oq.oanda2.get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
+                pairs = list(p_DataFrame(self.oq.oanda2.get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
             except:
                 pairs = opairs
         
@@ -846,23 +881,23 @@ class QoreQuant():
         #if showPlot == True: .plot(style='-'); show();
     
         dfs = df.pivot('name', 'period', 'summaryCode').transpose()
-        nm = n.array(dfs, dtype=n.float16)
+        nm = n_array(dfs, dtype=n_float16)
         #print nm
-        header = n.concatenate([list(dfs.columns), n.sum(nm, 0)])
+        header = n_concatenate([list(dfs.columns), n_sum(nm, 0)])
         print 
         header = p.DataFrame(header.reshape(2, header.shape[0] / 2)).transpose().set_index(0).transpose()
         print header
         if showPlot == True: 
-            imshow(n.array(dfs, dtype=n.float16), extent=[1,7,1,9], aspect=0.517)
+            imshow(n_array(dfs, dtype=n_float16), extent=[1,7,1,9], aspect=0.517)
             #title('Manually Set Aspect')
             tight_layout()
             show()
     
         headerT = header.transpose()
-        headerT[1] = n.array(headerT[1], dtype=n.float16)
+        headerT[1] = n_array(headerT[1], dtype=n_float16)
         rcParams['figure.figsize'] = 7.8, 5
         #headerT = normalizeme(headerT)
-        #headerT = n.tanh(headerT)
+        #headerT = n_tanh(headerT)
         if showPlot == True: 
             headerT.plot(); show()
         
@@ -925,8 +960,8 @@ class FinancialModel:
         return 100 * (pow(pow(1 + float(rate) / 100, period),float(1) / 1) - 1)
         
     def compoundVestedCapital(self, rate, period, initial_capital=100, shift=0):
-        rate   = n.array(rate, dtype=float64)
-        period = n.array(period)    
+        rate   = n_array(rate, dtype=float64)
+        period = n_array(period)    
         
         if shift < 0:
             raise ex.IndexError('shift should be greater than 0. shift: '+str(shift))
@@ -935,15 +970,15 @@ class FinancialModel:
         
         # shift code
         try:        
-            period = list(n.zeros(shift, dtype=int)) + list(period[0:len(period)-shift])
+            period = list(n_zeros(shift, dtype=int)) + list(period[0:len(period)-shift])
         except Exception as e:
             print e
             ''
         
-        return initial_capital * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
+        return initial_capital * n_power(1 + rate.reshape(size(rate), 1) / 100, period)
         
     def mdrange(self, initial, space, end):
-        return n.linspace(initial,end,(1.0/space)*end+1)
+        return n_linspace(initial,end,(1.0/space)*end+1)
         
     def rateSpectra(self):
         rate   = self.mdrange(0, 0.1, 10)
@@ -952,7 +987,7 @@ class FinancialModel:
        
     def test(self):
         print self.compoundVestedCapital(50,2)
-        print self.compoundVestedCapital(1,n.array([1,2,3]))
+        print self.compoundVestedCapital(1,n_array([1,2,3]))
         print self.compoundVestedCapital(1,[1,2,3])
         print self.compoundVestedCapital(1,range(0,10))
         print self.compoundVestedCapital(range(0,10),range(0,10))
@@ -971,17 +1006,15 @@ class FinancialModel:
         vc = fm.compoundVestedCapital(r_month, 1)[0][0]
         print vc
 
-        n.linspace(0,1,100).T
+        n_linspace(0,1,100).T
         rate = range(0,23)
         period = range(0,100)
-        rate   = n.array(rate, dtype=float64)
-        period = n.array(period)    
-        #res =  100 * n.power(1 + rate / 100, period.reshape(size(period), 1))
-        res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
+        rate   = n_array(rate, dtype=float64)
+        period = n_array(period)    
+        #res =  100 * n_power(1 + rate / 100, period.reshape(size(period), 1))
+        res =  100 * n_power(1 + rate.reshape(size(rate), 1) / 100, period)
         print res
 
-from IPython.display import display, clear_output
-import time
 class ml007:
 
     def __init__(self, thetaDir=None):
@@ -1003,15 +1036,15 @@ class ml007:
         #print type(X.shape)
         #print theta.shape
         o1 = 1.0/(2*m)
-        p1 = n.dot(X,theta)
-        o2 = n.sum(n.power(p1-y,2)) # J
+        p1 = n_dot(X,theta)
+        o2 = n_sum(n_power(p1-y,2)) # J
         #print type(theta)
         ret = o1 * o2
         return ret
     
-    #print computeCost( n.array([1, 2, 1, 3, 1, 4, 1, 5]).reshape(4,2), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2]).reshape(2,1) )
+    #print computeCost( n_array([1, 2, 1, 3, 1, 4, 1, 5]).reshape(4,2), n_array([7, 6, 5, 4]).reshape(4,1), n_array([0.1,0.2]).reshape(2,1) )
     # 11.945
-    #print computeCost( n.array([1,2,3,1,3,4,1,4,5,1,5,6]).reshape(4,3), n.array([7, 6, 5, 4]).reshape(4,1), n.array([0.1,0.2,0.3]).reshape(3,1))
+    #print computeCost( n_array([1,2,3,1,3,4,1,4,5,1,5,6]).reshape(4,3), n_array([7, 6, 5, 4]).reshape(4,1), n_array([0.1,0.2,0.3]).reshape(3,1))
     # 7.0175
     
     def gradientDescent_linearRegression(self, X, y, theta, alpha, num_iters, viewProgress=True, b=500, sw=None):
@@ -1020,13 +1053,13 @@ class ml007:
         mdf = X
 
         m = len(y)
-        self.J_history = n.zeros(num_iters)
+        self.J_history = n_zeros(num_iters)
         self.theta = theta
-        X = n.array(X)
+        X = n_array(X)
         alpha_over_m = (float(alpha)/m)
         #try:
         for self.iter in range(self.initialIter, num_iters):
-                self.theta = self.theta - alpha_over_m * n.dot((   n.dot(X, self.theta) - y).transpose(), X).transpose()
+                self.theta = self.theta - alpha_over_m * n_dot((   n_dot(X, self.theta) - y).transpose(), X).transpose()
                 #                              nx1   1xm mx1   mxn nx1      mx1           mxn
                 #if viewProgress:
                 #    if self.iter % b == 0:
@@ -1039,7 +1072,7 @@ class ml007:
                 #        print '1 J history:{0}'.format(self.J_history[self.iter])
                 #        print '1 iter:{0}'.format(self.iter)
                 #print type(self.J_history[self.iter])
-                #if n.isnan(self.J_history[self.iter]):
+                #if n_isnan(self.J_history[self.iter]):
                 #    #plot(self.J_history); show();
                 #    plt.scatter(self.iter, self.J_history); show();
                 #    return [self.theta, self.J_history]
@@ -1065,7 +1098,7 @@ class ml007:
         
         return [self.theta, self.J_history]
         
-    #[theta, J_history] = gradientDescent(n.array([1,5,1,2,1,4,1,5]).reshape(4,2), n.array([1,6,4,2]).reshape(4,1), n.array([0,0]).reshape(2,1),0.01,1000);
+    #[theta, J_history] = gradientDescent(n_array([1,5,1,2,1,4,1,5]).reshape(4,2), n_array([1,6,4,2]).reshape(4,1), n_array([0,0]).reshape(2,1),0.01,1000);
     #print theta
     #print J_history
     #theta =
@@ -1076,7 +1109,7 @@ class ml007:
     #>>J_hist(1000)
     #ans = 0.85426
     
-    #[theta, J_hist] = gradientDescent(n.array([3,5,1,2,9,4,1,5]).reshape(4,2),n.array([1,6,4,2]).reshape(4,1), n.array([0,0]).reshape(2,1), 0.01,1000);
+    #[theta, J_hist] = gradientDescent(n_array([3,5,1,2,9,4,1,5]).reshape(4,2),n_array([1,6,4,2]).reshape(4,1), n_array([0,0]).reshape(2,1), 0.01,1000);
     #print theta
     #print J_hist
     #>>theta
@@ -1097,7 +1130,7 @@ class ml007:
         
         #% You need to return the following variables correctly 
         J = 0;
-        grad = n.zeros(size(theta));
+        grad = n_zeros(size(theta));
         
         #% ====================== YOUR CODE HERE ======================
         #% Instructions: Compute the cost of a particular choice of theta.
@@ -1111,9 +1144,9 @@ class ml007:
         y = y.get_values()
         
         #J = (1/m)*sum(-y.*log(sigmoid(X*theta))-(1-y).*log(1-sigmoid(X*theta)));
-        J = (1.0/m) * n.sum(-y *  n.log(sigmoidme(n.dot(X, theta))) - (1 - y) *     log(  1 - sigmoidme(n.dot(X, theta))  ) );
+        J = (1.0/m) * n_sum(-y *  n_log(sigmoidme(n_dot(X, theta))) - (1 - y) *     log(  1 - sigmoidme(n_dot(X, theta))  ) );
         #grad = (1/m)*sum((sigmoid(X*theta)-y).*X)
-        grad = (1/m)*n.sum(n.dot((sigmoidme(n.dot(X, theta))-y), X))
+        grad = (1/m)*n_sum(n_dot((sigmoidme(n_dot(X, theta))-y), X))
         
         #% =============================================================
         
@@ -1121,8 +1154,8 @@ class ml007:
         
         return [J, grad]    
     
-    #initial_theta = n.zeros(nn + 1);
-    #initial_theta = n.zeros(nn);
+    #initial_theta = n_zeros(nn + 1);
+    #initial_theta = n_zeros(nn);
     #initial_theta
     
     #[cost, grad] = costFunction(initial_theta, X, y);
@@ -1132,26 +1165,27 @@ class OandaQ:
     
     oanda2 = None
     
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, stats=False):
         self.qd = QoreDebug()
         self.qd._getMethod()
         
         self.verbose = verbose
         
         # get current quotes
-        co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
+        co = p_read_csv('/mldev/bin/datafeeds/config.csv', header=None)
         env2=co.ix[1,1]
         access_token2=co.ix[1,2]
         self.oanda2 = oandapy.API(environment=env2, access_token=access_token2)
     
         self.aid = self.oanda2.get_accounts()['accounts'][0]['accountId']
         #self.oanda2.create_order(aid, type='market', instrument='EUR_USD', side='sell', units=10)
-        res = self.oanda2.get_trades(self.aid)
-        if verbose:
-            for i in res:
-                print p.DataFrame(res[i])
-        
-            print p.DataFrame(self.oanda2.get_account(self.aid), index=[0])
+        if stats == True:
+            res = self.oanda2.get_trades(self.aid)
+            if verbose:
+                for i in res:
+                    print p_DataFrame(res[i])
+            
+                print p_DataFrame(self.oanda2.get_account(self.aid), index=[0])
     
         self.dfa = {}
         
@@ -1431,7 +1465,7 @@ class OandaQ:
             inst = readcache(fname)
         except Exception as e:
             print e
-            inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
+            inst = p_DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
             writecache(inst, fname)
         lse = []
         lsf = []
@@ -1458,7 +1492,7 @@ class OandaQ:
         
         #print lsf
         try:
-            lsf  = list(p.DataFrame(lsf).sort(0).transpose().get_values()[0])
+            lsf  = list(p_DataFrame(lsf).sort(0).transpose().get_values()[0])
         except KeyError, e:
             print e
         #print lsf
@@ -1474,7 +1508,7 @@ class OandaQ:
             inst = readcache(fname)
         except Exception as e:
             print e     
-            inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
+            inst = p_DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
             writecache(inst, fname)
 
         lse = []
@@ -1510,21 +1544,21 @@ class OandaQ:
         for i in list(data.ix[:, sw.relatedCols].columns):
             pair = re.sub(re.compile(r'.*?-\ (.*)_x'), '\\1', i).replace('/', '_')
             #print pair
-            pr = p.DataFrame(self.oanda2.get_prices(instruments=[pair])['prices'])
+            pr = p_DataFrame(self.oanda2.get_prices(instruments=[pair])['prices'])
             #print 
-            ins.append(n.mean(pr.ix[0, ['bid', 'ask']].get_values()))
+            ins.append(n_mean(pr.ix[0, ['bid', 'ask']].get_values()))
             pairs.append(pair)
-        prices = p.DataFrame(ins, index=pairs)
+        prices = p_DataFrame(ins, index=pairs)
         if trueprices:
             return prices
         #print #prices
         list(prices.ix[1:,0])#.insert(0,1)
-        nprices = p.DataFrame([list(sw.theta), list(prices.ix[1:,0]) ]).transpose()
+        nprices = p_DataFrame([list(sw.theta), list(prices.ix[1:,0]) ]).transpose()
         #nprices = nprices.fillna(0)
         
         #prices.ix[1:,0], sw.dmean, sw.dstd] = normalizeme(prices.ix[1:,0], pinv=True)
         #rices.ix[1:,0] = sigmoidme(prices.ix[1:,0])
-        nprices = p.DataFrame([list(sw.theta), list(prices.ix[1:,0]) ], columns=list(prices.index)).transpose()
+        nprices = p_DataFrame([list(sw.theta), list(prices.ix[1:,0]) ], columns=list(prices.index)).transpose()
         pr2 = list(nprices.ix[:,1])[0:10]
         pr2.insert(0,1)
         #print pr2
@@ -1541,7 +1575,7 @@ class OandaQ:
         from pylab import rcParams
         rcParams['figure.figsize'] = 20, 5
         # oanda equity viz
-        df0 = p.read_csv('/home/qore/sec-svn.git/assets/oanda/kpql/primary/statement.csv')
+        df0 = p_read_csv('/home/qore/sec-svn.git/assets/oanda/kpql/primary/statement.csv')
         #df0 = df0.ix[3000:, 'Balance']
         df0 = df0.sort(columns=['Transaction ID'])
         df0 = df0.ix[:, :]
@@ -1555,7 +1589,7 @@ class OandaQ:
         
         # oanda transaction history (short-term)
         qqq = QoreQuant()
-        df1 = p.DataFrame(qqq.oanda2.get_transaction_history(qqq.oq.aid)['transactions']).bfill()
+        df1 = p_DataFrame(qqq.oanda2.get_transaction_history(qqq.oq.aid)['transactions']).bfill()
         df1 = df1.sort('id', ascending=True)
         df1 = df1.set_index('id')
         
@@ -1588,7 +1622,7 @@ class OandaQ:
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid', 'volume']
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid']
         hed = ['closeAsk', 'closeBid', 'volume']
-        df = p.DataFrame(df['candles'], dtype=n.float16)
+        df = p_DataFrame(df['candles'], dtype=n_float16)
         df = df.set_index('time')
         #print df
         df = df.ix[:,hed]
@@ -1649,7 +1683,7 @@ class OandaQ:
             self.log('{0} {1} dataframe not in memory'.format(pair, granularity))
             try:
                 # read from csv
-                self.dfa[pair][granularity] = p.read_csv(fname, index_col=0)
+                self.dfa[pair][granularity] = p_read_csv(fname, index_col=0)
                 ob += ' reading from {0} {1} {2}'.format(fname, pair, granularity)
                 ob += ' len {0}.'.format(len(self.dfa[pair][granularity]))
             except KeyError, e:
@@ -1702,7 +1736,7 @@ class OandaQ:
         pair = pair.replace('_', '') # remove the underscore
         relatedPairs = self.getPairsRelatedToOandaTickers(pair)        
         
-        pairs = list(p.DataFrame(relatedPairs['lsp']).ix[:,0])
+        pairs = list(p_DataFrame(relatedPairs['lsp']).ix[:,0])
         #self.log(pairs)
         self.granularities = granularities.split(' ')
         for pair in pairs:
@@ -1720,7 +1754,7 @@ class OandaQ:
     def prepareDfData(self, dfa):
         self.qd._getMethod()
 
-        dfac = p.DataFrame()
+        dfac = p_DataFrame()
         gran = self.granularities[0]
         
         try:
@@ -1737,9 +1771,9 @@ class OandaQ:
             print gran+' granularity not available, please update for '+gran
         #dfac = normalizeme(dfac)
         #dfac = sigmoidme(dfac)
-        #dfac = (1 - n.power(n.e, -dfac)) / (1 + n.power(n.e, -dfac)) # hyperbolic tangent, tanh
-        #dfac = n.log(1 + n.power(n.e, dfac)) # relu
-        #dfac = n.tanh(dfac) # tanh
+        #dfac = (1 - n_power(n_e, -dfac)) / (1 + n_power(n_e, -dfac)) # hyperbolic tangent, tanh
+        #dfac = n_log(1 + n_power(n_e, dfac)) # relu
+        #dfac = n_tanh(dfac) # tanh
         #dfac.plot(legend=False); show();
         #dfac
         
@@ -1750,7 +1784,6 @@ class OandaQ:
 
 
 # source: http://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
-import math
 def pearson_def(x, y):
     def average(x):
         assert len(x) > 0
@@ -1775,7 +1808,6 @@ def pearson_def(x, y):
 #returns
 #0.981980506062
 
-import numpy as np
 def pcc(X, Y):
    ''' Compute Pearson Correlation Coefficient. '''
    # Normalise X and Y
@@ -1785,11 +1817,11 @@ def pcc(X, Y):
    X /= X.std(0)
    Y /= Y.std(0)
    # Compute mean product
-   return np.mean(X*Y)
+   return n_mean(X*Y)
 # Using it on a random example
 #from random import random
-#X = np.array([random() for x in xrange(100)])
-#Y = np.array([random() for x in xrange(100)])
+#X = n_array([random() for x in xrange(100)])
+#Y = n_array([random() for x in xrange(100)])
 #pcc(X, Y)
 
 class StatWing:
@@ -1801,7 +1833,7 @@ class StatWing:
         self.thetaDir = thetaDir
         self.keyCol = ''
         self.relatedCols = []
-        self.theta = n.array([])
+        self.theta = n_array([])
         self.dmean = []
         self.dstd = []
         
@@ -1811,14 +1843,14 @@ class StatWing:
         except Exception as e:
             print e
             print 'offline mode'
-        #self.theta = p.read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
-        self.theta = p.DataFrame()
+        #self.theta = p_read_csv('/mldev/bin/datafeeds/theta.csv', index_col=0)
+        self.theta = p_DataFrame()
         self.ml = ml007(thetaDir=self.thetaDir)
         
     def nextBar(self, dfa, k, barsForward=3):
         self.qd._getMethod()
         
-        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward])
+        dfc = p_DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward])
         #print type(dfc)
         a = dfa.ix[0:len(dfa)-barsForward, [k]].get_values()
         b = dfa.ix[barsForward:len(dfa),[k]].get_values()
@@ -1833,49 +1865,49 @@ class StatWing:
     def higherNextDay(self, dfa, k):
         self.qd._getMethod()
 
-        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-1])
+        dfc = p_DataFrame(dfa, index=dfa.index[0:len(dfa)-1])
         print type(dfc)
         dfc['a'] = dfa.ix[0:len(dfa)-1, [k]].get_values()
         dfc['b'] = dfa.ix[1:len(dfa),[k]].get_values()
-        dfc['c'] = list(n.array((dfc['b'] > dfc['a']), dtype=int))
+        dfc['c'] = list(n_array((dfc['b'] > dfc['a']), dtype=int))
         #print dfc['a']
         return dfc['c']
-        #p.DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
+        #p_DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
     
     def lowerNextDay(self, dfa, k):
         self.qd._getMethod()
 
-        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-1], columns=dfa.columns)
+        dfc = p_DataFrame(dfa, index=dfa.index[0:len(dfa)-1], columns=dfa.columns)
         dfc['a'] = dfa.ix[0:len(dfa)-1, [k]].get_values()
         dfc['b'] = dfa.ix[1:len(dfa), [k]].get_values()
-        dfc['c'] = n.array((dfc['b'] < dfc['a']), dtype=int)
+        dfc['c'] = n_array((dfc['b'] < dfc['a']), dtype=int)
         return dfc['c']
-        #p.DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
+        #p_DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
     
     # export dataset to csv for analysis (statwing)
     def higherPrev(self, a):
         self.qd._getMethod()
 
         a = sigmoidme(a) > 0.5
-        return n.array(a, dtype=int)
+        return n_array(a, dtype=int)
     
     def lowerPrev(self, a):
         self.qd._getMethod()
 
         a = sigmoidme(a) < 0.5
-        return n.array(a, dtype=int)
+        return n_array(a, dtype=int)
     
     def exportToStatwing(self, de, currency_code):
         self.qd._getMethod()
 
-        #dff = n.matrix('1;2;3;4;-4;-5;-3;2;9').A
+        #dff = n_matrix('1;2;3;4;-4;-5;-3;2;9').A
         #print higherPrev(dff)
         #print lowerPrev(dff)
         s1 = 0
         de = de.fillna(0)
         de1 = de.ix[s1:,:]
         #de1 = sigmoidme(normalizeme(de1))
-        de1 = p.DataFrame(de1)
+        de1 = p_DataFrame(de1)
         de1['hi'] = self.higherPrev(de.ix[s1:,0].diff())
         de1['lo'] = self.lowerPrev(de.ix[s1:,0].diff())
         #de1.to_csv('quandl-BNP-'+currency_code+'.csv', index=None)
@@ -1898,16 +1930,16 @@ class StatWing:
         print 'Summary:'
         sample = df.ix[:,col]  
         c = ['Sample Size', 'Median',        'Average',      'Confidence Interval of Average',  'Standard Deviation', 'Minimum',      'Maximum',      'Sum']
-        d = [len(sample),   n.median(sample),n.mean(sample), '0.53784 to 0.54679',                    n.std(sample),       n.min(sample), n.max(sample), n.sum(sample)]
+        d = [len(sample),   n_median(sample),n_mean(sample), '0.53784 to 0.54679',                    n_std(sample),       n_min(sample), n_max(sample), n_sum(sample)]
         #110.279 to 110.636
-        summary = p.DataFrame(d, index=c)#.transpose()
+        summary = p_DataFrame(d, index=c)#.transpose()
         print summary
         
         print 'Percentiles:'
         pctl = []
         for i in [0,1,5,10,25,50,75,90,95,99,100]:
-            pctl.append(n.percentile(df.ix[:,1], i))
-        print p.DataFrame(pctl, index=['0th (Minimum)', '1st','5th','10th','25th (Lower Quartile)','50th (Median)','75th (Upper Quartile)','90th','95th','99th','100th (Maximum)'])#.transpose()
+            pctl.append(n_percentile(df.ix[:,1], i))
+        print p_DataFrame(pctl, index=['0th (Minimum)', '1st','5th','10th','25th (Lower Quartile)','50th (Median)','75th (Upper Quartile)','90th','95th','99th','100th (Maximum)'])#.transpose()
         
         sample.hist(bins=100);
         xlabel(self.getCol(col, df))
@@ -1917,35 +1949,34 @@ class StatWing:
     def relate(self, sample, keyCol, relatedCol):
         self.qd._getMethod()
 
-        #print n.corrcoef(sample.ix[:, keyCol], sample.ix[:, relatedCol])[0, 1]
+        #print n_corrcoef(sample.ix[:, keyCol], sample.ix[:, relatedCol])[0, 1]
         #print pearson_def(sample.ix[:, keyCol], sample.ix[:, relatedCol])
         # source: http://stackoverflow.com/questions/19428029/how-to-get-correlation-of-two-vectors-in-python
         from scipy.stats.stats import pearsonr, spearmanr
         ind = ['Pearson\'s r: ', 'Spearman\'s r: ']
         d = [pearsonr(sample.ix[:, keyCol], sample.ix[:, relatedCol]), spearmanr(sample.ix[:, keyCol], sample.ix[:, relatedCol])]
-        print p.DataFrame(d, index=ind)
+        print p_DataFrame(d, index=ind)
         
-        import numpy as np
         x = sample.ix[:, relatedCol].fillna(0)
         y = sample.ix[:, keyCol].fillna(0)
         
         deg = 1
         weight = 1
-        theta = np.polynomial.polynomial.polyfit(x,y,deg,weight)#w=weight of each observation)
+        theta = n_polynomial.polynomial.polyfit(x,y,deg,weight)#w=weight of each observation)
         print 'theta:{0}'.format(theta)
-        #p.DataFrame(theta[0] + theta[1] * n.array(range(0, int(n.max(x.ix[:,1]))))).plot()
-        #p.DataFrame(theta[0] + theta[1] * n.array(range(0, ceil(n.max(x.get_values()))))).plot()
+        #p_DataFrame(theta[0] + theta[1] * n_array(range(0, int(n_max(x.ix[:,1]))))).plot()
+        #p_DataFrame(theta[0] + theta[1] * n_array(range(0, ceil(n_max(x.get_values()))))).plot()
         #print [min(y), max(y)]
         #print [min(x), max(x)]
-        #p.DataFrame(theta[0] + theta[1] * n.array( n.linspace(0, int(ceil(n.max(x.get_values()))), 5) )).plot()
-        mini = int(ceil(n.min(x.get_values())))#-10
-        maxi = int(ceil(n.max(x.get_values())))#+10
+        #p_DataFrame(theta[0] + theta[1] * n_array( n_linspace(0, int(ceil(n_max(x.get_values()))), 5) )).plot()
+        mini = int(ceil(n_min(x.get_values())))#-10
+        maxi = int(ceil(n_max(x.get_values())))#+10
         plot(linspace(mini, maxi, 10), theta[0] + theta[1] * linspace(mini, maxi, 10), '-r');
-        #p.DataFrame(theta[0] + theta[1] * n.array( n.linspace(mini, maxi, maxi-mini) )).plot()
-        #p.DataFrame(theta[0] + theta[1] * n.array( n.linspace(-120, 60, 180) )).plot()
+        #p_DataFrame(theta[0] + theta[1] * n_array( n_linspace(mini, maxi, maxi-mini) )).plot()
+        #p_DataFrame(theta[0] + theta[1] * n_array( n_linspace(-120, 60, 180) )).plot()
         
-        #print n.linspace(int(ceil(n.max(x.get_values()))), int(ceil(n.max(x.get_values()))), 5)
-        #print n.linspace(min(x)-10, int(ceil(n.max(x.get_values())))+10, len(x))
+        #print n_linspace(int(ceil(n_max(x.get_values()))), int(ceil(n_max(x.get_values()))), 5)
+        #print n_linspace(min(x)-10, int(ceil(n_max(x.get_values())))+10, len(x))
         
         scatter(x,y, vmin=0, vmax=(100));
         #print ceil(max(x))
@@ -1970,7 +2001,7 @@ class StatWing:
         #print type(X)
         #print X
         #print list(X.columns)
-        X['bias'] = n.ones(len(data))
+        X['bias'] = n_ones(len(data))
         Xc = X.columns.tolist()
         Xc.insert(0, Xc.pop())
         try:
@@ -2008,7 +2039,7 @@ class StatWing:
         #initialTheta = None
         
         if type(initialTheta) == type(None):
-            self.theta = n.zeros(len(X.columns))
+            self.theta = n_zeros(len(X.columns))
             print 'theta initialized'
         else:
             print initialTheta
@@ -2026,7 +2057,7 @@ class StatWing:
         #print type(self.theta)
         #print X.columns
         #print self.theta.to_frame().columns
-        self.theta = p.Series(self.theta).to_frame('o').fillna(0).combine_first(p.DataFrame(n.zeros(len(X.columns)), index=X.columns, columns=['o'])).ix[X.columns, 'o'].get_values()
+        self.theta = p_Series(self.theta).to_frame('o').fillna(0).combine_first(p_DataFrame(n_zeros(len(X.columns)), index=X.columns, columns=['o'])).ix[X.columns, 'o'].get_values()
         print self.theta
         print 'theta2.shape: {0}'.format(self.theta.shape)
         #print relatedCols
@@ -2039,7 +2070,7 @@ class StatWing:
         #sys.exit()
         #raise(e)
         
-        #theta = n.random.randn(len(X.columns))
+        #theta = n_random.randn(len(X.columns))
         #print self.theta
         
         #% compute and display initial cost
@@ -2076,7 +2107,7 @@ class StatWing:
         print te2
         print '---'
         
-        dp = p.DataFrame(te1)
+        dp = p_DataFrame(te1)
         #print len(te1)
         #print te1
         #print len(te2)
@@ -2084,7 +2115,7 @@ class StatWing:
         dp[1] = te2
         
         # get current quotes
-        co = p.read_csv('datafeeds/config.csv', header=None)
+        co = p_read_csv('datafeeds/config.csv', header=None)
         env2=co.ix[1,1]
         access_token2=co.ix[1,2]
         oanda2 = oandapy.API(environment=env2, access_token=access_token2)
@@ -2115,14 +2146,14 @@ class StatWing:
         dp[2] = li
         print dp
         
-        dn = n.array(dp.get_values()[:,[0,2]], dtype=float)
+        dn = n_array(dp.get_values()[:,[0,2]], dtype=float)
         #print dn
-        n.dot(dn[:,0], dn[:,1])
-        pred = n.sum(dn[:,0] * dn[:,1])
+        n_dot(dn[:,0], dn[:,1])
+        pred = n_sum(dn[:,0] * dn[:,1])
         print pred
         """
         predictions.append(pred)
-        print p.DataFrame(predictions)
+        print p_DataFrame(predictions)
         plot(predictions); show();
         """
         
@@ -2172,9 +2203,9 @@ class StatWing:
         
         #sw.relate(df1, 0, 3)
         
-        #data = p.read_csv('/coursera/ml-007/programming-exercises/mlclass-ex1/ex1data1.txt', header=None)
-        #data = p.read_csv('quandl-BNP-USD.csv')
-        #data = p.read_csv('quandl-BNP-EUR.csv')
+        #data = p_read_csv('/coursera/ml-007/programming-exercises/mlclass-ex1/ex1data1.txt', header=None)
+        #data = p_read_csv('quandl-BNP-USD.csv')
+        #data = p_read_csv('quandl-BNP-EUR.csv')
         #data = X.fillna(0).ix[:,data.columns]
         data = X.ix[X.index, X.columns].fillna(0)
         
@@ -2203,7 +2234,7 @@ class StatWing:
             print 'related cols'
             print self.relatedCols
             #print data
-        #X = p.DataFrame(n.ones(len(data)), index=data.index).combine_first(data.ix[:, self.relatedCols].fillna(0))
+        #X = p_DataFrame(n_ones(len(data)), index=data.index).combine_first(data.ix[:, self.relatedCols].fillna(0))
         X = self.fixColumns(data, self.relatedCols, self.keyCol)
         if quiet == False:
             print list(X.columns)
@@ -2232,7 +2263,7 @@ class StatWing:
             print X.shape
             print list(X.columns)
         
-        predict = n.dot(nX, ntheta)
+        predict = n_dot(nX, ntheta)
         if quiet == False:
             print ntheta
             print nX.ix[len(nX)-1, :]
@@ -2262,14 +2293,14 @@ class StatWing:
             nX = self.oq.getPricesLatest(df, self, trueprices=True)
             #print nX
         
-        #print n.c_[n.ones(1), nX.ix[1:,:].get_values().T].T
+        #print n_c_[n_ones(1), nX.ix[1:,:].get_values().T].T
         #print nX.shape
-        #print n.dot(nX.T, theta)
-        if type(self.theta) == type(p.DataFrame()):
+        #print n_dot(nX.T, theta)
+        if type(self.theta) == type(p_DataFrame()):
             theta = self.theta.get_values()
         else:
             theta = self.theta
-        nXbias = n.c_[n.ones(1), nX.ix[1:,:].get_values().T]
+        nXbias = n_c_[n_ones(1), nX.ix[1:,:].get_values().T]
         #print nXbias
         #print theta
         #print nXbias.shape
@@ -2277,7 +2308,7 @@ class StatWing:
         
         val = 0
         try:
-            nd = n.dot( nXbias, self.theta )
+            nd = n_dot( nXbias, self.theta )
             try:    val = nd[0][0]
             except: val = nd[0]
             #print nd
@@ -2290,25 +2321,24 @@ class StatWing:
             self.nxps.append( val )
         
         if save == True:
-            p.DataFrame(self.nxps).to_csv('/mldev/bin/datafeeds/nxps.csv')
+            p_DataFrame(self.nxps).to_csv('/mldev/bin/datafeeds/nxps.csv')
         #plot(self.nxps);
         #show();
         #print self.nxps
         return val
  
 
-import plotly.plotly as py
-from plotly.graph_objs import *
 class RealtimeChart:
     
     def __init__(self):
+        
         self.qd = QoreDebug()
         self.qd._getMethod()
         
         ####
         # real time chart
         ####
-        self.df = p.DataFrame()
+        self.df = p_DataFrame()
         
         self.qq = QoreQuant()
         self.qq.loadTheta(0)
@@ -2349,14 +2379,14 @@ class RealtimeChart:
         y  = self.sw.predictFromTheta(nX=nX)
         
         try:
-            imax = n.max(self.sw.nxps)
-            imax = imax + n.std(self.sw.nxps)
+            imax = n_max(self.sw.nxps)
+            imax = imax + n_std(self.sw.nxps)
         except Exception as e:
             print 'exception:1'
             print e
         try:
-            imin = n.min(self.sw.nxps)
-            imin = imin - n.std(self.sw.nxps)
+            imin = n_min(self.sw.nxps)
+            imin = imin - n_std(self.sw.nxps)
         except Exception as e:
             print 'exception:2'
             print e
@@ -2421,7 +2451,7 @@ biasCol : The column to check for bias
 
 Example
 -------
->>> df = p.DataFrame([['a','b','c'],['buy','sell','sell'],[1,2,3]], index=['pair', 'bias', 'amount']).transpose()
+>>> df = p_DataFrame([['a','b','c'],['buy','sell','sell'],[1,2,3]], index=['pair', 'bias', 'amount']).transpose()
 >>> print df
   pair  bias amount
 0    a   buy      1
@@ -2448,12 +2478,12 @@ This function can be called to generate a polarized target portfolio.
 
 def normalizeme(dfr, pinv=False):
     
-    nmean = n.mean(dfr, axis=0)
-    nstd = n.std(dfr, axis=0)
-    #nmean = n.mean(dfr)
-    #nstd = n.std(dfr)
+    nmean = n_mean(dfr, axis=0)
+    nstd = n_std(dfr, axis=0)
+    #nmean = n_mean(dfr)
+    #nstd = n_std(dfr)
     dfr = (dfr - nmean) / nstd
-    #dfr = n.divide((dfr - nmean), nstd)
+    #dfr = n_divide((dfr - nmean), nstd)
     if pinv == False:
         return dfr
     else:
@@ -2461,33 +2491,33 @@ def normalizeme(dfr, pinv=False):
 
 def normalizemePinv(dfr, mean, std):
     
-    #print (n.dot(data.get_values(),  dst['mean'].get_values().reshape(len(dst), 1) )) + dst['std']
-    #print (n.dot(data.get_values(),  dmean.get_values().reshape(len(dst), 1) )) + dstd.get_values()
+    #print (n_dot(data.get_values(),  dst['mean'].get_values().reshape(len(dst), 1) )) + dst['std']
+    #print (n_dot(data.get_values(),  dmean.get_values().reshape(len(dst), 1) )) + dstd.get_values()
     ##print type(data)
     #print (data)
     ##print type(dmean)
     #print (dmean)
     ##print type(dstd)
     #print (dstd)
-    #print (n.dot(n.array(data), dmean.reshape(len(dst), 1) )) + dstd
+    #print (n_dot(n_array(data), dmean.reshape(len(dst), 1) )) + dstd
     
     dfr = (dfr * std) + mean
     return dfr
 
 def normalizeme2(ds, index=None, columns=None):
     
-    #ds = n.array(ds, dtype=float)
-    if type(ds) == type(p.DataFrame([])):
+    #ds = n_array(ds, dtype=float)
+    if type(ds) == type(p_DataFrame([])):
         #print '0'
         dss = ds.get_values()
         index = ds.index
         columns = ds.columns
-    if type(ds) == type(n.array([])):
+    if type(ds) == type(n_array([])):
     #    print 't1'
         dss = ds
     if type(ds) == type([]):
     #    print 't2'
-        dss = n.array(ds, dtype=float)
+        dss = n_array(ds, dtype=float)
     #print type(dss)
     #import sys
     #sys.exit()
@@ -2495,21 +2525,21 @@ def normalizeme2(ds, index=None, columns=None):
     # call fillna(method='bfill') on dataset before calling this method
     
     dss = dss / dss[0]
-    dss = p.DataFrame(dss, index=index, columns=columns)
+    dss = p_DataFrame(dss, index=index, columns=columns)
     return dss
 
 def sigmoidme(dfr):
-    return 1.0 / (1 + pow(n.e,-dfr))
+    return 1.0 / (1 + pow(n_e,-dfr))
 
 def sigmoidmePinv(sigdfr):
     #sigdfr = sigdfr.fillna(0).get_values()
-    #sigdfr = 1.0 / (1 + pow(n.e,-dfr))
-    #return pow(n.e,-dfr) = (1.0 / pinv) - 1
+    #sigdfr = 1.0 / (1 + pow(n_e,-dfr))
+    #return pow(n_e,-dfr) = (1.0 / pinv) - 1
     #return log10((1.0 / dfr.get_values()) - 1)
-    #return n.log10((1.0/sigdfr)-1)/n.log10(n.e)
-    #pow(n.e,-dfr) = (1.0 / pinv) - 1
-    #/ n.log(n.e)
-    return -n.divide(n.log10((n.divide(1.0, sigdfr))-1), n.log10(n.e))
+    #return n_log10((1.0/sigdfr)-1)/n_log10(n_e)
+    #pow(n_e,-dfr) = (1.0 / pinv) - 1
+    #/ n_log(n_e)
+    return -n_divide(n_log10((n_divide(1.0, sigdfr))-1), n_log10(n_e))
 
 def sharpe(dfr):
     ''
@@ -2533,7 +2563,7 @@ def sharpe(dfr):
 def quickPlot(tks, headers=None, listcolumns=False, title=None):
     d = getDataFromQuandl(tks, index_col=0, dataset='', verbosity=3)
     if listcolumns:
-        #print p.DataFrame(list(d.columns))
+        #print p_DataFrame(list(d.columns))
         for i in enumerate(list(d.columns)):
             print i
     d = d.bfill().ffill()
@@ -2634,7 +2664,7 @@ def searchQuandl(query, mode='manifest', headers=None, returndataset=False, cach
         return len(res)
 
 def fetchFromQuandlSP500():
-    sp = p.read_csv('data/quandl/SP500.csv')
+    sp = p_read_csv('data/quandl/SP500.csv')
     #for i in list(sp.sort(columns='Name').ix[0:10,['Code']].get_values().reshape(1,15)[0]):
     for i in range(0, len(sp)):
         getDataFromQuandl(sp.ix[i,'Code'], dataset='SP500')
@@ -2660,7 +2690,7 @@ def quandlCode2DatasetCode(tk, hdir='./', include_path=True, suffix='.csv'):
         
 def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False, style='-', columns=['Close'], tail=False):
     # if string
-    df = p.DataFrame([])
+    df = p_DataFrame([])
     
     if type(tk) == type(''):
         debug('fetching '+tk, verbosity=verbosity)
@@ -2668,7 +2698,7 @@ def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False, s
         mkdir_p(path) # alternative python3: os.makedirs(path, exist_ok=True)
         
         try:
-            df = p.read_csv(fname, index_col=index_col)
+            df = p_read_csv(fname, index_col=index_col)
         except IOError, e:
             try:
                 df = q.get(tk)
@@ -2686,8 +2716,8 @@ def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False, s
         for i in range(0, len(tk)):
             dfs.append(getDataFromQuandl(tk[i], index_col=0, dataset='', verbosity=8))
             #tk[i] = quandlCode2DatasetCode(tk[i], include_path=False, suffix='')[0]
-            r1 = n.array([tk[i]+' '], dtype=object)
-            r2 = n.array(list(dfs[i].columns), dtype=object)
+            r1 = n_array([tk[i]+' '], dtype=object)
+            r2 = n_array(list(dfs[i].columns), dtype=object)
             dfs[i].columns = r1+r2
             #print list(dfs[i].columns)    
         for i in range(0, len(dfs)):
@@ -2726,7 +2756,7 @@ def getDataFromQuandlBNP(pa, curr, authtoken=None, noUpdate=False): # curr = EUR
     fname = '/mldev/bin/data/quandl/BNP.'+curr+'.csv'
     #print fname
     try:
-        da = p.read_csv(fname, index_col=0)
+        da = p_read_csv(fname, index_col=0)
         
         # if column mismatch then update from source instead of caching
         """
@@ -2802,7 +2832,7 @@ def getDataFromQuandlBNP(pa, curr, authtoken=None, noUpdate=False): # curr = EUR
         #d.to_csv('data/quandl/BNP.'+curr+'.csv')
         
         print 'reading from '+fname
-        d = p.read_csv(fname, index_col=0)
+        d = p_read_csv(fname, index_col=0)
         
     #plot(d.ix[:,tl])
     #print d.columns
@@ -2829,8 +2859,8 @@ def testMicrofinance():
     
     myratetitles = []
     
-    periods = n.array(range(0,months))
-    df = p.DataFrame(periods)
+    periods = n_array(range(0,months))
+    df = p_DataFrame(periods)
     myratetitles.append('period')
     for i in xrange(0,len(myrates)):
         myratetitles.append('vested_'+str(int(myrates[i]))+'_monthly')
@@ -2976,7 +3006,7 @@ def getDataAUD(noUpdate=False):
     
 def quandlSweepDatasources():
     import StringIO as sio
-    df = p.read_csv('/mldev/lib/crawlers/finance/quandl.scrapy/datasources_quandl.csv')
+    df = p_read_csv('/mldev/lib/crawlers/finance/quandl.scrapy/datasources_quandl.csv')
     print df['code']
     #print df.ix[:,['name','code','datasets','url']]
     return 
@@ -2994,7 +3024,7 @@ def quandlSweepDatasources():
             s = sio.StringIO()
             s.write(c)
             s.seek(0)
-            print p.read_csv(s)
+            print p_read_csv(s)
             """
             #fp = open('', 'a')
             #fp.write(c+'\n')
@@ -3043,7 +3073,7 @@ class btce(CryptoCoinBaseClass):
         ky = r[code].keys()
         #print ky
         #print r[code].values()
-        r = p.DataFrame(r[code].values(), index=ky, columns=[code]).transpose()
+        r = p_DataFrame(r[code].values(), index=ky, columns=[code]).transpose()
         return r.ix[:,['sell','buy','last','vol','vol_cur']].transpose()
     
     def getRarestCryptoCoins(self):
@@ -3146,13 +3176,13 @@ Bitcoin	BTC	4	2400
 Bitgem	BTG	4	2400
 Peercoin	PPC	6	3600
 """
-        tis = p.read_csv(sio.StringIO(t), delimiter='\t', index_col=0).ix[:,[0,1,2]]
+        tis = p_read_csv(sio.StringIO(t), delimiter='\t', index_col=0).ix[:,[0,1,2]]
         tis = tis.sort('Transaction Speed (in seconds)', ascending=True)
         #print tis.ix[0:3,[0,2]]
         #print tis
         tis = list(tis.ix[:,[0]].transpose().get_values()[0])
         """
-        for i in list(n.array(self.pk, dtype=string0)):
+        for i in list(n_array(self.pk, dtype=string0)):
             print i.split('_')
             for j in range(0,len(fastestCoins)):
                 #print type(fastestCoins[j])
@@ -3181,17 +3211,17 @@ Peercoin	PPC	6	3600
         r = fetchURL(url, mode='json')
 
         try:
-            #print p.DataFrame(list(r['pairs']['ltc_gbp']))
+            #print p_DataFrame(list(r['pairs']['ltc_gbp']))
             pk = r['pairs'].keys()
             pv = r['pairs'].values()
             #print pk
             li = []
             for i in pv:
                 li.append(i.values())
-            li = p.DataFrame(li, index=pk, columns=pv[0].keys())
+            li = p_DataFrame(li, index=pk, columns=pv[0].keys())
             self.pk = pk
             return li
-            #pk = p.DataFrame(pk, index=pk, columns=['pair'])
+            #pk = p_DataFrame(pk, index=pk, columns=['pair'])
             #print pk
             #print pk.combine_first(li)
             #print r
@@ -3200,7 +3230,7 @@ Peercoin	PPC	6	3600
     
     def getRatesOnExchange(self):
         self.check()
-        pc = p.DataFrame()
+        pc = p_DataFrame()
         for i in self.pk:
             debug(i)
             try:
@@ -3220,8 +3250,8 @@ Peercoin	PPC	6	3600
         try:        
             ky = r[code].keys()    
             #print ky
-            rb = p.DataFrame(r[code]['bids'], columns=['bp','ba'])
-            ra = p.DataFrame(r[code]['asks'], columns=['ap','aa'])
+            rb = p_DataFrame(r[code]['bids'], columns=['bp','ba'])
+            ra = p_DataFrame(r[code]['asks'], columns=['ap','aa'])
             #print rb
             #print ra
             r = rb.combine_first(ra)
@@ -3249,12 +3279,12 @@ Peercoin	PPC	6	3600
             li = []
             for i in r[code]:
                 li.append(i.values())
-            ro = p.DataFrame(li, columns=ky)
+            ro = p_DataFrame(li, columns=ky)
             r = ro.ix[:,['price','amount']]
             #print r
             """
-            rb = p.DataFrame(r[code]['bids'], columns=['bp','ba'])
-            ra = p.DataFrame(r[code]['asks'], columns=['ap','aa'])
+            rb = p_DataFrame(r[code]['bids'], columns=['bp','ba'])
+            ra = p_DataFrame(r[code]['asks'], columns=['ap','aa'])
             print rb
             print ra
             r = rb.combine_first(ra)
@@ -3283,34 +3313,34 @@ Peercoin	PPC	6	3600
 
     def getArbTable(self, pk):
         self.check()
-        arbtable1 = n.random.randn(len(pk)*len(self.exchanges)).reshape(len(pk),len(self.exchanges));
+        arbtable1 = n_random.randn(len(pk)*len(self.exchanges)).reshape(len(pk),len(self.exchanges));
         return arbtable1
 
     def getArbRates(self, doPlot=False):
         #print pk
         arbtable1 = self.getArbTable(self.pk)
-        rarb = p.DataFrame(arbtable1, index=self.pk, columns=self.exchanges);
+        rarb = p_DataFrame(arbtable1, index=self.pk, columns=self.exchanges);
         #print rarb; print;
         
         ms = []
         arbHdr = ['sell','buy','arbitrageRate']
-        arbRates = p.DataFrame([])
+        arbRates = p_DataFrame([])
         for i in range(0,len(self.pk)):
         #for i in range(0,2):
             ind = i
             debug(self.pk[ind])
             m = rarb.ix[self.pk[ind]]
             debug(m)
-            m = p.DataFrame(n.array(m).reshape(len(m),1) / n.array(m) * 100 - 100, index=self.exchanges, columns=self.exchanges); 
+            m = p_DataFrame(n_array(m).reshape(len(m),1) / n_array(m) * 100 - 100, index=self.exchanges, columns=self.exchanges); 
             debug(m); debug('');
-            m1 = n.max(m,0); #print m1;
+            m1 = n_max(m,0); #print m1;
             exhds = list(m1.index)
-            #print (n.nonzero(m == m1))
-            #print (n.nonzero(m1 == n.max(m1)))
-            maxIndx = n.max(n.nonzero(m1 == n.max(m1)))
-            maxNum = n.max(m1,0); #print maxNum;
-            indx = (n.nonzero(n.array(m == maxNum, dtype=int)))
-            arbRate = p.DataFrame([exhds[indx[0][0]], exhds[indx[1][0]], maxNum], index=arbHdr, columns=[self.pk[ind]])
+            #print (n_nonzero(m == m1))
+            #print (n_nonzero(m1 == n_max(m1)))
+            maxIndx = n_max(n_nonzero(m1 == n_max(m1)))
+            maxNum = n_max(m1,0); #print maxNum;
+            indx = (n_nonzero(n_array(m == maxNum, dtype=int)))
+            arbRate = p_DataFrame([exhds[indx[0][0]], exhds[indx[1][0]], maxNum], index=arbHdr, columns=[self.pk[ind]])
             arbRates = arbRates.combine_first(arbRate)
             debug(arbRate.transpose())
             #m = normalizeme(m)
@@ -3332,8 +3362,8 @@ Peercoin	PPC	6	3600
             print e
             arr = self.getMostProfitablePair()
         arrSortedAR = arr.sort('arbitrageRate', ascending=False)
-        print p.DataFrame(arrSortedAR.ix[list(arrSortedAR.ix[:,'p1']).index(self.p1), :]).transpose(); print
-        print p.DataFrame(arrSortedAR.ix[list(arrSortedAR.ix[:,'p2']).index(self.p2), :]).transpose()
+        print p_DataFrame(arrSortedAR.ix[list(arrSortedAR.ix[:,'p1']).index(self.p1), :]).transpose(); print
+        print p_DataFrame(arrSortedAR.ix[list(arrSortedAR.ix[:,'p2']).index(self.p2), :]).transpose()
     
     def getMostProfitablePair(self):
         fastestCoins = self.getFastestCryptoCoins()
@@ -3345,7 +3375,7 @@ Peercoin	PPC	6	3600
             arbRates = self.getArbRates()
         arr = arbRates.transpose()
         po1 = []; po2 = []
-        for row in (n.array(arr.index, dtype=string0)):
+        for row in (n_array(arr.index, dtype=string0)):
             po1.append(row[0:3])
             po2.append(row[4:7])
         arr['p1'] = po1
@@ -3412,9 +3442,9 @@ class ShapeShift(CryptoCoinBaseClass):
             
         """
         abc = 'a b c d e f g h i j k l m n o p q r s t u v w x y z'.split(' ')
-        #rin = p.DataFrame(n.int0(n.abs(n.random.randn(26)*10)))
+        #rin = p_DataFrame(n_int0(n_abs(n_random.randn(26)*10)))
         abc = list(it.permutations(abc, 3))
-        abc = n.array(abc).tolist()
+        abc = n_array(abc).tolist()
         li = []
         for i in abc[0:10]:
             li.append(''.join(i))
@@ -3429,7 +3459,7 @@ class ShapeShift(CryptoCoinBaseClass):
         
         li = url
         li = list(it.permutations(li, 2))
-        li = n.array(li).tolist()
+        li = n_array(li).tolist()
         lis = []
         for i in li:
             lis.append('_'.join(i))
@@ -3800,7 +3830,7 @@ class Etoro():
     
     def etoroLogin(self, verbose=False):
         flow = []
-        co = p.read_csv('config.csv', header=None)
+        co = p_read_csv('config.csv', header=None)
         username = co.ix[3,1]
         passwd = co.ix[3,2]
         print username
@@ -3879,7 +3909,7 @@ class Etoro():
             #print i.text
             els.append(i.text)
         try:
-            return p.DataFrame(els, columns=[column])
+            return p_DataFrame(els, columns=[column])
         except Exception as e:
             print e
     
@@ -3907,7 +3937,7 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
             lss.append(self.find_elements_by_xpath_return_list(iss[1], iss[0]))
             
         # combine all into a dataframe
-        df = p.DataFrame(range(len(lss[0])))
+        df = p_DataFrame(range(len(lss[0])))
         for i in lss:
             df[i.columns[0]] = i
         return df
@@ -3969,7 +3999,7 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
             #print lss
             df = None
             try:
-                df = p.DataFrame(range(len(lss[0])))
+                df = p_DataFrame(range(len(lss[0])))
                 for i in lss:
                     df[i.columns[0]] = i
             except TypeError, e:
@@ -3977,7 +4007,7 @@ gain /html/body/div[2]/div[3]/div[2]/table/tbody/tr/td[6]"""
             """
             # combine all lists into a dataframe
             #print lss
-            df = p.DataFrame(range(len(lss[0])))
+            df = p_DataFrame(range(len(lss[0])))
             for i in lss:
                 try:
                     df[i.columns[0]] = i
@@ -4046,10 +4076,10 @@ gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-
             
         if save == True:
             try:
-                allPositions2 = p.read_json(self.fname_trader_positions)
+                allPositions2 = p_read_json(self.fname_trader_positions)
                 #print allPositions2
             except ValueError, e:
-                allPositions2 = p.DataFrame()
+                allPositions2 = p_DataFrame()
                 allPositions2.to_json(self.fname_trader_positions)
                 #print allPositions2
                 #print e
@@ -4082,11 +4112,11 @@ gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-
         em = fp.read()
         em = j.loads(em)
         #for i in em:
-        #    print p.DataFrame(em[i])
-        target = p.DataFrame([])
+        #    print p_DataFrame(em[i])
+        target = p_DataFrame([])
         if username == None:
             for i in em:
-                emi = p.DataFrame(em[i])
+                emi = p_DataFrame(em[i])
                 #print emi
                 target['pair'] = emi['pair']
                 target['bias'] = emi['bias']
@@ -4099,7 +4129,7 @@ gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-
             #print username
             #for i in em:
             #    print i
-            emi = p.DataFrame(em[username])
+            emi = p_DataFrame(em[username])
             #print emi
             try:
                 target['pair'] = emi['pair']
@@ -4175,16 +4205,16 @@ class Bancor:
         if mode == 4:
             for i in res:
                 print i
-        idx = p.DataFrame(idx)
-        p0 = p.DataFrame()
+        idx = p_DataFrame(idx)
+        p0 = p_DataFrame()
         if mode == 1:
             print idx.transpose().get_values()
-            print n.diff(idx)
+            print n_diff(idx)
             print idx[0]
             for [i, j] in enumerate(res):
                 print "{0} {1}".format(i,j)
         for i in idx:
-            p0 = p0.combine_first(p.DataFrame(res).ix[idx[i][0]:idx[i][1],:])
+            p0 = p0.combine_first(p_DataFrame(res).ix[idx[i][0]:idx[i][1],:])
         ms = []
         for i in list(p0.get_values()):
             if mode == 4:
@@ -4203,13 +4233,13 @@ class Bancor:
                     print i[0]
                 #print e
                 ''
-        ms = p.DataFrame(ms, columns=['Fecha', 'Concepto/Empresa', 'Debito/Credito', 'Saldo'])
+        ms = p_DataFrame(ms, columns=['Fecha', 'Concepto/Empresa', 'Debito/Credito', 'Saldo'])
         for i in range(len(ms.ix[:,2])):
             ms.ix[i,0] = self.cleanBancorDate(ms.ix[i,0], self.getBancorYear(fname))
             ms.ix[i,2] = self.cleanBancorNumber(ms.ix[i,2])
             ms.ix[i,3] = self.cleanBancorNumber(ms.ix[i,3])
         #print ms
-        pres = p.DataFrame(res).ix[:,:]
+        pres = p_DataFrame(res).ix[:,:]
         ms = ms.set_index('Fecha')
         #ms.ix[:,'Saldo'].plot(); show();
         #print ms
