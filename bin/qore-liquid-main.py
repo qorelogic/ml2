@@ -21,7 +21,8 @@ import pandas as p
 import numpy as n
 import time
 """
-from qoreliquid import QoreQuant
+from qorequant import QoreQuant
+from oandaq import OandaQ
 from threading import Thread
 import sys, traceback
 
@@ -252,9 +253,10 @@ class QsForecaster:
     
         def getTechnicals(self):
 
-            qq = QoreQuant()
-            df = qq.analyseInvestingTechnical(showPlot=False)
-            print df.transpose()
+            #qq = QoreQuant()
+            #df = qq.analyseInvestingTechnical(showPlot=False)
+            #print df.transpose()
+            ''
 
     
 trader = QsTrader()
@@ -288,6 +290,7 @@ def test():
 if __name__ == "__main__":
     #main()
     #test()
+    """
     def usage():
         return 'usage: <ta=technical analysis | fc=forecast>'
     try:    sys.argv[1]
@@ -296,7 +299,9 @@ if __name__ == "__main__":
         sys.exit(0)
     
     if sys.argv[1] == 'ta':
-        forecaster.getTechnicals()
+        #forecaster.getTechnicals()
+        ''
     if sys.argv[1] == 'fc':
         do_work(True)
         #do_work_debug(False)
+    """

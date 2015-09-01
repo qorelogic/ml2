@@ -1,4 +1,8 @@
 
+import sys
+try: sys.path.index('/ml.dev/lib/oanda/oandapy')
+except: sys.path.append('/ml.dev/lib/oanda/oandapy')
+
 #from numpy import *
 from numpy import divide as n_divide
 from numpy import float16 as n_float16
@@ -21,6 +25,7 @@ import ujson as j
 
 from qore import *
 from qore_qstk import *
+from oandaq import OandaQ
 from matplotlib.pylab import *
 
 import numpy as n

@@ -24,7 +24,7 @@ import socket
 import matplotlib.pyplot as plt
 
 qd = QoreDebug()
-qd.on()
+qd.off()
 qd.stackTraceOff()
 
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -166,12 +166,7 @@ def do_work(mode, forever = True):
                     pairs = rtc.getInstruments()
                     break
                 if case('babysit'):
-                    df = oq.oanda2.get_trades(oq.aid)['trades']
-                    pairdf = p.DataFrame(df)
-                    #print df
-                    pairs = ','.join(list(pairdf.ix[:,'instrument'].get_values()))
-                    print pairs
-                    #pairs = 'AUD_USD'
+                    pairs = oq.getBabySitPairs()
                     break
                 print usage()
                 break

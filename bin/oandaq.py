@@ -1,5 +1,7 @@
 
 #from numpy import *
+from numpy import array as n_array
+from numpy import dot as n_dot
 from numpy import divide as n_divide
 from numpy import float16 as n_float16
 from numpy import rint as n_rint
@@ -93,8 +95,8 @@ class OandaQ:
         }
 
         self.instruments = self.oanda2.get_instruments(self.aid)['instruments']
-        #self.oq = OandaQ()
         self.ticks = {}
+        self.accountInfo = self.getAccountInfo()
 
     def log(self, msg, printDot=False):
         if self.verbose == True: 
@@ -218,8 +220,9 @@ class OandaQ:
         self.qd._getMethod()
         return dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
 
-    def trade(self, risk, stop, instrument, side, tp=None):
+    def trade(self, risk, stop, instrument, side, tp=None, nostoploss=False):
         self.qd._getMethod()
+        
         """
         if instrument == 'eu':
             instrument = 'EUR_USD'
@@ -232,24 +235,25 @@ class OandaQ:
         if instrument == 'uj':
             instrument = 'USD_JPY'
         """
+        
         if side == 'b':
             side ='buy'
-            self.buy(risk, stop, instrument=instrument, tp=tp)
+            self.buy(risk, stop, instrument=instrument, tp=tp, nostoploss=nostoploss)
         if side == 's':
             side ='sell'
-            self.sell(risk, stop, instrument=instrument, tp=tp)
+            self.sell(risk, stop, instrument=instrument, tp=tp, nostoploss=nostoploss)
         
-    def buy(self, risk, stop, instrument='EUR_USD', tp=None):
+    def buy(self, risk, stop, instrument='EUR_USD', tp=None, nostoploss=False):
         self.qd._getMethod()
         
-        self.order(risk, stop, 'buy', instrument=instrument, tp=tp)
+        self.order(risk, stop, 'buy', instrument=instrument, tp=tp, nostoploss=nostoploss)
         
-    def sell(self, risk, stop, instrument='EUR_USD', tp=None):
+    def sell(self, risk, stop, instrument='EUR_USD', tp=None, nostoploss=False):
         self.qd._getMethod()
         
-        self.order(risk, stop, 'sell', instrument=instrument, tp=tp)
+        self.order(risk, stop, 'sell', instrument=instrument, tp=tp, nostoploss=nostoploss)
 
-    def order(self, risk, stop, side, instrument='EUR_USD', tp=None, price=None, expiry=None):
+    def order(self, risk, stop, side, instrument='EUR_USD', tp=None, price=None, expiry=None, nostoploss=False):
         self.qd._getMethod()
         
         stop = abs(float(stop)) # pips
@@ -271,6 +275,11 @@ class OandaQ:
         
         limitprice = self.oanda2.get_prices(instruments='EUR_USD')['prices'][0]
                 
+        # modify the stop to mimic no stoploss
+        if nostoploss == True:
+            stop = 1000
+
+        # set the stoploss & takeprofit
         if side == 'buy':
             stopLoss   = prc['bid'] - float(stop) / 10000
             takeProfit = prc['bid'] + float(stop) / 10000
@@ -281,6 +290,7 @@ class OandaQ:
             takeProfit = prc['ask'] - float(stop) / 10000
             print takeProfit
             limitprice = limitprice['ask']
+        
         if tp != None:
             takeProfit = tp
         else:
@@ -661,12 +671,35 @@ class OandaQ:
         
         return dfac
 
+    def getAccountInfo(self):
+        try: self.lastAccountCheck
+        except: self.lastAccountCheck = 0
+        #print self.lastAccountCheck
+        if time.time() - 600 >= self.lastAccountCheck:
+            self.lastAccountCheck = time.time()
+            #self.accountInfo = self.oanda2.get_account(self.aid)
+            self.accountInfo = self.oanda2.get_account(self.aid)
+            print 'account checked'
+        return self.accountInfo
+
     def getPipValue(self, instrument):
         return p.DataFrame(self.instruments).set_index('instrument').ix[instrument, 'pip']
+
+    def calcDoublingFactorPeriod(self, x):
+        return 100*((n.power(10, log10(2)/x))-1)
+    
+    def getBabySitPairs (self):
+        df = self.oanda2.get_trades(self.aid)['trades']
+        pairdf = p.DataFrame(df)
+        print pairdf
+        pairs = ','.join(list(pairdf.ix[:,'instrument'].get_values()))
+        print pairs
+        return pairs
 
     def babysitTrades(self, df, tick):
     
         #print tick
+        
         self.ticks[tick['instrument']] = tick 
         #print p.DataFrame(self.ticks).transpose()
         #print df
@@ -678,14 +711,23 @@ class OandaQ:
             dfi = p.DataFrame(i, index=[0]).set_index('id')
             pair = dfi.ix[:,'instrument'].get_values()[0]
             side = dfi.ix[:,'side'].get_values()[0]
-            mside = 'ask' if side == 'buy' else 'bid'
+            # if selling, you need to buy back@ bid price
+            # and vice versa, if buying, you need to sell back@ ask price
+            mside = 'bid' if side == 'sell' else 'ask'
+            
+            dfi['units'] = dfi.ix[:,'units'].get_values()[0]
+            
             try:
                 dfi['currentprice'] = self.ticks[pair][mside]
-                dfi['pipval']    = self.getPipValue(pair)
-                mdf = mdf.combine_first(dfi.ix[:,['instrument','price','side', 'currentprice', 'pipval']])
-                #print dfi
+                dfi['bid']          = self.ticks[pair]['bid']
+                dfi['ask']          = self.ticks[pair]['ask']
+                dfi['pipval']       = self.getPipValue(pair)
+                dfi['spread']       = abs(self.ticks[pair]['bid'] - self.ticks[pair]['ask'])
+                dfi['spreadpips']   = float(abs(self.ticks[pair]['bid'] - self.ticks[pair]['ask'])) / float(list(dfi['pipval'])[0])
+                mdf = mdf.combine_first(dfi)
             except:
                 ''
+            #print dfi.transpose()
     
         if len(mdf) > 0:
             
@@ -698,19 +740,51 @@ class OandaQ:
             #z = n.matrix('1;0.1').A
             z = mdf['pole']
             
-            mdf['poleTanh'] = n_rint(n_tanh((2*(n_power(n_e, z) / (1 + n_power(n_e, z))) * (2*z))-1))    
-            mdf['pips'] = n_divide(1.0, n_array(mdf.ix[:,'pipval'], dtype=n_float16)) * (mdf.ix[:,'currentprice'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']
-            mdf['trailpips'] = 2
-            mdf['trail']     = mdf['pips'] - mdf['trailpips']
+            mdf['poleTanh']          = n_rint(n_tanh((2*(n_power(n_e, z) / (1 + n_power(n_e, z))) * (2*z))-1))    
+            mdf['pips']              = n_divide(1.0, n_array(mdf.ix[:,'pipval'], dtype=n_float16)) * (mdf.ix[:,'currentprice'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']
+            mdf['trailpips']         = 2
+            mdf['trail']             = mdf['pips'] - mdf['trailpips']
+            mdf['pl']                = (mdf.ix[:,'currentprice'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']  * mdf.ix[:,'units']
+            mdf['plpcnt']            = n_dot(n_divide(mdf['pl'], self.getAccountInfo()['balance']), 100)
+            mdf['plpcntExSpread'] = n_dot(n_divide(mdf['pl'] - mdf['spread'], self.getAccountInfo()['balance']), 100)
     
             #print mdf.ix[:,'poleTanh']
             #print mdf.ix[:,'currentprice']
             #print mdf.ix[:,'price']
             #print (mdf.ix[:,'currentprice'] - mdf.ix[:,'price'])
             #print (mdf.ix[:,'currentprice'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']
+            #print (mdf.ix[:,'currentprice'] - mdf.ix[:,'price']) * mdf.ix[:,'poleTanh']  * mdf.ix[:,'units'] 
+            #print self.getAccountInfo()['balance']
             #print mdf['pips']
         
-            print mdf.ix[:, 'instrument price side currentprice pips trail trailpips'.split(' ')]
+            # display the dataframe        
+            #columns = 'instrument price units side currentprice bid ask spread spreadpips plpcntExSpread pl plpcnt pips trail trailpips'.split(' ')
+            columns  = 'instrument price units side currentprice bid ask spreadpips plpcntExSpread pl plpcnt pips'.split(' ')
+            fcolumns = 'price units side currprice bid ask spread pl%-spread pl$ pl% pips trail trailpips'.split(' ')
+            amdf = mdf.ix[:, columns]
+            #amdf['id'] = amdf.index
+            amdf       = amdf.set_index('instrument')
+            mamdf = n_array(amdf.ix[:, columns].fillna(0).get_values())#, dtype=n_float16)
+            #mamdf = n_around(mamdf, decimals=4)
+            #p.options.display.float_format = '{:,.1f}'.format
+            fdf = p.DataFrame(amdf, index=amdf.index, columns=amdf.columns) #.transpose()
+            print fdf
+
+            #print len(mdf)
+            #print mdf
+            for i in xrange(len(mdf)):
+                tid = mdf.index[i]
+                instrument = mdf['instrument'].ix[tid,:]
+                plpcntExSpread = mdf['plpcntExSpread'].ix[tid,:]
+                if plpcntExSpread >= self.calcDoublingFactorPeriod(100):
+                    print 'closing trade: {0}-{1}'.format(tid, instrument)
+                    self.oanda2.close_trade(self.aid, tid)
+                    
+                    manifest = 'EURGBPv1560 HKDJPY^60 GBPNZDv15 GBPCHFv15 GBPUSDv603015 GBPJPYv15 GBPAUDv3060 USDCHFv240'.split(' ') #HKDJPYv30
+                    time.sleep(1)
+                    self.gotoMarket(manifest)
+                #print plpcntExSpread
+
             print '---------------------------------------------------------------------'
 
             #for res in n_array(mdf, dtype=n_string0):
@@ -739,5 +813,61 @@ class OandaQ:
         #else:
         #    return n.empty()
   
+    def gotoMarket(self, manifest):
+        
+        self = OandaQ()
+        trades = self.oanda2.get_trades(self.aid)['trades']
+        trades = p.DataFrame(trades)#.transpose()
+        trades = trades.set_index('id')
+        trades['stop'] = list(abs(trades['price'] - trades['stopLoss'])*10000)
+        print trades.ix[:,'instrument price side stopLoss stop units'.split(' ')]
+        #print trades.ix[:,:]
+    
+        for i in manifest:
+            print 
+    
+            pair = i[0:6]
+            side = i[6:7]
+            timeframe = i[7:]  
+            pair = '{0}_{1}'.format(pair[0:3], pair[3:6])
+            sideS = 'b' if side == '^' else 's'
+            sideO = 'buy' if side == '^' else 'sell'
+    
+            if pair not in list(trades.ix[:,'instrument']):
+                print 'no position open in trade table: opening trade..'
+    
+                cmd = "print self.trade(3, 30, '{0}', '{1}', nostoploss=True)".format(pair, sideS)
+                print cmd
+                exec(cmd)
+                
+            print '------'
+            print '------'
+            print i
+            print '------'
+            
+            try:
+                mtrades = trades.ix[(trades['instrument'] == pair),['instrument','side','units']]
+                sideN = mtrades.get_values()[0][1]
+                units = mtrades.get_values()[0][2]
+                print units
+                print 'for {0} from {1} to {2}'.format(pair, sideN, sideO)
+                #print (trades['instrument'] == pair)
+                if sideO != sideN:
+                    print 'new opposite signal, reversing open position to: '+sideN
+    
+    
+                    cmd = "print self.oanda2.close_position('{0}', '{1}')".format(self.aid, pair)
+                    print cmd
+                    exec(cmd)
+    
+                    sideNS = 'b' if side == '^' else 's'
+                    cmd = "print self.trade(3, 30, '{0}', '{1}', nostoploss=True)".format(pair, sideNS)
+                    print cmd
+                    exec(cmd)
+            except:
+                ''
+                
+            print
+    
 if __name__ == "__main__":
     print 'stub'
