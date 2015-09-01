@@ -23,7 +23,7 @@ import socket
 import matplotlib.pyplot as plt
 
 qd = QoreDebug()
-qd.off()
+qd.on()
 qd.stackTraceOff()
 
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -54,11 +54,11 @@ accid = acc[0]['accountId']
 
 oq = OandaQ()
 
-modes = 'demo,plotly,csv'.split(',')
+modes = 'demo,plotly,csv,babysit'.split(',')
 
 def usage():
     qd._getMethod()
-    return "usage: demo | plotly | csv"
+    return "usage: demo | plotly | csv | babysit"
 
 #------------------------------
 # tick streamer (data feed)
@@ -83,6 +83,13 @@ class MyStreamer(oandapy.Streamer):
                 break
             if case('plotly'):
                 self.rtc = RealtimeChart()
+                #self.rtc.qd.on()
+                #self.rtc.qd.stackTraceOn()
+                return self.rtc
+                break
+            if case('babysit'):
+                self.trades = oq.oanda2.get_trades(oq.aid)['trades']
+                self.account = oq.oanda2.get_account(oq.aid)
                 break
             print usage()
             break
@@ -112,6 +119,11 @@ class MyStreamer(oandapy.Streamer):
                 if case('plotly'):
                     self.rtc.update(csvc)
                     break
+                if case('babysit'):
+                    res = oq.babysitTrades(self.trades, data['tick'])
+                    #if res == False:
+                    #    print data
+                    break
                 print usage()
                 break
             
@@ -137,7 +149,7 @@ def do_work(mode, forever = True):
         print 'receiving feed..'
         try:
             stream = MyStreamer(environment=env2, access_token=access_token2)
-            stream.init(mode)
+            rtc = stream.init(mode)
             #pairs = ",".join(list(res))
             #res = getPricesLatest(df, oanda2, sw).index
 
@@ -149,9 +161,18 @@ def do_work(mode, forever = True):
                     pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
                     break
                 if case('plotly'):
-                    pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
+                    #pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
+                    pairs = rtc.getInstruments()
                     break
-                print "options: demo, plotly"
+                if case('babysit'):
+                    df = oq.oanda2.get_trades(oq.aid)['trades']
+                    pairdf = p.DataFrame(df)
+                    #print df
+                    pairs = ','.join(list(pairdf.ix[:,'instrument'].get_values()))
+                    print pairs
+                    #pairs = 'AUD_USD'
+                    break
+                print usage()
                 break
             
             stream.start(accountId=accid, instruments=pairs)

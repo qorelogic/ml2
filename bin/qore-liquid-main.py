@@ -180,7 +180,7 @@ class QsForecaster:
             pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD','EUR_JPY', 'GBP_JPY','USD_JPY','USD_CAD']
             pairs         = ['EUR_USD', 'GBP_USD', 'AUD_USD', 'NZD_USD', 'NZD_EUR', 'USD_JPY',  'USD_CHF', 'USD_CAD','GBP_JPY', 'EUR_NZD', 'GBP_NZD', 'AUD_JPY', 'AUD_NZD', 'NZD_JPY','AUD_USD', 'USD_CAD', 'USD_CHF','EUR_JPY']
             granularities = [ 'D','H4','H1','M30','M15','M5','M1','S10','S5']
-            iterations    = 3000000
+            iterations    = 6000000
             alpha         = 0.125
             risk          = 1
             plot          = False
@@ -250,6 +250,13 @@ class QsForecaster:
         def generateNDayForecast(self):
             ''
     
+        def getTechnicals(self):
+
+            qq = QoreQuant()
+            df = qq.analyseInvestingTechnical(showPlot=False)
+            print df.transpose()
+
+    
 trader = QsTrader()
 forecaster = QsForecaster()
 
@@ -281,6 +288,15 @@ def test():
 if __name__ == "__main__":
     #main()
     #test()
-
-    do_work(True)
-    #do_work_debug(False)
+    def usage():
+        return 'usage: <ta=technical analysis | fc=forecast>'
+    try:    sys.argv[1]
+    except: 
+        print usage()
+        sys.exit(0)
+    
+    if sys.argv[1] == 'ta':
+        forecaster.getTechnicals()
+    if sys.argv[1] == 'fc':
+        do_work(True)
+        #do_work_debug(False)

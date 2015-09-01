@@ -12,6 +12,13 @@ logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
 
 hdir = '/ml.live/bin/data/cache'
 
+from numpy import array as n_array
+from numpy import rint as n_rint
+from numpy import tanh as n_tanh
+from numpy import power as n_power
+from numpy import e as n_e
+from numpy import string0 as n_string0
+
 def debug(str, verbosity=8):
     #if verbosity == 9:
     if verbosity == 8:
@@ -44,6 +51,7 @@ class QoreDebug:
     def stackTraceOff(self):
         self.stackTrace = False
         
+    # source: http://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     def _getMethod(self):
         
         if self._on == True:
@@ -64,7 +72,7 @@ class QoreDebug:
             print "*** print_exception:"
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
 
-
+# source: http://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python
 class switch(object):
     value = None
     def __new__(class_, value):
@@ -263,3 +271,35 @@ class QoreScrapy:
                 print ct
         return items
 
+
+def babysitTrades2(qq, acc):
+    #acc = qq.oq.oanda2.get_account(qq.oq.aid)
+    bal = acc['balance']
+
+    relatedPairs = qq.oq.getPairsRelatedToOandaTickers('EUR_USD')
+    pairs = list(n_array(p.DataFrame(relatedPairs['lsp']).ix[:,0], dtype=n_string0))
+    prices = p.DataFrame(qq.oq.oanda2.get_prices(instruments=','.join(pairs))['prices'])
+    cupris = prices.set_index('instrument').ix['EUR_USD',['ask','bid']].transpose().describe()['top']#.ix['EUR_USD',:]
+
+    trades = p.DataFrame(qq.oq.oanda2.get_trades(qq.oq.aid)['trades'])
+    trades['cprice'] = cupris
+    pl = (trades['price'] - cupris) * trades['units'] * cupris
+    trades['pl'] = pl
+    trades['pips'] = (trades['price'] - cupris) * 10000
+    trades['pcnt'] = pl / bal * 100
+
+    print list((trades['instrument'] == 'EUR_USD').index)
+    for i in xrange(len(trades)):
+        trade = trades.ix[i,:]
+        pl = trade['pl']
+        #print trade
+        if pl > 0:
+            print pl
+            print 'setting trailstop'
+            tid = trade['id']
+            #qq.oq.oanda2.modify_trade(qq.oq.aid, tid, trailingStop=10)
+        else:
+            print 'trailstop too small, patience!'
+            
+        #break
+    print trades.transpose()

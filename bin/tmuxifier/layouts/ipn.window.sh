@@ -16,10 +16,10 @@ run_cmd "p" 0
 run_cmd "p" 1
 run_cmd "p" 2
 run_cmd "cd /ml.dev/bin/" 0
-run_cmd "cd /ml.dev/bin/datafeeds" 1
+#run_cmd "cd /ml.dev/bin/datafeeds" 1
 run_cmd "cd /sec/assets" 2
 run_cmd "ipn" 0
-run_cmd "ipn" 1
+#run_cmd "ipn" 1
 run_cmd "ipn" 2
 
 # Paste text

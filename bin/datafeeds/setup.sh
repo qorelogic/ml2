@@ -19,11 +19,23 @@ mdependencies() {
 }
 
 minstall() {
+
 	sleep 1
-	#if [ -f $MPWD/tmuxifier/layouts/datafeeds.window.sh ]; then
-	if [ ! -f $mlocal/layouts/datafeeds.window.sh ]; then
-		ln -s $MPWD/tmuxifier/layouts/datafeeds.window.sh $mlocal/layouts/ 2> /dev/null
-		echo 'linked datafeeds tmuxifier layout.'
+	if [ "`which puppet`" == "" ]; then
+            sudo apt-get update
+            sudo apt-get -y install puppet
+	fi
+	if [ ! -f $mlocal/layouts/qlm.window.sh ]; then
+		echo "$mlocal/layouts contents:"
+		ls -l $mlocal/layouts
+		echo "need to fix $mlocal/layouts, sure you want to remove directory $mlocal/layouts? y/n: "
+		read ans
+		if [ "$ans" == "y" ]; then
+			rm -r $mlocal/layouts
+			rm -rfv $mlocal/layouts
+			ln -s $mldir/bin/tmuxifier/layouts $mlocal/layouts 2> /dev/null
+			echo 'linked mldev/bin/tmuxifier/layouts to ~/.tmuxifier/layouts'
+		fi
 	fi
 	if [ ! -f $mldir/lib/oanda/oandapy/oandapy.py ]; then
 		mkdir -p $mldir/lib/oanda/
@@ -40,7 +52,8 @@ minstall() {
 		echo 'adding PYTHONPATH export ~/.bashrc'
 	fi
 
-	# python packacges for datafeeds
+	# python packages for datafeeds
+	sudo pip install --upgrade pip
 	if [ "`python -c 'import QSTK' 2>&1`" != "" ]; then
             sudo pip install QSTK
 	fi
@@ -52,6 +65,14 @@ minstall() {
 	fi
 	if [ "`python -c 'import selenium' 2>&1`" != "" ]; then
             sudo pip install selenium
+	fi
+
+	# still testing on ipython notebook
+      if [ "`python -c 'import bitstampy' 2>&1`" != "" ]; then
+            sudo pip install bitstampy
+	fi
+      if [ "`python -c 'import krakenex' 2>&1`" != "" ]; then
+            sudo pip install krakenex
 	fi
 
 	echo ''
