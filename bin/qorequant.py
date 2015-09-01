@@ -1,4 +1,10 @@
 
+import sys
+try: sys.path.index('/ml.dev/lib/oanda/oandapy')
+except: sys.path.append('/ml.dev/lib/oanda/oandapy')
+
+from qoreliquid import Etoro, StatWing
+
 #from numpy import *
 from numpy import divide as n_divide
 from numpy import float16 as n_float16
@@ -21,6 +27,7 @@ import ujson as j
 
 from qore import *
 from qore_qstk import *
+from oandaq import OandaQ
 from matplotlib.pylab import *
 
 import numpy as n
@@ -789,7 +796,7 @@ class QoreQuant():
 
     def analyseInvestingTechnical(self, showPlot=True):
         
-        import ujson as j
+        import json as j
         
         fname = self.hdirDatapipeline+'/investingTechnical_numbeo.csv'
         df = p.read_csv(fname)
@@ -801,13 +808,13 @@ class QoreQuant():
         li = list(df.ix[:,'summary'])
         for i in xrange(len(li)): df.ix[i,'summaryCode'] = di[li[i].lower()]
         sdf = df.pivot('name', 'period', 'summaryCode').transpose()
-        #print sdf
-        sdf = j.dumps(sdf.fillna(0).to_dict())
+        print sdf
+        #sdf = j.dumps(sdf.fillna(0).to_dict())
         #print repr(sdf)
         cdate = os.path.getctime(fname)
-        fp = open(self.hdirDatapipeline+'/investingTechnical_numbeo.csv.log', 'a')
-        fp.write('{0},{1}\n'.format(cdate,sdf))
-        fp.close()
+        #fp = open(self.hdirDatapipeline+'/investingTechnical_numbeo.csv.log', 'a')
+        #fp.write('{0},{1}\n'.format(cdate,sdf))
+        #fp.close()
     
         dfa = df.set_index('name').ix[:,['period','summaryCode']]
         #dfa = normalizeme(dfa)

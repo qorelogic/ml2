@@ -1,4 +1,6 @@
 
+from oandaq import OandaQ
+
 #from numpy import *
 from numpy import divide as n_divide
 from numpy import float16 as n_float16
@@ -8,6 +10,8 @@ from numpy import min as n_min
 from numpy import max as n_max
 from numpy import tanh as n_tanh
 from numpy import concatenate as n_concatenate
+
+from pandas import read_csv as p_read_csv
 
 import plotly.plotly as py
 from plotly.graph_objs import *

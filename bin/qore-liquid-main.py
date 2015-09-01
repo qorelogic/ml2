@@ -21,7 +21,8 @@ import pandas as p
 import numpy as n
 import time
 """
-from qoreliquid import QoreQuant
+from qorequant import QoreQuant
+from oandaq import OandaQ
 from threading import Thread
 import sys, traceback
 
@@ -252,9 +253,26 @@ class QsForecaster:
     
         def getTechnicals(self):
 
+            
             qq = QoreQuant()
             df = qq.analyseInvestingTechnical(showPlot=False)
-            print df.transpose()
+            df = df.transpose()
+            from numpy import array as n_array
+            from numpy import float16 as n_float16
+            df[1] = n_array(df, dtype=n_float16)
+            df = df.sort(1)
+            df['pa'] = df.index
+            for i in xrange(len(df['pa'])):
+                if df[1][i] > 0:
+                    side = '^'
+                if df[1][i] < 0:
+                    side = 'v'
+                if df[1][i] == 0:
+                    side = '-'
+                df['pa'][i] = '{0}{1}all'.format(df['pa'][i].replace('/', ''), side)
+            threshold = 14
+            print df.ix[(df[1] > threshold) | (df[1] < -threshold), :]
+            print ' '.join(list(df.ix[(df[1] > threshold) | (df[1] < -threshold), 'pa']))
 
     
 trader = QsTrader()
@@ -297,6 +315,7 @@ if __name__ == "__main__":
     
     if sys.argv[1] == 'ta':
         forecaster.getTechnicals()
+        ''
     if sys.argv[1] == 'fc':
         do_work(True)
         #do_work_debug(False)
