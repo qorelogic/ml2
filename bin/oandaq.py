@@ -1,4 +1,6 @@
 
+#import curses  # Get the module
+
 #from numpy import *
 from numpy import array as n_array
 from numpy import dot as n_dot
@@ -48,6 +50,8 @@ class OandaQ:
         self.qd._getMethod()
         
         self.verbose = verbose
+
+	#self.stdscr = curses.initscr()  # initialise it
         
         # get current quotes
         co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
@@ -700,12 +704,15 @@ class OandaQ:
 
     def babysitTrades(self, df, tick):
     
+  	#self.stdscr.clear()  # Clear the screen
+    	#os.system('clear')
+	#print(100*'\n')
         #print tick
         
         self.ticks[tick['instrument']] = tick 
         #print p.DataFrame(self.ticks).transpose()
         #print df
-        
+   
         mdf = p.DataFrame()
         
         for i in df:
@@ -762,6 +769,7 @@ class OandaQ:
             # display the dataframe        
             #columns = 'instrument price units side currentprice bid ask spread spreadpips plpcntExSpread pl plpcnt pips trail trailpips'.split(' ')
             columns  = 'instrument price units side currentprice bid ask spreadpips plpcntExSpread pl plpcnt pips'.split(' ')
+            columns  = 'instrument units plpcnt pips spreadpips'.split(' ')
             fcolumns = 'price units side currprice bid ask spread pl%-spread pl$ pl% pips trail trailpips'.split(' ')
             amdf = mdf.ix[:, columns]
             #amdf['id'] = amdf.index
@@ -770,7 +778,12 @@ class OandaQ:
             #mamdf = n_around(mamdf, decimals=4)
             #p.options.display.float_format = '{:,.1f}'.format
             fdf = p.DataFrame(amdf, index=amdf.index, columns=amdf.columns) #.transpose()
-            print fdf
+	    tspm = float(time.time())*100
+	    #print tspm
+            if int(tspm) % 5 == 0:
+	    	print fdf
+
+	    #time.sleep(0.10)
 
             #print len(mdf)
             #print mdf
@@ -778,16 +791,17 @@ class OandaQ:
                 tid = mdf.index[i]
                 instrument = mdf['instrument'].ix[tid,:]
                 plpcntExSpread = mdf['plpcntExSpread'].ix[tid,:]
-                if plpcntExSpread >= self.calcDoublingFactorPeriod(100):
+		doublineFactorPeriod = self.calcDoublingFactorPeriod(400)
+#		print doublineFactorPeriod
+                if plpcntExSpread >= doublineFactorPeriod:
                     print 'closing trade: {0}-{1}'.format(tid, instrument)
                     self.oanda2.close_trade(self.aid, tid)
                     
-                    #manifest = 'EURGBPv1560 HKDJPY^60 GBPNZDv15 GBPCHFv15 GBPUSDv603015 GBPJPYv15 GBPAUDv3060 USDCHFv240'.split(' ') #HKDJPYv30
-                    #time.sleep(1)
-                    #self.gotoMarket(manifest)
+#                    time.sleep(1)
+                    self.gotoMarket()
                 #print plpcntExSpread
 
-            print '---------------------------------------------------------------------'
+#            print '---------------------------------------------------------------------'
 
             #for res in n_array(mdf, dtype=n_string0):
             #    print ' '.join(list(res))
@@ -810,13 +824,22 @@ class OandaQ:
                 print 'trailstop too small, patience!'
             """
             
-            #print mdf.ix[:,'side'].get_values()
+           #print mdf.ix[:,'side'].get_values()
             return mdf#.transpose()
         #else:
         #    return n.empty()
   
-    def gotoMarket(self, manifest):
+    def gotoMarket(self, manifest=None):
         
+        if manifest == None:
+		#manifest = 'EURGBPv1560 HKDJPY^60 GBPNZDv15 GBPCHFv15 GBPUSDv603015 GBPJPYv15 GBPAUDv3060 USDCHFv240'.split(' ') #HKDJPYv30
+        	fp = open('/home/qore/mldev/bin/data/infofeeds/investing.csv', 'r')
+        	mlog = fp.read().strip().split('\n')
+        	#print mlog
+        	manifest = mlog[len(mlog)-1].strip().split(',')
+        	print manifest
+        	fp.close()
+
         self = OandaQ()
         trades = self.oanda2.get_trades(self.aid)['trades']
         trades = p.DataFrame(trades)#.transpose()

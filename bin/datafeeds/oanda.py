@@ -91,6 +91,7 @@ class MyStreamer(oandapy.Streamer):
             if case('babysit'):
                 self.trades = oq.oanda2.get_trades(oq.aid)['trades']
                 self.account = oq.oanda2.get_account(oq.aid)
+#		oq.gotoMarket()
                 break
             print usage()
             break

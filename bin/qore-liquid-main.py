@@ -25,6 +25,7 @@ from qorequant import QoreQuant
 from oandaq import OandaQ
 from threading import Thread
 import sys, traceback
+from qore import mkdir_p
 
 def rawInput(msg, options, option=None):
     for i in xrange(len(options)): print '{0} {1}'.format(i, options[i])
@@ -252,7 +253,6 @@ class QsForecaster:
             ''
     
         def getTechnicals(self):
-
             
             qq = QoreQuant()
             df = qq.analyseInvestingTechnical(showPlot=False)
@@ -272,7 +272,11 @@ class QsForecaster:
                 df['pa'][i] = '{0}{1}all'.format(df['pa'][i].replace('/', ''), side)
             threshold = 14
             print df.ix[(df[1] > threshold) | (df[1] < -threshold), :]
-            print ' '.join(list(df.ix[(df[1] > threshold) | (df[1] < -threshold), 'pa']))
+            csv = ','.join(list(df.ix[(df[1] > threshold) | (df[1] < -threshold), 'pa']))
+	    mkdir_p('/mldev/bin/data/infofeeds')
+	    fp = open('/mldev/bin/data/infofeeds/investing.csv', 'a')
+	    fp.write(csv+'\n')
+	    fp.close()
 
     
 trader = QsTrader()
