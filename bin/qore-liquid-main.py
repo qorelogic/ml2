@@ -269,7 +269,7 @@ class QsForecaster:
                     side = 'v'
                 if df[1][i] == 0:
                     side = '-'
-                df['pa'][i] = '{0}{1}all'.format(df['pa'][i].replace('/', ''), side)
+                df['pa'][i] = '{0}{1}all-{2}'.format(df['pa'][i].replace('/', ''), side, df[1][i])
             threshold = 14
             print df.ix[(df[1] > threshold) | (df[1] < -threshold), :]
             csv = ','.join(list(df.ix[(df[1] > threshold) | (df[1] < -threshold), 'pa']))

@@ -769,7 +769,7 @@ class OandaQ:
             # display the dataframe        
             #columns = 'instrument price units side currentprice bid ask spread spreadpips plpcntExSpread pl plpcnt pips trail trailpips'.split(' ')
             columns  = 'instrument price units side currentprice bid ask spreadpips plpcntExSpread pl plpcnt pips'.split(' ')
-            columns  = 'instrument units plpcnt pips spreadpips'.split(' ')
+            columns  = 'instrument side plpcnt pips spreadpips'.split(' ')
             fcolumns = 'price units side currprice bid ask spread pl%-spread pl$ pl% pips trail trailpips'.split(' ')
             amdf = mdf.ix[:, columns]
             #amdf['id'] = amdf.index
@@ -791,7 +791,7 @@ class OandaQ:
                 tid = mdf.index[i]
                 instrument = mdf['instrument'].ix[tid,:]
                 plpcntExSpread = mdf['plpcntExSpread'].ix[tid,:]
-		doublineFactorPeriod = self.calcDoublingFactorPeriod(400)
+		doublineFactorPeriod = self.calcDoublingFactorPeriod(200)
 #		print doublineFactorPeriod
                 if plpcntExSpread >= doublineFactorPeriod:
                     print 'closing trade: {0}-{1}'.format(tid, instrument)
