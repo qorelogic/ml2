@@ -834,7 +834,7 @@ class OandaQ:
         #else:
         #    return n.empty()
   
-    def gotoMarket(self, manifest=None):
+    def gotoMarket(self, manifest, dryrun=False):
         
         if manifest == None:
 		#manifest = 'EURGBPv1560 HKDJPY^60 GBPNZDv15 GBPCHFv15 GBPUSDv603015 GBPJPYv15 GBPAUDv3060 USDCHFv240'.split(' ') #HKDJPYv30
@@ -868,7 +868,11 @@ class OandaQ:
     
                 cmd = "print self.trade(3, 30, '{0}', '{1}', nostoploss=True)".format(pair, sideS)
                 print cmd
-                exec(cmd)
+                if dryrun == False:
+                    ###########################################################
+                    try:   exec(cmd)
+                    ###########################################################
+                    except Exception as e: print e
                 
             print '------'
             print '------'
@@ -885,17 +889,24 @@ class OandaQ:
                 if sideO != sideN:
                     print 'new opposite signal, reversing open position to: '+sideN
     
-    
                     cmd = "print self.oanda2.close_position('{0}', '{1}')".format(self.aid, pair)
                     print cmd
-                    exec(cmd)
+                    if dryrun == False:
+                        #######################################################
+                        try:   exec(cmd)
+                        #######################################################
+                        except Exception as e: print e
     
                     sideNS = 'b' if side == '^' else 's'
                     cmd = "print self.trade(3, 30, '{0}', '{1}', nostoploss=True)".format(pair, sideNS)
                     print cmd
-                    exec(cmd)
+                    if dryrun == False:
+                        #######################################################
+                        try:   exec(cmd)
+                        #######################################################
+                        except Exception as e: print e
             except:
-                ''
+                print 'exp 12'
                 
             print
     
