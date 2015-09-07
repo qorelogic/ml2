@@ -103,7 +103,9 @@ class OandaQ:
         self.instruments = self.oanda2.get_instruments(self.aid)['instruments']
         self.ticks = {}
         self.accountInfo = {}
-
+        self.ctime = 0
+        self.ptime = 0
+        
     def log(self, msg, printDot=False):
         if self.verbose == True: 
             print msg
@@ -701,6 +703,31 @@ class OandaQ:
         pairs = ','.join(list(pairdf.ix[:,'instrument'].get_values()))
         print pairs
         return pairs
+    
+    def logEquity(self):
+
+        mkdir_p('/mldev/bin/data/oanda/logs')
+        self.ptime = self.ctime
+        self.ctime = time.strftime('%S')
+        #if self.ptime < self.ctime:
+        #    print '--'            
+        if self.ptime > self.ctime:
+            print '---------'
+            res = self.oanda2.get_accounts()['accounts']
+            #print res
+            for i in list(p.DataFrame(res).ix[:, 'accountId']):
+                #print i
+                ctime = time.time()
+                df = p.DataFrame(self.oanda2.get_account(i), index=[ctime])#.transpose()
+                df['ts'] = ctime
+                #print df.columns
+                csv = ','.join(list(n.array(df, dtype=string0)[0]))
+                print csv
+                fp = open('/mldev/bin/data/oanda/logs/kpql.equity.log.csv', 'a')
+                fp.write(csv+'\n')
+                fp.close()
+        #print self.ctime
+        #print '{0} {1}'.format(self.ctime, self.ptime)
 
     def babysitTrades(self, df, tick):
     
@@ -783,6 +810,9 @@ class OandaQ:
             #print fdf#.to_dict()
             print fdf.ix[:,:]#.to_dict()
             #os.system('clear')
+
+            self.logEquity()
+
             tspm = float(time.time())*100
             #print tspm
             #if int(tspm) % 5 == 0:
