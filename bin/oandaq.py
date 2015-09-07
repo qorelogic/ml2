@@ -766,6 +766,8 @@ class OandaQ:
             #print self.getAccountInfo()['balance']
             #print mdf['pips']
         
+            print mdf.ix[:, 'instrument price side currentprice pips trail trailpips'.split(' ')]
+            print '---------------------------------------------------------------------'
             # display the dataframe        
             #columns = 'instrument price units side currentprice bid ask spread spreadpips plpcntExSpread pl plpcnt pips trail trailpips'.split(' ')
             columns  = 'instrument price units side currentprice bid ask spreadpips plpcntExSpread pl plpcnt pips'.split(' ')
@@ -774,16 +776,19 @@ class OandaQ:
             amdf = mdf.ix[:, columns]
             #amdf['id'] = amdf.index
             amdf       = amdf.set_index('instrument')
-            mamdf = n_array(amdf.ix[:, columns].fillna(0).get_values())#, dtype=n_float16)
+            #mamdf = n_array(amdf.ix[:, columns].fillna(0).get_values())#, dtype=n_float16)
             #mamdf = n_around(mamdf, decimals=4)
             #p.options.display.float_format = '{:,.1f}'.format
             fdf = p.DataFrame(amdf, index=amdf.index, columns=amdf.columns) #.transpose()
-	    tspm = float(time.time())*100
-	    #print tspm
-            if int(tspm) % 5 == 0:
-	    	print fdf
+            #print fdf#.to_dict()
+            print fdf.ix[:,:]#.to_dict()
+            #os.system('clear')
+            tspm = float(time.time())*100
+            #print tspm
+            #if int(tspm) % 5 == 0:
+            print fdf
 
-	    #time.sleep(0.10)
+            #time.sleep(0.10)
 
             #print len(mdf)
             #print mdf
@@ -792,12 +797,12 @@ class OandaQ:
                 instrument = mdf['instrument'].ix[tid,:]
                 plpcntExSpread = mdf['plpcntExSpread'].ix[tid,:]
 		doublineFactorPeriod = self.calcDoublingFactorPeriod(200)
-#		print doublineFactorPeriod
+                #print doublineFactorPeriod
                 if plpcntExSpread >= doublineFactorPeriod:
                     print 'closing trade: {0}-{1}'.format(tid, instrument)
                     self.oanda2.close_trade(self.aid, tid)
                     
-#                    time.sleep(1)
+                    #time.sleep(1)
                     self.gotoMarket()
                 #print plpcntExSpread
 

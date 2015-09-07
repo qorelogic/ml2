@@ -829,7 +829,7 @@ class QoreQuant():
         header = n.concatenate([list(dfs.columns), n.sum(nm, 0)])
         print 
         header = p.DataFrame(header.reshape(2, header.shape[0] / 2)).transpose().set_index(0).transpose()
-        print header
+        #print header
         if showPlot == True: 
             imshow(n.array(dfs, dtype=n.float16), extent=[1,7,1,9], aspect=0.517)
             #title('Manually Set Aspect')
