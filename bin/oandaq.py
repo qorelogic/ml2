@@ -695,6 +695,8 @@ class OandaQ:
         return dfac
 
     def getAccountInfo(self):
+        self.qd._getMethod()
+        
         try: self.lastAccountCheck
         except: self.lastAccountCheck = 0
         #print self.lastAccountCheck
@@ -706,12 +708,18 @@ class OandaQ:
         return self.accountInfo
 
     def getPipValue(self, instrument):
+        self.qd._getMethod()
+        
         return p.DataFrame(self.instruments).set_index('instrument').ix[instrument, 'pip']
 
     def calcDoublingFactorPeriod(self, x):
+        self.qd._getMethod()
+        
         return 100*((n.power(10, log10(2)/x))-1)
     
     def getBabySitPairs (self):
+        self.qd._getMethod()
+        
         df = self.oandaConnection().get_trades(self.aid)['trades']
         pairdf = p.DataFrame(df)
         print pairdf
@@ -720,6 +728,7 @@ class OandaQ:
         return pairs
     
     def logEquity(self):
+        self.qd._getMethod()
 
         mkdir_p('/mldev/bin/data/oanda/logs')
         self.ptime = self.ctime
@@ -745,6 +754,7 @@ class OandaQ:
         #print '{0} {1}'.format(self.ctime, self.ptime)
 
     def babysitTrades(self, df, tick):
+        self.qd._getMethod()
     
   	#self.stdscr.clear()  # Clear the screen
     	#os.system('clear')
@@ -880,6 +890,8 @@ class OandaQ:
         #    return n.empty()
   
     def runCmd(self, cmd, dryrun=False):
+        self.qd._getMethod()
+        
         print cmd
         if dryrun == False:
             ###########################################################
