@@ -55,8 +55,9 @@ class OandaQ:
         
         # get current quotes
         co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
-        self.env2=co.ix[1,1]
-        self.access_token2=co.ix[1,2]
+        selAccount = 1
+        self.env2=co.ix[selAccount,1]
+        self.access_token2=co.ix[selAccount,2]
         self.oanda2 = oandapy.API(environment=self.env2, access_token=self.access_token2)
     
         self.aid = self.oanda2.get_accounts()['accounts'][0]['accountId']
@@ -794,8 +795,8 @@ class OandaQ:
             #print self.getAccountInfo()['balance']
             #print mdf['pips']
         
-            print mdf.ix[:, 'instrument price side currentprice pips trail trailpips'.split(' ')]
-            print '---------------------------------------------------------------------'
+            #print mdf.ix[:, 'instrument price side currentprice pips trail trailpips'.split(' ')]
+            #print '---------------------------------------------------------------------'
             # display the dataframe        
             #columns = 'instrument price units side currentprice bid ask spread spreadpips plpcntExSpread pl plpcnt pips trail trailpips'.split(' ')
             columns  = 'instrument price units side currentprice bid ask spreadpips plpcntExSpread pl plpcnt pips'.split(' ')
@@ -865,7 +866,7 @@ class OandaQ:
         #else:
         #    return n.empty()
   
-    def gotoMarket(self, manifest, dryrun=False):
+    def gotoMarket(self, manifest=None, dryrun=False):
         
         if manifest == None:
 		#manifest = 'EURGBPv1560 HKDJPY^60 GBPNZDv15 GBPCHFv15 GBPUSDv603015 GBPJPYv15 GBPAUDv3060 USDCHFv240'.split(' ') #HKDJPYv30
