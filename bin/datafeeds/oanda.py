@@ -77,8 +77,8 @@ class MyStreamer(oandapy.Streamer):
                 return self.rtc
                 break
             if case('babysit'):
-                self.trades = oq.oanda2.get_trades(oq.aid)['trades']
-                self.account = oq.oanda2.get_account(oq.aid)
+                self.trades = oq.oandaConnection().get_trades(oq.aid)['trades']
+                self.account = oq.oandaConnection().get_account(oq.aid)
 #		oq.gotoMarket()
                 break
             print usage()
@@ -143,11 +143,11 @@ def do_work(mode, forever = True):
             stream = MyStreamer(environment=oq.env2, access_token=oq.access_token2)
             rtc = stream.init(mode)
             #pairs = ",".join(list(res))
-            #res = getPricesLatest(df, oq.oanda2, sw).index
+            #res = getPricesLatest(df, oq.oandaConnection(), sw).index
 
             while switch(stream.mode):
                 if case('demo'):
-                    pairs = ",".join(list(n.array(p.DataFrame(oq.oanda2.get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
+                    pairs = ",".join(list(n.array(p.DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
                     break
                 if case('csv'):
                     pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'

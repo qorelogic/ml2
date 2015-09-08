@@ -547,7 +547,7 @@ class QoreQuant():
         print pair
         pair = pair[0:3]+'_'+pair[3:6]
         print pair
-        eu =  self.oq.oanda2.get_prices(instruments=pair)['prices']
+        eu =  self.oq.oandaConnection().get_prices(instruments=pair)['prices']
         
         curr1 = n.mean([float(eu[0]['ask']), float(eu[0]['bid'])])
         tp1 = float('%.5f' % tp.ix[len(tp)-1,0])
@@ -709,7 +709,7 @@ class QoreQuant():
         # view only pairs with open positions
         if onlyTradedPairs == True:
             try:
-                pairs = list(p.DataFrame(self.oq.oanda2.get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
+                pairs = list(p.DataFrame(self.oq.oandaConnection().get_positions(self.oq.aid)['positions']).ix[:,'instrument'].get_values())
             except:
                 pairs = opairs
         

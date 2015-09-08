@@ -44,6 +44,7 @@ import oandapy
 class OandaQ:
     
     oanda2 = None
+    oandapys = {}
     
     def __init__(self, verbose=False):
         self.qd = QoreDebug()
@@ -56,19 +57,23 @@ class OandaQ:
         # get current quotes
         co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
         selAccount = 1
+        self.oandaUsername=co.ix[selAccount,0]
         self.env2=co.ix[selAccount,1]
         self.access_token2=co.ix[selAccount,2]
-        self.oanda2 = oandapy.API(environment=self.env2, access_token=self.access_token2)
+        #self.oanda2 = oandapy.API(environment=self.env2, access_token=self.access_token2)
+        #self.oanda2 = 
+        
+        self.oandaConnection(self.oandaUsername, self.env2, self.access_token2)
     
-        self.aid = self.oanda2.get_accounts()['accounts'][0]['accountId']
-        #self.oanda2.create_order(aid, type='market', instrument='EUR_USD', side='sell', units=10)
+        self.aid = self.oandaConnection().get_accounts()['accounts'][0]['accountId']
+        #self.oandaConnection().create_order(aid, type='market', instrument='EUR_USD', side='sell', units=10)
         """
         if verbose == True:
-            res = self.oanda2.get_trades(self.aid)
+            res = self.oandaConnection().get_trades(self.aid)
             for i in res:
                 print p.DataFrame(res[i])
         
-            print p.DataFrame(self.oanda2.get_account(self.aid), index=[0])
+            print p.DataFrame(self.oandaConnection().get_account(self.aid), index=[0])
         """
     
         self.dfa = {}
@@ -101,7 +106,7 @@ class OandaQ:
             'M' : 1 * 2419200 # Month
         }
 
-        self.instruments = self.oanda2.get_instruments(self.aid)['instruments']
+        self.instruments = self.oandaConnection().get_instruments(self.aid)['instruments']
         self.ticks = {}
         self.accountInfo = {}
         self.ctime = 0
@@ -117,6 +122,12 @@ class OandaQ:
         if self.verbose == True: 
             print msg
     
+    def oandaConnection(self, name=None, env=None, access_token=None):
+        if name != None and env != None and access_token != None:
+            self.oandapys[name] = oandapy.API(environment=env, access_token=access_token)
+        else:
+            return self.oandapys[self.oandaUsername]
+
     def datetimeToTimestamp(self, ddt):
         self.qd._getMethod()
 
@@ -268,9 +279,9 @@ class OandaQ:
         stop = abs(float(stop)) # pips
         risk = float(risk) # percentage risk
         
-        #print self.oanda2.get_accounts()['accounts'][0]['accountId']
-        acc = self.oanda2.get_account(self.aid)
-        #mprice = self.oanda2.get_prices(instruments='EUR_USD')['prices'][0]['ask']
+        #print self.oandaConnection().get_accounts()['accounts'][0]['accountId']
+        acc = self.oandaConnection().get_account(self.aid)
+        #mprice = self.oandaConnection().get_prices(instruments='EUR_USD')['prices'][0]['ask']
         #leverage = 50
         
         amount = self.calculateAmount(acc['marginAvail'], risk, stop)
@@ -280,9 +291,9 @@ class OandaQ:
         #print mprice
         print amount
         
-        prc = self.oanda2.get_prices(instruments=instrument)['prices'][0]
+        prc = self.oandaConnection().get_prices(instruments=instrument)['prices'][0]
         
-        limitprice = self.oanda2.get_prices(instruments='EUR_USD')['prices'][0]
+        limitprice = self.oandaConnection().get_prices(instruments='EUR_USD')['prices'][0]
                 
         # modify the stop to mimic no stoploss
         if nostoploss == True:
@@ -307,7 +318,7 @@ class OandaQ:
         
         try:
             print 'attempting market order'
-            order = self.oanda2.create_order(self.aid, type='market', instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
+            order = self.oandaConnection().create_order(self.aid, type='market', instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
             print 'market order success'
         except oandapy.OandaError, e:
             print 'attempting limit order'
@@ -316,7 +327,7 @@ class OandaQ:
             tti = self.datetimeToTimestamp(tti)
             expiry = self.timestampToDatetimeFormat(tti, fmt='%Y-%m-%dT%H:%M:%S-3:00')
             #print e
-            order = self.oanda2.create_order(self.aid, type='limit', expiry=expiry, price=limitprice, instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
+            order = self.oandaConnection().create_order(self.aid, type='limit', expiry=expiry, price=limitprice, instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
             print order
             print 'limit order success'
 
@@ -345,7 +356,7 @@ class OandaQ:
     def calculateStopLossFromPrice(self, pair, mprice):
         self.qd._getMethod()
 
-        current = self.oanda2.get_prices(instruments=[pair])['prices'][0]['bid']
+        current = self.oandaConnection().get_prices(instruments=[pair])['prices'][0]['bid']
         mstop = (mprice-current) * 10000
         #print 'mstop {0}'.format(mstop)
         return mstop
@@ -363,7 +374,7 @@ class OandaQ:
             inst = readcache(fname)
         except Exception as e:
             print e
-            inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
+            inst = p.DataFrame(self.oandaConnection().get_instruments(self.aid)['instruments'])
             writecache(inst, fname)
         lse = []
         lsf = []
@@ -406,7 +417,7 @@ class OandaQ:
             inst = readcache(fname)
         except Exception as e:
             print e     
-            inst = p.DataFrame(self.oanda2.get_instruments(self.aid)['instruments'])
+            inst = p.DataFrame(self.oandaConnection().get_instruments(self.aid)['instruments'])
             writecache(inst, fname)
 
         lse = []
@@ -442,7 +453,7 @@ class OandaQ:
         for i in list(data.ix[:, sw.relatedCols].columns):
             pair = re.sub(re.compile(r'.*?-\ (.*)_x'), '\\1', i).replace('/', '_')
             #print pair
-            pr = p.DataFrame(self.oanda2.get_prices(instruments=[pair])['prices'])
+            pr = p.DataFrame(self.oandaConnection().get_prices(instruments=[pair])['prices'])
             #print 
             ins.append(n.mean(pr.ix[0, ['bid', 'ask']].get_values()))
             pairs.append(pair)
@@ -473,8 +484,8 @@ class OandaQ:
         from pylab import rcParams
         rcParams['figure.figsize'] = 20, 5
         # oanda equity viz
-        if fname == None:
-            fname = '/home/qore/sec-svn.git/assets/oanda/kpql/primary/statement.csv'
+        if fname == None:            
+            fname = '/home/qore/sec-svn.git/assets/oanda/{0}/primary/statement.csv'.format(self.oandaUsername)
         df0 = p.read_csv(fname)
         #df0 = df0.ix[3000:, 'Balance']
         df0 = df0.sort(columns=['Transaction ID'])
@@ -488,7 +499,7 @@ class OandaQ:
         #print df.ix[:,['Type','Currency Pair','Units','Balance','Interest','Pl']]
         
         # oanda transaction history (short-term)
-        df1 = p.DataFrame(self.oanda2.get_transaction_history(self.aid)['transactions']).bfill()
+        df1 = p.DataFrame(self.oandaConnection().get_transaction_history(self.aid)['transactions']).bfill()
         df1 = df1.sort('id', ascending=True)
         df1 = df1.set_index('id')
         
@@ -517,7 +528,7 @@ class OandaQ:
     def getHistoricalPrice(self, pair, granularity='S5', count=2, plot=True):
         self.qd._getMethod()
         
-        df = self.oanda2.get_history(instrument=pair, count=count, granularity=granularity)
+        df = self.oandaConnection().get_history(instrument=pair, count=count, granularity=granularity)
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid', 'volume']
         #hed = ['closeAsk', 'closeBid', 'highAsk', 'highBid', 'lowAsk', 'lowBid', 'openAsk', 'openBid']
         hed = ['closeAsk', 'closeBid', 'volume']
@@ -687,8 +698,8 @@ class OandaQ:
         #print self.lastAccountCheck
         if time.time() - 600 >= self.lastAccountCheck:
             self.lastAccountCheck = time.time()
-            #self.accountInfo = self.oanda2.get_account(self.aid)
-            self.accountInfo = self.oanda2.get_account(self.aid)
+            #self.accountInfo = self.oandaConnection().get_account(self.aid)
+            self.accountInfo = self.oandaConnection().get_account(self.aid)
             print 'account checked'
         return self.accountInfo
 
@@ -699,7 +710,7 @@ class OandaQ:
         return 100*((n.power(10, log10(2)/x))-1)
     
     def getBabySitPairs (self):
-        df = self.oanda2.get_trades(self.aid)['trades']
+        df = self.oandaConnection().get_trades(self.aid)['trades']
         pairdf = p.DataFrame(df)
         print pairdf
         pairs = ','.join(list(pairdf.ix[:,'instrument'].get_values()))
@@ -715,17 +726,17 @@ class OandaQ:
         #    print '--'            
         if self.ptime > self.ctime:
             print '---------'
-            res = self.oanda2.get_accounts()['accounts']
+            res = self.oandaConnection().get_accounts()['accounts']
             #print res
             for i in list(p.DataFrame(res).ix[:, 'accountId']):
                 #print i
                 ctime = time.time()
-                df = p.DataFrame(self.oanda2.get_account(i), index=[ctime])#.transpose()
+                df = p.DataFrame(self.oandaConnection().get_account(i), index=[ctime])#.transpose()
                 df['ts'] = ctime
                 #print df.columns
                 csv = ','.join(list(n.array(df, dtype=string0)[0]))
                 print csv
-                fp = open('/mldev/bin/data/oanda/logs/kpql.equity.log.csv', 'a')
+                fp = open('/mldev/bin/data/oanda/logs/{0}.equity.log.csv'.format(self.oandaUsername), 'a')
                 fp.write(csv+'\n')
                 fp.close()
         #print self.ctime
@@ -832,7 +843,7 @@ class OandaQ:
                 #print doublineFactorPeriod
                 if plpcntExSpread >= doublineFactorPeriod:
                     print 'closing trade: {0}-{1}'.format(tid, instrument)
-                    self.oanda2.close_trade(self.aid, tid)
+                    self.oandaConnection().close_trade(self.aid, tid)
                     
                     #time.sleep(1)
                     self.gotoMarket()
@@ -848,7 +859,7 @@ class OandaQ:
             for i in xrange(len(mdf)):
                 print mdf['trail'][i]
                 if mdf['trail'][i] > 0:
-                    #self.oanda2.modify_trade(self.aid, tid, trailingStop=10)
+                    #self.oandaConnection().modify_trade(self.aid, tid, trailingStop=10)
                     print 'setting trailstop'
             """
             """
@@ -856,7 +867,7 @@ class OandaQ:
                 print pl
                 print 'setting trailstop'
                 tid = trade['id']
-                #self.oanda2.modify_trade(self.aid, tid, trailingStop=10)
+                #self.oandaConnection().modify_trade(self.aid, tid, trailingStop=10)
             else:
                 print 'trailstop too small, patience!'
             """
@@ -870,7 +881,7 @@ class OandaQ:
         
         if manifest == None:
 		#manifest = 'EURGBPv1560 HKDJPY^60 GBPNZDv15 GBPCHFv15 GBPUSDv603015 GBPJPYv15 GBPAUDv3060 USDCHFv240'.split(' ') #HKDJPYv30
-        	fp = open('/home/qore/mldev/bin/data/infofeeds/investing.csv', 'r')
+        	fp = open('/ml.dev/bin/data/infofeeds/investing.csv', 'r')
         	mlog = fp.read().strip().split('\n')
         	#print mlog
         	manifest = mlog[len(mlog)-1].strip().split(',')
@@ -878,7 +889,7 @@ class OandaQ:
         	fp.close()
 
         self = OandaQ()
-        trades = self.oanda2.get_trades(self.aid)['trades']
+        trades = self.oandaConnection().get_trades(self.aid)['trades']
         trades = p.DataFrame(trades)#.transpose()
         trades = trades.set_index('id')
         trades['stop'] = list(abs(trades['price'] - trades['stopLoss'])*10000)
@@ -921,7 +932,7 @@ class OandaQ:
                 if sideO != sideN:
                     print 'new opposite signal, reversing open position to: '+sideN
     
-                    cmd = "print self.oanda2.close_position('{0}', '{1}')".format(self.aid, pair)
+                    cmd = "print self.oandaConnection().close_position('{0}', '{1}')".format(self.aid, pair)
                     print cmd
                     if dryrun == False:
                         #######################################################
