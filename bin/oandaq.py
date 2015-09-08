@@ -55,9 +55,9 @@ class OandaQ:
         
         # get current quotes
         co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
-        env2=co.ix[1,1]
-        access_token2=co.ix[1,2]
-        self.oanda2 = oandapy.API(environment=env2, access_token=access_token2)
+        self.env2=co.ix[1,1]
+        self.access_token2=co.ix[1,2]
+        self.oanda2 = oandapy.API(environment=self.env2, access_token=self.access_token2)
     
         self.aid = self.oanda2.get_accounts()['accounts'][0]['accountId']
         #self.oanda2.create_order(aid, type='market', instrument='EUR_USD', side='sell', units=10)

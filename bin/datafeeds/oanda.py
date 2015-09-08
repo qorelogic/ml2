@@ -41,18 +41,6 @@ except IOError, e:
     print e
     sys.exit()
     
-
-env1=co.ix[0,1]
-access_token1=co.ix[0,2]
-oanda1 = oandapy.API(environment=env1, access_token=access_token1)
-
-env2=co.ix[1,1]
-access_token2=co.ix[1,2]
-oanda2 = oandapy.API(environment=env2, access_token=access_token2)
-
-acc = oanda2.get_accounts()['accounts']
-accid = acc[0]['accountId']
-
 oq = OandaQ()
 
 modes = 'demo,plotly,csv,babysit'.split(',')
@@ -146,18 +134,20 @@ class MyStreamer(oandapy.Streamer):
 # source: http://www.digi.com/wiki/developer/index.php/Handling_Socket_Error_and_Keepalive
 def do_work(mode, forever = True):
     qd._getMethod()
+
+    oq = OandaQ()
     
     while True:
         print 'receiving feed..'
         try:
-            stream = MyStreamer(environment=env2, access_token=access_token2)
+            stream = MyStreamer(environment=oq.env2, access_token=oq.access_token2)
             rtc = stream.init(mode)
             #pairs = ",".join(list(res))
-            #res = getPricesLatest(df, oanda2, sw).index
+            #res = getPricesLatest(df, oq.oanda2, sw).index
 
             while switch(stream.mode):
                 if case('demo'):
-                    pairs = ",".join(list(n.array(p.DataFrame(oanda2.get_instruments(accid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
+                    pairs = ",".join(list(n.array(p.DataFrame(oq.oanda2.get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
                     break
                 if case('csv'):
                     pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
@@ -172,7 +162,7 @@ def do_work(mode, forever = True):
                 print usage()
                 break
             
-            stream.start(accountId=accid, instruments=pairs)
+            stream.start(accountId=oq.aid, instruments=pairs)
             
         except socket.error, e:
             print '1:'
@@ -207,8 +197,9 @@ def do_work(mode, forever = True):
             'disconnecting'
             qd.printTraceBack()
             stream.disconnect()
-        except:
+        except Exception as e:
             qd.printTraceBack()
+	    print e
             print 'unhandled error'
         #------------------------------
         
