@@ -56,14 +56,14 @@ class OandaQ:
         
         # get current quotes
         co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
-        selAccount = 1
-        self.oandaUsername=co.ix[selAccount,0]
-        self.env2=co.ix[selAccount,1]
-        self.access_token2=co.ix[selAccount,2]
-        #self.oanda2 = oandapy.API(environment=self.env2, access_token=self.access_token2)
+        selAccount         = 1
+        self.oandaUsername = co.ix[selAccount,0]
+        self.env2          = co.ix[selAccount,1]
+        self.access_token2 = co.ix[selAccount,2]
         #self.oanda2 = 
         
-        self.oandaConnection(self.oandaUsername, self.env2, self.access_token2)
+        oc = self.oandaConnection(self.oandaUsername, self.env2, self.access_token2)
+        self.oanda2 = oc #oandapy.API(environment=self.env2, access_token=self.access_token2)
     
         self.aid = self.oandaConnection().get_accounts()['accounts'][0]['accountId']
         #self.oandaConnection().create_order(aid, type='market', instrument='EUR_USD', side='sell', units=10)
@@ -125,6 +125,7 @@ class OandaQ:
     def oandaConnection(self, name=None, env=None, access_token=None):
         if name != None and env != None and access_token != None:
             self.oandapys[name] = oandapy.API(environment=env, access_token=access_token)
+            return self.oandapys[name]
         else:
             return self.oandapys[self.oandaUsername]
 
@@ -289,7 +290,7 @@ class OandaQ:
         #print acc['marginAvail'] * float(leverage) / mprice
         #print acc
         #print mprice
-        print amount
+        print 'amount:{0}'.format(amount)
         
         prc = self.oandaConnection().get_prices(instruments=instrument)['prices'][0]
         
@@ -350,6 +351,7 @@ class OandaQ:
         print 'amount {0}'.format(amount)
         print 'pl {0}'.format(pl)
         print 'pcnt {0}'.format(pcnt)
+        print 'bal {0}'.format(bal)
         
         return amount
         
@@ -877,6 +879,14 @@ class OandaQ:
         #else:
         #    return n.empty()
   
+    def runCmd(self, cmd, dryrun=False):
+        print cmd
+        if dryrun == False:
+            ###########################################################
+            try:   exec(cmd)
+            ###########################################################
+            except Exception as e: print e
+    
     def gotoMarket(self, manifest=None, dryrun=False):
         
         if manifest == None:
@@ -891,11 +901,14 @@ class OandaQ:
         self = OandaQ()
         trades = self.oandaConnection().get_trades(self.aid)['trades']
         trades = p.DataFrame(trades)#.transpose()
-        trades = trades.set_index('id')
-        trades['stop'] = list(abs(trades['price'] - trades['stopLoss'])*10000)
+        try:
+            trades = trades.set_index('id')
+            trades['stop'] = list(abs(trades['price'] - trades['stopLoss'])*10000)
+        except:
+            ''
         print trades.ix[:,'instrument price side stopLoss stop units'.split(' ')]
         #print trades.ix[:,:]
-    
+        
         for i in manifest:
             print 
     
@@ -905,17 +918,15 @@ class OandaQ:
             pair = '{0}_{1}'.format(pair[0:3], pair[3:6])
             sideS = 'b' if side == '^' else 's'
             sideO = 'buy' if side == '^' else 'sell'
-    
-            if pair not in list(trades.ix[:,'instrument']):
-                print 'no position open in trade table: opening trade..'
-    
-                cmd = "print self.trade(3, 30, '{0}', '{1}', nostoploss=True)".format(pair, sideS)
-                print cmd
-                if dryrun == False:
-                    ###########################################################
-                    try:   exec(cmd)
-                    ###########################################################
-                    except Exception as e: print e
+            
+            cmd = "print self.trade(3, 30, '{0}', '{1}', nostoploss=True)".format(pair, sideS)
+            try:
+                if pair not in list(trades.ix[:,'instrument']):
+                    print 'no position open in trade table: opening trade..'
+                    self.runCmd(cmd, dryrun=dryrun)
+            except:
+                    # if len(trades) is 0 do this:
+                    self.runCmd(cmd, dryrun=dryrun)
                 
             print '------'
             print '------'
@@ -931,23 +942,10 @@ class OandaQ:
                 #print (trades['instrument'] == pair)
                 if sideO != sideN:
                     print 'new opposite signal, reversing open position to: '+sideN
-    
-                    cmd = "print self.oandaConnection().close_position('{0}', '{1}')".format(self.aid, pair)
-                    print cmd
-                    if dryrun == False:
-                        #######################################################
-                        try:   exec(cmd)
-                        #######################################################
-                        except Exception as e: print e
-    
+                    self.runCmd("print self.oandaConnection().close_position('{0}', '{1}')".format(self.aid, pair))
+
                     sideNS = 'b' if side == '^' else 's'
-                    cmd = "print self.trade(3, 30, '{0}', '{1}', nostoploss=True)".format(pair, sideNS)
-                    print cmd
-                    if dryrun == False:
-                        #######################################################
-                        try:   exec(cmd)
-                        #######################################################
-                        except Exception as e: print e
+                    self.runCmd("print self.trade(3, 30, '{0}', '{1}', nostoploss=True)".format(pair, sideNS))
             except:
                 print 'exp 12'
                 
