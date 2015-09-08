@@ -465,14 +465,16 @@ class OandaQ:
         print nprices
         return nprices
 
-    def oandaTransactionHistory(self, plot=True):
+    def oandaTransactionHistory(self, plot=True, fname=None, startTs=1200000000):
         self.qd._getMethod()
 
         # oanda transaction history (long-term)
         from pylab import rcParams
         rcParams['figure.figsize'] = 20, 5
         # oanda equity viz
-        df0 = p.read_csv('/home/qore/sec-svn.git/assets/oanda/kpql/primary/statement.csv')
+        if fname == None:
+            fname = '/home/qore/sec-svn.git/assets/oanda/kpql/primary/statement.csv'
+        df0 = p.read_csv(fname)
         #df0 = df0.ix[3000:, 'Balance']
         df0 = df0.sort(columns=['Transaction ID'])
         df0 = df0.ix[:, :]
@@ -485,8 +487,7 @@ class OandaQ:
         #print df.ix[:,['Type','Currency Pair','Units','Balance','Interest','Pl']]
         
         # oanda transaction history (short-term)
-        qqq = QoreQuant()
-        df1 = p.DataFrame(qqq.oanda2.get_transaction_history(qqq.oq.aid)['transactions']).bfill()
+        df1 = p.DataFrame(self.oanda2.get_transaction_history(self.aid)['transactions']).bfill()
         df1 = df1.sort('id', ascending=True)
         df1 = df1.set_index('id')
         
@@ -508,8 +509,8 @@ class OandaQ:
         #print 'short term'
         #df1['accountBalance'].plot(); show();
         #print 'merge'
-        if plot == True:
-            df.ix[:,'Balance'].plot(); show();
+        if plot == True:            
+            df.ix[startTs:,'Balance'].plot(); show();
         return df
         
     def getHistoricalPrice(self, pair, granularity='S5', count=2, plot=True):
