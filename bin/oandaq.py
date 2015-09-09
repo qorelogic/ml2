@@ -854,7 +854,7 @@ class OandaQ:
             # display the dataframe        
             #columns = 'instrument price units side currentprice bid ask spread spreadpips plpcntExSpread pl plpcnt pips trail trailpips'.split(' ')
             columns  = 'instrument price units side currentprice bid ask spreadpips plpcntExSpread pl plpcnt pips'.split(' ')
-            columns  = 'tid instrument side units price currentprice pl plpcnt plpcntExSpread pips spread spreadpips pipval'.split(' ')
+            columns  = 'tid instrument side units price currentprice pl plpcnt plpcntExSpread pips spread spreadpips pipval poleTanh'.split(' ')
             fcolumns = 'price units side currprice bid ask spread pl%-spread pl$ pl% pips trail trailpips'.split(' ')
             amdf = mdf.ix[:, columns]
             #amdf['id'] = amdf.index
@@ -894,7 +894,7 @@ class OandaQ:
             fdf = fdf.combine_first(gdf)
             #fdf['ple'] = pow(fdf['pl'] / fdf['pask'], fdf['pow'])
             #print fdf['pipval']
-            fdf['ple'] = (fdf['price'] - fdf['currentprice']) * fdf['units'] * pow(fdf['pask'], fdf['pow'])
+            fdf['ple'] = (fdf['currentprice'] - fdf['price']) * fdf.ix[:,'poleTanh'] * fdf['units'] * pow(fdf['pask'], fdf['pow'])
             fdf['plpecnt'] = n_dot(n_divide(fdf['ple'], self.getAccountInfo()['balance']), 100)
             fdf['period72'] = 500
             fdf['doublineFactorPeriod'] = self.calcDoublingFactorPeriod(fdf['period72'])
