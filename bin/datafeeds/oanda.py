@@ -117,6 +117,12 @@ class MyStreamer(oandapy.Streamer):
                 print usage()
                 break
             
+        except IndexError, e:
+            #print 'usage: python oanda.py'
+            ''
+            print '4:'
+            print e
+            qd.printTraceBack()
         except requests.ConnectionError, e:
             qd.printTraceBack()
             ''
@@ -162,7 +168,17 @@ def do_work(mode, forever = True):
                 print usage()
                 break
             
-            stream.start(accountId=oq.aid, instruments=pairs)
+            print 'getbabysit:{0}'.format(pairs)
+            if pairs != '':
+                print '------pairs-----'
+                print pairs
+                print '----------'
+                stream.start(accountId=oq.aid, instruments=pairs)
+                #sys.exit(0)
+            else:
+                #oq.gotoMarket()
+                #break
+                ''
             
         except socket.error, e:
             print '1:'
@@ -199,7 +215,7 @@ def do_work(mode, forever = True):
             stream.disconnect()
         except Exception as e:
             qd.printTraceBack()
-	    print e
+            print e
             print 'unhandled error'
         #------------------------------
         
@@ -219,6 +235,7 @@ if __name__ == '__main__':
         if sys.argv[1] not in modes:
             raise
         do_work(sys.argv[1], True)
-    except:
+    except Exception as e:
+        print e
         print usage()
         
