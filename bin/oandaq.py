@@ -710,22 +710,51 @@ class OandaQ:
     def getPipValue(self, instrument):
         self.qd._getMethod()
         
-        return p.DataFrame(self.instruments).set_index('instrument').ix[instrument, 'pip']
+        return n_float16(p.DataFrame(self.instruments).set_index('instrument').ix[instrument, 'pip'])
 
     def calcDoublingFactorPeriod(self, x):
         self.qd._getMethod()
         
         return 100*((n.power(10, log10(2)/x))-1)
     
+    def wew(self, ds):
+        #print '---2---'
+        #print ds
+        ds = n.unique(ds)
+        #print ds
+        ds = list(ds)
+        #print ds
+        #ds.remove(ds.index('na')+1)
+        try: ds.remove('na')
+        except: ''
+        #print ds
+        return ds
+
     def getBabySitPairs (self):
         self.qd._getMethod()
         
         df = self.oandaConnection().get_trades(self.aid)['trades']
         pairdf = p.DataFrame(df)
         print pairdf
-        pairs = ','.join(list(pairdf.ix[:,'instrument'].get_values()))
-        print pairs
-        return pairs
+        try:
+            pdf = pairdf.ix[:,'instrument'].get_values()
+            pdf = n.array(pdf)            
+            #print pdf
+            #print '---'
+            df = self.syntheticCurrencyTable(pdf, homeCurrency='USD')
+            df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
+            pcdf = df.ix[:,'pairedCurrency'].get_values()
+            #print pcdf
+            pcdf = self.wew(pcdf)
+            #pdf = n.c_[pdf,pcdf]#[0]
+            pdf = list(pdf)+list(pcdf)
+            #print pdf
+            #fdf = fdf.combine_first(df)
+            pairs = ','.join(list(pdf))
+            #print pairs
+            return pairs
+        except Exception as e: print e
+        return ''
     
     def logEquity(self):
         self.qd._getMethod()
@@ -754,7 +783,7 @@ class OandaQ:
         #print '{0} {1}'.format(self.ctime, self.ptime)
 
     def babysitTrades(self, df, tick):
-        self.qd._getMethod()
+        #self.qd._getMethod()
     
   	#self.stdscr.clear()  # Clear the screen
     	#os.system('clear')
@@ -769,7 +798,9 @@ class OandaQ:
         
         for i in df:
             
-            dfi = p.DataFrame(i, index=[0]).set_index('id')
+            dfi = p.DataFrame(i, index=[0])
+            dfi['tid'] = dfi['id']
+            dfi = dfi.set_index('id')
             pair = dfi.ix[:,'instrument'].get_values()[0]
             side = dfi.ix[:,'side'].get_values()[0]
             # if selling, you need to buy back@ bid price
@@ -823,7 +854,7 @@ class OandaQ:
             # display the dataframe        
             #columns = 'instrument price units side currentprice bid ask spread spreadpips plpcntExSpread pl plpcnt pips trail trailpips'.split(' ')
             columns  = 'instrument price units side currentprice bid ask spreadpips plpcntExSpread pl plpcnt pips'.split(' ')
-            columns  = 'instrument side plpcnt pips spreadpips'.split(' ')
+            columns  = 'tid instrument side units price currentprice pl plpcnt plpcntExSpread pips spread spreadpips pipval'.split(' ')
             fcolumns = 'price units side currprice bid ask spread pl%-spread pl$ pl% pips trail trailpips'.split(' ')
             amdf = mdf.ix[:, columns]
             #amdf['id'] = amdf.index
@@ -833,7 +864,7 @@ class OandaQ:
             #p.options.display.float_format = '{:,.1f}'.format
             fdf = p.DataFrame(amdf, index=amdf.index, columns=amdf.columns) #.transpose()
             #print fdf#.to_dict()
-            print fdf.ix[:,:]#.to_dict()
+            #print fdf.ix[:,:]#.to_dict()
             #os.system('clear')
 
             self.logEquity()
@@ -841,7 +872,35 @@ class OandaQ:
             tspm = float(time.time())*100
             #print tspm
             #if int(tspm) % 5 == 0:
-            print fdf
+            
+            df = self.syntheticCurrencyTable(fdf.index, homeCurrency='USD')
+            df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
+            #print '---1---'
+            ds = df['pairedCurrency'].get_values()
+            ds = self.wew(ds)
+            #print ds
+            #print '---4---'
+            gdf = p.DataFrame(self.ticks).transpose().ix[df['pairedCurrency'].get_values(), :]
+            gdf['fdfi'] = fdf.index
+            gdf = gdf.set_index('fdfi')
+            gdf['pask'] = gdf['ask']
+            gdf['pbid'] = gdf['bid']
+            gdf = gdf.ix[:,['pask','pbid']]
+            gdf = gdf.fillna(1)
+            #[df['pairedCurrency'].get_values()[0]]
+            #print '------'
+            #print df
+            fdf = fdf.combine_first(df)
+            fdf = fdf.combine_first(gdf)
+            #fdf['ple'] = pow(fdf['pl'] / fdf['pask'], fdf['pow'])
+            #print fdf['pipval']
+            fdf['ple'] = (fdf['price'] - fdf['currentprice']) * fdf['units'] * pow(fdf['pask'], fdf['pow'])
+            fdf['plpecnt'] = n_dot(n_divide(fdf['ple'], self.getAccountInfo()['balance']), 100)
+            fdf['period72'] = 500
+            fdf['doublineFactorPeriod'] = self.calcDoublingFactorPeriod(fdf['period72'])
+            
+            print
+            print fdf.transpose()
 
             #time.sleep(0.10)
 
@@ -850,10 +909,10 @@ class OandaQ:
             for i in xrange(len(mdf)):
                 tid = mdf.index[i]
                 instrument = mdf['instrument'].ix[tid,:]
-                plpcntExSpread = mdf['plpcntExSpread'].ix[tid,:]
-		doublineFactorPeriod = self.calcDoublingFactorPeriod(200)
+                plpcntExSpread = fdf['plpecnt'].ix[fdf.index[i],:]
+                doublineFactorPeriod = fdf['doublineFactorPeriod'].ix[fdf.index[i],:]
                 #print doublineFactorPeriod
-                if plpcntExSpread >= doublineFactorPeriod:
+                if plpcntExSpread >= doublineFactorPeriod: # and False:
                     print 'closing trade: {0}-{1}'.format(tid, instrument)
                     self.oandaConnection().close_trade(self.aid, tid)
                     
@@ -900,6 +959,7 @@ class OandaQ:
             except Exception as e: print e
     
     def gotoMarket(self, manifest=None, dryrun=False):
+        self.qd._getMethod()
         
         if manifest == None:
 		#manifest = 'EURGBPv1560 HKDJPY^60 GBPNZDv15 GBPCHFv15 GBPUSDv603015 GBPJPYv15 GBPAUDv3060 USDCHFv240'.split(' ') #HKDJPYv30
@@ -963,5 +1023,39 @@ class OandaQ:
                 
             print
     
+    def syntheticCurrencyTable(self, currs, homeCurrency='USD'):
+        self.qd._getMethod()
+        
+        # source: http://www.python-course.eu/lambda.php
+        ret = {'quote':map(lambda x: x[0:3], currs), 'base':map(lambda x: x[4:7], currs)}
+        ret['pairedCurrency'] = []
+        
+        df = p.read_csv('/mldev/bin/data/oanda/cache/instruments.csv')
+        #dfp = p.DataFrame(self.oanda2.get_prices(instruments=','.join(list(currs)))['prices'])
+        #print dfp
+        for i in ret['base']:
+            try:
+                #print i
+                dft = map(lambda x: (x[0:3] == homeCurrency and x[4:7] == i) or (x[0:3] == i and x[4:7] == homeCurrency), list(df['instrument']))
+                #print dft
+                #print df.ix[dft, 'instrument'].get_values()[0]
+                ret['pairedCurrency'].append(df.ix[dft, 'instrument'].get_values()[0])
+            except Exception as e:
+                ret['pairedCurrency'].append('na')
+                #print e
+        poles      = [1, -1]
+        po         = map(lambda x: x[0:3] == homeCurrency, ret['pairedCurrency'])
+        po         = n.array(po, dtype=int0)    
+        ret['instrument'] = list(currs)
+        ret['pow'] = map(lambda x: poles[x], po)
+        #ret['ask'] = list(dfp['ask'])
+        #ret['bid'] = list(dfp['bid'])
+        ini = ','.join(list(ret['pairedCurrency'])).replace(',na', '')
+        #print ini#['prices'] 
+        #print p.DataFrame(self.oanda2.get_prices(instruments=ini)['prices'])
+        #print p.DataFrame(ret).ix[:, 'instrument quote base pairedCurrency ask bid pow'.split(' ')]    
+        #ret = ret.set_index('instrument')
+        return ret
+
 if __name__ == "__main__":
     print 'stub'
