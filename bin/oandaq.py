@@ -46,20 +46,19 @@ class OandaQ:
     oanda2 = None
     oandapys = {}
     
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, selectOandaAccount=2):
         self.qd = QoreDebug()
         self.qd._getMethod()
         
         self.verbose = verbose
-
-	#self.stdscr = curses.initscr()  # initialise it
+        
+        #self.stdscr = curses.initscr()  # initialise it
         
         # get current quotes
         co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
-        selAccount         = 1
-        self.oandaUsername = co.ix[selAccount,0]
-        self.env2          = co.ix[selAccount,1]
-        self.access_token2 = co.ix[selAccount,2]
+        self.oandaUsername = co.ix[selectOandaAccount,0]
+        self.env2          = co.ix[selectOandaAccount,1]
+        self.access_token2 = co.ix[selectOandaAccount,2]
         #self.oanda2 = 
         
         oc = self.oandaConnection(self.oandaUsername, self.env2, self.access_token2)

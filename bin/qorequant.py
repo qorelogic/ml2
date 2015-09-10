@@ -83,7 +83,7 @@ class QoreQuant():
         self.verbose = verbose
         self.oq.verbose = self.verbose
         
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, selectOandaAccount=2):
 
         self.thetaDir         = '/mldev/bin/data/oanda/qorequant'
         self.hdirDatapipeline = '/mldev/lib/crawlers/finance/dataPipeline.scrapy'
@@ -114,7 +114,7 @@ class QoreQuant():
         
         self.sw = StatWing(thetaDir=self.thetaDir)
 
-        try:    self.oq = OandaQ(verbose=self.verbose)
+        try:    self.oq = OandaQ(verbose=self.verbose, selectOandaAccount=selectOandaAccount)
         except Exception as e:
             print e
             print 'offline mode'
