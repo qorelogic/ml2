@@ -25,3 +25,6 @@ echo $addr | cut -d' ' -f22 #| cut -d':' -f2
 echo 'addr'
 echo $addr
 ipython notebook --ip=$addr
+
+exit 0
+
