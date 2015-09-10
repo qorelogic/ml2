@@ -735,32 +735,6 @@ class OandaQ:
         #print ds
         return ds
 
-    def getBabySitPairs (self):
-        self.qd._getMethod()
-        
-        df = self.oandaConnection().get_trades(self.aid)['trades']
-        pairdf = p.DataFrame(df)
-        print pairdf
-        try:
-            pdf = pairdf.ix[:,'instrument'].get_values()
-            pdf = n.array(pdf)            
-            #print pdf
-            #print '---'
-            df = self.syntheticCurrencyTable(pdf, homeCurrency='USD')
-            df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
-            pcdf = df.ix[:,'pairedCurrency'].get_values()
-            #print pcdf
-            pcdf = self.wew(pcdf)
-            #pdf = n.c_[pdf,pcdf]#[0]
-            pdf = list(pdf)+list(pcdf)
-            #print pdf
-            #fdf = fdf.combine_first(df)
-            pairs = ','.join(list(pdf))
-            #print pairs
-            return pairs
-        except Exception as e: print e
-        return ''
-    
     def logEquity(self, daemon=True):
         self.qd._getMethod()
 
@@ -792,6 +766,32 @@ class OandaQ:
         #print self.ctime
         #print '{0} {1}'.format(self.ctime, self.ptime)
 
+    def getBabySitPairs (self):
+        self.qd._getMethod()
+        
+        df = self.oandaConnection().get_trades(self.aid)['trades']
+        pairdf = p.DataFrame(df)
+        print pairdf
+        try:
+            pdf = pairdf.ix[:,'instrument'].get_values()
+            pdf = n.array(pdf)            
+            #print pdf
+            #print '---'
+            df = self.syntheticCurrencyTable(pdf, homeCurrency='USD')
+            df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
+            pcdf = df.ix[:,'pairedCurrency'].get_values()
+            #print pcdf
+            pcdf = self.wew(pcdf)
+            #pdf = n.c_[pdf,pcdf]#[0]
+            pdf = list(pdf)+list(pcdf)
+            #print pdf
+            #fdf = fdf.combine_first(df)
+            pairs = ','.join(list(pdf))
+            #print pairs
+            return pairs
+        except Exception as e: print e
+        return ''
+    
     def babysitTrades(self, df, tick):
         #self.qd._getMethod()
     
@@ -865,6 +865,7 @@ class OandaQ:
             #columns = 'instrument price units side currentprice bid ask spread spreadpips plpcntExSpread pl plpcnt pips trail trailpips'.split(' ')
             columns  = 'instrument price units side currentprice bid ask spreadpips plpcntExSpread pl plpcnt pips'.split(' ')
             columns  = 'tid instrument side units price currentprice pl plpcnt plpcntExSpread pips spread spreadpips pipval poleTanh'.split(' ')
+            #columns  = 'instrument units plpcnt pips'.split(' ')
             fcolumns = 'price units side currprice bid ask spread pl%-spread pl$ pl% pips trail trailpips'.split(' ')
             amdf = mdf.ix[:, columns]
             #amdf['id'] = amdf.index
@@ -911,6 +912,12 @@ class OandaQ:
             
             print
             print fdf.transpose()
+            #print fdf.ix[:,:]#.to_dict()
+            #os.system('clear')
+            #tspm = float(time.time())*100
+            #print tspm
+            #if int(tspm) % 5 == 0:
+            #print fdf
 
             #time.sleep(0.10)
 
