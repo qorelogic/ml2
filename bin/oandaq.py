@@ -756,15 +756,17 @@ class OandaQ:
         except Exception as e: print e
         return ''
     
-    def logEquity(self):
+    def logEquity(self, daemon=True):
         self.qd._getMethod()
 
+        fname = '/mldev/bin/data/oanda/logs/{0}.equity.log.csv'.format(self.oandaUsername)
+        
         mkdir_p('/mldev/bin/data/oanda/logs')
         self.ptime = self.ctime
         self.ctime = time.strftime('%S')
         #if self.ptime < self.ctime:
-        #    print '--'            
-        if self.ptime > self.ctime:
+        #    print '--'  
+        if self.ptime > self.ctime or daemon == False:
             print '---------'
             res = self.oandaConnection().get_accounts()['accounts']
             #print res
@@ -776,9 +778,12 @@ class OandaQ:
                 #print df.columns
                 csv = ','.join(list(n.array(df, dtype=string0)[0]))
                 print csv
-                fp = open('/mldev/bin/data/oanda/logs/{0}.equity.log.csv'.format(self.oandaUsername), 'a')
+                fp = open(fname, 'a')
                 fp.write(csv+'\n')
                 fp.close()
+        else:
+            print 'not updating equity log '+fname
+            print '{0} {1}'.format(self.ptime, self.ctime)
         #print self.ctime
         #print '{0} {1}'.format(self.ctime, self.ptime)
 
