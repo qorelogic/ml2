@@ -13,6 +13,7 @@ if initialize_session "Datamining"; then
   load_window "datapipeline"
   load_window "h2o"
   load_window "datafeeds"
+  load_window "dataminer"
 
   #load_window "ml.live"
   #load_window "ml.dev"
