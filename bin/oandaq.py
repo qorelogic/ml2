@@ -74,7 +74,7 @@ class OandaQ:
         
             print p.DataFrame(self.oandaConnection().get_account(self.aid), index=[0])
         """
-    
+
         self.dfa = {}
         
         self.granularityMap = {
@@ -104,7 +104,7 @@ class OandaQ:
             #Start of month alignment (First day of the month)        
             'M' : 1 * 2419200 # Month
         }
-
+        
         self.instruments = self.oandaConnection().get_instruments(self.aid)['instruments']
         self.ticks = {}
         self.accountInfo = {}
@@ -112,16 +112,22 @@ class OandaQ:
         self.ptime = 0
         
     def log(self, msg, printDot=False):
+        #self.qd._getMethod()
+    
         if self.verbose == True: 
             print msg
         if printDot == True:
             print '.',
     
     def debug(self, msg):
+        #self.qd._getMethod()
+        
         if self.verbose == True: 
             print msg
     
     def oandaConnection(self, name=None, env=None, access_token=None):
+        self.qd._getMethod()
+        
         if name != None and env != None and access_token != None:
             self.oandapys[name] = oandapy.API(environment=env, access_token=access_token)
             return self.oandapys[name]
