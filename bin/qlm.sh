@@ -14,3 +14,6 @@ investingTechnicals() {
 
 investingTechnicals
 /mldev/bin/qlm.py ta
+
+exit 0
+
