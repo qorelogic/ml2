@@ -29,6 +29,8 @@ import numpy as np
 import re
 import shutil as shu
 
+from pandas import read_csv as p_read_csv
+
 # Creating an object of the dataaccess class with Yahoo as the source.
 c_dataobj = da.DataAccess('Yahoo')
 
@@ -256,7 +258,7 @@ def calculateEfficientFrontier(ls_symbols, dt_end, days=100, updatePrices=False,
     return ret
 
 def getEfficientFrontierCharts(dt_end, calculateHowMany=None, printHowMany=None, fname='tutorial3portfolio.csv', days=365, annotate=False):
-    sp500 = p.read_csv('data/quandl/SP500.csv')
+    sp500 = p_read_csv('data/quandl/SP500.csv')
     print len(sp500)
     if calculateHowMany == None:
         calculateHowMany = len(sp500)
@@ -292,12 +294,14 @@ def getEfficientFrontierCharts(dt_end, calculateHowMany=None, printHowMany=None,
     print out2
     
     # copy previous allocation file to archive
-    tct = os.path.getmtime(fname)
-    dtnow = dt.datetime.fromtimestamp(tct)
-    tstm = dt.datetime.strftime(dtnow, '%Y%m%d-%H%M%S')
-    fname2 = fname+'.'+tstm+'.csv'
-    shu.copy2(fname, fname2)
-
+    try:
+        tct = os.path.getmtime(fname)
+        dtnow = dt.datetime.fromtimestamp(tct)
+        tstm = dt.datetime.strftime(dtnow, '%Y%m%d-%H%M%S')
+        fname2 = fname+'.'+tstm+'.csv'
+        shu.copy2(fname, fname2)
+    except Exception as e:
+        print e
     print out2.ix[:,'alloc'].to_csv(fname)
     
     return out2
