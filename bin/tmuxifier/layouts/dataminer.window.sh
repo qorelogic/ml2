@@ -9,10 +9,12 @@ new_window "DataMiner"
 
 # Split window into panes.
 split_h 50
+split_v 50 1
 
 # Run commands.
 run_cmd "tail -f /mldev/bin/data/infofeeds/logs/dataminer.log" 0
 run_cmd "tail -f /mldev/bin/data/infofeeds/logs/dataminer.err.log" 1
+run_cmd "tail -f /mldev/bin/data/infofeeds/investing.csv" 2
 
 # Set active pane.
 select_pane 0
