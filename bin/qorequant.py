@@ -36,6 +36,7 @@ import threading,time
 import itertools as it
 
 import oandapy
+from qoreliquid import normalizeme, sigmoidme
 
 # -*- coding: utf-8 -*-
 """Example Google style docstrings.
