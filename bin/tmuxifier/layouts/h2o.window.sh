@@ -15,6 +15,9 @@ run_cmd ".gpull" 0
 run_cmd "git branch" 0
 #run_cmd "cd /mldev/lib/ml/h2o/h2o-2.8.4.4/" 0
 run_cmd "cd /mldev/lib/ml/h2o/h2o-3.0.1.7/" 0
+run_cmd "cd /mldev/lib/ml/h2o/h2oai_h2o-3.github.py.git/h2o-py/demos" 1
+run_cmd "p" 1
+run_cmd "ipn" 1
 run_cmd "htop" 2
 
 send_keys "java -jar h2o.jar" 0
