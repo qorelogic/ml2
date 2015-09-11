@@ -718,10 +718,17 @@ class OandaQ:
         
         return n_float16(p.DataFrame(self.instruments).set_index('instrument').ix[instrument, 'pip'])
 
-    def calcDoublingFactorPeriod(self, x):
+    #print calcDoublingFactorPeriod(500, x=2)
+    #print calcDoublingFactorPeriod(500, x=1-10./100)
+    # 0.138725571133
+    # -0.0210698831199
+    # source: https://en.wikipedia.org/wiki/Rule_of_72
+    def calcDoublingFactorPeriod(self, P, x=2):
         self.qd._getMethod()
         
-        return 100*((n.power(10, log10(2)/x))-1)
+        # P =  ln(2)/ln(1+R/100) 
+        # R = 100 * ( 10^(ln(2)/P - 1)  )
+        return 100*((n.power(10, n.log10(x)/P))-1)
     
     def wew(self, ds):
         #print '---2---'
@@ -909,8 +916,9 @@ class OandaQ:
             #print fdf['pipval']
             fdf['ple'] = (fdf['currentprice'] - fdf['price']) * fdf.ix[:,'poleTanh'] * fdf['units'] * pow(fdf['pask'], fdf['pow'])
             fdf['plpecnt'] = n_dot(n_divide(fdf['ple'], self.getAccountInfo()['balance']), 100)
-            fdf['period72'] = 500
+            fdf['period72'] = 100
             fdf['doublineFactorPeriod'] = self.calcDoublingFactorPeriod(fdf['period72'])
+            fdf['losingFactorRate'] = self.calcDoublingFactorPeriod(fdf['period72'], x=1-(10./100))
             fdf['age'] = (n.ones(len(fdf['time']))*ttnow) - self.oandaToTimestamp(fdf['time'])
             
             #print fdf.ix[:,'instrument units plpcnt pips'.split(' ')].transpose()
@@ -932,6 +940,7 @@ class OandaQ:
                 plpcntExSpread = fdf['plpecnt'][i]
                 doublineFactorPeriod = fdf['doublineFactorPeriod'][i]
                 age = fdf['age'][i]
+                losingFactorRate = fdf['losingFactorRate'][i]
                 pips = fdf['pips'][i]
                 
                 #print doublineFactorPeriod
@@ -943,7 +952,7 @@ class OandaQ:
                     self.gotoMarket()
                 #print plpcntExSpread
 
-                if age >= 300 and pips < 0:
+                if (age >= 300 and pips < 0) or plpcntExSpread <= losingFactorRate:
                     print 'closing trade: {0}-{1}'.format(tid, instrument)
                     self.oandaConnection().close_trade(self.aid, tid)
                     #time.sleep(0.5)
