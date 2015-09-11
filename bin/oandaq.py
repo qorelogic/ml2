@@ -880,7 +880,7 @@ class OandaQ:
             #print fdf.ix[:,:]#.to_dict()
             #os.system('clear')
 
-            self.logEquity()
+            #self.logEquity()
 
             tspm = float(time.time())*100
             #print tspm
