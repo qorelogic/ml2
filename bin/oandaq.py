@@ -988,6 +988,11 @@ class OandaQ:
             except Exception as e: print e
     
     def gotoMarket(self, manifest=None, dryrun=False):
+        t0 = threading.Thread(target=self.gotoMarketT, args=(manifest, dryrun))
+        t0.daemon = False
+        t0.start()
+
+    def gotoMarketT(self, manifest, dryrun):
         self.qd._getMethod()
         
         if manifest == None:
@@ -996,10 +1001,9 @@ class OandaQ:
         	mlog = fp.read().strip().split('\n')
         	#print mlog
         	manifest = mlog[len(mlog)-1].strip().split(',')
-        	print manifest
+        	self.log(manifest)
         	fp.close()
 
-        self = OandaQ()
         trades = self.oandaConnection().get_trades(self.aid)['trades']
         trades = p.DataFrame(trades)#.transpose()
         try:
@@ -1007,11 +1011,10 @@ class OandaQ:
             trades['stop'] = list(abs(trades['price'] - trades['stopLoss'])*10000)
         except:
             ''
-        print trades.ix[:,'instrument price side stopLoss stop units'.split(' ')]
+        self.log(trades.ix[:,'instrument price side stopLoss stop units'.split(' ')])
         #print trades.ix[:,:]
         
         for i in manifest:
-            print 
     
             pair = i[0:6]
             side = i[6:7]
@@ -1023,34 +1026,46 @@ class OandaQ:
             cmd = "print self.trade(3, 30, '{0}', '{1}', nostoploss=True)".format(pair, sideS)
             try:
                 if pair not in list(trades.ix[:,'instrument']):
-                    print 'no position open in trade table: opening trade..'
-                    self.runCmd(cmd, dryrun=dryrun)
+                    self.log('no position open in trade table: opening trade..')
+                    #self.runCmd(cmd, dryrun=dryrun)
+                    t1 = threading.Thread(target=self.runCmd, args=(cmd, dryrun))
+                    t1.daemon = False
+                    t1.start()
             except:
                     # if len(trades) is 0 do this:
-                    self.runCmd(cmd, dryrun=dryrun)
+                    #self.runCmd(cmd, dryrun=dryrun)
+                    t2 = threading.Thread(target=self.runCmd, args=(cmd, dryrun))
+                    t2.daemon = False
+                    t2.start()
                 
-            print '------'
-            print '------'
-            print i
-            print '------'
+            self.log('------')
+            self.log('------')
+            self.log(i)
+            self.log('------')
             
             try:
                 mtrades = trades.ix[(trades['instrument'] == pair),['instrument','side','units']]
                 sideN = mtrades.get_values()[0][1]
                 units = mtrades.get_values()[0][2]
-                print units
-                print 'for {0} from {1} to {2}'.format(pair, sideN, sideO)
+                self.log(units)
+                self.log('for {0} from {1} to {2}'.format(pair, sideN, sideO))
                 #print (trades['instrument'] == pair)
                 if sideO != sideN:
-                    print 'new opposite signal, reversing open position to: '+sideN
-                    self.runCmd("print self.oandaConnection().close_position('{0}', '{1}')".format(self.aid, pair))
+                    self.log('new opposite signal, reversing open position to: '+sideN)
+                    cmd = "print self.oandaConnection().close_position('{0}', '{1}')".format(self.aid, pair)
+                    #self.runCmd(cmd)
+                    t3 = threading.Thread(target=self.runCmd, args=(cmd, dryrun))
+                    t3.daemon = False
+                    t3.start()
 
                     sideNS = 'b' if side == '^' else 's'
-                    self.runCmd("print self.trade(3, 30, '{0}', '{1}', nostoploss=True)".format(pair, sideNS))
+                    cmd = "print self.trade(3, 30, '{0}', '{1}', nostoploss=True)".format(pair, sideNS)
+                    #self.runCmd(cmd)
+                    t4 = threading.Thread(target=self.runCmd, args=(cmd, dryrun))
+                    t4.daemon = False
+                    t4.start()
             except:
                 print 'exp 12'
-                
-            print
     
     def syntheticCurrencyTable(self, currs, homeCurrency='USD'):
         self.qd._getMethod()
