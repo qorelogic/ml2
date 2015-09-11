@@ -592,10 +592,11 @@ class OandaQ:
         ob = ''
         #ob += '{0} {1}'.format(pair, granularity)
         fname = '/mldev/bin/data/oanda/ticks/{0}/{0}-{1}.csv'.format(pair, granularity)
+        self.log('updating {0} {1}'.format(pair, granularity))
         try:    
             self.dfa[pair][granularity]
         except Exception as e:
-            print e
+            self.log('{0} {1} {2}'.format(e, pair, granularity))
             # if dataframe not in memory
             self.log('{0} {1} dataframe not in memory'.format(pair, granularity))
             try:
