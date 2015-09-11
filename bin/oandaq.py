@@ -804,6 +804,8 @@ class OandaQ:
         self.ticks[tick['instrument']] = tick 
         #print p.DataFrame(self.ticks).transpose()
         #print df
+        
+        ttnow = time.time()
    
         mdf = p.DataFrame()
         
@@ -865,8 +867,7 @@ class OandaQ:
             # display the dataframe        
             #columns = 'instrument price units side currentprice bid ask spread spreadpips plpcntExSpread pl plpcnt pips trail trailpips'.split(' ')
             columns  = 'instrument price units side currentprice bid ask spreadpips plpcntExSpread pl plpcnt pips'.split(' ')
-            columns  = 'tid instrument side units price currentprice pl plpcnt plpcntExSpread pips spread spreadpips pipval poleTanh'.split(' ')
-            #columns  = 'instrument units plpcnt pips'.split(' ')
+            columns  = 'time tid instrument side units price currentprice pl plpcnt plpcntExSpread pips spread spreadpips pipval poleTanh'.split(' ')
             fcolumns = 'price units side currprice bid ask spread pl%-spread pl$ pl% pips trail trailpips'.split(' ')
             amdf = mdf.ix[:, columns]
             #amdf['id'] = amdf.index
@@ -910,9 +911,10 @@ class OandaQ:
             fdf['plpecnt'] = n_dot(n_divide(fdf['ple'], self.getAccountInfo()['balance']), 100)
             fdf['period72'] = 500
             fdf['doublineFactorPeriod'] = self.calcDoublingFactorPeriod(fdf['period72'])
+            fdf['age'] = (n.ones(len(fdf['time']))*ttnow) - self.oandaToTimestamp(fdf['time'])
             
-            print
-            print fdf.transpose()
+            #print fdf.ix[:,'instrument units plpcnt pips'.split(' ')].transpose()
+            print fdf.ix[:,'units side plpcnt pl pips age'.split(' ')]
             #print fdf.ix[:,:]#.to_dict()
             #os.system('clear')
             #tspm = float(time.time())*100
@@ -923,12 +925,15 @@ class OandaQ:
             #time.sleep(0.10)
 
             #print len(mdf)
-            #print mdf
-            for i in xrange(len(mdf)):
+            
+            for i in xrange(len(mdf.index)):
                 tid = mdf.index[i]
                 instrument = mdf['instrument'].ix[tid,:]
-                plpcntExSpread = fdf['plpecnt'].ix[fdf.index[i],:]
-                doublineFactorPeriod = fdf['doublineFactorPeriod'].ix[fdf.index[i],:]
+                plpcntExSpread = fdf['plpecnt'][i]
+                doublineFactorPeriod = fdf['doublineFactorPeriod'][i]
+                age = fdf['age'][i]
+                pips = fdf['pips'][i]
+                
                 #print doublineFactorPeriod
                 if plpcntExSpread >= doublineFactorPeriod: # and False:
                     print 'closing trade: {0}-{1}'.format(tid, instrument)
@@ -937,6 +942,12 @@ class OandaQ:
                     #time.sleep(1)
                     self.gotoMarket()
                 #print plpcntExSpread
+
+                if age >= 300 and pips < 0:
+                    print 'closing trade: {0}-{1}'.format(tid, instrument)
+                    self.oandaConnection().close_trade(self.aid, tid)
+                    #time.sleep(0.5)
+                    self.gotoMarket()
 
 #            print '---------------------------------------------------------------------'
 
