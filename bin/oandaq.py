@@ -949,7 +949,8 @@ class OandaQ:
                     self.oandaConnection().close_trade(self.aid, tid)
                     
                     #time.sleep(1)
-                    self.gotoMarket()
+                    #self.gotoMarket(dryrun=True)
+                    self.gotoMarket(dryrun=False)
                 #print plpcntExSpread
 
                 if (age >= 300 and pips < 0) or plpcntExSpread <= losingFactorRate:
