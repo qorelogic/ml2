@@ -27,6 +27,9 @@ qd = QoreDebug()
 qd.off()
 qd.stackTraceOff()
 
+# import celery message-queue tasks
+from mqtasks import *
+
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # todo: fix jbd2 io read write issue
@@ -99,6 +102,7 @@ class MyStreamer(oandapy.Streamer):
                     break
                 if case('csv'):
                     csv = ",".join(csvc)            
+	            appendCsv.delay(csv, '{0}/{1}.csv'.format(self.hdir, pair))
                     #print p.DataFrame(data['tick'], index=[0]).to_string(index=False).split('\n')[1]
                     #pair = data['tick']['instrument']
                     #fp = open('{0}/{1}.csv'.format(self.hdir, pair), 'a')
