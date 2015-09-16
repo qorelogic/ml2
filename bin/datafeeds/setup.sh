@@ -26,7 +26,7 @@ minstall() {
 		echo 'linked datafeeds tmuxifier layout.'
 	fi
 	if [ ! -f $mldir/lib/oanda/oandapy/oandapy.py ]; then
-		mkdir $mldir/lib/oanda/
+		mkdir -p $mldir/lib/oanda/
 		echo 'oandapy'
 		git clone https://github.com/oanda/oandapy.git /ml.dev/lib/oanda/oandapy
 		echo 'cloned oandapy.'
@@ -39,6 +39,21 @@ minstall() {
 		echo 'export PYTHONPATH=$PYTHONPATH:/ml.dev/lib/oanda/oandapy' >> ~/.bashrc
 		echo 'adding PYTHONPATH export ~/.bashrc'
 	fi
+
+	# python packacges for datafeeds
+	if [ "`python -c 'import QSTK' 2>&1`" != "" ]; then
+            sudo pip install QSTK
+	fi
+	if [ "`python -c 'import Quandl' 2>&1`" != "" ]; then
+            sudo pip install Quandl
+	fi
+	if [ "`python -c 'import html2text' 2>&1`" != "" ]; then
+            sudo pip install html2text
+	fi
+	if [ "`python -c 'import selenium' 2>&1`" != "" ]; then
+            sudo pip install selenium
+	fi
+
 	echo ''
 	echo 'install complete.'
 }
