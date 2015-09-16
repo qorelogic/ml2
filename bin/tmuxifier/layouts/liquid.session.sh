@@ -11,6 +11,7 @@ if initialize_session "liquid"; then
 
   # Load a defined window layout.
   load_window "qlm"
+  load_window "zmq"
   load_window "babysit"
   #load_window "h2o"
   load_window "datafeeds"
