@@ -1,14 +1,23 @@
 
 import urllib2 as u
 import json as j
-import os, errno
+import os, errno, sys
 import logging
 import re
+import pandas as p
+import traceback
 
 #logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
 logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
 
 hdir = '/ml.live/bin/data/cache'
+
+from numpy import array as n_array
+from numpy import rint as n_rint
+from numpy import tanh as n_tanh
+from numpy import power as n_power
+from numpy import e as n_e
+from numpy import string0 as n_string0
 
 def debug(str, verbosity=8):
     #if verbosity == 9:
@@ -17,6 +26,62 @@ def debug(str, verbosity=8):
         logging.debug(str)
 
         return str
+
+class QoreDebug:
+    
+    def __init__(self, on=False, stackTrace=False):
+        self._on        = on
+        self.stackTrace = stackTrace
+        
+    def on(self):
+        self.debugOn()
+        
+    def off(self):
+        self.debugOff()
+        
+    def debugOn(self):
+        self._on = True
+        
+    def debugOff(self):
+        self._on = False
+        
+    def stackTraceOn(self):
+        self.stackTrace = True
+        
+    def stackTraceOff(self):
+        self.stackTrace = False
+        
+    # source: http://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
+    def _getMethod(self):
+        
+        if self._on == True:
+            print
+            print '=============================='
+            print '{1} for {0}():'.format(sys._getframe(1).f_code.co_name, 'call stack')
+            if self.stackTrace == True:
+                for i in range(2,10):
+                    try:    print ' - {0}()'.format(sys._getframe(i).f_code.co_name)
+                    except: break
+            print '------------------------------'
+
+    def printTraceBack(self):
+        if self._on == True:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print "*** print_tb:"
+            traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+            print "*** print_exception:"
+            traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
+
+# source: http://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python
+class switch(object):
+    value = None
+    def __new__(class_, value):
+        class_.value = value
+        return True
+
+def case(*args):
+    return any((arg == switch.value for arg in args))
+
 
 def cleanJsonContent(t):
     return re.sub(re.compile(r'[\s]+'), ' ', ''.join(t.split('\n')))
@@ -73,6 +138,23 @@ def mkdir_p(path):
         if exc.errno == errno.EEXIST and os.path.isdir(path):
             pass
         else: raise
+
+def readcache(fname):
+    return p.read_csv(fname, index_col=0)
+
+def writecache(df, fname):
+    mkdir_p(os.path.dirname(fname))
+    df.to_csv(fname)
+    
+def cacheme(cmd, fname):
+    try:
+        df = readcache(fname)
+    except:
+        
+        exec('df = '+cmd)
+        writecache(df, fname)
+    return df
+
 
 #for i in range(len(allPositions2['noasnoas'])):
 #    try:
@@ -167,3 +249,57 @@ assert prepTestDataFrame(df) == ['a', 'buy', 1, 'b', 'sell', 2, 'c', 'sell', 3]
     
     return forAssertion
 
+
+class QoreScrapy:
+    def makeItems(self, df, itemClass):
+        items = []
+        df = p.DataFrame.from_dict(df, orient='index').transpose().fillna('')
+        for i in xrange(len(df)):
+            ct = []
+            for j in xrange(len(df.ix[i,:])):
+                k = list(df.keys())[j]                
+                v = df.ix[i,k].replace("\'","\\'")
+                pair = "{0}='{1}'".format(k, v.encode('utf-8'))
+                ct.append(pair)
+            # import the item class
+            exec('import {0}'.format(re.sub(re.compile(r'(.*?)\..*'), '\\1', itemClass)))
+            # append to items
+            try:
+                exec('items.append({0})'.format("{0}({1})".format(itemClass, ", ".join(ct))))
+            except:
+                print itemClass
+                print ct
+        return items
+
+
+def babysitTrades2(qq, acc):
+    #acc = qq.oq.oanda2.get_account(qq.oq.aid)
+    bal = acc['balance']
+
+    relatedPairs = qq.oq.getPairsRelatedToOandaTickers('EUR_USD')
+    pairs = list(n_array(p.DataFrame(relatedPairs['lsp']).ix[:,0], dtype=n_string0))
+    prices = p.DataFrame(qq.oq.oanda2.get_prices(instruments=','.join(pairs))['prices'])
+    cupris = prices.set_index('instrument').ix['EUR_USD',['ask','bid']].transpose().describe()['top']#.ix['EUR_USD',:]
+
+    trades = p.DataFrame(qq.oq.oanda2.get_trades(qq.oq.aid)['trades'])
+    trades['cprice'] = cupris
+    pl = (trades['price'] - cupris) * trades['units'] * cupris
+    trades['pl'] = pl
+    trades['pips'] = (trades['price'] - cupris) * 10000
+    trades['pcnt'] = pl / bal * 100
+
+    print list((trades['instrument'] == 'EUR_USD').index)
+    for i in xrange(len(trades)):
+        trade = trades.ix[i,:]
+        pl = trade['pl']
+        #print trade
+        if pl > 0:
+            print pl
+            print 'setting trailstop'
+            tid = trade['id']
+            #qq.oq.oanda2.modify_trade(qq.oq.aid, tid, trailingStop=10)
+        else:
+            print 'trailstop too small, patience!'
+            
+        #break
+    print trades.transpose()
