@@ -120,6 +120,7 @@ class spark {
 	#exec { 'run spark':      command => "$sparkHdir/spark-1.4.0-bin-hadoop2.4/bin/spark-shell",        timeout => 60, tries   => 3 }
 }
 
+# source: http://ryanuber.com/04-29-2010/simple-puppet-cron-management.html
 class crontab {
 	cron { "logEquity":
 	    command => "python /mldev/bin/logEquity.py",
