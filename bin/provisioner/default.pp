@@ -120,6 +120,15 @@ class spark {
 	#exec { 'run spark':      command => "$sparkHdir/spark-1.4.0-bin-hadoop2.4/bin/spark-shell",        timeout => 60, tries   => 3 }
 }
 
+class crontab {
+	cron { "logEquity":
+	    command => "python /mldev/bin/logEquity.py",
+	    user    => "qore",
+	    #hour    => 0,
+	    #minute  => 0
+	}
+}
+
 #include apache
 
 include system-update
@@ -128,3 +137,4 @@ include javart
 include h2o
 include spark
 include sparkling-water
+include crontab
