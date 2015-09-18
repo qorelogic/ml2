@@ -37,5 +37,31 @@ def zmq(name=None):
     return render_template('zmq-client.html', name=name, liquid_ipaddr=liquid_ipaddr)
     
 if __name__ == '__main__':
+
+    #ADMINS = ['yourname@example.com']
+    import logging
+    #from logging.handlers import SMTPHandler
+    #mail_handler = SMTPHandler('127.0.0.1',
+    #                           'server-error@example.com',
+    #                           ADMINS, 'YourApplication Failed')
+    #mail_handler.setLevel(logging.ERROR)
+    #app.logger.addHandler(mail_handler)
+    """
+    from logging.handlers import FileHandler
+    file_handler = FileHandler('/tmp/zmq-client.flask.py.log')
+    file_handler.setLevel(logging.WARNING)
+    app.logger.addHandler(file_handler)
+    """
+
+    from logging import StreamHandler
+    import sys
+    file_handler = StreamHandler(sys.stdout)
+    file_handler.setLevel(logging.DEBUG)
+    #file_handler.setLevel(logging.INFO)
+    #file_handler.setLevel(logging.WARNING)
+    #file_handler.setLevel(logging.ERROR)
+    #file_handler.setLevel(logging.CRITICAL)
+    app.logger.addHandler(file_handler)
+
     app.run(host='0.0.0.0')
     url_for('static', filename='style.css')
