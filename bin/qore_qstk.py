@@ -14,7 +14,7 @@ Created on January, 24, 2013
 @summary: Demonstrates the use of the CVXOPT portfolio optimization call.
 '''
 
-from qoreliquid import *
+#from qoreliquid import *
 
 # QSTK Imports
 import QSTK.qstkutil.qsdateutil as du

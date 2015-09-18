@@ -67,12 +67,26 @@
 
 <script>
 
+pairs = '{{pairs}}'
+console.log(pairs)
+console.log(pairs.split(','))
+
 // set up our data series with 150 random data points
 
-var seriesData = [ [], [], [], [], [], [], [], [], [] ];
-var random = new Rickshaw.Fixtures.RandomData(150);
 
-for (var i = 0; i < 150; i++) {
+var seriesData = []; 
+pa = pairs.split(','); 
+for (var i = 0; i < pa.length; i++) {
+    seriesData[i] = []
+}
+
+lh = 300
+
+//var seriesData = [ [], [], [], [], [], [], [], [], [] ];
+//var random = new Rickshaw.Fixtures.RandomData(lh);
+var random = new Rickshaw.Fixtures.Data(lh);
+
+for (var i = 0; i < lh; i++) {
 	random.addData(seriesData);
 }
 
@@ -202,16 +216,35 @@ var messages = [
 	"Added documentation for new methods"
 ];
 
+// ---------
+var host = "{{liquid_ipaddr}}"
+var ws = new WebSocket("ws://"+host+":8888");
+ws.onopen = function() {
+   ws.send("Hello, world");
+   ws.send('Wassup');
+};
+ws.onmessage = function (evt) {
+   //alert(evt.data);
+   //var current = $('#messages').val();
+   //current = current + "\n" + evt.data;
+   //$('#messages').val(current);
+    $('#messages').html(evt.data);
+    random.removeData(seriesData);
+    random.addData(seriesData, evt.data);
+    graph.update();
+   //console.log("message: " + evt.data);
+};
+
 ri = Math.round(Math.random()*1000, 1)
 //intervali = 250
 intervali = ri
 
-setInterval( function() {
+/*setInterval( function() {
 	random.removeData(seriesData);
 	random.addData(seriesData);
 	graph.update();
 
-}, intervali );
+}, intervali );*/
 
 function addAnnotation(force) {
 	if (messages.length > 0 && (force || Math.random() >= 0.95)) {

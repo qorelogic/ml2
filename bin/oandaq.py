@@ -800,7 +800,7 @@ class OandaQ:
         except Exception as e: print e
         return ''
     
-    def babysitTrades(self, df, tick):
+    def babysitTrades(self, df, tick, verbose=True):
         #self.qd._getMethod()
     
   	#self.stdscr.clear()  # Clear the screen
@@ -922,7 +922,8 @@ class OandaQ:
             fdf['age'] = (n.ones(len(fdf['time']))*ttnow) - self.oandaToTimestamp(fdf['time'])
             
             #print fdf.ix[:,'instrument units plpcnt pips'.split(' ')].transpose()
-            print fdf.ix[:,'units side plpcnt pl pips age'.split(' ')]
+            if verbose == True:
+                print fdf.ix[:,'units side plpcnt pl pips age'.split(' ')]
             #print fdf.ix[:,:]#.to_dict()
             #os.system('clear')
             #tspm = float(time.time())*100

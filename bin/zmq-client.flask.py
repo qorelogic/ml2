@@ -2,6 +2,12 @@
 from flask import Flask, url_for
 from flask import render_template
 
+from oandaq import OandaQ
+#from qorequant import QoreQuant
+
+oq = OandaQ()
+#qq = QoreQuant()
+
 app = Flask(__name__)
 
 import socket, fcntl, struct
@@ -32,9 +38,12 @@ def hello(name=None):
 @app.route('/zmq/')
 @app.route('/zmq/<name>')
 def zmq(name=None):
-
+    import ujson as j
+    pairs = oq.getBabySitPairs()#.split(',')
+    #print pairs
+    #pairs = j.dumps(pairs)
     liquid_ipaddr=get_ip_address('eth0')
-    return render_template('zmq-client.html', name=name, liquid_ipaddr=liquid_ipaddr)
+    return render_template('zmq-client.html', name=name, liquid_ipaddr=liquid_ipaddr, pairs=pairs)
     
 if __name__ == '__main__':
 

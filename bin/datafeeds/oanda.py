@@ -46,11 +46,11 @@ except IOError, e:
     
 oq = OandaQ()
 
-modes = 'demo,plotly,csv,babysit'.split(',')
+modes = 'demo,plotly,csv,babysit,babysitzmq'.split(',')
 
 def usage():
     qd._getMethod()
-    return "usage: demo | plotly | csv | babysit"
+    return "usage: demo | plotly | csv | babysit | babysitzmq"
 
 #------------------------------
 # tick streamer (data feed)
@@ -84,6 +84,18 @@ class MyStreamer(oandapy.Streamer):
                 self.account = oq.oandaConnection().get_account(oq.aid)
 #		oq.gotoMarket()
                 break
+            if case('babysitzmq'):
+                self.trades = oq.oandaConnection().get_trades(oq.aid)['trades']
+                self.account = oq.oandaConnection().get_account(oq.aid)
+                #oq.gotoMarket()
+
+                ctx = zmq.Context()
+                #socket = ctx.socket(zmq.REP)
+                #socket = ctx.socket(zmq.PUSH)
+                self.socket = ctx.socket(zmq.PUB);
+                self.socket.bind('tcp://*:5555')
+                break
+
             print usage()
             break
 
@@ -117,6 +129,23 @@ class MyStreamer(oandapy.Streamer):
                     res = oq.babysitTrades(self.trades, data['tick'])
                     #if res == False:
                     #    print data
+                    break
+                if case('babysitzmq'):
+                    res = oq.babysitTrades(self.trades, data['tick'], verbose=False)
+                    #print j.dumps(res.get_values())
+                    #print (res.to_dict())
+                    csv = ",".join(csvc)
+                    #if res == False:
+                    #    print data
+                    
+                    #self.socket.recv(0) # only for REP
+                    #stri = 'world {0}'.format(int(n.random.rand()*10))
+                    stri = '{0}'.format(csv)
+                    #print stri
+                    topic = 'tester'
+                    self.socket.send("%s %s" % (topic, stri)) # only for PUB
+                    #self.socket.send(stri)
+                    
                     break
                 print usage()
                 break
@@ -167,6 +196,9 @@ def do_work(mode, forever = True):
                     pairs = rtc.getInstruments()
                     break
                 if case('babysit'):
+                    pairs = oq.getBabySitPairs()
+                    break
+                if case('babysitzmq'):
                     pairs = oq.getBabySitPairs()
                     break
                 print usage()
@@ -240,6 +272,7 @@ if __name__ == '__main__':
             raise
         do_work(sys.argv[1], True)
     except Exception as e:
+        qd.printTraceBack()
         print e
         print usage()
         
