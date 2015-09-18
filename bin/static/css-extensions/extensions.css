@@ -139,16 +139,16 @@ label.disabled {
 	display: block;
 }
 label[for=area] {
-	background: url(../images/om_stack.png);
+	background: url(/static/rickshaw/images/om_stack.png);
 }
 label[for=line] {
-	background: url(../images/om_lines.png);
+	background: url(/static/rickshaw/images/om_lines.png);
 }
 label[for=bar] {
-	background: url(../images/om_bar.png);
+	background: url(/static/rickshaw/images/om_bar.png);
 }
 label[for=scatter] {
-	background: url(../images/om_scatter.png);
+	background: url(/static/rickshaw/images/om_scatter.png);
 }
 #offset_form label,
 #interpolation_form label {
@@ -162,23 +162,23 @@ label[for=scatter] {
 	padding-left: 36px;
 }
 label[for=stack] {
-	background-image: url(../images/offset_stack.png);
+	background-image: url(/static/rickshaw/images/offset_stack.png);
 }
 label[for=pct] {
-	background-image: url(../images/offset_pct.png);
+	background-image: url(/static/rickshaw/images/offset_pct.png);
 }
 label[for=stream] {
-	background-image: url(../images/offset_stream.png);
+	background-image: url(/static/rickshaw/images/offset_stream.png);
 }
 label[for=value] {
-	background-image: url(../images/offset_value.png);
+	background-image: url(/static/rickshaw/images/offset_value.png);
 }
 label[for=cardinal] {
-	background-image: url(../images/interp_cardinal.png);
+	background-image: url(/static/rickshaw/images/interp_cardinal.png);
 }
 label[for=linear] {
-	background-image: url(../images/interp_linear.png);
+	background-image: url(/static/rickshaw/images/interp_linear.png);
 }
 label[for=step] {
-	background-image: url(../images/interp_step.png);
+	background-image: url(/static/rickshaw/images/interp_step.png);
 }
