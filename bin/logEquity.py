@@ -6,6 +6,7 @@ except: sys.path.append('/mldev/bin')
 #from oandaq import OandaQ
 from qorequant import QoreQuant
 from pandas import read_csv as p_read_csv
+from qore import mkdir_p
 
 df = p_read_csv('/mldev/bin/datafeeds/config.csv', header=None)
 # get the active oanda account indeces
