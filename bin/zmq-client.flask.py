@@ -38,7 +38,7 @@ def hello(name=None):
 @app.route('/zmq/')
 @app.route('/zmq/<name>')
 def zmq(name=None):
-    import ujson as j
+    #import ujson as j
     pairs = oq.getBabySitPairs()#.split(',')
     #print pairs
     #pairs = j.dumps(pairs)

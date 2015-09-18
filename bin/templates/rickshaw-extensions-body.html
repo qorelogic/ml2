@@ -65,11 +65,41 @@
 
 </div>
 
+
+<div>
+    <table id="rates">
+	<thead>
+		<tr>
+			<th id="pair">pair</th>
+			<th id="avg">avg</th>
+			<th id="bid">bid</th>
+			<th id="ask">ask</th>
+			<th id="spread">spread</th>
+			<th id="time">time</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr></tr>
+	</tbody>
+    </table>
+</div>
+
+<style>
+table#rates td { border: solid 1px #000 }
+table#rates td { padding: 5px }
+table#rates td { background-color: #999 }
+table#rates td { color: #fff }
+table#rates { width: 1180px; }
+#pair { width: 100px; }
+#avg, #bid, #ask { width: 200px; }
+#spread { width: 200px; }
+</style>
+
 <script>
 
 pairs = '{{pairs}}'
-console.log(pairs)
-console.log(pairs.split(','))
+//console.log(pairs)
+//console.log(pairs.split(','))
 
 // set up our data series with 150 random data points
 
@@ -94,6 +124,12 @@ var palette = new Rickshaw.Color.Palette( { scheme: 'classic9' } );
 
 // instantiate our graph!
 
+pa0     = ['Moscow','Shanghai','Amsterdam','Paris','Tokyo','London','New York']
+
+series = []
+for (var i = 0; i < pa.length; i++) series[i] = { color: palette.color(), data: seriesData[i], name: pa[i] };
+//console.log(series);
+
 var graph = new Rickshaw.Graph( {
 	element: document.getElementById("chart"),
 	width: 900,
@@ -101,37 +137,7 @@ var graph = new Rickshaw.Graph( {
 	renderer: 'area',
 	stroke: true,
 	preserve: true,
-	series: [
-		{
-			color: palette.color(),
-			data: seriesData[0],
-			name: 'Moscow'
-		}, {
-			color: palette.color(),
-			data: seriesData[1],
-			name: 'Shanghai'
-		}, {
-			color: palette.color(),
-			data: seriesData[2],
-			name: 'Amsterdam'
-		}, {
-			color: palette.color(),
-			data: seriesData[3],
-			name: 'Paris'
-		}, {
-			color: palette.color(),
-			data: seriesData[4],
-			name: 'Tokyo'
-		}, {
-			color: palette.color(),
-			data: seriesData[5],
-			name: 'London'
-		}, {
-			color: palette.color(),
-			data: seriesData[6],
-			name: 'New York'
-		}
-	]
+      series: series,
 } );
 
 graph.render();
@@ -223,16 +229,39 @@ ws.onopen = function() {
    ws.send("Hello, world");
    ws.send('Wassup');
 };
+
+rates = {}
+
 ws.onmessage = function (evt) {
    //alert(evt.data);
    //var current = $('#messages').val();
    //current = current + "\n" + evt.data;
    //$('#messages').val(current);
-    $('#messages').html(evt.data);
+   //$('#messages').html(evt.data);
     random.removeData(seriesData);
     random.addData(seriesData, evt.data);
     graph.update();
-   //console.log("message: " + evt.data);
+    //console.log("message: " + evt.data);
+    dda = evt.data.split(' ');
+    dda = dda[1].split(',');
+    avg = (Number(dda[1]) + Number(dda[2]))/2;
+    ts = dda[3];
+    pair = dda[0];
+    spread = Math.abs(Number(dda[1]) - Number(dda[2]));
+    spread = Math.round(spread*10000,2)
+    //console.log(pair+' '+dda[1]+' '+dda[2]+' '+avg);
+    rates[pair] = avg;
+    //console.log(pair+' '+avg);
+    //console.log(rates);
+    selTd = $('table#rates tr#'+pair+' td.rate');
+    //console.log(pair+' '+selTd.length);
+    if (selTd.length == 0) {
+        app1 = '<tr id="'+pair+'"><td class="title">'+pair+'</td><td class="rate">'+avg+'</td><td class="bid">'+dda[1]+'</td><td class="ask">'+dda[2]+'</td><td class="spread">'+spread+'</td><td class="time">'+ts+'</td></tr>'
+        $('table#rates tbody').append(app1);
+    }
+    else {
+	selTd.html(avg);
+    }
 };
 
 ri = Math.round(Math.random()*1000, 1)
