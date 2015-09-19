@@ -67,6 +67,20 @@ minstall() {
             sudo pip install selenium
 	fi
 
+	# MQ
+	if [ "`python -c 'import zmq' 2>&1`" != "" ]; then
+            sudo pip install pyzmq
+	fi
+	if [ "`python -c 'import tailf' 2>&1`" != "" ]; then
+            sudo pip install pytailf
+	fi
+	if [ "`python -c 'import flask' 2>&1`" != "" ]; then
+            sudo pip install flask
+	fi
+	if [ "`python -c 'import celery 2>&1`" != "" ]; then
+            sudo pip install celery
+	fi
+
 	# still testing on ipython notebook
       if [ "`python -c 'import bitstampy' 2>&1`" != "" ]; then
             sudo pip install bitstampy
