@@ -126,7 +126,8 @@ class crontab {
 	    command => "python /mldev/bin/logEquity.py",
 	    user    => "qore",
 	    #hour    => 0,
-	    #minute  => 0
+	    #minute  => 0,
+	    weekday  => [1,2,3,4,5]
 	}
 }
 
