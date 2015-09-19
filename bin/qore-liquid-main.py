@@ -250,6 +250,13 @@ class QsForecaster:
         def generateNDayForecast(self):
             ''
     
+        def getTechnicals(self):
+
+            qq = QoreQuant()
+            df = qq.analyseInvestingTechnical(showPlot=False)
+            print df.transpose()
+
+    
 trader = QsTrader()
 forecaster = QsForecaster()
 
@@ -281,6 +288,15 @@ def test():
 if __name__ == "__main__":
     #main()
     #test()
-
-    do_work(True)
-    #do_work_debug(False)
+    def usage():
+        return 'usage: <ta=technical analysis | fc=forecast>'
+    try:    sys.argv[1]
+    except: 
+        print usage()
+        sys.exit(0)
+    
+    if sys.argv[1] == 'ta':
+        forecaster.getTechnicals()
+    if sys.argv[1] == 'fc':
+        do_work(True)
+        #do_work_debug(False)
