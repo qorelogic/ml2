@@ -24,6 +24,7 @@ minstall() {
 	if [ "`which puppet`" == "" ]; then
             sudo apt-get update
             sudo apt-get -y install puppet
+            #sudo apt-get -y install shellinabox
 	fi
 	if [ ! -f $mlocal/layouts/qlm.window.sh ]; then
 		echo "$mlocal/layouts contents:"
@@ -65,6 +66,10 @@ minstall() {
 	fi
 	if [ "`python -c 'import selenium' 2>&1`" != "" ]; then
             sudo pip install selenium
+	fi
+
+	if [ "`python -c 'import celery 2>&1`" != "" ]; then
+            sudo pip install celery
 	fi
 
 	# still testing on ipython notebook
