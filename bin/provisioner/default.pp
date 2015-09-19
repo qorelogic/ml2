@@ -156,6 +156,7 @@ class nodejs {
 
 # source: http://ryanuber.com/04-29-2010/simple-puppet-cron-management.html
 # cheatsheet: http://bencane.com/2012/09/03/cheat-sheet-crontab-by-example/
+# source: http://ryanuber.com/04-29-2010/simple-puppet-cron-management.html
 class crontab {
 	cron { "logEquity":
 	    command => "python /mldev/bin/logEquity.py",
