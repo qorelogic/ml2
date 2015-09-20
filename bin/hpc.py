@@ -49,6 +49,7 @@ class HPC:
                 print '  ssh -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
                 print '  ipython notebook --ip={0}'.format(droplet.ip_address)
                 print '  ping {0}'.format(droplet.ip_address)
+                print '  http://{0}:5000'.format(droplet.ip_address)
         return droplets
 
         #    #droplet.shutdown()
