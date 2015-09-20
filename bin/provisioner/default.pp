@@ -27,6 +27,7 @@ class system-update {
     require => Exec['apt-get update'],
   }
 }
+import 'cassandra.pp'
 
 class apache {
   package { "apache2":
@@ -54,6 +55,14 @@ class unzip {
     require => Class["system-update"],
   }
 }
+
+class curl {
+  package { "curl":
+    ensure  => present,
+    require => Class["system-update"],
+  }
+}
+
 
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
@@ -163,7 +172,7 @@ class crontab {
 	    user    => "qore",
 	    #hour    => 0,
 	    #minute  => 0,
-	    weekday  => [1,2,3,4,5]
+	    weekday  => [0,1,2,3,4,5]
 	}
 }
 
