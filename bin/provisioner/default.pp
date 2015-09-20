@@ -50,6 +50,13 @@ class unzip {
   }
 }
 
+class curl {
+  package { "curl":
+    ensure  => present,
+    require => Class["system-update"],
+  }
+}
+
 # source: http://docs.datastax.com/en/cassandra/2.1/cassandra/install/installDeb_t.html
 class cassandra {
 	exec { 
@@ -60,6 +67,7 @@ class cassandra {
 	exec { 
 		"AddDataStaxReposKey2aptitudeTrustedKeys":
                 command => 'curl -L http://debian.datastax.com/debian/repo_key | apt-key add -',
+		require => Class["curl"],
 		before  => Exec["InstallCassandra"]
 	}
 	$xv = '9'
@@ -169,6 +177,7 @@ class crontab {
 
 include system-update
 include unzip
+include curl
 include javart
 include h2o
 include spark
