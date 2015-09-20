@@ -129,6 +129,11 @@ class crontab {
 	    #minute  => 0,
 	    weekday  => [1,2,3,4,5]
 	}
+	cron { "dataminer":
+	    command => "nice -15 /mldev/bin/dataminer.sh",
+	    user    => "qore",
+	    minute  => [0,15,30,45]
+	}
 }
 
 #include apache
