@@ -11,17 +11,17 @@ $h2oTarball   = "http://h2o-release.s3.amazonaws.com/h2o/rel-simons/7/h2o-3.0.1.
 $sparkTarball = "http://d3kbcqa49mib13.cloudfront.net/spark-1.4.0-bin-hadoop2.4.tgz"
 $sparklingWaterTarball = "http://h2o-release.s3.amazonaws.com/sparkling-water/rel-1.4/3/sparkling-water-1.4.3.zip"
 
+$nodeV           = "node-v4.1.0-linux-x64"
+$nodeTarball     = "$nodeV.tar.gz"
+$nodeTarballURL  = "https://nodejs.org/dist/latest/$nodeTarball"
+$nodeHdir        = "$installHdir/node"
+
 class system-update {
   exec { 'apt-get update':
     command => 'apt-get update',
   }
+import 'provisioner/cassandra.pp'
 
-  $sysPackages = [ "build-essential" ]
-  package { $sysPackages:
-    ensure => "installed",
-    require => Exec['apt-get update'],
-  }
-}
 
 class apache {
   package { "apache2":
@@ -49,6 +49,43 @@ class unzip {
     require => Class["system-update"],
   }
 }
+
+class curl {
+  package { "curl":
+    ensure  => present,
+    require => Class["system-update"],
+  }
+}
+
+# source: http://docs.datastax.com/en/cassandra/2.1/cassandra/install/installDeb_t.html
+class cassandra {
+	exec { 
+		"AddDataStaxCommunityRepository2cassandra.sources.list":
+		command => 'echo "deb http://debian.datastax.com/community stable main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list',
+		before  => Exec["AddDataStaxReposKey2aptitudeTrustedKeys"]
+	}
+	exec { 
+		"AddDataStaxReposKey2aptitudeTrustedKeys":
+                command => 'curl -L http://debian.datastax.com/debian/repo_key | apt-key add -',
+		require => Class["curl"],
+		before  => Exec["InstallCassandra"]
+	}
+	$xv = '9'
+	exec { 
+		"InstallCassandra":
+                command => "apt-get install dsc21=2.1.${xv}-1 cassandra=2.1.${xv}",
+		before  => Exec["InstallCassandraTools"],
+		require => Class["system-update"]
+	}
+	exec { 
+		## Optional utilities
+		"InstallCassandraTools":
+                command => "apt-get install cassandra-tools=2.1.${xv}",
+		require => Class["system-update"]
+	}
+}
+
+
 
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
@@ -120,13 +157,50 @@ class spark {
 	#exec { 'run spark':      command => "$sparkHdir/spark-1.4.0-bin-hadoop2.4/bin/spark-shell",        timeout => 60, tries   => 3 }
 }
 
+class nodejs {
+	exec { "mkdir -p $nodeHdir": command => "mkdir -p $nodeHdir" }
+	exec { "wget -nc $nodeTarball":
+		command => "wget -nc $nodeTarballURL -P $nodeHdir/",
+		timeout => 60,
+		tries   => 3,
+		before  => Exec["untar node"],
+	}
+	exec { 'untar node': 
+		command => "tar zxf $nodeHdir/$nodeTarball -C $nodeHdir/", 
+		timeout => 60, 
+		tries   => 3,
+		#require => File["$nodeHdir/$nodeTarball"],
+		before  => Exec["rm node symlinks"],
+	}
+	exec { 'rm node symlinks':
+		command => "rm -f /usr/bin/node; rm -f /usr/bin/npm;", 
+		timeout => 60, 
+		tries   => 3,
+		before  => Exec["node symlinks"],
+	}
+	exec { 'node symlinks':
+		command => "ln -s $nodeHdir/$nodeV/bin/node /usr/bin/node; ln -s $nodeHdir/$nodeV/bin/npm /usr/bin/npm;",
+		timeout => 60, 
+		tries   => 3,
+	}
+	#exec { 'run node':      command => "$nodeHdir/bin/node",        timeout => 60, tries   => 3 }
+}
+
+# source: http://ryanuber.com/04-29-2010/simple-puppet-cron-management.html
+# cheatsheet: http://bencane.com/2012/09/03/cheat-sheet-crontab-by-example/
 # source: http://ryanuber.com/04-29-2010/simple-puppet-cron-management.html
 class crontab {
 	cron { "logEquity":
 	    command => "python /mldev/bin/logEquity.py",
 	    user    => "qore",
 	    #hour    => 0,
-	    #minute  => 0
+	    #minute  => 0,
+	    weekday  => [1,2,3,4,5]
+	}
+	cron { "dataminer":
+	    command => "nice -15 /mldev/bin/dataminer.sh",
+	    user    => "qore",
+	    minute  => [0,15,30,45]
 	}
 }
 
@@ -134,8 +208,11 @@ class crontab {
 
 include system-update
 include unzip
+include curl
 include javart
 include h2o
 include spark
 include sparkling-water
 include crontab
+include nodejs
+include cassandra
