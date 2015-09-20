@@ -41,6 +41,43 @@ class unzip {
   }
 }
 
+class curl {
+  package { "curl":
+    ensure  => present,
+    require => Class["system-update"],
+  }
+}
+
+# source: http://docs.datastax.com/en/cassandra/2.1/cassandra/install/installDeb_t.html
+class cassandra {
+	exec { 
+		"AddDataStaxCommunityRepository2cassandra.sources.list":
+		command => 'echo "deb http://debian.datastax.com/community stable main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list',
+		before  => Exec["AddDataStaxReposKey2aptitudeTrustedKeys"]
+	}
+	exec { 
+		"AddDataStaxReposKey2aptitudeTrustedKeys":
+                command => 'curl -L http://debian.datastax.com/debian/repo_key | apt-key add -',
+		require => Class["curl"],
+		before  => Exec["InstallCassandra"]
+	}
+	$xv = '9'
+	exec { 
+		"InstallCassandra":
+                command => "apt-get install dsc21=2.1.${xv}-1 cassandra=2.1.${xv}",
+		before  => Exec["InstallCassandraTools"],
+		require => Class["system-update"]
+	}
+	exec { 
+		## Optional utilities
+		"InstallCassandraTools":
+                command => "apt-get install cassandra-tools=2.1.${xv}",
+		require => Class["system-update"]
+	}
+}
+
+
+
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
 	exec { "mkdir_${h2oHdir}": command => "mkdir -p $h2oHdir" }
@@ -131,6 +168,7 @@ class crontab {
 
 include system-update
 include unzip
+include curl
 include javart
 include h2o
 include spark
