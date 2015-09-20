@@ -11,17 +11,8 @@ $h2oTarball   = "http://h2o-release.s3.amazonaws.com/h2o/rel-simons/7/h2o-3.0.1.
 $sparkTarball = "http://d3kbcqa49mib13.cloudfront.net/spark-1.4.0-bin-hadoop2.4.tgz"
 $sparklingWaterTarball = "http://h2o-release.s3.amazonaws.com/sparkling-water/rel-1.4/3/sparkling-water-1.4.3.zip"
 
-class system-update {
-  exec { 'apt-get update':
-    command => 'apt-get update',
-  }
+import 'provisioner/cassandra.pp'
 
-  $sysPackages = [ "build-essential" ]
-  package { $sysPackages:
-    ensure => "installed",
-    require => Exec['apt-get update'],
-  }
-}
 
 class apache {
   package { "apache2":
