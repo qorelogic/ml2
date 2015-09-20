@@ -20,6 +20,7 @@ class system-update {
   exec { 'apt-get update':
     command => 'apt-get update',
   }
+import 'provisioner/cassandra.pp'
 
   $sysPackages = [ "build-essential" ]
   package { $sysPackages:
@@ -174,15 +175,22 @@ class crontab {
 	    #minute  => 0,
 	    weekday  => [0,1,2,3,4,5]
 	}
+	cron { "dataminer":
+	    command => "nice -15 /mldev/bin/dataminer.sh",
+	    user    => "qore",
+	    minute  => [0,15,30,45]
+	}
 }
 
 #include apache
 
 include system-update
 include unzip
+include curl
 include javart
 include h2o
 include spark
 include sparkling-water
 include crontab
 include nodejs
+include cassandra
