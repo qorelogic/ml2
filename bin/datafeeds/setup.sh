@@ -77,7 +77,7 @@ minstall() {
 	if [ "`python -c 'import flask' 2>&1`" != "" ]; then
             sudo pip install flask
 	fi
-	if [ "`python -c 'import celery 2>&1`" != "" ]; then
+	if [ "`python -c 'import celery' 2>&1`" != "" ]; then
             sudo pip install celery
 	fi
 
