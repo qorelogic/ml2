@@ -48,11 +48,11 @@ except IOError, e:
     
 oq = OandaQ()
 
-modes = 'demo,plotly,csv,babysit,babysitzmq'.split(',')
+modes = 'demo,plotly,csv,babysit,zmq'.split(',')
 
 def usage():
     qd._getMethod()
-    return "usage: demo | plotly | csv | babysit | babysitzmq"
+    return "usage: demo | plotly | csv | babysit | zmq"
 
 #------------------------------
 # tick streamer (data feed)
@@ -86,7 +86,7 @@ class MyStreamer(oandapy.Streamer):
                 self.account = oq.oandaConnection().get_account(oq.aid)
 #		oq.gotoMarket()
                 break
-            if case('babysitzmq'):
+            if case('zmq'):
                 self.trades = oq.oandaConnection().get_trades(oq.aid)['trades']
                 self.account = oq.oandaConnection().get_account(oq.aid)
                 #oq.gotoMarket()
@@ -132,8 +132,8 @@ class MyStreamer(oandapy.Streamer):
                     #if res == False:
                     #    print data
                     break
-                if case('babysitzmq'):
                     res = oq.babysitTrades(self.trades, data['tick'], verbose=False)
+                if case('zmq'):
                     #print j.dumps(res.get_values())
                     #print (res.to_dict())
                     csv = ",".join(csvc)
@@ -200,7 +200,7 @@ def do_work(mode, forever = True):
                 if case('babysit'):
                     pairs = oq.getBabySitPairs()
                     break
-                if case('babysitzmq'):
+                if case('zmq'):
                     pairs = oq.getBabySitPairs()
                     break
                 print usage()
