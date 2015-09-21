@@ -13,7 +13,9 @@ split_v 50 1
 
 # Run commands.
 run_cmd ".gpull" 0
-run_cmd "python zmq-server.py" 0
+#run_cmd "python zmq-server.py" 0
+run_cmd "cd datafeeds/" 0
+run_cmd "./babysit.sh" 0
 run_cmd " python zmq-client.ws.py" 2
 run_cmd " python zmq-client.flask.py" 3
 run_cmd "htop" 1

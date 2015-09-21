@@ -132,8 +132,8 @@ class MyStreamer(oandapy.Streamer):
                     #if res == False:
                     #    print data
                     break
-                    res = oq.babysitTrades(self.trades, data['tick'], verbose=False)
                 if case('zmq'):
+                    res = oq.babysitTrades(self.trades, data['tick'], verbose=True)
                     #print j.dumps(res.get_values())
                     #print (res.to_dict())
                     csv = ",".join(csvc)

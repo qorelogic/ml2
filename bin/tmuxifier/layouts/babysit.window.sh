@@ -12,7 +12,8 @@ split_v 50 1
 
 # Run commands.
 run_cmd ".gpull" 0
-run_cmd "python oanda.py babysit" 0
+#run_cmd "python oanda.py babysit" 0
+run_cmd "./babysit.sh" 0
 run_cmd ".gpull" 1
 run_cmd "htop" 2
 
