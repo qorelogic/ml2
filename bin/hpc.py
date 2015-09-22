@@ -34,14 +34,16 @@ class HPC:
         for i in im:
             ims[i.id] = i#.name
         for img in ims:
-            print '{0} {1} {2}'.format(ims[img].id, ims[img].name, ims[img].created_at)
+            print '{0} {1} {2}'.format(ims[img].id, ims[img].name.split(' ')[0], ims[img].created_at)
         print
         return ims
 
     def getLastImage(self):
         self.qd._getMethod()
         
-        ims = self.getImages().keys()
+        images = self.getImages()
+        #print images
+        ims = images.keys()
         return n.max(ims)
     
     def getNodes(self, quiet=False):
@@ -173,7 +175,10 @@ class HPC:
         #print lastImage.created_at
         #print lastImage.name
         lim = lastImage.name.split('rc')
-        return '{0}{1}{2}'.format(lim[0], 'rc', '%02d' % (int(lim[1])+1))
+        #print lim
+        lim = '{0}{1}{2}'.format(lim[0], 'rc', '%02d' % (int(lim[1].split(' ')[0])+1))
+        #print lim
+        return lim
 
     def createNextSnapshotname2(self):
         self.qd._getMethod()
