@@ -4,9 +4,17 @@ import digitalocean
 import numpy as n
 import time
 
+from qore import QoreDebug
+
+qd = QoreDebug()
+qd.off()
+qd.stackTraceOff()
+
 class HPC:
     
     def __init__(self):
+        self.qd = qd
+        self.qd._getMethod()
         
         self.token = "fb13f87e074de9bcfba1fca4844b4823a85272d7902418a5776445bcdea250b9"
         self.pkey  = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCoa61+j5xyI1c0cfRhmx1ggEzScbzs2VBLvEsbNB5M1rNqWqVT/Wou7XnEWZzijcNuuZtYDZZRegCRfN4VH+DNpT4uaykShYp1XNRuDK7fXttDbxhg2XIrfBoW6lvTt1K2xWQP/dOMg0DjRmjRbGL3OQpcyaOofmE7+0WMDqySa/MhYk7AJhgBVYoBh43W0f4Jv+JAaxz4RTxiHGwIIYDHLDI67nupWXgzFOvj29LNh3/qtfJAQUhdBRfcuOpZyglBxYlMw5o/7euSe+oYhmdWM11g/0MOOYonkOl1Yg3/E5AACV7P9y5db7aVttAfnAD6XXIqUj74u3PHJ8Nji5dB kiizaa@gmail.com'
@@ -14,6 +22,7 @@ class HPC:
         self.manager = digitalocean.Manager(token=self.token)
         
     def getImages(self):
+        self.qd._getMethod()
         
         #im = self.manager.get_all_images()
         #im = self.manager.get_images()
@@ -25,16 +34,20 @@ class HPC:
         for i in im:
             ims[i.id] = i#.name
         for img in ims:
-            print '{0} {1} {2}'.format(ims[img].id, ims[img].name, ims[img].created_at)
+            print '{0} {1} {2}'.format(ims[img].id, ims[img].name.split(' ')[0], ims[img].created_at)
         print
         return ims
 
     def getLastImage(self):
+        self.qd._getMethod()
         
-        ims = self.getImages().keys()
+        images = self.getImages()
+        #print images
+        ims = images.keys()
         return n.max(ims)
     
     def getNodes(self, quiet=False):
+        self.qd._getMethod()
         
         #print
         #print 'nodes:'
@@ -45,21 +58,23 @@ class HPC:
             #droplets.append(droplet)
             if quiet == False:
                 print droplet.id
-                print '  ping {0}'.format(droplet.ip_address)
-                print '  ssh -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
+                print '    ping {0}'.format(droplet.ip_address)
+                print '    ssh -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
                 print ''
-                print 'X11 Forwarding via SSH@{0}'.format(droplet.ip_address)
-                print '  ssh -X -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
-                print '  ipython notebook --ip={0}'.format(droplet.ip_address)
-                print '  ping {0}'.format(droplet.ip_address)
-                print '  http://{0}:5000'.format(droplet.ip_address)
-                print '  rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(droplet.ip_address)
-                print '  rdesktop -u qore -p - {0}'.format(droplet.ip_address)
+                print '  X11 Forwarding via SSH@{0}'.format(droplet.ip_address)
+                print '    ssh -X -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
+                print '    ipython notebook --ip={0}'.format(droplet.ip_address)
+                print '    ping {0}'.format(droplet.ip_address)
+                print '    http://{0}:5000'.format(droplet.ip_address)
+                print '    rsync -av /mldev/bin/datafeeds/config.csv \\'
+                print '              root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(droplet.ip_address)
+                print '    rdesktop -u qore -p - {0}'.format(droplet.ip_address)
         return droplets
 
         #    #droplet.shutdown()
     
     def createNode(self):
+        self.qd._getMethod()
         
         key = digitalocean.SSHKey(token=self.token)
         dkey = key.load_by_pub_key(self.pkey)
@@ -75,6 +90,8 @@ class HPC:
         droplet.create()
     
     def makeNewSnapshot(self, droplet):
+        self.qd._getMethod()
+        
         newSnapshotName = self.createNextSnapshotname()
         try:
             droplet.take_snapshot(newSnapshotName)
@@ -87,6 +104,7 @@ class HPC:
 
     
     def snapshotAllDroplets(self):
+        self.qd._getMethod()
         
         # make snapshot of droplets
         wait = 5
@@ -118,6 +136,7 @@ class HPC:
                 print 'nothing done'
 
     def destroyAllDroplets(self):
+        self.qd._getMethod()
         
         # destroy droplets
         wait = 5
@@ -146,17 +165,26 @@ class HPC:
                 print 'nothing done'
 
     def getLastImageName(self):
+        self.qd._getMethod()
+        
         lastImage = self.getImages()[self.getLastImage()]
         return lastImage.name
 
     def createNextSnapshotname(self):
+        self.qd._getMethod()
+        
         lastImage = self.getImages()[self.getLastImage()]
         #print lastImage.created_at
         #print lastImage.name
         lim = lastImage.name.split('rc')
-        return '{0}{1}{2}'.format(lim[0], 'rc', '%02d' % (int(lim[1])+1))
+        #print lim
+        lim = '{0}{1}{2}'.format(lim[0], 'rc', '%02d' % (int(lim[1].split(' ')[0])+1))
+        #print lim
+        return lim
 
     def createNextSnapshotname2(self):
+        self.qd._getMethod()
+        
         images = self.getImages()
         lastImage = images[self.getLastImage()].name.split(' ')[0]
         str1 = lastImage.split('rc')[0]
