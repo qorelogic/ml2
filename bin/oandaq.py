@@ -746,7 +746,7 @@ class OandaQ:
         #print ds
         return ds
 
-    def logEquity(self, daemon=True):
+    def logEquity(self, daemon=True, csvSave=True, mongodbSave=True):
         self.qd._getMethod()
 
         fname = '/mldev/bin/data/oanda/logs/{0}.equity.log.csv'.format(self.oandaUsername)
@@ -766,17 +766,20 @@ class OandaQ:
                 df = p.DataFrame(self.oandaConnection().get_account(i), index=[ctime])#.transpose()
                 df['ts'] = ctime
                 #print df.columns
+                
                 ldf = list(n.array(df, dtype=string0)[0])
                 csv = ','.join(ldf)
-                print csv
-                fp = open(fname, 'a')
-                fp.write(csv+'\n')
-                fp.close()
+                print csv                
+                if csvSave == True:
+                    fp = open(fname, 'a')
+                    fp.write(csv+'\n')
+                    fp.close()
 
                 # insert to mongodb ql.equity
-                df['timestamp'] = ctime
-                dictdf = df.transpose().to_dict()
-                self.mongo.ql.equity.insert(dictdf[dictdf.keys()[0]])
+                if mongodbSave == True:
+                    df['timestamp'] = ctime
+                    dictdf = df.transpose().to_dict()
+                    self.mongo.ql.equity.insert(dictdf[dictdf.keys()[0]])
         else:
             print 'not updating equity log '+fname
             print '{0} {1}'.format(self.ptime, self.ctime)

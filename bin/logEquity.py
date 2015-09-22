@@ -14,4 +14,4 @@ ain = list(df.ix[list(df[3] == 1),0].index)
 for i in ain:
     #qq.oq = OandaQ(verbose=True, selectOandaAccount=i)    
     qq = QoreQuant(verbose=True, selectOandaAccount=i)
-    qq.oq.logEquity(daemon=False)
+    qq.oq.logEquity(daemon=False, csvSave=False)
