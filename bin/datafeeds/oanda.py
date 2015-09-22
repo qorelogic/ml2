@@ -49,11 +49,11 @@ except IOError, e:
     
 oq = OandaQ()
 
-modes = 'demo,plotly,csv,babysit,zmq'.split(',')
+modes = 'demo,feed,plotly,csv,babysit,zmq'.split(',')
 
 def usage():
     qd._getMethod()
-    return "usage: demo | plotly | csv | babysit | zmq"
+    return "usage: demo | feed | plotly | csv | babysit | zmq"
 
 #------------------------------
 # tick streamer (data feed)
@@ -73,6 +73,9 @@ class MyStreamer(oandapy.Streamer):
 
         while switch(self.mode):
             if case('demo'):
+                break
+            if case('feed'):
+                self.mongo = mong.MongoClient()
                 break
             if case('csv'):
                 break
@@ -117,6 +120,10 @@ class MyStreamer(oandapy.Streamer):
             while switch(self.mode):
                 if case('demo'):
                     print data
+                    break
+                if case('feed'):
+                    # insert to ql mongodb
+                    self.mongo.ql.ticks.insert(data['tick'])
                     break
                 if case('csv'):
                     csv = ",".join(csvc)            
@@ -195,6 +202,9 @@ def do_work(mode, forever = True):
 
             while switch(stream.mode):
                 if case('demo'):
+                    pairs = ",".join(list(n.array(p.DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
+                    break
+                if case('feed'):
                     pairs = ",".join(list(n.array(p.DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
                     break
                 if case('csv'):
