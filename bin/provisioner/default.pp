@@ -20,7 +20,7 @@ class system-update {
   exec { 'apt-get update':
     command => 'apt-get update',
   }
-import 'provisioner/cassandra.pp'
+#import 'provisioner/cassandra.pp'
 
   $sysPackages = [ "build-essential" ]
   package { $sysPackages:
@@ -28,6 +28,24 @@ import 'provisioner/cassandra.pp'
     require => Exec['apt-get update'],
   }
 }
+
+class xrdp {
+
+  $sysPackages = [ "xfce4", "xrdp" ]
+  package { $sysPackages:
+    ensure => "installed",
+    require => Exec['apt-get update'],
+    before  => Exec["setXsession"],
+  }
+  exec { 'setXsession':
+    command => 'cp -p /mldev/bin/provisioner/dot.xsession /home/qore/.xsession',
+    before  => Exec["restart xrdp"],
+  }
+  exec { 'restart xrdp':
+    command => '/etc/init.d/xrdp restart',
+  }
+}
+
 import 'cassandra.pp'
 
 class apache {
@@ -63,7 +81,6 @@ class curl {
     require => Class["system-update"],
   }
 }
-
 
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
@@ -194,3 +211,4 @@ include sparkling-water
 include crontab
 include nodejs
 include cassandra
+include xrdp
