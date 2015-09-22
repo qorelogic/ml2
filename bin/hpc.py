@@ -58,15 +58,17 @@ class HPC:
             #droplets.append(droplet)
             if quiet == False:
                 print droplet.id
-                print '  ping {0}'.format(droplet.ip_address)
-                print '  ssh -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
+                print '    ping {0}'.format(droplet.ip_address)
+                print '    ssh -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
                 print ''
-                print 'X11 Forwarding via SSH@{0}'.format(droplet.ip_address)
-                print '  ssh -X -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
-                print '  ipython notebook --ip={0}'.format(droplet.ip_address)
-                print '  ping {0}'.format(droplet.ip_address)
-                print '  rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(droplet.ip_address)
-                print '  rdesktop -u qore -p - {0}'.format(droplet.ip_address)
+                print '  X11 Forwarding via SSH@{0}'.format(droplet.ip_address)
+                print '    ssh -X -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
+                print '    ipython notebook --ip={0}'.format(droplet.ip_address)
+                print '    ping {0}'.format(droplet.ip_address)
+                print '    http://{0}:5000'.format(droplet.ip_address)
+                print '    rsync -av /mldev/bin/datafeeds/config.csv \\'
+                print '              root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(droplet.ip_address)
+                print '    rdesktop -u qore -p - {0}'.format(droplet.ip_address)
         return droplets
 
         #    #droplet.shutdown()
