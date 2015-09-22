@@ -158,10 +158,6 @@ class MyStreamer(oandapy.Streamer):
                     topic = 'tester'
                     self.socket.send("%s %s" % (topic, stri)) # only for PUB
                     #self.socket.send(stri)
-                    
-                    # insert to ql mongodb
-                    self.mongo.ql.ticks.insert(data['tick'])
-                    
                     break
                 print usage()
                 break
