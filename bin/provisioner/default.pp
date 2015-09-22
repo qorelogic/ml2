@@ -20,7 +20,6 @@ class system-update {
   exec { 'apt-get update':
     command => 'apt-get update',
   }
-#import 'provisioner/cassandra.pp'
 
   $sysPackages = [ "build-essential" ]
   package { $sysPackages:
