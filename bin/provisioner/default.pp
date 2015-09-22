@@ -28,6 +28,23 @@ class system-update {
   }
 }
 
+class xrdp {
+
+  $sysPackages = [ "xfce4", "xrdp" ]
+  package { $sysPackages:
+    ensure => "installed",
+    require => Exec['apt-get update'],
+    before  => Exec["setXsession"],
+  }
+  exec { 'setXsession':
+    command => 'cp -p /mldev/bin/provisioner/dot.xsession /home/qore/.xsession',
+    before  => Exec["restart xrdp"],
+  }
+  exec { 'restart xrdp':
+    command => '/etc/init.d/xrdp restart',
+  }
+}
+
 import 'cassandra.pp'
 
 class apache {
@@ -161,3 +178,4 @@ include spark
 include sparkling-water
 include crontab
 include cassandra
+include xrdp
