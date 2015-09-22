@@ -1,5 +1,5 @@
 
-import 'systemupdate.pp'
+#import 'systemupdate.pp'
 
 # source: http://docs.datastax.com/en/cassandra/2.1/cassandra/install/installDeb_t.html
 class cassandra {
