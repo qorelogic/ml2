@@ -24,6 +24,7 @@ import socket
 import matplotlib.pyplot as plt
 import zmq, time
 import ujson as j
+import pymongo as mong
 
 qd = QoreDebug()
 qd.off()
@@ -96,6 +97,9 @@ class MyStreamer(oandapy.Streamer):
                 #socket = ctx.socket(zmq.PUSH)
                 self.socket = ctx.socket(zmq.PUB);
                 self.socket.bind('tcp://*:5555')
+                
+                self.mongo = mong.MongoClient()
+                
                 break
 
             print usage()
@@ -147,6 +151,9 @@ class MyStreamer(oandapy.Streamer):
                     topic = 'tester'
                     self.socket.send("%s %s" % (topic, stri)) # only for PUB
                     #self.socket.send(stri)
+                    
+                    # insert to ql mongodb
+                    self.mongo.ql.ticks.insert(data['tick'])
                     
                     break
                 print usage()
