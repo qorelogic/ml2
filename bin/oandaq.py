@@ -40,6 +40,7 @@ import threading,time
 import itertools as it
 
 import oandapy
+import pymongo as mong
 
 class OandaQ:
     
@@ -110,6 +111,8 @@ class OandaQ:
         self.accountInfo = {}
         self.ctime = 0
         self.ptime = 0
+
+        self.mongo = mong.MongoClient()
         
     def log(self, msg, printDot=False):
         #self.qd._getMethod()
@@ -763,11 +766,17 @@ class OandaQ:
                 df = p.DataFrame(self.oandaConnection().get_account(i), index=[ctime])#.transpose()
                 df['ts'] = ctime
                 #print df.columns
-                csv = ','.join(list(n.array(df, dtype=string0)[0]))
+                ldf = list(n.array(df, dtype=string0)[0])
+                csv = ','.join(ldf)
                 print csv
                 fp = open(fname, 'a')
                 fp.write(csv+'\n')
                 fp.close()
+
+                # insert to mongodb ql.equity
+                df['timestamp'] = ctime
+                dictdf = df.transpose().to_dict()
+                self.mongo.ql.equity.insert(dictdf[dictdf.keys()[0]])
         else:
             print 'not updating equity log '+fname
             print '{0} {1}'.format(self.ptime, self.ctime)
