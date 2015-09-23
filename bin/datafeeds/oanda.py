@@ -55,6 +55,12 @@ def usage():
     qd._getMethod()
     return "usage: demo | feed | plotly | csv | babysit | zmq"
 
+def getCsvc(data):
+    tick = p.DataFrame(data['tick'], index=[0])
+    tick['timestamp'] = oq.oandaToTimestamp(tick['time'].ix[0])
+    csvc = n.array(tick.ix[:,[2,0,1,3,4]].get_values()[0], dtype=str)
+    return csvc
+
 #------------------------------
 # tick streamer (data feed)
 class MyStreamer(oandapy.Streamer):
@@ -114,9 +120,6 @@ class MyStreamer(oandapy.Streamer):
         #self.ticks += 1
         #if self.ticks == 2: self.disconnect()
         try:
-            tick = p.DataFrame(data['tick'], index=[0])
-            tick['timestamp'] = oq.oandaToTimestamp(tick['time'].ix[0])
-            csvc = n.array(tick.ix[:,[2,0,1,3,4]].get_values()[0], dtype=str)
             while switch(self.mode):
                 if case('demo'):
                     print data
@@ -126,7 +129,7 @@ class MyStreamer(oandapy.Streamer):
                     self.mongo.ql.ticks.insert(data['tick'])
                     break
                 if case('csv'):
-                    csv = ",".join(csvc)            
+                    csv = ",".join(getCsvc(data))            
 	              #appendCsv.delay(csv, '{0}/{1}.csv'.format(self.hdir, pair))
                     #print p.DataFrame(data['tick'], index=[0]).to_string(index=False).split('\n')[1]
                     #pair = data['tick']['instrument']
@@ -136,7 +139,7 @@ class MyStreamer(oandapy.Streamer):
                     print csv
                     break
                 if case('plotly'):
-                    self.rtc.update(csvc)
+                    self.rtc.update(getCsvc(data))
                     break
                 if case('babysit'):
                     res = oq.babysitTrades(self.trades, data['tick'])
@@ -147,7 +150,7 @@ class MyStreamer(oandapy.Streamer):
                     res = oq.babysitTrades(self.trades, data['tick'], verbose=True)
                     #print j.dumps(res.get_values())
                     #print (res.to_dict())
-                    csv = ",".join(csvc)
+                    csv = ",".join(getCsvc(data))
                     #if res == False:
                     #    print data
                     
@@ -290,4 +293,3 @@ if __name__ == '__main__':
         qd.printTraceBack()
         print e
         print usage()
-        
