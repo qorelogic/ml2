@@ -28,8 +28,8 @@ def takeScreenshot(fname, verbose=False):
     #    print e
 
     try:
-        #w = gtk.gdk.get_default_root_window()
-        w = gtk.gdk.get_default_root_window().get_screen().get_active_window()
+        w = gtk.gdk.get_default_root_window() # grabs the entire window
+        #w = gtk.gdk.get_default_root_window().get_screen().get_active_window() # grabs only the window
         sz = w.get_size()
         if verbose == True: print "The size of the window is %d x %d" % sz
         pb = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB,False,8,sz[0],sz[1])
