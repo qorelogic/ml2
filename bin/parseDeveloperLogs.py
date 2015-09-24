@@ -1,3 +1,5 @@
+#!/usr/bin/env python 
+
 import os, time
 import datetime as dd
 
@@ -10,11 +12,13 @@ def defp(pt):
 defp('/ml.dev/bin')
 defp('/ml.dev/lib/oanda/oandapy')
 
+hdir = '/ml.dev/screenshots/developerLogs/screen/qore2/'
+
 from pandas import DataFrame as pDataFrame
 
 try:
     li = []
-    for fname in os.popen('ls').read().split('\n'):
+    for fname in os.popen('ls {0}'.format(hdir)).read().split('\n'):
         #print fname
         #os.popen('eog '+fname)
         ts = fname.split('-')[3].split('.')[0]
