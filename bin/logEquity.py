@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import sys
 try: sys.path.index('/mldev/bin')
