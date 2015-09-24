@@ -12,10 +12,13 @@ defp('/ml.dev/bin')
 defp('/ml.dev/lib/oanda/oandapy')
 
 from oandaq import OandaQ
-import pandas as p
+#import pandas as p
 import pymongo
 
-@profile
+
+# uncomment thr @profile line for profiling via kernprof 
+#   as per source: http://www.huyng.com/posts/python-performance-analysis/
+#@profile
 def parseEquityLogs():
     
     # Connection to Mongo DB
@@ -47,36 +50,39 @@ def parseEquityLogs():
     for file in files:
         
         l = ''
-        for l in os.popen('cat {0}/logs/{1}'.format(hdir, file)).readlines():
+        for l in os.popen('cat {0}/logs/{1} 2> /dev/null'.format(hdir, file)).readlines():
             
             currt = time.time()
             #est = (currt - st) / lnum * int(tlines)
             
             # percentage complete
-            pcnt       = (float(lnum) / int(tlines) * 100)
+            pcnt   = (float(lnum) / int(tlines) * 100)
             
             #  [in seconds from start of run]
-            endest     = (currt - st) / pcnt * 100
+            endest = (currt - st) / pcnt * 100
             
             # ETA [in seconds]
-            eta = st + endest - currt
+            eta    = st + endest - currt
     
             li = l.split('\n')[0].split(',')
+            #dc = p.DataFrame(li, index=header).to_dict()[0]
+            # source: http://stackoverflow.com/questions/4576115/python-list-to-dictionary
+            dc = dict(zip(header, li)) # 6.76X speedup over the above p.Dataframe method
             if lnum % 1000 == 0:
                 #print '{0} of {1} [{2} {3} {4}]'.format(lnum, tlines, pcnt, endest, eta)
                 #print str(lnum)+' of '+str(tlines)+' ['+str(pcnt)+' '+str(endest)+' '+str(eta)+']'
                 print '%s of %s [%s %s %s]' % (lnum, tlines, pcnt, endest, eta)
-            #dc = p.DataFrame(li, index=header).to_dict()[0]
-            dc = dict(zip(header, li)) # 27.75X speedup over p.Dataframe method
-            #print dc   
+                #print dc
             
+            #try:
             db.equity.insert(dc)
+            #except Exception as e:
+            #print e
             
             lnum += 1
-            #time.sleep(0.01)
             
             # uncomment for kernprof
-            #if lnum  > 5000: break
-        #if lnum  > 5000: break
+            #if lnum  > 1000: break
+        #if lnum  > 1000: break
             
 parseEquityLogs()
