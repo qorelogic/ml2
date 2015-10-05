@@ -81,11 +81,7 @@ class curl {
   }
 }
 
-class nfs-server {
-    package { "nfs-kernel-server":
-    ensure  => present,
-    require => Class["system-update"],
-    }
+class portmap {
     #package { "portmap":
     #ensure  => present,
     #require => Class["system-update"],
@@ -95,20 +91,27 @@ class nfs-server {
         ensure => "installed",
         require => Exec['apt-get update'],
     }
-    exec { "mkdir_nfs_share}":
+}
+
+class nfs-server {
+    package { "nfs-kernel-server":
+    ensure  => present,
+    require => Class["system-update","portmap"],
+    }
+    exec { "etc exports":
         command => "cat /etc/exports | grep -v '^/Opt/nfs'  | tee expo > /dev/null",
         timeout => 60,
         tries   => 3,
         #notify => Exec['unzip h2o'],
         before  => Exec["add2exports"],
     }
-    exec { "add2exports}":
+    exec { "add2exports":
         command => "echo '/Opt/nfs  192.168.3.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> expo",
         timeout => 60,
         tries   => 3,
         before  => Exec["nfs-kernel-server restart"],
     }
-    exec { "nfs-kernel-server restart}":
+    exec { "nfs-kernel-server restart":
         command => "service nfs-kernel-server restart",
         #command => "exportfs -a",
         timeout => 60,
@@ -120,16 +123,7 @@ class nfs-client {
     ensure  => present,
     require => Class["system-update"],
     }
-    #package { "portmap":
-    #ensure  => present,
-    #require => Class["system-update"],
-    #}
-    $sysPackages = [ "portmap" ]
-    package { $sysPackages:
-        ensure => "installed",
-        require => Exec['apt-get update'],
-    }
-    exec { "mkdir_nfs_share}":
+    exec { "mkdir_nfs_share":
         command => "mkdir /mnt/nfs-share",
         #cwd => "$h2oHdir",
         timeout => 60,
@@ -266,6 +260,7 @@ class crontab {
 #include apache
 
 include system-update
+include portmap
 include nfs-server
 include nfs-client
 include unzip
