@@ -4,24 +4,19 @@ window_root "/ml.dev/bin"
 
 # Create new window. If no argument is given, window name will be based on
 # layout file name.
-new_window "ml.dev"
+new_window "db"
 
 # Split window into panes.
-split_v 50
-#split_h 50 0
+split_v 66
+split_v 50 1
 
 # Run commands.
-#run_cmd "top"     # runs in active pane
-#run_cmd "date" 1  # runs in pane 1
-run_cmd "cd /ml.dev/bin" 0
-run_cmd "cd /ml.dev/bin" 1
-run_cmd "p" 0
-run_cmd "p" 1
-run_cmd "ls && git branch -v" 1
+run_cmd "watch -n3 \"mongo --quiet --eval 'db.investingWorldGovernmentBonds.stats()[\\\"count\\\"]' numbeo\"" 0
+run_cmd "watch -n3 \"mongo --quiet --eval 'db.equity.stats()[\\\"count\\\"]' ql\"" 1
+run_cmd "watch -n3 \"mongo --quiet --eval 'db.ticks.stats()[\\\"count\\\"]' ql\"" 2
 
 # Paste text
-#send_keys "top"    # paste into active pane
-#send_keys "date" 1 # paste into pane 1
+#send_keys "watch -n3 \"mongo --quiet --eval 'db.equity.stats()[\\\"count\\\"]' ql\"" 0
 
 # Set active pane.
-#select_pane 0
+select_pane 0
