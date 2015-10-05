@@ -196,6 +196,11 @@ class crontab {
 	    user    => "qore",
 	    minute  => [0,15,30,45]
 	}
+	cron { "dataminerInvestingWorldGovernmentBonds":
+	    command => "nice -15 /mldev/bin/dataminerInvestingWorldGovernmentBonds.sh",
+	    user    => "qore",
+	    minute  => [0,5,10,15,20,25,30,35,40,45,50,55]
+	}
 }
 
 #include apache
