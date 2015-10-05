@@ -81,6 +81,56 @@ class curl {
   }
 }
 
+class nfs-server {
+    package { "nfs-kernel-server":
+    ensure  => present,
+    require => Class["system-update"],
+    }
+    package { "portmap":
+    ensure  => present,
+    require => Class["system-update"],
+    }
+    exec { "mkdir_nfs_share}":
+        command => "cat /etc/exports | grep -v '^/Opt/nfs'  | tee expo > /dev/null",
+        timeout => 60,
+        tries   => 3,
+        #notify => Exec['unzip h2o'],
+        before  => Exec["add2exports"],
+    }
+    exec { "add2exports}":
+        command => "echo '/Opt/nfs  192.168.3.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> expo",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["nfs-kernel-server restart"],
+    }
+    exec { "nfs-kernel-server restart}":
+        command => "service nfs-kernel-server restart",
+        #command => "exportfs -a",
+        timeout => 60,
+        tries   => 3,
+    }
+}
+class nfs-client {
+    package { "nfs-common":
+    ensure  => present,
+    require => Class["system-update"],
+    }
+    package { "portmap":
+    ensure  => present,
+    require => Class["system-update"],
+    }
+    exec { "mkdir_nfs_share}":
+        command => "mkdir /mnt/nfs-share",
+        #cwd => "$h2oHdir",
+        timeout => 60,
+        tries   => 3,
+        #creates => "$h2oHdir/h2o-3.0.1.7.zip",
+        #refreshonly => true,
+        #notify => Exec['unzip h2o'],
+        #before  => Exec["unzip h2o"],
+    }
+}
+
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
 	exec { "mkdir_${h2oHdir}": command => "mkdir -p $h2oHdir" }
@@ -206,6 +256,8 @@ class crontab {
 #include apache
 
 include system-update
+include nfs-server
+include nfs-client
 include unzip
 include curl
 include javart
