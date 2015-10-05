@@ -13,6 +13,7 @@ if initialize_session "liquid"; then
   load_window "qlm"
   load_window "zmq"
   load_window "babysit"
+  load_window "db"
   #load_window "h2o"
   load_window "equity"
   load_window "datafeeds"
