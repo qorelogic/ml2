@@ -96,17 +96,17 @@ class portmap {
 class nfs-server {
     package { "nfs-kernel-server":
     ensure  => present,
-    require => Class["system-update","portmap"],
+    require => Class["system-update"],
     }
     exec { "etc exports":
-        command => "cat /etc/exports | grep -v '^/Opt/nfs'  | tee expo > /dev/null",
+        command => "/bin/grep -v '/mldev/bin/data' /etc/exports | /usr/bin/tee /etc/exports > /dev/null",
         timeout => 60,
         tries   => 3,
         #notify => Exec['unzip h2o'],
         before  => Exec["add2exports"],
     }
     exec { "add2exports":
-        command => "echo '/Opt/nfs  192.168.3.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> expo",
+        command => "echo '/mldev/bin/data  *.*.*.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> /etc/exports",
         timeout => 60,
         tries   => 3,
         before  => Exec["nfs-kernel-server restart"],
@@ -124,7 +124,7 @@ class nfs-client {
     require => Class["system-update"],
     }
     exec { "mkdir_nfs_share":
-        command => "mkdir /mnt/nfs-share",
+        command => "mkdir /mnt/nfs-share 2> /dev/null",
         #cwd => "$h2oHdir",
         timeout => 60,
         tries   => 3,
