@@ -86,9 +86,14 @@ class nfs-server {
     ensure  => present,
     require => Class["system-update"],
     }
-    package { "portmap":
-    ensure  => present,
-    require => Class["system-update"],
+    #package { "portmap":
+    #ensure  => present,
+    #require => Class["system-update"],
+    #}
+    $sysPackages = [ "portmap" ]
+    package { $sysPackages:
+        ensure => "installed",
+        require => Exec['apt-get update'],
     }
     exec { "mkdir_nfs_share}":
         command => "cat /etc/exports | grep -v '^/Opt/nfs'  | tee expo > /dev/null",
@@ -115,9 +120,14 @@ class nfs-client {
     ensure  => present,
     require => Class["system-update"],
     }
-    package { "portmap":
-    ensure  => present,
-    require => Class["system-update"],
+    #package { "portmap":
+    #ensure  => present,
+    #require => Class["system-update"],
+    #}
+    $sysPackages = [ "portmap" ]
+    package { $sysPackages:
+        ensure => "installed",
+        require => Exec['apt-get update'],
     }
     exec { "mkdir_nfs_share}":
         command => "mkdir /mnt/nfs-share",
