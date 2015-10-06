@@ -82,6 +82,7 @@ class curl {
 }
 
 class mongodb {
+#export LC_ALL=C
     exec { "mongo purge":
 	command => "sudo apt-get purge mongodb-org",
         timeout => 60,
