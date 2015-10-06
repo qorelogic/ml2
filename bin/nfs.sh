@@ -5,7 +5,9 @@ nfsmount() {
 	sudo mkdir /mnt/$miaddr 2> /dev/null
 	
 	#ssh -L 3049:localhost:2049 -oStrictHostKeyChecking=no root@$miaddr
-	sudo mount -t nfs -o port=2049 $miaddr:/mldev/bin/data /mnt/$miaddr
+	sudo umount /mnt/$miaddr
+	#sudo mount -t nfs -o port=2049 $miaddr:/mldev/bin/data /mnt/$miaddr
+	sudo mount -t nfs -o port=2049 $miaddr:/var/lib/mongodb /mnt/$miaddr
 }
 
 nfsmount 45.55.92.77
