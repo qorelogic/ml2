@@ -81,6 +81,45 @@ class curl {
   }
 }
 
+class mongodb {
+    exec { "mongo purge":
+	command => "sudo apt-get purge mongodb-org",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["mongo autoremove"],
+    }
+    exec { "mongo autoremove":
+	command => "sudo apt-get autoremove",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["mongo rm mongodb.list"],
+    }
+    exec { "mongo rm mongodb.list":
+	command => "rm /etc/apt/sources.list.d/mongodb.list",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["mongo add deb sources"],
+    }
+    exec { "mongo add deb sources":
+	command => "echo 'deb http://repo.mongodb.org/apt/debian wheezy/mongodb-org/3.0 main' | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["mongo aptget update"],
+    }
+    exec { "mongo aptget update":
+	command => "sudo apt-get update",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["mongo aptget install"],
+   }
+    exec { "mongo aptget install":
+	command => "sudo apt-get install -y --force-yes mongodb-org",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["add2exports"],
+    }
+}
+
 class portmap {
     #package { "portmap":
     #ensure  => present,
@@ -96,17 +135,23 @@ class portmap {
 class nfs-server {
     package { "nfs-kernel-server":
     ensure  => present,
-    require => Class["system-update","portmap"],
+    require => Class["system-update"],
     }
     exec { "etc exports":
-        command => "cat /etc/exports | grep -v '^/Opt/nfs'  | tee expo > /dev/null",
+        command => "/bin/grep -v '/mldev/bin/data' /etc/exports | grep -v '/var/lib/mongodb' | /usr/bin/tee /etc/exports > /dev/null",
         timeout => 60,
         tries   => 3,
         #notify => Exec['unzip h2o'],
         before  => Exec["add2exports"],
     }
     exec { "add2exports":
-        command => "echo '/Opt/nfs  192.168.3.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> expo",
+        command => "echo '/mldev/bin/data  *.*.*.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> /etc/exports",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["add2exports2"],
+    }
+    exec { "add2exports2":
+        command => "echo '/var/lib/mongodb  *.*.*.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> /etc/exports",
         timeout => 60,
         tries   => 3,
         before  => Exec["nfs-kernel-server restart"],
@@ -124,7 +169,7 @@ class nfs-client {
     require => Class["system-update"],
     }
     exec { "mkdir_nfs_share":
-        command => "mkdir /mnt/nfs-share",
+        command => "mkdir /mnt/nfs-share 2> /dev/null",
         #cwd => "$h2oHdir",
         timeout => 60,
         tries   => 3,
@@ -273,3 +318,4 @@ include crontab
 include nodejs
 include cassandra
 include xrdp
+include mongodb
