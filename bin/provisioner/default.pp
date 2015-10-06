@@ -99,7 +99,7 @@ class nfs-server {
     require => Class["system-update"],
     }
     exec { "etc exports":
-        command => "/bin/grep -v '/mldev/bin/data' /etc/exports | /usr/bin/tee /etc/exports > /dev/null",
+        command => "/bin/grep -v '/mldev/bin/data' /etc/exports | grep -v '/var/lib/mongodb' | /usr/bin/tee /etc/exports > /dev/null",
         timeout => 60,
         tries   => 3,
         #notify => Exec['unzip h2o'],
@@ -107,6 +107,12 @@ class nfs-server {
     }
     exec { "add2exports":
         command => "echo '/mldev/bin/data  *.*.*.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> /etc/exports",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["add2exports2"],
+    }
+    exec { "add2exports2":
+        command => "echo '/var/lib/mongodb  *.*.*.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> /etc/exports",
         timeout => 60,
         tries   => 3,
         before  => Exec["nfs-kernel-server restart"],
