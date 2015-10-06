@@ -81,6 +81,46 @@ class curl {
   }
 }
 
+class mongodb {
+#export LC_ALL=C
+    exec { "mongo purge":
+	command => "sudo apt-get purge mongodb-org",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["mongo autoremove"],
+    }
+    exec { "mongo autoremove":
+	command => "sudo apt-get autoremove",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["mongo rm mongodb.list"],
+    }
+    exec { "mongo rm mongodb.list":
+	command => "rm /etc/apt/sources.list.d/mongodb.list",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["mongo add deb sources"],
+    }
+    exec { "mongo add deb sources":
+	command => "echo 'deb http://repo.mongodb.org/apt/debian wheezy/mongodb-org/3.0 main' | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["mongo aptget update"],
+    }
+    exec { "mongo aptget update":
+	command => "sudo apt-get update",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["mongo aptget install"],
+   }
+    exec { "mongo aptget install":
+	command => "sudo apt-get install -y --force-yes mongodb-org",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["add2exports"],
+    }
+}
+
 class portmap {
     #package { "portmap":
     #ensure  => present,
@@ -279,3 +319,4 @@ include crontab
 include nodejs
 include cassandra
 include xrdp
+include mongodb
