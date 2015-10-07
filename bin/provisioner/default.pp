@@ -323,6 +323,6 @@ include spark
 include sparkling-water
 include crontab
 include nodejs
-include cassandra
+#include cassandra
 include xrdp
 include mongodb
