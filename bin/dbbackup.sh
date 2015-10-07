@@ -15,6 +15,7 @@ else
 	#rsync -avP /var/lib/mongodb/ root@$ipaddr:/var/lib/mongodb/
 	#sudo rsync -avP /var/lib/mongodb/ /mnt/$ipaddr/data/var-lib-mongodb/
 	#echo "rsync -avP /var/lib/mongodb/ /mnt/$ipaddr/mongodb/"
+	rsync -avP /mnt/$ipaddr/data/db-archive/ data/db-archive/
 	#sudo rsync -avn \
 	#  --exclude='admin.*' --exclude='local.*' --exclude='mongod.lock'  --exclude='mydb*'  --exclude='storage.*'  --exclude='journal*' \
 	#  data/var-lib-mongodb/ /var/lib/mongodb/
@@ -26,14 +27,14 @@ else
 	dsttarball="$dbarchive/$dname.tar.bz2"
 	mkdir -p "$dbarchive"
 
-	wipe -fqQ1 $dsttarball
-	rm -rf $scrdir
-	#mongodump -d ql -c equity --out $scrdir/
-	mongodump -d numbeo --out $scrdir/
+	#wipe -fqQ1 $dsttarball
+	#rm -rf $scrdir
+	
+	#mongodump -d numbeo --out $scrdir/
 	#mongodump -d ql --out $scrdir/
 	
 	#tar jcfv /mnt/$ipaddr/$dsttarball $scrdir/
-	tar jcfv $dsttarball $scrdir/
+	#tar jcfv $dsttarball $scrdir/
 	
-	rm -rf $scrdir
+	#rm -rf $scrdir
 fi
