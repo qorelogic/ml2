@@ -15,16 +15,25 @@ else
 	#rsync -avP /var/lib/mongodb/ root@$ipaddr:/var/lib/mongodb/
 	#sudo rsync -avP /var/lib/mongodb/ /mnt/$ipaddr/data/var-lib-mongodb/
 	#echo "rsync -avP /var/lib/mongodb/ /mnt/$ipaddr/mongodb/"
-	sudo rsync -avn \
-	  --exclude='admin.*' --exclude='local.*' --exclude='mongod.lock'  --exclude='mydb*'  --exclude='storage.*'  --exclude='journal*' \
-	  data/var-lib-mongodb/ /var/lib/mongodb/
-	sudo chown mongodb:nogroup /var/lib/mongodb/*.*
+	#sudo rsync -avn \
+	#  --exclude='admin.*' --exclude='local.*' --exclude='mongod.lock'  --exclude='mydb*'  --exclude='storage.*'  --exclude='journal*' \
+	#  data/var-lib-mongodb/ /var/lib/mongodb/
+	#sudo chown mongodb:nogroup /var/lib/mongodb/*.*
 
-	scrdir="data/db3"
-	dsttarball="db3.tar.bz2"
-	wipe -fqQ1 data/db2.tar.bz2
+	dname="db4"
+	scrdir="data/$dname"
+	dbarchive="data/db-archive"
+	dsttarball="$dbarchive/$dname.tar.bz2"
+	mkdir -p "$dbarchive"
+
+	wipe -fqQ1 $dsttarball
 	rm -rf $scrdir
-#	mongodump -d ql -c equity --out $scrdir/
-	mongodump -d ql --out $scrdir/
-	tar jcfv /mnt/$ipaddr/data/$dsttarball $scrdir/
+	#mongodump -d ql -c equity --out $scrdir/
+	mongodump -d numbeo --out $scrdir/
+	#mongodump -d ql --out $scrdir/
+	
+	#tar jcfv /mnt/$ipaddr/$dsttarball $scrdir/
+	tar jcfv $dsttarball $scrdir/
+	
+	rm -rf $scrdir
 fi
