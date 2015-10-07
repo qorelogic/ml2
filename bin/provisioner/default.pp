@@ -139,7 +139,7 @@ class nfs-server {
     require => Class["system-update"],
     }
     exec { "etc exports":
-        command => "/bin/grep -v '/mldev/bin/data' /etc/exports | grep -v '/var/lib/mongodb' | /usr/bin/tee /etc/exports > /dev/null",
+        command => "/bin/grep -v '/mldev/bin/data' /etc/exports | grep -v '/var/lib/mongodb' | grep -v '/mldev/lib/DataPipeline' | /usr/bin/tee /etc/exports > /dev/null",
         timeout => 60,
         tries   => 3,
         #notify => Exec['unzip h2o'],
@@ -153,6 +153,12 @@ class nfs-server {
     }
     exec { "add2exports2":
         command => "echo '/var/lib/mongodb  *.*.*.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> /etc/exports",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["add2exports3"],
+    }
+    exec { "add2exports3":
+        command => "echo '/mldev/lib/DataPipeline  *.*.*.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> /etc/exports",
         timeout => 60,
         tries   => 3,
         before  => Exec["nfs-kernel-server restart"],
@@ -169,16 +175,16 @@ class nfs-client {
     ensure  => present,
     require => Class["system-update"],
     }
-    exec { "mkdir_nfs_share":
-        command => "mkdir /mnt/nfs-share 2> /dev/null",
-        #cwd => "$h2oHdir",
-        timeout => 60,
-        tries   => 3,
-        #creates => "$h2oHdir/h2o-3.0.1.7.zip",
-        #refreshonly => true,
-        #notify => Exec['unzip h2o'],
-        #before  => Exec["unzip h2o"],
-    }
+    #exec { "mkdir_nfs_share":
+    #    command => "mkdir /mnt/nfs-share 2> /dev/null",
+    #    #cwd => "$h2oHdir",
+    #    timeout => 60,
+    #    tries   => 3,
+    #    #creates => "$h2oHdir/h2o-3.0.1.7.zip",
+    #    #refreshonly => true,
+    #    #notify => Exec['unzip h2o'],
+    #    #before  => Exec["unzip h2o"],
+    #}
 }
 
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
