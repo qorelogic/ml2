@@ -17,6 +17,7 @@ import pymongo
 
 
 # uncomment thr @profile line for profiling via kernprof 
+# kernprof -lv parseEquityLogs.py
 #   as per source: http://www.huyng.com/posts/python-performance-analysis/
 #@profile
 def parseEquityLogs():
