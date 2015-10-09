@@ -66,7 +66,7 @@ def timestampToDatetime(tst):
         for i in tst: ddt.append(_timestampToDatetime(i))                
     return ddt
 ##################
-
+    
 #@profile
 def sparseTicks(num=2000):
 
@@ -132,11 +132,11 @@ def sparseTicks(num=2000):
 # convert sparse ticks dataframe to 3D matrix: 
 #       the 3rd dimension composed of historical price of depth mdepth
 #@profile
-def sparseTicks2dim3(df, mdepth=200, verbose=False, simulator=True):
+def sparseTicks2dim3(df, mdepth=200, verbose=False):
     
     import numpy as n
     import time
-    from pandas import DataFrame as p_DataFrame    
+    from pandas import DataFrame as p_DataFrame
     
     dfn = df.get_values()
     #dir(dfn)
@@ -166,6 +166,24 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False, simulator=True):
             #print
         #print p_DataFrame(dfn)
         
+    #print dfm
+    #print 'shape dfn: {0}'.format(dfn.shape)
+    #print 'shape dfm: {0}'.format(dfm.shape)
+
+    #print dfm
+    #print dfm#[0]
+    #for i in range(10):
+    #    print dfm[i]
+#        print 
+        #p_DataFrame(dfm[i]).plot(legend=False)
+    
+    return dfm
+    
+def simulator(df, simulator=True):
+    from pandas import DataFrame as p_DataFrame
+    import time
+    import numpy as n
+    dfn = df.get_values()
     if simulator == True:
         dff = p_DataFrame(dfn, index=df.index, columns=df.columns)
         dff['ts'] = oandaToTimestamp(dff.index)
@@ -187,22 +205,15 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False, simulator=True):
             res = dict(zip(k, v))
             #print res
             print p_DataFrame(res, index=[0]).transpose()
-        
-    #print dfm
-    #print 'shape dfn: {0}'.format(dfn.shape)
-    #print 'shape dfm: {0}'.format(dfm.shape)
-
-    #print dfm
-    #print dfm#[0]
-    #for i in range(10):
-    #    print dfm[i]
-#        print 
-        #p_DataFrame(dfm[i]).plot(legend=False)
-    
-    return dfm
 
 ##################
 ##########################
 
-df = sparseTicks(num=1000)
-sparseTicks2dim3(df, mdepth=5)
+df = sparseTicks(num=10000)
+#for i in xrange(1):
+#    sparseTicks2dim3(df, mdepth=5)
+#sparseTicks2dim3(df, mdepth=5)
+simulator(df)
+
+
+
