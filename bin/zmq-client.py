@@ -17,4 +17,4 @@ while True:
     #socket.send('test client') # only for REQ
     print socket.recv(0)
     c += 1
-    time.sleep(0.1)
+    #time.sleep(0.1)
