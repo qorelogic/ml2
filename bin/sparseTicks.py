@@ -66,16 +66,12 @@ def timestampToDatetime(tst):
         for i in tst: ddt.append(_timestampToDatetime(i))                
     return ddt
 ##################
-    
-#@profile
-def sparseTicks(num=2000):
 
+def getTicks(num=2000):
     import pymongo
     #import pandas as p
     from pandas import DataFrame as p_DataFrame
-    from matplotlib import pyplot as plt
-    from pylab import rcParams
-    
+
     # Connection to Mongo DB
     try:
         conn = pymongo.MongoClient(port=27017)
@@ -112,11 +108,22 @@ def sparseTicks(num=2000):
     
     #df = _pe(db, dfi, , num=num)
     df = _pe2(db, dfi, num=num)
+    #print df
+    return df
+    
+#@profile
+def sparseTicks(num=2000):
 
+    from matplotlib import pyplot as plt
+    from pylab import rcParams
+    
+    df = getTicks(num=num)
+    
     df = df.drop_duplicates('time')
     indexby = 'time'
     df['ts'] = oandaToTimestamp(df['time'])
     df = df.pivot(indexby, 'instrument', 'ask')
+    #df['time'] = df.index
     df = df.bfill()
     df = df.ffill()
     df = df.convert_objects(convert_numeric=True)#.ix[:, 'AUD_CHF']
@@ -179,16 +186,26 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False):
     
     return dfm
     
-def simulator(df, simulator=True):
+#@profile
+def simulator(df=None, simulator=True, num=200):
     from pandas import DataFrame as p_DataFrame
     import time
     import numpy as n
+    if type(df) == type(None):
+        df = getTicks(num=num)
     dfn = df.get_values()
     if simulator == True:
         dff = p_DataFrame(dfn, index=df.index, columns=df.columns)
-        dff['ts'] = oandaToTimestamp(dff.index)
+        #if dff.index.dtype == 'int64':
+        #    dff = dff.set_index('time')
+        #print dff.index.dtype
+        #print type(dff.index.dtype)
+        try:
+            dff['ts'] = oandaToTimestamp(dff.index)
+        except:
+            dff['ts'] = oandaToTimestamp(dff['time'])
         dff['dts'] = timestampToDatetime(dff['ts'])        
-        ts = dff.ix[1,'ts']
+        ts = dff.ix[10,'ts']
         cts = time.time()
         #print ts
         #print cts
@@ -198,13 +215,16 @@ def simulator(df, simulator=True):
         dff['tsnow'] = timestampToDatetime(dff['ts'] + ndiff)        
         for i in dff.get_values():
             while i[len(i)-2] >= time.time():
-                time.sleep(0.01)
+                time.sleep(0.001)
             v = n.array(list(i), dtype=str)
             csv = ','.join(v)
             k = list(dff.columns)
             res = dict(zip(k, v))
             #print res
-            print p_DataFrame(res, index=[0]).transpose()
+            dfp = p_DataFrame(res, index=[0])
+            if dff.index.dtype == 'int64':
+                dfp = dfp.ix[:,['instrument', 'ask','bid', 'dts', 'time']]
+            print dfp.transpose()[0].to_dict()
 
 ##################
 ##########################
@@ -213,7 +233,6 @@ df = sparseTicks(num=10000)
 #for i in xrange(1):
 #    sparseTicks2dim3(df, mdepth=5)
 #sparseTicks2dim3(df, mdepth=5)
-simulator(df)
+simulator(df=df, num=40)
 
-
-
+#simulator(num=40)
