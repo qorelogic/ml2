@@ -44,6 +44,7 @@ def _oandaToTimestamp(ptime):
     import datetime as dd
     dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
     return (dt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
+
 def oandaToTimestamp(ptime):
     
     try:
@@ -52,6 +53,18 @@ def oandaToTimestamp(ptime):
         tstmp = []
         for i in ptime: tstmp.append(_oandaToTimestamp(i))                
     return tstmp
+
+def timestampToDatetime(tst):
+    import datetime as dd    
+    def _timestampToDatetime(tst):
+        return dd.datetime.fromtimestamp(tst)
+
+    try:    ddt = _timestampToDatetime(tst)
+    except Exception as e:
+        print e
+        ddt = []
+        for i in tst: ddt.append(_timestampToDatetime(i))                
+    return ddt
 ##################
 
 #@profile
@@ -107,8 +120,9 @@ def sparseTicks(num=2000):
     df = df.bfill()
     df = df.ffill()
     df = df.convert_objects(convert_numeric=True)#.ix[:, 'AUD_CHF']
-    df = normalizeme(df)
-    df = sigmoidme(df)
+    
+    #df = normalizeme(df)
+    #df = sigmoidme(df)
     #print df
     #df.plot(legend=None); plt.show();
     #plt.plot(df); plt.show();
@@ -118,10 +132,11 @@ def sparseTicks(num=2000):
 # convert sparse ticks dataframe to 3D matrix: 
 #       the 3rd dimension composed of historical price of depth mdepth
 #@profile
-def sparseTicks2dim3(df, mdepth=200):
+def sparseTicks2dim3(df, mdepth=200, verbose=False, simulator=True):
     
     import numpy as n
-    from pandas import DataFrame as p_DataFrame
+    import time
+    from pandas import DataFrame as p_DataFrame    
     
     dfn = df.get_values()
     #dir(dfn)
@@ -129,8 +144,8 @@ def sparseTicks2dim3(df, mdepth=200):
     dfnl = dfn.shape[0]-mdepth
     dfm = n.resize(n.zeros(dfnl * mdepth * dfn.shape[1]), (dfnl, mdepth, dfn.shape[1]))
 
-    print 'shape dfn: {0}'.format(dfn.shape)
-    print 'shape dfm: {0}'.format(dfm.shape)
+    #print 'shape dfn: {0}'.format(dfn.shape)
+    #print 'shape dfm: {0}'.format(dfm.shape)
     #print 'shape dfn: {0}'.format(dfn[0:200].shape)
     #print 'shape dfm: {0}'.format(dfm[0].shape)
 
@@ -139,9 +154,40 @@ def sparseTicks2dim3(df, mdepth=200):
     #print dfm
 
     #print dfn[0:200]
-    for i in range(dfn.shape[0]-mdepth):
-        #print dfn[i:mdepth+i]
+    midepth = dfn.shape[0]-mdepth
+    for i in xrange(midepth):
         dfm[i] = dfn[i:mdepth+i]
+        
+    if verbose == True:
+        for i in xrange(midepth):
+            #print dfn[i:mdepth+i]
+            #print df.ix[i:mdepth+i]
+            print p_DataFrame(dfn[i:mdepth+i], index=df.ix[i:mdepth+i].index, columns=df.columns)
+            #print
+        #print p_DataFrame(dfn)
+        
+    if simulator == True:
+        dff = p_DataFrame(dfn, index=df.index, columns=df.columns)
+        dff['ts'] = oandaToTimestamp(dff.index)
+        dff['dts'] = timestampToDatetime(dff['ts'])        
+        ts = dff.ix[1,'ts']
+        cts = time.time()
+        #print ts
+        #print cts
+        ndiff = cts - ts
+        #print ndiff
+        dff['tsnowts'] = dff['ts'] + ndiff        
+        dff['tsnow'] = timestampToDatetime(dff['ts'] + ndiff)        
+        for i in dff.get_values():
+            while i[len(i)-2] >= time.time():
+                time.sleep(0.01)
+            v = n.array(list(i), dtype=str)
+            csv = ','.join(v)
+            k = list(dff.columns)
+            res = dict(zip(k, v))
+            #print res
+            print p_DataFrame(res, index=[0]).transpose()
+        
     #print dfm
     #print 'shape dfn: {0}'.format(dfn.shape)
     #print 'shape dfm: {0}'.format(dfm.shape)
@@ -158,5 +204,5 @@ def sparseTicks2dim3(df, mdepth=200):
 ##################
 ##########################
 
-df = sparseTicks(num=2000)
-sparseTicks2dim3(df, mdepth=200)
+df = sparseTicks(num=1000)
+sparseTicks2dim3(df, mdepth=5)
