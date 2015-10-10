@@ -13,6 +13,7 @@ else
 	#mongodump --host=127.0.0.1 --port=27017 -d ql -c "${colwot}" --out /mnt/$ipaddr/db/
 
 	#rsync -avP /var/lib/mongodb/ root@$ipaddr:/var/lib/mongodb/
+	sudo rsync -avP /mnt/$ipaddr/mongodb/ /var/lib/mongodb/
 	#sudo rsync -avP /var/lib/mongodb/ /mnt/$ipaddr/data/var-lib-mongodb/
 	#echo "rsync -avP /var/lib/mongodb/ /mnt/$ipaddr/mongodb/"
 	rsync -avP /mnt/$ipaddr/data/db-archive/ data/db-archive/
@@ -21,7 +22,7 @@ else
 	#  data/var-lib-mongodb/ /var/lib/mongodb/
 	#sudo chown mongodb:nogroup /var/lib/mongodb/*.*
 
-	dname="db4"
+	dname="db6"
 	scrdir="data/$dname"
 	dbarchive="data/db-archive"
 	dsttarball="$dbarchive/$dname.tar.bz2"
@@ -30,6 +31,8 @@ else
 	#wipe -fqQ1 $dsttarball
 	#rm -rf $scrdir
 	
+	#mongodump -h $ipaddr -d numbeo --out $scrdir/
+	#mongodump -h $ipaddr -d ql --out $scrdir/
 	#mongodump -d numbeo --out $scrdir/
 	#mongodump -d ql --out $scrdir/
 	
@@ -37,4 +40,5 @@ else
 	#tar jcfv $dsttarball $scrdir/
 	
 	#rm -rf $scrdir
+	rsync -avP data/db-archive/ /mnt/$ipaddr/data/db-archive/
 fi
