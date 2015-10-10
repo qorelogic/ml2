@@ -90,13 +90,13 @@ class mongodb {
         before  => Exec["mongo autoremove"],
     }
     exec { "mongo autoremove":
-	command => "sudo apt-get autoremove",
+	command => "sudo apt-get autoremove -y",
         timeout => 60,
         tries   => 3,
         before  => Exec["mongo rm mongodb.list"],
     }
     exec { "mongo rm mongodb.list":
-	command => "rm /etc/apt/sources.list.d/mongodb.list",
+	command => "rm /etc/apt/sources.list.d/mongodb.list 2>&1 > /dev/null",
         timeout => 60,
         tries   => 3,
         before  => Exec["mongo add deb sources"],
