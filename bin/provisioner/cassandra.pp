@@ -31,5 +31,6 @@ class cassandra {
 }
 
 import 'system-update.pp'
+import 'javart.pp'
 include cassandra
 
