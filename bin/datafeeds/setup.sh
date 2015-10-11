@@ -53,6 +53,7 @@ minstall() {
 	fi
 
 	# python packages for datafeeds
+	sudo apt-get -y install python-pip
 	sudo pip install --upgrade pip
 	if [ "`python -c 'import QSTK' 2>&1`" != "" ]; then
             sudo pip install QSTK

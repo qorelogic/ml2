@@ -45,8 +45,6 @@ class xrdp {
   }
 }
 
-import 'cassandra.pp'
-
 class apache {
   package { "apache2":
     ensure  => present,
@@ -81,46 +79,6 @@ class curl {
   }
 }
 
-class mongodb {
-#export LC_ALL=C
-    exec { "mongo purge":
-	command => "sudo apt-get purge mongodb-org",
-        timeout => 60,
-        tries   => 3,
-        before  => Exec["mongo autoremove"],
-    }
-    exec { "mongo autoremove":
-	command => "sudo apt-get autoremove -y",
-        timeout => 60,
-        tries   => 3,
-        before  => Exec["mongo rm mongodb.list"],
-    }
-    exec { "mongo rm mongodb.list":
-	command => "rm /etc/apt/sources.list.d/mongodb.list 2>&1 > /dev/null",
-        timeout => 60,
-        tries   => 3,
-        before  => Exec["mongo add deb sources"],
-    }
-    exec { "mongo add deb sources":
-	command => "echo 'deb http://repo.mongodb.org/apt/debian wheezy/mongodb-org/3.0 main' | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list",
-        timeout => 60,
-        tries   => 3,
-        before  => Exec["mongo aptget update"],
-    }
-    exec { "mongo aptget update":
-	command => "sudo apt-get update",
-        timeout => 60,
-        tries   => 3,
-        before  => Exec["mongo aptget install"],
-   }
-    exec { "mongo aptget install":
-	command => "sudo apt-get install -y --force-yes mongodb-org",
-        timeout => 60,
-        tries   => 3,
-        before  => Exec["add2exports"],
-    }
-}
-
 class portmap {
     #package { "portmap":
     #ensure  => present,
@@ -133,59 +91,6 @@ class portmap {
     }
 }
 
-class nfs-server {
-    package { "nfs-kernel-server":
-    ensure  => present,
-    require => Class["system-update"],
-    }
-    exec { "etc exports":
-        command => "/bin/grep -v '/mldev/bin/data' /etc/exports | grep -v '/var/lib/mongodb' | grep -v '/mldev/lib/DataPipeline' | /usr/bin/tee /etc/exports > /dev/null",
-        timeout => 60,
-        tries   => 3,
-        #notify => Exec['unzip h2o'],
-        before  => Exec["add2exports"],
-    }
-    exec { "add2exports":
-        command => "echo '/mldev/bin/data  *.*.*.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> /etc/exports",
-        timeout => 60,
-        tries   => 3,
-        before  => Exec["add2exports2"],
-    }
-    exec { "add2exports2":
-        command => "echo '/var/lib/mongodb  *.*.*.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> /etc/exports",
-        timeout => 60,
-        tries   => 3,
-        before  => Exec["add2exports3"],
-    }
-    exec { "add2exports3":
-        command => "echo '/mldev/lib/DataPipeline  *.*.*.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> /etc/exports",
-        timeout => 60,
-        tries   => 3,
-        before  => Exec["nfs-kernel-server restart"],
-    }
-    exec { "nfs-kernel-server restart":
-        command => "service nfs-kernel-server restart",
-        #command => "exportfs -a",
-        timeout => 60,
-        tries   => 3,
-    }
-}
-class nfs-client {
-    package { "nfs-common":
-    ensure  => present,
-    require => Class["system-update"],
-    }
-    #exec { "mkdir_nfs_share":
-    #    command => "mkdir /mnt/nfs-share 2> /dev/null",
-    #    #cwd => "$h2oHdir",
-    #    timeout => 60,
-    #    tries   => 3,
-    #    #creates => "$h2oHdir/h2o-3.0.1.7.zip",
-    #    #refreshonly => true,
-    #    #notify => Exec['unzip h2o'],
-    #    #before  => Exec["unzip h2o"],
-    #}
-}
 
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
@@ -309,20 +214,27 @@ class crontab {
 	}
 }
 
+include system-update
+
+#import 'cassandra.pp'
+import 'mongodb.pp'
+import 'nfs-server.pp'
+import 'nfs-client.pp'
+
 #include apache
 
-include system-update
 include portmap
 include nfs-server
 include nfs-client
 include unzip
 include curl
 include javart
-include h2o
-include spark
-include sparkling-water
+#include h2o
+#include spark
+#include sparkling-water
 include crontab
-include nodejs
-#include cassandra
+#include nodejs
 include xrdp
-include mongodb
+#include cassandra
+#include mongodb
+
