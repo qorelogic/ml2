@@ -23,6 +23,12 @@ extract-all() {
 	extractdb "db6"
 }
 
+restore-all() {
+	for i in `ls data`; do 
+		echo $i; 
+	done
+}
+
 pull-db() {
 	# source: http://stackoverflow.com/questions/16619598/sync-mongodb-via-ssh
 	ssh -L$portlocal:localhost:$portmongo $dsthost '
@@ -42,3 +48,4 @@ pull-db() {
 
 #extract-all
 #pull-db
+restore-all
