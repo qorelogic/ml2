@@ -16,18 +16,6 @@ $nodeTarball     = "$nodeV.tar.gz"
 $nodeTarballURL  = "https://nodejs.org/dist/latest/$nodeTarball"
 $nodeHdir        = "$installHdir/node"
 
-class system-update {
-  exec { 'apt-get update':
-    command => 'apt-get update',
-  }
-
-  $sysPackages = [ "build-essential" ]
-  package { $sysPackages:
-    ensure => "installed",
-    require => Exec['apt-get update'],
-  }
-}
-
 class xrdp {
 
   $sysPackages = [ "xfce4", "xrdp" ]
@@ -56,13 +44,6 @@ class apache {
     require => Package["apache2"],
   }
 
-}
-
-class javart {
-  package { "openjdk-8-jre-headless":
-    ensure  => present,
-    require => Class["system-update"],
-  }
 }
 
 class unzip {
@@ -214,27 +195,26 @@ class crontab {
 	}
 }
 
-include system-update
-
+import 'system-update.pp'
 #import 'cassandra.pp'
 import 'mongodb.pp'
-import 'nfs-server.pp'
-import 'nfs-client.pp'
+
+#include cassandra
+#import 'nfs-server.pp'
+#import 'nfs-client.pp'
 
 #include apache
 
-include portmap
-include nfs-server
-include nfs-client
-include unzip
-include curl
-include javart
+#include portmap
+#include nfs-server
+#include nfs-client
+#include unzip
+#include curl
+#include javart
 #include h2o
 #include spark
 #include sparkling-water
-include crontab
+#include crontab
 #include nodejs
-include xrdp
-#include cassandra
-#include mongodb
+#include xrdp
 

@@ -6,15 +6,22 @@ class mongodb {
 #apt-get install debian-keyring
 #gpg --keyserver pgp.mit.edu --recv-keys 9ECBEC467F0CEB10
 #gpg --armor --export 9ECBEC467F0CEB10 | apt-key add -
+    Exec { path => "/usr/bin" }
+    exec { "reconfigure":
+	command => "sudo dpkg-reconfigure -phigh -a",
+        timeout => 60,
+        tries   => 3,
+        before  => Exec["mongo purge"],
+    }
     exec { "mongo purge":
-	#command => "sudo apt-get purge -y mongodb-org",
-	command => "sudo apt-get purge mongodb-server",
+	#command => "sudo /usr/binapt-get purge -y mongodb-org",
+	command => "sudo /usr/bin/apt-get purge -y mongodb-server",
         timeout => 60,
         tries   => 3,
         before  => Exec["mongo autoremove"],
     }
     exec { "mongo autoremove":
-	command => "sudo apt-get autoremove -y",
+	command => "sudo /usr/bin/apt-get autoremove -y",
         timeout => 60,
         tries   => 3,
         before  => Exec["mongo rm mongodb.list"],
@@ -41,8 +48,7 @@ class mongodb {
 	#command => "sudo apt-get install -y --force-yes mongodb-org",
 	command => "sudo apt-get install -y --force-yes mongodb-server",
         timeout => 60,
-        tries   => 3,
-        before  => Exec["add2exports"],
+        tries   => 3,        
     }
 }
 

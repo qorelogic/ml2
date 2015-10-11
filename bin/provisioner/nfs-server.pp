@@ -38,6 +38,5 @@ class nfs-server {
 }
 
 import 'system-update.pp'
-include system-update
 include nfs-server
 

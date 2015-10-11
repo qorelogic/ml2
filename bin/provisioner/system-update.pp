@@ -11,3 +11,5 @@ class system-update {
   }
 }
 
+include system-update
+
