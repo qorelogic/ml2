@@ -1,5 +1,7 @@
 #!/bin/bash
 
+hdir="data/db-archive"
+
 srcdb="mydb2"
 dstdb="mydb234"
 dsthost="localhost"
@@ -11,8 +13,8 @@ portlocal=27018
 
 extractdb() {
 	dbfname="$1"; 
-	mkdir $dbfname; 
-	tar jxfv $dbfname.tar.bz2 #-C $dbfname
+	mkdir $hdir/$dbfname; 
+	tar jxfv $hdir/$dbfname.tar.bz2 #-C $hdir/$dbfname
 }
 
 extract-all() {
@@ -24,8 +26,11 @@ extract-all() {
 }
 
 restore-all() {
-	for i in `ls data`; do 
+	for i in `ls $hdir/data`; do 
 		echo $i; 
+		echo '---'
+		mongorestore -d $i $hdir/data/$i/ql/
+		echo '==='
 	done
 }
 
