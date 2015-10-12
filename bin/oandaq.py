@@ -1,46 +1,50 @@
 
-#import curses  # Get the module
-
-#from numpy import *
-from numpy import array as n_array
-from numpy import dot as n_dot
-from numpy import divide as n_divide
-from numpy import float16 as n_float16
-from numpy import rint as n_rint
-from numpy import c_ as n_c_
-from numpy import min as n_min
-from numpy import max as n_max
-from numpy import tanh as n_tanh
-from numpy import concatenate as n_concatenate
-
-import plotly.plotly as py
-from plotly.graph_objs import *
-
-import os, sys, oandapy
-import datetime as dd
-from matplotlib.pyplot import plot, legend, title, show, imshow, tight_layout
-from pylab import rcParams
-from IPython.display import display, clear_output
-import ujson as j
-
-from qore import *
-from qore_qstk import *
-from matplotlib.pylab import *
-
-import numpy as n
-import pandas as p
-import Quandl as q
-import datetime as dd
-import urllib2 as u
-import html2text
-import exceptions as ex
-import re, sys
-import StringIO as sio
-import threading,time
-import itertools as it
-
-import oandapy
-import pymongo as mong
+def imports():
+    #import curses  # Get the module
+    
+    #from numpy import *
+    from numpy import array as n_array
+    from numpy import dot as n_dot
+    from numpy import divide as n_divide
+    from numpy import float16 as n_float16
+    from numpy import rint as n_rint
+    from numpy import c_ as n_c_
+    from numpy import min as n_min
+    from numpy import max as n_max
+    from numpy import tanh as n_tanh
+    from numpy import concatenate as n_concatenate
+    
+    #import plotly.plotly as py
+    #from plotly.graph_objs import *
+    
+    import sys
+    try: sys.path.index('/ml.dev/lib/oanda/oandapy')
+    except: sys.path.append('/ml.dev/lib/oanda/oandapy')
+    import os, sys, oandapy
+    import datetime as dd
+    from matplotlib.pyplot import plot, legend, title, show, imshow, tight_layout
+    from pylab import rcParams
+    from IPython.display import display, clear_output
+    import ujson as j
+    
+    #from qore import *    
+    #from qore_qstk import *
+    #from matplotlib.pylab import *
+    
+    import numpy as n
+    import pandas as p
+    import Quandl as q
+    import datetime as dd
+    import urllib2 as u
+    import html2text
+    import exceptions as ex
+    import re, sys
+    import StringIO as sio
+    import threading,time
+    import itertools as it
+    
+    import oandapy
+    import pymongo as mong
 
 class OandaQ:
     
@@ -48,6 +52,10 @@ class OandaQ:
     oandapys = {}
     
     def __init__(self, verbose=False, selectOandaAccount=2):
+
+        #imports()
+        from qore import QoreDebug
+        import pandas as p
         self.qd = QoreDebug()
         self.qd._getMethod()
         
@@ -112,6 +120,7 @@ class OandaQ:
         self.ctime = 0
         self.ptime = 0
 
+        import pymongo as mong
         self.mongo = mong.MongoClient()
         
     def log(self, msg, printDot=False):
@@ -130,6 +139,7 @@ class OandaQ:
     
     def oandaConnection(self, name=None, env=None, access_token=None):
         self.qd._getMethod()
+        import oandapy
         
         if name != None and env != None and access_token != None:
             self.oandapys[name] = oandapy.API(environment=env, access_token=access_token)
@@ -161,6 +171,21 @@ class OandaQ:
             print e
             ddt = []
             for i in tst: ddt.append(_timestampToDatetime(i))                
+        return ddt
+
+    @staticmethod
+    def _timestampToDatetime(tst):
+        import datetime as dd
+        return dd.datetime.fromtimestamp(tst)
+    @staticmethod
+    def timestampToDatetime_S(tst):
+        #self.qd._getMethod()
+
+        try:    ddt = OandaQ._timestampToDatetime(tst)
+        except Exception as e:
+            print e
+            ddt = []
+            for i in tst: ddt.append(OandaQ._timestampToDatetime(i))                
         return ddt
         
     """
@@ -230,20 +255,24 @@ class OandaQ:
         dfin = self.numpyTimestampToTslibTimestamp(dfin)
         return dfin
 
+    @staticmethod
+    def _oandaToTimestamp(ptime):
+        import datetime as dd
+        dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
+        return (dt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()        
+    @staticmethod
+    def oandaToTimestamp_S(ptime):
+        #self.qd._getMethod()            
+        try:
+            tstmp = OandaQ._oandaToTimestamp(ptime)
+        except Exception as e:
+            #self.log(e)
+            tstmp = []
+            for i in ptime: tstmp.append(OandaQ._oandaToTimestamp(i))                
+        return tstmp
     def oandaToTimestamp(self, ptime):
         self.qd._getMethod()
-        
-        def _oandaToTimestamp(ptime):
-            dt = dd.datetime.strptime(ptime, '%Y-%m-%dT%H:%M:%S.%fZ')
-            return (dt - dd.datetime(1970, 1, 1)).total_seconds() / dd.timedelta(seconds=1).total_seconds()
-            
-        try:
-            tstmp = _oandaToTimestamp(ptime)
-        except Exception as e:
-            self.log(e)
-            tstmp = []
-            for i in ptime: tstmp.append(_oandaToTimestamp(i))                
-        return tstmp
+        return OandaQ.oandaToTimestamp(ptime)
 
     def oandaToDatetime(self, ptime):
         self.qd._getMethod()
