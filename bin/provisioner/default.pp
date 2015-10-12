@@ -200,12 +200,12 @@ import 'system-update.pp'
 import 'mongodb.pp'
 
 #include cassandra
-#import 'nfs-server.pp'
-#import 'nfs-client.pp'
+import 'nfs-server.pp'
+import 'nfs-client.pp'
 
 #include apache
 
-#include portmap
+include portmap
 #include nfs-server
 #include nfs-client
 #include unzip
@@ -214,7 +214,7 @@ import 'mongodb.pp'
 #include h2o
 #include spark
 #include sparkling-water
-#include crontab
+include crontab
 #include nodejs
-#include xrdp
+include xrdp
 
