@@ -102,4 +102,7 @@ class Simulator:
                 socket.send("%s %s" % (topic, stri)) # only for PUB
                 #self.socket.send(stri)
 
-
+if __name__ == "__main__":
+    s = Simulator()
+    s.simulate(num=400)
+    #simulator(df=df, num=40)

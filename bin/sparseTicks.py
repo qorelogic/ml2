@@ -151,11 +151,8 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False):
 ##################
 ##########################
 
-#df = sparseTicks(num=10000)
-#for i in xrange(1):
-#    sparseTicks2dim3(df, mdepth=5)
-#sparseTicks2dim3(df, mdepth=5)
-#simulator(df=df, num=40)
-
-s = Simulator()
-s.simulate(num=400)
+if __name__ == "__main__":
+    df = sparseTicks(num=10000)
+    #for i in xrange(1):
+    #    sparseTicks2dim3(df, mdepth=5)
+    sparseTicks2dim3(df, mdepth=5)
