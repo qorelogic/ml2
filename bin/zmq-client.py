@@ -15,6 +15,6 @@ socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 c = 0
 while True:
     #socket.send('test client') # only for REQ
-    print socket.recv(0)
+    print socket.recv(0).split(' ')[1]
     c += 1
     #time.sleep(0.1)

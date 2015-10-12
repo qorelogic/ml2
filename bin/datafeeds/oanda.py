@@ -82,6 +82,7 @@ class MyStreamer(oandapy.Streamer):
                 break
             if case('feed'):
                 self.mongo = mong.MongoClient()
+                self.zmqInit()
                 break
             if case('csv'):
                 break
@@ -100,15 +101,7 @@ class MyStreamer(oandapy.Streamer):
                 self.trades = oq.oandaConnection().get_trades(oq.aid)['trades']
                 self.account = oq.oandaConnection().get_account(oq.aid)
                 #oq.gotoMarket()
-
-                ctx = zmq.Context()
-                #socket = ctx.socket(zmq.REP)
-                #socket = ctx.socket(zmq.PUSH)
-                self.socket = ctx.socket(zmq.PUB);
-                self.socket.bind('tcp://*:5555')
-                
-                self.mongo = mong.MongoClient()
-                
+                self.zmqInit()
                 break
 
             print usage()
@@ -127,6 +120,7 @@ class MyStreamer(oandapy.Streamer):
                 if case('feed'):
                     # insert to ql mongodb
                     self.mongo.ql.ticks.insert(data['tick'])
+                    self.zmqSend(data)
                     break
                 if case('csv'):
                     csv = ",".join(getCsvc(data))            
@@ -150,17 +144,7 @@ class MyStreamer(oandapy.Streamer):
                     res = oq.babysitTrades(self.trades, data['tick'], verbose=True)
                     #print j.dumps(res.get_values())
                     #print (res.to_dict())
-                    csv = ",".join(getCsvc(data))
-                    #if res == False:
-                    #    print data
-                    
-                    #self.socket.recv(0) # only for REP
-                    #stri = 'world {0}'.format(int(n.random.rand()*10))
-                    stri = '{0}'.format(csv)
-                    #print stri
-                    topic = 'tester'
-                    self.socket.send("%s %s" % (topic, stri)) # only for PUB
-                    #self.socket.send(stri)
+                    self.zmqSend(data)
                     break
                 print usage()
                 break
@@ -185,6 +169,28 @@ class MyStreamer(oandapy.Streamer):
         
         self.disconnect()
 
+    def zmqInit(self):
+        ctx = zmq.Context()
+        #socket = ctx.socket(zmq.REP)
+        #socket = ctx.socket(zmq.PUSH)
+        self.socket = ctx.socket(zmq.PUB);
+        self.socket.bind('tcp://*:5555')
+        
+        self.mongo = mong.MongoClient()
+
+    def zmqSend(self, data):
+        csv = ",".join(getCsvc(data))
+        #if res == False:
+        #    print data
+        
+        #self.socket.recv(0) # only for REP
+        #stri = 'world {0}'.format(int(n.random.rand()*10))
+        stri = '{0}'.format(csv)
+        #print stri
+        topic = 'tester'
+        self.socket.send("%s %s" % (topic, stri)) # only for PUB
+        #self.socket.send(stri)
+    
 # source: http://www.digi.com/wiki/developer/index.php/Handling_Socket_Error_and_Keepalive
 def do_work(mode, forever = True):
     qd._getMethod()
@@ -217,7 +223,8 @@ def do_work(mode, forever = True):
                     pairs = oq.getBabySitPairs()
                     break
                 if case('zmq'):
-                    pairs = oq.getBabySitPairs()
+                    pairs = ",".join(list(n.array(p.DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
+                    #pairs = oq.getBabySitPairs()
                     break
                 print usage()
                 break
