@@ -10,3 +10,6 @@ class system-update {
     require => Exec['apt-get update'],
   }
 }
+
+include system-update
+

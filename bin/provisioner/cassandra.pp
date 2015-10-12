@@ -1,7 +1,9 @@
 
-#import 'systemupdate.pp'
-
 # source: http://docs.datastax.com/en/cassandra/2.1/cassandra/install/installDeb_t.html
+# source: http://stackoverflow.com/questions/1139127/how-to-trust-a-apt-repository-debian-apt-get-update-error-public-key-is-not-av
+#apt-get install debian-keyring
+#gpg --keyserver pgp.mit.edu --recv-keys 350200F2B999A372
+#gpg --armor --export 350200F2B999A372 | apt-key add -
 class cassandra {
         exec {
                 "AddDataStaxCommunityRepository2cassandra.sources.list":
@@ -28,5 +30,7 @@ class cassandra {
         }
 }
 
-include system-update
+import 'system-update.pp'
+import 'javart.pp'
 include cassandra
+
