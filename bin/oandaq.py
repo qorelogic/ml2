@@ -272,7 +272,7 @@ class OandaQ:
         return tstmp
     def oandaToTimestamp(self, ptime):
         self.qd._getMethod()
-        return OandaQ.oandaToTimestamp(ptime)
+        return OandaQ.oandaToTimestamp_S(ptime)
 
     def oandaToDatetime(self, ptime):
         self.qd._getMethod()
@@ -763,9 +763,10 @@ class OandaQ:
         return 100*((n.power(10, n.log10(x)/P))-1)
     
     def wew(self, ds):
+        from numpy import unique as n_unique
         #print '---2---'
         #print ds
-        ds = n.unique(ds)
+        ds = n_unique(ds)
         #print ds
         ds = list(ds)
         #print ds
@@ -818,16 +819,19 @@ class OandaQ:
     def getBabySitPairs (self):
         self.qd._getMethod()
         
+        from pandas import DataFrame as p_DataFrame
+        from numpy import array as n_array
+                
         df = self.oandaConnection().get_trades(self.aid)['trades']
-        pairdf = p.DataFrame(df)
+        pairdf = p_DataFrame(df)
         print pairdf
         try:
             pdf = pairdf.ix[:,'instrument'].get_values()
-            pdf = n.array(pdf)            
+            pdf = n_array(pdf)            
             #print pdf
             #print '---'
             df = self.syntheticCurrencyTable(pdf, homeCurrency='USD')
-            df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
+            df = p_DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
             pcdf = df.ix[:,'pairedCurrency'].get_values()
             #print pcdf
             pcdf = self.wew(pcdf)
@@ -844,22 +848,25 @@ class OandaQ:
     def babysitTrades(self, df, tick, verbose=True):
         #self.qd._getMethod()
     
+        from pandas import DataFrame as p_DataFrame
+        import time
+    
   	#self.stdscr.clear()  # Clear the screen
     	#os.system('clear')
 	#print(100*'\n')
         #print tick
         
         self.ticks[tick['instrument']] = tick 
-        #print p.DataFrame(self.ticks).transpose()
+        #print p_DataFrame(self.ticks).transpose()
         #print df
         
         ttnow = time.time()
    
-        mdf = p.DataFrame()
+        mdf = p_DataFrame()
         
         for i in df:
             
-            dfi = p.DataFrame(i, index=[0])
+            dfi = p_DataFrame(i, index=[0])
             dfi['tid'] = dfi['id']
             dfi = dfi.set_index('id')
             pair = dfi.ix[:,'instrument'].get_values()[0]
@@ -1119,13 +1126,16 @@ class OandaQ:
                 print 'exp 12'
     
     def syntheticCurrencyTable(self, currs, homeCurrency='USD'):
-        self.qd._getMethod()
+        self.qd._getMethod()        
+        from pandas import read_csv as p_read_csv
+        from numpy import array as n_array
+        from numpy import int0 as n_int0
         
         # source: http://www.python-course.eu/lambda.php
         ret = {'quote':map(lambda x: x[0:3], currs), 'base':map(lambda x: x[4:7], currs)}
         ret['pairedCurrency'] = []
         
-        df = p.read_csv('/mldev/bin/data/oanda/cache/instruments.csv')
+        df = p_read_csv('/mldev/bin/data/oanda/cache/instruments.csv')
         #dfp = p.DataFrame(self.oanda2.get_prices(instruments=','.join(list(currs)))['prices'])
         #print dfp
         for i in ret['base']:
@@ -1140,7 +1150,7 @@ class OandaQ:
                 #print e
         poles      = [1, -1]
         po         = map(lambda x: x[0:3] == homeCurrency, ret['pairedCurrency'])
-        po         = n.array(po, dtype=int0)    
+        po         = n_array(po, dtype=n_int0)    
         ret['instrument'] = list(currs)
         ret['pow'] = map(lambda x: poles[x], po)
         #ret['ask'] = list(dfp['ask'])
