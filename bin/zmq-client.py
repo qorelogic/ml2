@@ -1,10 +1,16 @@
 
-import zmq, time
+import zmq, time, sys
+
+# option to change the port number from default 5555
+try:
+    port = sys.argv[1]
+except:
+    port = 5555    
 
 ctx = zmq.Context()
 #socket = ctx.socket(zmq.REQ)
 socket = ctx.socket(zmq.SUB)
-socket.connect('tcp://localhost:5555')
+socket.connect('tcp://localhost:{0}'.format(port))
 
 
 # Subscribe to tester
