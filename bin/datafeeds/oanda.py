@@ -289,7 +289,8 @@ def do_work(mode, forever = True):
         except KeyboardInterrupt, e:
             'disconnecting'
             qd.printTraceBack()
-            stream.disconnect()
+            #stream.disconnect()
+            break
         except Exception as e:
             qd.printTraceBack()
             print e
