@@ -55,7 +55,14 @@ def usage():
     qd._getMethod()
     return "usage: demo | feed | plotly | csv | babysit | zmq"
 
+#@profile
 def getCsvc(data):
+    #data['tick']['timestamp'] = str(OandaQ._oandaToTimestamp(data['tick']['time']))
+    data['tick']['timestamp'] = str(oq.oandaToTimestamp(data['tick']['time']))
+    csvc = [data['tick']['instrument'], str(data['tick']['bid']), str(data['tick']['ask']), data['tick']['time'], data['tick']['timestamp']]
+    return csvc
+
+def getCsvc0(data):
     tick = p.DataFrame(data['tick'], index=[0])
     tick['timestamp'] = oq.oandaToTimestamp(tick['time'].ix[0])
     csvc = n.array(tick.ix[:,[2,0,1,3,4]].get_values()[0], dtype=str)
@@ -141,7 +148,7 @@ class MyStreamer(oandapy.Streamer):
                     #    print data
                     break
                 if case('zmq'):
-                    res = oq.babysitTrades(self.trades, data['tick'], verbose=True)
+                    #res = oq.babysitTrades(self.trades, data['tick'], verbose=True)
                     #print j.dumps(res.get_values())
                     #print (res.to_dict())
                     self.zmqSend(data)
@@ -169,17 +176,26 @@ class MyStreamer(oandapy.Streamer):
         
         self.disconnect()
 
+#    @profile
     def zmqInit(self):
         ctx = zmq.Context()
         #socket = ctx.socket(zmq.REP)
         #socket = ctx.socket(zmq.PUSH)
         self.socket = ctx.socket(zmq.PUB);
-        self.socket.bind('tcp://*:5555')
+        
+        # A+B feeds
+        try:
+            self.socket.bind('tcp://*:5555')
+        except:
+            self.socket.bind('tcp://*:5556')
         
         self.mongo = mong.MongoClient()
 
+#    @profile
     def zmqSend(self, data):
-        csv = ",".join(getCsvc(data))
+        csvc = getCsvc(data)
+        csv = ",".join(csvc)
+        #print csvc
         #if res == False:
         #    print data
         
