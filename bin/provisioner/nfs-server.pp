@@ -18,7 +18,7 @@ class nfs-server {
         before  => Exec["add2exports2"],
     }
     exec { "add2exports2":
-        command => "/bin/echo '/var/lib/mongodb  *.*.*.*(rw,sync,anonuid=1000,anongid=1000,all_squash)' >> /etc/exports",
+        command => "/bin/echo '/var/lib/mongodb  *.*.*.*(rw,sync,anonuid=0,anongid=0,all_squash)' >> /etc/exports",
         timeout => 60,
         tries   => 3,
         before  => Exec["add2exports3"],
