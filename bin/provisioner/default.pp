@@ -1,5 +1,5 @@
 
-Exec { path => [ "/bin/", "/sbin/" , "/usr/bin/", "/usr/sbin/" ] }
+#Exec { path => [ "/bin/", "/sbin/" , "/usr/bin/", "/usr/sbin/" ] }
 
 $hdir        = "/mldev"
 $installHdir = "$hdir/lib/ml"
@@ -172,6 +172,10 @@ class nodejs {
 	#exec { 'run node':      command => "$nodeHdir/bin/node",        timeout => 60, tries   => 3 }
 }
 
+class keys {
+	exec { 'run node':      command => "cat /home/qore/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys",        timeout => 60, tries   => 3 }
+}
+
 # source: http://ryanuber.com/04-29-2010/simple-puppet-cron-management.html
 # cheatsheet: http://bencane.com/2012/09/03/cheat-sheet-crontab-by-example/
 # source: http://ryanuber.com/04-29-2010/simple-puppet-cron-management.html
@@ -217,4 +221,4 @@ include portmap
 include crontab
 #include nodejs
 include xrdp
-
+include keys
