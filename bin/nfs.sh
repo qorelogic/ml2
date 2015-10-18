@@ -19,6 +19,10 @@ nfsmount() {
 	sudo mount -t nfs -o port=2049 $miaddr:/mldev/lib/DataPipeline /mnt/$miaddr/datapipeline
 }
 
-nfsmount 45.55.92.77
-nfsmount 104.131.163.27
-#nfsmount 159.203.64.99
+echo "IP Address of nodes (space delimited): "
+read ans
+
+for i in `echo $ans`; do 
+	echo $i
+	nfsmount $i
+done
