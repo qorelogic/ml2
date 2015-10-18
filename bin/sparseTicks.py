@@ -189,7 +189,7 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False):
 #@profile
 def simulator(df=None, simulator=True, num=200):
     from pandas import DataFrame as p_DataFrame
-    import time
+    import time, zmq
     import numpy as n
     if type(df) == type(None):
         df = getTicks(num=num)
@@ -200,6 +200,14 @@ def simulator(df=None, simulator=True, num=200):
         #    dff = dff.set_index('time')
         #print dff.index.dtype
         #print type(dff.index.dtype)
+
+        # message queue (zmq)
+        ctx = zmq.Context()
+        #socket = ctx.socket(zmq.REP)
+        #socket = ctx.socket(zmq.PUSH)
+        socket = ctx.socket(zmq.PUB);
+        socket.bind('tcp://*:5555')
+
         try:
             dff['ts'] = oandaToTimestamp(dff.index)
         except:
@@ -224,15 +232,22 @@ def simulator(df=None, simulator=True, num=200):
             dfp = p_DataFrame(res, index=[0])
             if dff.index.dtype == 'int64':
                 dfp = dfp.ix[:,['instrument', 'ask','bid', 'dts', 'time']]
-            print dfp.transpose()[0].to_dict()
+            #print dfp.transpose()[0].to_dict()
+
+            # send to message queue
+            stri = '{0}'.format(csv)
+            #print stri
+            topic = 'tester'
+            socket.send("%s %s" % (topic, stri)) # only for PUB
+            #self.socket.send(stri)
 
 ##################
 ##########################
 
-df = sparseTicks(num=10000)
+#df = sparseTicks(num=10000)
 #for i in xrange(1):
 #    sparseTicks2dim3(df, mdepth=5)
 #sparseTicks2dim3(df, mdepth=5)
-simulator(df=df, num=40)
+#simulator(df=df, num=40)
 
-#simulator(num=40)
+simulator(num=400)
