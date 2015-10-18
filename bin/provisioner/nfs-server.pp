@@ -30,7 +30,7 @@ class nfs-server {
         before  => Exec["nfs-kernel-server restart"],
     }
     exec { "nfs-kernel-server restart":
-        command => "/usr/bin/service nfs-kernel-server restart",
+        command => "/usr/sbin/service nfs-kernel-server restart",
         #command => "exportfs -a",
         timeout => 60,
         tries   => 3,
