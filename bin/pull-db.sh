@@ -62,6 +62,7 @@ pull-db2() {
 	echo "Waiting 5 sec on local";
 	sleep 5;
 	echo "Connecting to Mongo and piping in script";
+	#./nfs.sh
 	./dbbackup.sh ${dsthost}
 }
 

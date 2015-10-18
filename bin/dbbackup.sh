@@ -23,7 +23,7 @@ else
 	#  data/var-lib-mongodb/ /var/lib/mongodb/
 	#sudo chown mongodb:nogroup /var/lib/mongodb/*.*
 
-	dname="db6"
+	dname="db8"
 	scrdir="data/$dname"
 	dbarchive="data/db-archive"
 	dsttarball="$dbarchive/$dname.tar.bz2"
@@ -32,8 +32,8 @@ else
 	#wipe -fqQ1 $dsttarball
 	#rm -rf $scrdir
 	
-	mongodump -h 127.0.0.1 --port 2017 -d numbeo --out $scrdir/
-	mongodump -h 127.0.0.1 --port 2017 -d ql --out $scrdir/
+	mongodump -h 127.0.0.1 --port 27017 -d numbeo --out $scrdir/
+	mongodump -h 127.0.0.1 --port 27017 -d ql --out $scrdir/
 	#mongodump -h $ipaddr -d numbeo --out $scrdir/
 	#mongodump -h $ipaddr -d ql --out $scrdir/
 	#mongodump -d numbeo --out $scrdir/
