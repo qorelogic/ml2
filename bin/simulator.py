@@ -46,11 +46,12 @@ class Simulator:
         return df
        
     #@profile
-    def simulate(self, df=None, simulator=True, num=200):
+    def simulate(self, df=None, simulator=True, num=200, mode='csv'):
         from pandas import DataFrame as p_DataFrame
         import time, zmq
         import numpy as n
         from oandaq import OandaQ
+        import ujson as j
         
         if type(df) == type(None):
             df = self.getTicks(num=num)
@@ -96,13 +97,26 @@ class Simulator:
                 #print dfp.transpose()[0].to_dict()
     
                 # send to message queue
-                stri = '{0}'.format(csv)
-                #print stri
                 topic = 'tester'
-                socket.send("%s %s" % (topic, stri)) # only for PUB
+                
+                try:
+                    mode = sys.argv[2]
+                except:
+                    mode = 'csv'
+                
+                if mode == 'csv':
+                    stri = '{0}'.format(csv)
+                    socket.send("%s %s" % (topic, stri)) # only for PUB
+                    print stri
                 #self.socket.send(stri)
+                
+                if mode == 'dict':                    
+                    ddict = dfp.transpose()[0].to_dict()
+                    ddict = j.dumps(ddict)
+                    socket.send("%s %s" % (topic, ddict)) # only for PUB                
+                    print ddict
 
 if __name__ == "__main__":
     s = Simulator()
-    s.simulate(num=400)
+    s.simulate(num=400, mode='csv')
     #simulator(df=df, num=40)
