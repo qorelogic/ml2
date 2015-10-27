@@ -49,6 +49,10 @@ def currencyMatrix(pairs, df=None, mode=None, mong=None, depth=None):
     #pairs = ",".join(list(n.array(p_DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str)))
     
     if mode == 'avg':
+        #print mong['avgs'].keys()
+        #for i in mong['avgs'].keys():
+        #    print len(mong['avgs'][i])
+        #    print mong['avgs'][i]
         df = p_DataFrame(mong['avgs'])
         #print df
         for i in df.columns:
@@ -221,13 +225,13 @@ def client(mode='avg'):
             avgs[pair] = deque([0]*depth)
             avgs[pair].append(avg)
         
-        if len(avgs[pair]) >= depth: avgs[pair].popleft()
+        if len(avgs[pair]) >= depth:
+            #print 'len avg pair:{0} depth:{1}'.format(len(avgs[pair]), depth)
+            avgs[pair].popleft()
+            #print len(avgs[pair])
 
         if mode == 'avg':
-            #try:
-            #currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
-            #except:
-            print avgs
+            currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
         ########
         # spreads
         spread = abs(float(data[1]) - float(data[2])) / instruments.ix[pair, 'pip']
