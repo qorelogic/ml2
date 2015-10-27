@@ -76,7 +76,11 @@ def currencyMatrix(pairs, df=None, mode=None, mong=None, depth=None):
             #df[i] = sigmoidme(n.array(df[i], dtype=float))
         """
         #print df  
-        df=df.ix[depth-1, :]
+        #print depth
+        try:
+            df=df.ix[depth-1, :]
+        except:
+            df=df.ix[depth-2, :]
     
     ps = []
     for i in pairs:#.split(','):
@@ -214,7 +218,7 @@ def client(mode='avg'):
             avgs[pair].append(avg)
         except:
             avgs[pair] = deque()
-            #avgs[pair] = deque([0]*depth)
+            avgs[pair] = deque([0]*depth)
             avgs[pair].append(avg)
         
         if len(avgs[pair]) >= depth: avgs[pair].popleft()
