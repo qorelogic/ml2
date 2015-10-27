@@ -137,9 +137,9 @@ def client(mode='avg'):
     while True:
         #socket.send('test client') # only for REQ
         data = socket.recv(0)
-        data = data.split(' ')[1]
+        data = data.split(' ')
+        data = ' '.join(data[1:]) # fixes the previous space split
         data = data.split(',')
-        #print data
         ts = str(data[4][0:10])+str(data[3][19:26])
         #de.append(ts)
         
