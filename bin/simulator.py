@@ -48,7 +48,7 @@ class Simulator:
     #@profile
     def simulate(self, df=None, simulator=True, num=200, mode='csv'):
         from pandas import DataFrame as p_DataFrame
-        import time, zmq
+        import time, zmq, sys
         import numpy as n
         from oandaq import OandaQ
         import ujson as j
@@ -68,7 +68,15 @@ class Simulator:
             #socket = ctx.socket(zmq.REP)
             #socket = ctx.socket(zmq.PUSH)
             socket = ctx.socket(zmq.PUB);
-            socket.bind('tcp://*:5555')
+            try:
+                port = sys.argv[1]
+                socket.bind('tcp://*:{0}'.format(port))
+            except:
+                # A+B feeds            
+                try:
+                    socket.bind('tcp://*:5555')
+                except:
+                    socket.bind('tcp://*:5556')
     
             try:
                 dff['ts'] = OandaQ.oandaToTimestamp_S(dff.index)
