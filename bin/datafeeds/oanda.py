@@ -79,6 +79,7 @@ class MyStreamer(oandapy.Streamer):
         self.hdir = '/ml.dev/bin/data/oanda/datafeed'
         mkdir_p(self.hdir)
         
+#    @profile
     def init(self, mode):
         qd._getMethod()
         
@@ -114,13 +115,15 @@ class MyStreamer(oandapy.Streamer):
             print usage()
             break
 
+    #@profile
     def on_success(self, data):
-        qd._getMethod()
+        #qd._getMethod()
         
         #self.ticks += 1
         #if self.ticks == 2: self.disconnect()
         try:
             while switch(self.mode):
+                """
                 if case('demo'):
                     print data
                     break
@@ -147,6 +150,7 @@ class MyStreamer(oandapy.Streamer):
                     #if res == False:
                     #    print data
                     break
+                """
                 if case('zmq'):
                     #res = oq.babysitTrades(self.trades, data['tick'], verbose=True)
                     #print j.dumps(res.get_values())
@@ -208,10 +212,11 @@ class MyStreamer(oandapy.Streamer):
         #self.socket.send(stri)
     
 # source: http://www.digi.com/wiki/developer/index.php/Handling_Socket_Error_and_Keepalive
+#@profile
 def do_work(mode, forever = True):
     qd._getMethod()
 
-    oq = OandaQ()
+    oq = OandaQ(selectOandaAccount=1)
     
     while True:
         print 'receiving feed..'
