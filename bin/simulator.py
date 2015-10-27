@@ -95,7 +95,7 @@ class Simulator:
                 while i[len(i)-2] >= time.time():
                     time.sleep(0.001)
                 v = n.array(list(i), dtype=str)
-                csv = ','.join(v)
+                #csv = ','.join(v)
                 k = list(dff.columns)
                 res = dict(zip(k, v))
                 #print res
@@ -103,6 +103,8 @@ class Simulator:
                 if dff.index.dtype == 'int64':
                     dfp = dfp.ix[:,['instrument', 'ask','bid', 'dts', 'time']]
                 #print dfp.transpose()[0].to_dict()
+                csv = list(dfp.get_values()[0])
+                csv = ','.join(csv)
     
                 # send to message queue
                 topic = 'tester'
