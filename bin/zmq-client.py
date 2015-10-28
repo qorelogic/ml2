@@ -175,6 +175,24 @@ class ZMQClient:
         return dfu
     
     #@profile
+    def renderArray(self, a):
+        lsnlen = []
+        for i in a:
+            lsnlen.append(len(i))
+        lsnlenmax = n.max(lsnlen)
+        for i in xrange(len(a)):
+            for j in xrange(len(a[0])):
+                stdscr.addstr(i, (j*lsnlenmax)+(j*5), '{0}'.format(a[i][j]), curses.A_REVERSE)
+                stdscr.refresh()
+        time.sleep(0.01)
+    """
+    for i in xrange(100):
+        cn = 8
+        a = n.random.randn(40,cn)
+        zc.renderArray(a)
+    """
+    
+    #@profile
     def currencyMatrix(self, df=None, mode=None, mong=None, depth=None, verbose=False, instruments=None):
         #from oandaq import OandaQ
         #oq = OandaQ()
@@ -460,14 +478,17 @@ stdscr.keypad(1)
 curses.curs_set(0)
 curses.mousemask(1)
 
+stdscr = curses.initscr()
+curses.noecho()
+curses.cbreak()
+stdscr.keypad(1)
+
 mode = sys.argv[2]
 zc = ZMQClient()
 
 try:
     zc.client(mode=mode)
 except KeyboardInterrupt as e:
-    curses.nocbreak(); stdscr.keypad(0); curses.echo()
-    curses.endwin()
     print ''
 except Exception as e:
     curses.nocbreak(); stdscr.keypad(0); curses.echo()
