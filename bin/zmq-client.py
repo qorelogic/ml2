@@ -1,28 +1,8 @@
 
 import zmq, time, sys
-
-# option to change the port number from default 5555
-try:
-    port = sys.argv[1]
-except:
-    port = 5555    
-
-ctx = zmq.Context()
-#socket = ctx.socket(zmq.REQ)
-socket = ctx.socket(zmq.SUB)
-socket.connect('tcp://localhost:{0}'.format(port))
-
-
-# Subscribe to tester
-topicfilter = 'tester'
-#socket.subscribe(topicfilter) # only for SUB
-socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
-
 from pandas import DataFrame as p_DataFrame
 from numpy import array as n_array
 import numpy as n
-#df = p_DataFrame()
-
 from collections import deque
 
 def normalizeme(dfr, pinv=False):
@@ -285,6 +265,27 @@ def client(mode='avg'):
         c += 1
         """
         #time.sleep(0.1)
+
+
+# option to change the port number from default 5555
+try:
+    port = sys.argv[1]
+except:
+    port = 5555    
+
+ctx = zmq.Context()
+#socket = ctx.socket(zmq.REQ)
+socket = ctx.socket(zmq.SUB)
+socket.connect('tcp://localhost:{0}'.format(port))
+
+
+# Subscribe to tester
+topicfilter = 'tester'
+#socket.subscribe(topicfilter) # only for SUB
+socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
+
+#df = p_DataFrame()
+
 mode = sys.argv[2]
 try:
     client(mode=mode)
