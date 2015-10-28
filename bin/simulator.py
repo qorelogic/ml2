@@ -90,7 +90,8 @@ class Simulator:
             ndiff = cts - ts
             #print ndiff
             dff['tsnowts'] = dff['ts'] + ndiff        
-            dff['tsnow'] = OandaQ.timestampToDatetime_S(dff['ts'] + ndiff)        
+            dff['tsnow'] = OandaQ.timestampToDatetime_S(dff['ts'] + ndiff)
+            cnt = 1
             for i in dff.get_values():
                 while i[len(i)-2] >= time.time():
                     time.sleep(0.001)
@@ -117,14 +118,16 @@ class Simulator:
                 if mode == 'csv':
                     stri = '{0}'.format(csv)
                     socket.send("%s %s" % (topic, stri)) # only for PUB
-                    print stri
+                    print '{0}: {1}'.format(cnt, stri)
                 #self.socket.send(stri)
                 
                 if mode == 'dict':                    
                     ddict = dfp.transpose()[0].to_dict()
                     ddict = j.dumps(ddict)
                     socket.send("%s %s" % (topic, ddict)) # only for PUB                
-                    print ddict
+                    print '{0}: {1}'.format(cnt, ddict)
+
+                cnt +=1
 
 if __name__ == "__main__":
     s = Simulator()
