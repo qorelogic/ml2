@@ -90,7 +90,7 @@ def currencyMatrix(pairs, df=None, mode=None, mong=None, depth=None):
         dfm = dfm.convert_objects(convert_numeric=True)
         dfu = dfm.ix[:, 'EUR USD GBP AUD CHF CAD'.split(' ')]
         #print dfu[(dfu.values) > 0]
-        print dfu
+        print dfu.sort()
         #print dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
         #print dfm[(dfm.values < 5)] #.any(1)
         #print dfm[(dfm.values < 1.5).any(1)].ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
