@@ -170,19 +170,29 @@ class ZMQClient:
         #dfu = dfm.ix[['USD'], :].transpose()
         #dfu = dfu.convert_objects(convert_numeric=True)
         
+        #print dfu
         #print (dfu['USD'] != int(0))
-
         return dfu
     
     #@profile
-    def renderArray(self, a):
+    def renderArray(self, a, index=None, columns=None):
         lsnlen = []
         for i in a:
             lsnlen.append(len(i))
         lsnlenmax = n.max(lsnlen)
+        
+        # index
+        for j in xrange(len(index)):
+            stdscr.addstr(j+3, 0+10, '{0}    '.format(index[j]), curses.A_REVERSE)
+
+        # header
+        for j in xrange(len(columns)):
+            stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{0}'.format(columns[j]), curses.A_REVERSE)
+            
+        # body
         for i in xrange(len(a)):
             for j in xrange(len(a[0])):
-                stdscr.addstr(i, (j*lsnlenmax)+(j*5), '{0}'.format(a[i][j]), curses.A_REVERSE)
+                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{0}'.format(a[i][j]), curses.A_REVERSE)
                 stdscr.refresh()
         time.sleep(0.01)
     """
