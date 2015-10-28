@@ -534,6 +534,14 @@ curses.mousemask(1)
 mode = sys.argv[2]
 zc = ZMQClient()
 
+stdscr = curses.initscr()
+curses.noecho()
+curses.cbreak()
+stdscr.keypad(1)
+
+mode = sys.argv[2]
+zc = ZMQClient()
+
 try:
     zc.client(mode=mode)
 except KeyboardInterrupt as e:
@@ -541,6 +549,8 @@ except KeyboardInterrupt as e:
 except Exception as e:
     curses.nocbreak(); stdscr.keypad(0); curses.echo()
     curses.endwin()
+    print ''
+    print 'usage: <port> <avg|spread>'
 
 curses.nocbreak(); 
 stdscr.keypad(0); 
