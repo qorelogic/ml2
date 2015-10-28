@@ -131,5 +131,8 @@ class Simulator:
 
 if __name__ == "__main__":
     s = Simulator()
-    s.simulate(num=400, mode='csv')
+    try:
+        s.simulate(num=400, mode='csv')
+    except KeyboardInterrupt as e:
+        print ''
     #simulator(df=df, num=40)

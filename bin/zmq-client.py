@@ -286,7 +286,11 @@ def client(mode='avg'):
         """
         #time.sleep(0.1)
 mode = sys.argv[2]
-client(mode=mode)
+try:
+    client(mode=mode)
+except KeyboardInterrupt as e:
+    print ''
+
 
 #from pandas import read_csv as p_read_csv
 #instruments = p_read_csv('data/oanda/cache/instruments.csv').set_index('instrument')
