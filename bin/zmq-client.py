@@ -9,6 +9,11 @@ import os
 import curses
 import threading
 
+stdscr = curses.initscr()
+curses.noecho()
+curses.cbreak()
+stdscr.keypad(1)
+
 def normalizeme(dfr, pinv=False):
     
     nmean = n.mean(dfr, axis=0)
@@ -187,6 +192,7 @@ class ZMQClient:
             #print dfu
             
             self.renderArray(dfu.sort().get_values(), index=dfu.index, columns=dfu.columns)
+            stdscr.addstr(0, 0, "Current mode: Typing mode", curses.A_REVERSE)        
 
             #print dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
             #print dfm[(dfm.values < 5)] #.any(1)
@@ -427,6 +433,8 @@ try:
     zc = ZMQClient()
     zc.client(mode=mode)
 except KeyboardInterrupt as e:
+    curses.nocbreak(); stdscr.keypad(0); curses.echo()
+    curses.endwin()
     print ''
 except Exception as e:
     curses.nocbreak(); stdscr.keypad(0); curses.echo()
