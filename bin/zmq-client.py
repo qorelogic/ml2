@@ -88,10 +88,18 @@ class ZMQClient:
     """
     
     #@profile
-    def currencyMatrix(self, pairs, df=None, mode=None, mong=None, depth=None):
+    def currencyMatrix(self, pairs, df=None, mode=None, mong=None, depth=None, verbose=False):
         #from oandaq import OandaQ
         #oq = OandaQ()
         #pairs = ",".join(list(n.array(p_DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str)))
+        
+        if verbose == True:
+            stdscr.addstr(1, 120, '{:^12}'.format('mode:{0}'.format(mode)), curses.color_pair(1))
+            stdscr.addstr(2, 120, '{:^12}'.format('depth:{0}'.format(depth)), curses.color_pair(1))
+            stdscr.addstr(3, 120, '{:^12}'.format('mong:{0}'.format(len(mong[mode+'s']))), curses.color_pair(1))
+            #self.renderArray(dfu.sort().get_values(), index=dfu.index, columns=dfu.columns)
+                
+        ######
         
         if mode == 'avg':
             #print mong['avgs'].keys()
@@ -162,8 +170,7 @@ class ZMQClient:
             #for i in xrange(int(rows)+len(dfu.index)): print ''
             #print dfu
             
-            #stdscr.addstr(0, 0, "Current mode: Typing mode", curses.A_REVERSE)
-            zc.renderArray(dfu.sort().get_values(), index=dfu.index, columns=dfu.columns)
+            self.renderArray(dfu.sort().get_values(), index=dfu.index, columns=dfu.columns)
 
             #print dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
             #print dfm[(dfm.values < 5)] #.any(1)
