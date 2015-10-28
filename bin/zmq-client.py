@@ -79,7 +79,7 @@ class ZMQClient:
                 #curses.A_REVERSE
                 stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>12}'.format('%1.6f' % a[i][j]), curses.color_pair(2))                
                 stdscr.refresh()
-        time.sleep(0.01)
+        #time.sleep(0.01)
     """
     for i in xrange(100):
         cn = 8
