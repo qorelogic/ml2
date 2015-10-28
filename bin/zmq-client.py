@@ -183,6 +183,7 @@ class ZMQClient:
         
         #print dfu
         #print (dfu['USD'] != int(0))
+
         return dfu
     
     #@profile
@@ -536,6 +537,8 @@ try:
     zc = ZMQClient()
     zc.client(mode=mode)
 except KeyboardInterrupt as e:
+    curses.nocbreak(); stdscr.keypad(0); curses.echo()
+    curses.endwin()
     print ''
 except Exception as e:
     curses.nocbreak(); stdscr.keypad(0); curses.echo()
