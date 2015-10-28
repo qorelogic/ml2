@@ -183,7 +183,6 @@ class ZMQClient:
         
         #print dfu
         #print (dfu['USD'] != int(0))
-
         return dfu
     
     #@profile
