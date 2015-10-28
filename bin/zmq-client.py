@@ -703,11 +703,6 @@ stdscr.keypad(1)
 curses.curs_set(0)
 curses.mousemask(1)
 
-stdscr = curses.initscr()
-curses.noecho()
-curses.cbreak()
-stdscr.keypad(1)
-
 mode = sys.argv[2]
 zc = ZMQClient()
 
