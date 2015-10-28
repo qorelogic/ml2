@@ -67,16 +67,16 @@ class ZMQClient:
         
         # index
         for j in xrange(len(index)):
-            stdscr.addstr(j+3, 0+10, '{0}    '.format(index[j]), curses.A_REVERSE)
+            stdscr.addstr(j+3, 0+10, '{:^8}'.format(index[j]), curses.A_REVERSE)
 
         # header
         for j in xrange(len(columns)):
-            stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{0}'.format(columns[j]), curses.A_REVERSE)
+            stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^12}'.format(columns[j]), curses.A_REVERSE)
             
         # body
         for i in xrange(len(a)):
             for j in xrange(len(a[0])):
-                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{0}'.format(a[i][j]), curses.A_REVERSE)
+                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>12}'.format('%1.6f' % a[i][j]), curses.A_REVERSE)
                 stdscr.refresh()
         time.sleep(0.01)
     """
