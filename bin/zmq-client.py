@@ -214,14 +214,14 @@ def client(mode='avg'):
         #currencyMatrix(list(df.ix[depth-1, :].index), df=df.ix[depth-1, :])
         ########
         # avgs
-        try:
-            avg = abs(float(data[1]) - float(data[2])) / instruments.ix[pair, 'pip']
-        except:
-            continue
+        #try:
+        avg = abs( (float(data[1]) + float(data[2]))/2 )
+        #except:
+        #    continue
         try:
             avgs[pair].append(avg)
         except:
-            avgs[pair] = deque()
+            #avgs[pair] = deque()
             avgs[pair] = deque([0]*depth)
             avgs[pair].append(avg)
         
@@ -229,6 +229,7 @@ def client(mode='avg'):
             #print 'len avg pair:{0} depth:{1}'.format(len(avgs[pair]), depth)
             avgs[pair].popleft()
             #print len(avgs[pair])
+        df = p_DataFrame(avgs)
 
         if mode == 'avg':
             currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
@@ -247,7 +248,7 @@ def client(mode='avg'):
         #    df[i] = normalizeme(n.array(df[i], dtype=float))
         #    df[i] = sigmoidme(n.array(df[i], dtype=float))
         if mode == 'spread':
-            currencyMatrix(list(df.ix[depth-1, :].index), df=df.ix[depth-1, :])
+            currencyMatrix(list(df.ix[depth-1, :].index), df=df.ix[depth-1, :], mode=mode, mong=mong, depth=depth)
         ########
         
         #print de
@@ -282,7 +283,7 @@ def client(mode='avg'):
         """
         #time.sleep(0.1)
 mode = sys.argv[2]
-client(mode)
+client(mode=mode)
 
 #from pandas import read_csv as p_read_csv
 #instruments = p_read_csv('data/oanda/cache/instruments.csv').set_index('instrument')
