@@ -214,10 +214,10 @@ def client(mode='avg'):
         #currencyMatrix(list(df.ix[depth-1, :].index), df=df.ix[depth-1, :])
         ########
         # avgs
-        #try:
-        avg = abs( (float(data[1]) + float(data[2]))/2 )
-        #except:
-        #    continue
+        try: # catch exceptions from commodity instruments
+            avg = abs( (float(data[1]) + float(data[2]))/2 )
+        except:
+            continue
         try:
             avgs[pair].append(avg)
         except:
@@ -235,7 +235,10 @@ def client(mode='avg'):
             currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
         ########
         # spreads
-        spread = abs(float(data[1]) - float(data[2])) / instruments.ix[pair, 'pip']
+        try: # catch exceptions from commodity instruments
+            spread = abs(float(data[1]) - float(data[2])) / instruments.ix[pair, 'pip']
+        except:
+            continue
         try:
             spreads[pair].append(spread)
         except:
