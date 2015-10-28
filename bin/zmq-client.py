@@ -8,11 +8,6 @@ from collections import deque
 import os
 import curses
 
-stdscr = curses.initscr()
-curses.noecho()
-curses.cbreak()
-stdscr.keypad(1)
-
 def normalizeme(dfr, pinv=False):
     
     nmean = n.mean(dfr, axis=0)
@@ -63,6 +58,24 @@ class ZMQClient:
         
         #df = p_DataFrame()
         
+    #@profile
+    def renderArray(self, a):
+        lsnlen = []
+        for i in a:
+            lsnlen.append(len(i))
+        lsnlenmax = n.max(lsnlen)
+        for i in xrange(len(a)):
+            for j in xrange(len(a[0])):
+                stdscr.addstr(i, (j*lsnlenmax)+(j*5), '{0}'.format(a[i][j]), curses.A_REVERSE)
+                stdscr.refresh()
+        time.sleep(0.01)
+    """
+    for i in xrange(100):
+        cn = 8
+        a = n.random.randn(40,cn)
+        zc.renderArray(a)
+    """
+    
     #@profile
     def currencyMatrix(self, pairs, df=None, mode=None, mong=None, depth=None):
         #from oandaq import OandaQ
@@ -138,7 +151,8 @@ class ZMQClient:
             #for i in xrange(int(rows)+len(dfu.index)): print ''
             #print dfu
             
-            stdscr.addstr(0, 0, "Current mode: Typing mode", curses.A_REVERSE)        
+            #stdscr.addstr(0, 0, "Current mode: Typing mode", curses.A_REVERSE)
+            zc.renderArray(dfu.sort().get_values())
 
             #print dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
             #print dfm[(dfm.values < 5)] #.any(1)
@@ -320,16 +334,29 @@ class ZMQClient:
             #time.sleep(0.1)
 
 
+stdscr = curses.initscr()
+curses.noecho()
+curses.cbreak()
+stdscr.keypad(1)
+
+mode = sys.argv[2]
+zc = ZMQClient()
+
 try:
     mode = sys.argv[2]
     zc = ZMQClient()
     zc.client(mode=mode)
 except KeyboardInterrupt as e:
-    curses.nocbreak(); stdscr.keypad(0); curses.echo()
-    curses.endwin()
     print ''
 except Exception as e:
+    curses.nocbreak(); stdscr.keypad(0); curses.echo()
+    curses.endwin()
     print 'usage: <host:port> <avg|spread>'
+
+curses.nocbreak(); 
+stdscr.keypad(0); 
+curses.echo()
+curses.endwin()
 
 #from pandas import read_csv as p_read_csv
 #instruments = p_read_csv('data/oanda/cache/instruments.csv').set_index('instrument')
