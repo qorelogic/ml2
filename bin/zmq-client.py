@@ -459,6 +459,8 @@ curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
 curses.noecho()
 curses.cbreak()
 stdscr.keypad(1)
+# source: http://stackoverflow.com/questions/18837836/how-can-i-hide-the-cursor-in-ncurses
+curses.curs_set(0)
 
 mode = sys.argv[2]
 zc = ZMQClient()
