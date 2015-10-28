@@ -5,6 +5,13 @@ from pandas import DataFrame as p_DataFrame
 from numpy import array as n_array
 import numpy as n
 from collections import deque
+import os
+import curses
+
+stdscr = curses.initscr()
+curses.noecho()
+curses.cbreak()
+stdscr.keypad(1)
 
 def normalizeme(dfr, pinv=False):
     
@@ -124,7 +131,15 @@ class ZMQClient:
             dfm = dfm.convert_objects(convert_numeric=True)
             dfu = dfm.ix[:, 'EUR USD GBP AUD CHF CAD'.split(' ')]
             #print dfu[(dfu.values) > 0]
-            print dfu.sort()
+            dfu = dfu.sort()#.get_values()
+            
+            #absolutely_unused_variable = os.system('clear')  # on linux / os x
+            #rows, columns = os.popen('stty size', 'r').read().split()
+            #for i in xrange(int(rows)+len(dfu.index)): print ''
+            #print dfu
+            
+            stdscr.addstr(0, 0, "Current mode: Typing mode", curses.A_REVERSE)        
+
             #print dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
             #print dfm[(dfm.values < 5)] #.any(1)
             #print dfm[(dfm.values < 1.5).any(1)].ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
@@ -310,6 +325,8 @@ try:
     zc = ZMQClient()
     zc.client(mode=mode)
 except KeyboardInterrupt as e:
+    curses.nocbreak(); stdscr.keypad(0); curses.echo()
+    curses.endwin()
     print ''
 except Exception as e:
     print 'usage: <host:port> <avg|spread>'
