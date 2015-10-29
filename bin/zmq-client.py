@@ -7,6 +7,7 @@ import numpy as n
 from collections import deque
 import os
 import curses
+import threading
 
 def normalizeme(dfr, pinv=False):
     
@@ -58,12 +59,27 @@ class ZMQClient:
         
         #df = p_DataFrame()
         
+        self.hdr = 'EUR USD GBP AUD CHF CAD'.split(' ')
+        self.indr = []
+        
+        #self.hdr0 = [[21,31], [34, 45], [50, 59], [65, 73]]
+        #self.dmaps = dict(zip(self.hdr, self.hdr0))
+
+        t0 = threading.Thread(target=self.getMouse)
+        t0.daemon = False
+        t0.start()
+        
+        from oandaq import OandaQ   
+        self.oq = OandaQ(selectOandaAccount=1)
+        
     #@profile
     def renderArray(self, a, index=None, columns=None):
         lsnlen = []
         for i in a:
             lsnlen.append(len(i))
         lsnlenmax = n.max(lsnlen)
+        
+        self.indr = index
         
         # index
         for j in xrange(len(index)):
@@ -161,7 +177,7 @@ class ZMQClient:
         except: ''
         try:
             dfm = dfm.convert_objects(convert_numeric=True)
-            dfu = dfm.ix[:, 'EUR USD GBP AUD CHF CAD'.split(' ')]
+            dfu = dfm.ix[:, self.hdr]
             #print dfu[(dfu.values) > 0]
             dfu = dfu.sort()#.get_values()
             
@@ -351,7 +367,44 @@ class ZMQClient:
             """
             #time.sleep(0.1)
 
+    def getMouse(self):
+        #stdscr.addstr("This is a Sample Curses Script\n\n") 
+        while True: 
+           event = stdscr.getch() 
+           if event == ord("q"): break 
+           if event == curses.KEY_MOUSE:
+               mm = curses.getmouse()
+               mip = self.getp(mm[1], mm[2])
+               pair = '{0}_{1}'.format(mip[0], mip[1])
+               #self.oq.buy(risk, stop, instrument='EUR_USD', tp=None, nostoploss=False)
+               risk = 1
+               stop = 20
+               self.oq.buy(risk, stop, instrument=pair, verbose=False)
+               #stdscr.getstr()
+               stdscr.addstr(mm[2],mm[1],'{2}_{3}'.format(mm[1], mm[2], mip[0], mip[1]))
+               stdscr.refresh()
 
+    """
+    octave
+    a = [21 31; 34 45; 50 59; 65 72]
+    ar = reshape(a', 1, 8)
+    x = 57
+    [max(ar(ar < x)) min(ar(x < ar))]
+    """
+    def getp(self, x, y):
+        #x = 57
+        a   = n.matrix('21 31; 34 45; 50 59; 65 73; 80 90; 95 105').A
+        ar  = a.reshape(1,a.shape[0]*a.shape[1])[0]
+        
+        try:
+            res = [max(ar[ar < x]), min(ar[x < ar])]
+            df = p_DataFrame(a, index=self.hdr)
+            df['in'] = df.index
+            df0 = df.set_index(0)
+            return [df0.ix[res[0], 'in'], self.indr[y-3]]
+        except:
+            return ''
+            
 stdscr = curses.initscr()
 
 curses.start_color()
@@ -364,6 +417,7 @@ curses.cbreak()
 stdscr.keypad(1)
 # source: http://stackoverflow.com/questions/18837836/how-can-i-hide-the-cursor-in-ncurses
 curses.curs_set(0)
+curses.mousemask(1)
 
 mode = sys.argv[2]
 zc = ZMQClient()
