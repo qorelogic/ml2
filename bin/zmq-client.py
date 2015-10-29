@@ -231,10 +231,23 @@ class ZMQClient:
         #pairs = list(df0.ix[depth-1, :].index)
         dfm0 = self.pivotTicksToCurrencyCode(list(df0.index), df0)
         dfm1 = self.pivotTicksToCurrencyCode(list(df1.index), df1)
-        #print dfm0
+        #print dfm0#.get_values()
         
-        print self.processDfm(dfm0)
-        #print self.processDfm(dfm1)
+        dfu0 = self.processDfm(dfm0)
+        dfu1 = self.processDfm(dfm1)
+        #print dfu0.get_values()
+        
+        a0 = dfu0.get_values()
+        a1 = dfu1.get_values()
+        #print a0.shape
+        #print a1.shape
+        dfmd = n.array([a0, a1])
+        #print dfmd
+        s = n.core.defchararray.add(n.array(dfmd[0], dtype=n.string0), ' ')
+        s = n.core.defchararray.add(s , n.array(n.around(dfmd[0]-dfmd[1], decimals=1), dtype=n.string0))
+        s = n.core.defchararray.add(s, ' ')
+        s = n.core.defchararray.add(s , n.array(n.around((dfmd[0]-dfmd[1])/dfmd[0]*100, decimals=1), dtype=n.string0))
+        print p_DataFrame(s, index=dfu0.index, columns=dfu0.columns)
     
     #@profile
     def client(self, mode='avg'):
