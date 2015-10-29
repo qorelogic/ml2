@@ -231,18 +231,27 @@ class ZMQClient:
             
             pair = data[0]
             # append data into pairs
-            def _uwe(name, pairs, pair, data):
+            def _uwe(name, ddd, pair, data):
                 try:
-                    pairs[pair]['bids'].append(data[1])
+                    ddd[pair]['bids'].append(data[1])
                 except:
                     try:
-                        pairs[pair]['bids'] = deque()
-                        pairs[pair]['bids'].append(data[1])
+                        ddd[pair]['bids'] = deque()
+                        ddd[pair]['bids'].append(data[1])
                     except:
-                        pairs[pair] = {}
-                        pairs[pair]['bids'] = deque()
-                        pairs[pair]['bids'].append(data[1])
-                return pairs
+                        ddd[pair] = {}
+                        ddd[pair]['bids'] = deque()
+                        ddd[pair]['bids'].append(data[1])
+                return ddd
+
+            def _uwe2(ddd, pair, data):
+                try:
+                    ddd[pair].append(data)
+                except:
+                    #ddd[pair] = deque()
+                    ddd[pair] = deque([0]*depth)
+                    ddd[pair].append(data)
+                return ddd
                 
             pairs = _uwe('bids', pairs, pair, data)
             pairs = _uwe('asks', pairs, pair, data)
@@ -252,11 +261,7 @@ class ZMQClient:
             mong = {'bids':bids, 'asks':asks, 'avgs':avgs, 'spreads':spreads}
             ########
             # bids
-            try:
-                bids[pair].append(data[1])
-            except:
-                bids[pair] = deque([0]*depth)
-                bids[pair].append(data[1])                
+            bids = _uwe2(bids, pair, data[1])
             
             if len(pairs[pair]['bids']) >= depth: pairs[pair]['bids'].popleft()
             #df = normalizeme(n.array(pairs[pair]['bids'], dtype=float))
@@ -282,11 +287,7 @@ class ZMQClient:
             #self.currencyMatrix(list(df.ix[depth-1, :].index), df=df.ix[depth-1, :])
             ########
             # asks
-            try:
-                asks[pair].append(data[1])
-            except:
-                asks[pair] = deque([0]*depth)
-                asks[pair].append(data[1])
+            asks = _uwe2(asks, pair, data[1])
             
             if len(asks[pair]) >= depth: asks[pair].popleft()
             df = p_DataFrame(asks)
@@ -300,12 +301,7 @@ class ZMQClient:
                 avg = abs( (float(data[1]) + float(data[2]))/2 )
             except:
                 continue
-            try:
-                avgs[pair].append(avg)
-            except:
-                #avgs[pair] = deque()
-                avgs[pair] = deque([0]*depth)
-                avgs[pair].append(avg)
+            avgs = _uwe2(avgs, pair, avg)
             
             if len(avgs[pair]) >= depth:
                 #print 'len avg pair:{0} depth:{1}'.format(len(avgs[pair]), depth)
@@ -321,11 +317,7 @@ class ZMQClient:
                 spread = abs(float(data[1]) - float(data[2])) / instruments.ix[pair, 'pip']
             except:
                 continue
-            try:
-                spreads[pair].append(spread)
-            except:
-                spreads[pair] = deque([0]*depth)
-                spreads[pair].append(spread)
+            spreads = _uwe2(spreads, pair, spread)
             
             if len(spreads[pair]) >= depth: spreads[pair].popleft()
             df = p_DataFrame(spreads)
