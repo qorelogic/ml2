@@ -29,11 +29,6 @@ def sigmoidme(dfr):
 class ZMQClient:
 
     def __init__(self):
-
-        from qore import QoreDebug
-        self.qd = QoreDebug()
-        self.qd._getMethod()
-
         # option to change the port number from default 5555
         try:
             hostport = sys.argv[1]
@@ -131,6 +126,47 @@ class ZMQClient:
             dfm.ix[isp[1], isp[0]] = di[i]
         return dfm
     
+    def getLast(self, df, depth, n=None):
+        if n != None:
+            df=df.ix[len(df.index)-1-n, :]
+        else:
+            try:
+                df=df.ix[depth-1, :]
+            except:
+                df=df.ix[depth-2, :]
+        #print df
+        return df
+    
+    def processDfm(self, dfm):
+        try: dfm.ix['total', 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] = n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
+        except: ''
+        try:
+            dfm = dfm.convert_objects(convert_numeric=True)
+            dfu = dfm.ix[:, self.hdr]
+            #print dfu[(dfu.values) > 0]
+            dfu = dfu.sort()#.get_values()
+            
+            #absolutely_unused_variable = os.system('clear')  # on linux / os x
+            #rows, columns = os.popen('stty size', 'r').read().split()
+            #for i in xrange(int(rows)+len(dfu.index)): print ''
+            #print dfu
+            
+            self.renderArray(dfu.sort().get_values(), index=dfu.index, columns=dfu.columns)
+
+            #print dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
+            #print dfm[(dfm.values < 5)] #.any(1)
+            #print dfm[(dfm.values < 1.5).any(1)].ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
+            #print dfm.ix[:,(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] < 10)]
+        except:
+            ''
+        #print n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
+        #print dfm.ix[:, ['USD']]
+        #dfu = dfm.ix[['USD'], :].transpose()
+        #dfu = dfu.convert_objects(convert_numeric=True)
+        
+        #print (dfu['USD'] != int(0))
+        return dfu
+    
     #@profile
     def currencyMatrix(self, df=None, mode=None, mong=None, depth=None, verbose=False):
         #from oandaq import OandaQ
@@ -177,58 +213,24 @@ class ZMQClient:
                 #df[i] = sigmoidme(n.array(df[i], dtype=float))
             """
         
+        df = p_DataFrame(mong[mode+'s'])
         #print df  
         #print depth
-        try:
-            df=df.ix[depth-1, :]
-        except:
-            df=df.ix[depth-2, :]
-
-        #print df
-        #print len(df)
+        df1 = self.getLast(df, depth)
+        #print len(df1)
 
         #from oandaq import OandaQ
         #oq = OandaQ()
         #pairs = ",".join(list(n.array(p_DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str)))
-        #pairs = list(df.ix[depth-1, :].index)
-        pairs = list(df.index)
-        """
-        list(df.ix[depth-1, :].index)
-        list(df.ix[depth-1, :].index)
-        list(df.ix[depth-1, :].index) 
-        """           
+        #pairs = list(df1.ix[depth-1, :].index)
+        dfm   = self.pivotTicksToCurrencyCode(list(df1.index), df1)
         
-        dfm = self.pivotTicksToCurrencyCode(pairs, df)
+        df2 = self.getLast(df, depth, n=1)
+        dfm2 = self.pivotTicksToCurrencyCode(list(df2.index), df2)
         #print dfm
         
-        try: dfm.ix['total', 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] = n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
-        except: ''
-        try:
-            dfm = dfm.convert_objects(convert_numeric=True)
-            dfu = dfm.ix[:, self.hdr]
-            #print dfu[(dfu.values) > 0]
-            dfu = dfu.sort()#.get_values()
-            
-            #absolutely_unused_variable = os.system('clear')  # on linux / os x
-            #rows, columns = os.popen('stty size', 'r').read().split()
-            #for i in xrange(int(rows)+len(dfu.index)): print ''
-            #print dfu
-            
-            self.renderArray(dfu.sort().get_values(), index=dfu.index, columns=dfu.columns)
-            stdscr.addstr(0, 0, "Current mode: Typing mode", curses.A_REVERSE)        
-
-            #print dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
-            #print dfm[(dfm.values < 5)] #.any(1)
-            #print dfm[(dfm.values < 1.5).any(1)].ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
-            #print dfm.ix[:,(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] < 10)]
-        except:
-            ''
-        #print n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
-        #print dfm.ix[:, ['USD']]
-        dfu = dfm.ix[['USD'], :].transpose()
-        dfu = dfu.convert_objects(convert_numeric=True)
-        #print dfu
-        #print (dfu['USD'] != int(0))
+        print self.processDfm(dfm)
+        #print self.processDfm(dfm2)
     
     #@profile
     def client(self, mode='avg'):
@@ -439,17 +441,16 @@ stdscr.keypad(1)
 curses.curs_set(0)
 curses.mousemask(1)
 
+mode = sys.argv[2]
+zc = ZMQClient()
+
 try:
-    mode = sys.argv[2]
-    zc = ZMQClient()
     zc.client(mode=mode)
 except KeyboardInterrupt as e:
     print ''
 except Exception as e:
     curses.nocbreak(); stdscr.keypad(0); curses.echo()
     curses.endwin()
-    print 'usage: <host:port> <avg|spread>'
-    sys.exit(0)
 
 curses.nocbreak(); 
 stdscr.keypad(0); 
