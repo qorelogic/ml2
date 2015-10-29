@@ -82,14 +82,24 @@ class ZMQClient:
 
         # header
         for j in xrange(len(columns)):
-            stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^12}'.format(columns[j]), curses.color_pair(1))
+            stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^20}'.format(columns[j]), curses.color_pair(1))
             
         # body
         for i in xrange(len(a)):
             for j in xrange(len(a[0])):
                 #curses.A_REVERSE
-                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>12}'.format('%1.6f' % a[i][j]), curses.color_pair(2))                
-                stdscr.refresh()
+                #stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>20}'.format('%1.6f' % a[i][j]), curses.color_pair(2))
+                vals = a[i][j].split(' ')
+                if float(vals[1]) > 0:
+                    color_pair = 2
+                elif float(vals[1]) < 0:
+                    color_pair = 3
+                else:
+                    color_pair = 4
+                
+                #if float(vals[1]) > 0 or float(vals[1]) < 0:
+                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>20}'.format(a[i][j]), curses.color_pair(color_pair))
+        stdscr.refresh()
         #time.sleep(0.01)
     """
     for i in xrange(100):
@@ -157,8 +167,6 @@ class ZMQClient:
             #for i in xrange(int(rows)+len(dfu.index)): print ''
             #print dfu
             
-            self.renderArray(dfu.sort().get_values(), index=dfu.index, columns=dfu.columns)
-
             #print dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
             #print dfm[(dfm.values < 5)] #.any(1)
             #print dfm[(dfm.values < 1.5).any(1)].ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
@@ -266,7 +274,7 @@ class ZMQClient:
         dfu0 = self.processDfm(dfm0)
         dfu1 = self.processDfm(dfm1)
         #print dfu0.get_values()
-        
+
         a0 = dfu0.get_values()
         a1 = dfu1.get_values()
         #print a0.shape
@@ -277,7 +285,10 @@ class ZMQClient:
         s = n.core.defchararray.add(s , n.array(n.around(dfmd[0]-dfmd[1], decimals=1), dtype=n.string0))
         s = n.core.defchararray.add(s, ' ')
         s = n.core.defchararray.add(s , n.array(n.around((dfmd[0]-dfmd[1])/dfmd[0]*100, decimals=1), dtype=n.string0))
-        #print p_DataFrame(s, index=dfu0.index, columns=dfu0.columns)
+        dfum = p_DataFrame(s, index=dfu0.index, columns=dfu0.columns)
+
+        #self.renderArray(dfu0.sort().get_values(), index=dfu0.index, columns=dfu0.columns)
+        self.renderArray(dfum.sort().get_values(), index=dfum.index, columns=dfum.columns)
     
     #@profile
     def client(self, mode='avg'):
@@ -480,6 +491,7 @@ curses.start_color()
 curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
 curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
 curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
+curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_BLACK)
 
 curses.noecho()
 curses.cbreak()
