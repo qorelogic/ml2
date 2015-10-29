@@ -277,7 +277,7 @@ class ZMQClient:
         s = n.core.defchararray.add(s , n.array(n.around(dfmd[0]-dfmd[1], decimals=1), dtype=n.string0))
         s = n.core.defchararray.add(s, ' ')
         s = n.core.defchararray.add(s , n.array(n.around((dfmd[0]-dfmd[1])/dfmd[0]*100, decimals=1), dtype=n.string0))
-        print p_DataFrame(s, index=dfu0.index, columns=dfu0.columns)
+        #print p_DataFrame(s, index=dfu0.index, columns=dfu0.columns)
     
     #@profile
     def client(self, mode='avg'):
