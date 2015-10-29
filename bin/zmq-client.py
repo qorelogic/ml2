@@ -118,12 +118,13 @@ class ZMQClient:
         di = df.to_dict()
         kdi = di.keys()
         vdi = di.values()
-        dfm = p_DataFrame(lc, index=currs, columns=currs)
         for i in kdi:
             isp = i.split('_')
             #print vdi
             #print '{0} {1} {2}'.format(di[i], i, isp)
-            dfm.ix[isp[1], isp[0]] = di[i]
+            lcurrs = dict(zip(currs, xrange(len(currs))))
+            lc[lcurrs[isp[1]]][lcurrs[isp[0]]] = di[i]
+        dfm = p_DataFrame(lc, index=currs, columns=currs)
         return dfm
     
     def getLast(self, df, depth, num=None, instruments=None):
