@@ -315,17 +315,17 @@ class OandaQ:
             side ='sell'
             self.sell(risk, stop, instrument=instrument, tp=tp, nostoploss=nostoploss)
         
-    def buy(self, risk, stop, instrument='EUR_USD', tp=None, nostoploss=False):
+    def buy(self, risk, stop, instrument='EUR_USD', tp=None, nostoploss=False, verbose=True):
         self.qd._getMethod()
         
-        self.order(risk, stop, 'buy', instrument=instrument, tp=tp, nostoploss=nostoploss)
+        self.order(risk, stop, 'buy', instrument=instrument, tp=tp, nostoploss=nostoploss, verbose=verbose)
         
-    def sell(self, risk, stop, instrument='EUR_USD', tp=None, nostoploss=False):
+    def sell(self, risk, stop, instrument='EUR_USD', tp=None, nostoploss=False, verbose=True):
         self.qd._getMethod()
         
-        self.order(risk, stop, 'sell', instrument=instrument, tp=tp, nostoploss=nostoploss)
+        self.order(risk, stop, 'sell', instrument=instrument, tp=tp, nostoploss=nostoploss, verbose=verbose)
 
-    def order(self, risk, stop, side, instrument='EUR_USD', tp=None, price=None, expiry=None, nostoploss=False):
+    def order(self, risk, stop, side, instrument='EUR_USD', tp=None, price=None, expiry=None, nostoploss=False, verbose=True):
         self.qd._getMethod()
         
         stop = abs(float(stop)) # pips
@@ -359,7 +359,7 @@ class OandaQ:
         #print acc['marginAvail'] * float(leverage) / mprice
         #print acc
         #print mprice
-        print 'amount:{0}'.format(amount)
+        if verbose == True: print 'amount:{0}'.format(amount)
         
         prc = self.oandaConnection().get_prices(instruments=instrument)['prices'][0]
         
@@ -373,12 +373,12 @@ class OandaQ:
         if side == 'buy':
             stopLoss   = prc['bid'] - float(stop) / 10000
             takeProfit = prc['bid'] + float(stop) / 10000
-            print takeProfit
+            if verbose == True: print takeProfit
             limitprice = limitprice['bid']
         if side == 'sell':
             stopLoss = prc['ask'] + float(stop) / 10000
             takeProfit = prc['ask'] - float(stop) / 10000
-            print takeProfit
+            if verbose == True: print takeProfit
             limitprice = limitprice['ask']
         
         if tp != None:
@@ -387,21 +387,21 @@ class OandaQ:
             takeProfit = None
         
         try:
-            print 'attempting market order'
+            if verbose == True: print 'attempting market order'
             order = self.oandaConnection().create_order(self.aid, type='market', instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
-            print 'market order success'
+            if verbose == True: print 'market order success'
         except oandapy.OandaError, e:
-            print 'attempting limit order'
+            if verbose == True: print 'attempting limit order'
             tti = dd.datetime.now()
             tti = tti+ dd.timedelta(days=30)
             tti = self.datetimeToTimestamp(tti)
             expiry = self.timestampToDatetimeFormat(tti, fmt='%Y-%m-%dT%H:%M:%S-3:00')
             #print e
             order = self.oandaConnection().create_order(self.aid, type='limit', expiry=expiry, price=limitprice, instrument=instrument, side=side, units=amount, stopLoss=stopLoss, takeProfit=takeProfit)
-            print order
-            print 'limit order success'
+            if verbose == True: print order
+            if verbose == True: print 'limit order success'
 
-    def calculateAmount(self, bal, pcnt, stop):
+    def calculateAmount(self, bal, pcnt, stop, verbose=True):
         self.qd._getMethod()
 
         bal  = float(bal)
@@ -417,10 +417,11 @@ class OandaQ:
         amount = (pcnt * bal) / (100* ((openp + float(stop) / 10000.0) - openp ) )
         #amount = (pcnt * bal) / (100* ((openp - float(stop) / 10000.0) - openp ) )
         amount = abs(int(amount))
-        print 'amount {0}'.format(amount)
-        print 'pl {0}'.format(pl)
-        print 'pcnt {0}'.format(pcnt)
-        print 'bal {0}'.format(bal)
+        if verbose == True: 
+            print 'amount {0}'.format(amount)
+            print 'pl {0}'.format(pl)
+            print 'pcnt {0}'.format(pcnt)
+            print 'bal {0}'.format(bal)
         
         return amount
         
