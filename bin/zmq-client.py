@@ -50,11 +50,36 @@ class ZMQClient:
         
         #df = p_DataFrame()
         
+    def getCurrencyCodes(self, ps):
+        return list(p_DataFrame(ps).drop_duplicates().transpose().get_values()[0])
+    
+    def currencyPairs2CurrencyCodes(self, pairs):
+        ps = []
+        for i in pairs:#.split(','):
+            pr = i.split('_')
+            ps.append(pr[0])
+            ps.append(pr[1])
+        return ps
+
+    def pivotTicksToCurrencyCode(self, pairs, df):
+        ps    = self.currencyPairs2CurrencyCodes(pairs)
+        currs = self.getCurrencyCodes(ps)
+        #print currs
+        lcurrs = len(currs)
+        lc = n.zeros(lcurrs*lcurrs).reshape(lcurrs, lcurrs)
+        di = df.to_dict()
+        kdi = di.keys()
+        vdi = di.values()
+        dfm = p_DataFrame(lc, index=currs, columns=currs)
+        for i in kdi:
+            isp = i.split('_')
+            #print vdi
+            #print '{0} {1} {2}'.format(di[i], i, isp)
+            dfm.ix[isp[1], isp[0]] = di[i]
+        return dfm
+    
     #@profile
-    def currencyMatrix(self, pairs, df=None, mode=None, mong=None, depth=None):
-        #from oandaq import OandaQ
-        #oq = OandaQ()
-        #pairs = ",".join(list(n.array(p_DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str)))
+    def currencyMatrix(self, df=None, mode=None, mong=None, depth=None):
         
         if mode == 'avg':
             #print mong['avgs'].keys()
@@ -87,30 +112,30 @@ class ZMQClient:
                 #df[i] = normalizeme(n.array(df[i], dtype=float))
                 #df[i] = sigmoidme(n.array(df[i], dtype=float))
             """
-            #print df  
-            #print depth
-            try:
-                df=df.ix[depth-1, :]
-            except:
-                df=df.ix[depth-2, :]
         
-        ps = []
-        for i in pairs:#.split(','):
-            pr = i.split('_')
-            ps.append(pr[0])
-            ps.append(pr[1])
-        currs = list(p_DataFrame(ps).drop_duplicates().transpose().get_values()[0])
-        lcurrs = len(currs)
-        lc = n.zeros(lcurrs*lcurrs).reshape(lcurrs, lcurrs)
-        di = df.to_dict()
-        kdi = di.keys()
-        vdi = di.values()
-        dfm = p_DataFrame(lc, index=currs, columns=currs)
-        for i in kdi:
-            isp = i.split('_')
-            #print vdi
-            #print '{0} {1} {2}'.format(di[i], i, isp)
-            dfm.ix[isp[1], isp[0]] = di[i]
+        #print df  
+        #print depth
+        try:
+            df=df.ix[depth-1, :]
+        except:
+            df=df.ix[depth-2, :]
+
+        #print df
+        #print len(df)
+
+        #from oandaq import OandaQ
+        #oq = OandaQ()
+        #pairs = ",".join(list(n.array(p_DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str)))
+        #pairs = list(df.ix[depth-1, :].index)
+        pairs = list(df.index)
+        """
+        list(df.ix[depth-1, :].index)
+        list(df.ix[depth-1, :].index)
+        list(df.ix[depth-1, :].index) 
+        """           
+        
+        dfm = self.pivotTicksToCurrencyCode(pairs, df)
+        #print dfm
         
         try: dfm.ix['total', 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] = n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
         except: ''
@@ -214,7 +239,7 @@ class ZMQClient:
             #print 'plot'
             
             #print list(df.ix[depth-1, :].index)
-            #self.currencyMatrix(list(df.ix[depth-1, :].index), df=df.ix[depth-1, :])
+            #self.currencyMatrix(df=df)
             ########
             # asks
             asks = _uwe2(asks, pair, data[1])
@@ -224,7 +249,7 @@ class ZMQClient:
             #for i in df.columns:
             #    df[i] = normalizeme(n.array(df[i], dtype=float))
             #    df[i] = sigmoidme(n.array(df[i], dtype=float))
-            #self.currencyMatrix(list(df.ix[depth-1, :].index), df=df.ix[depth-1, :])
+            #self.currencyMatrix(df=df)
             ########
             # avgs
             try: # catch exceptions from commodity instruments
@@ -240,7 +265,7 @@ class ZMQClient:
             df = p_DataFrame(avgs)
     
             if mode == 'avg':
-                self.currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
+                self.currencyMatrix(df=df, mode=mode, mong=mong, depth=depth)
             ########
             # spreads
             try: # catch exceptions from commodity instruments
@@ -255,9 +280,8 @@ class ZMQClient:
             #    df[i] = normalizeme(n.array(df[i], dtype=float))
             #    df[i] = sigmoidme(n.array(df[i], dtype=float))
             if mode == 'spread':
-                self.currencyMatrix(list(df.ix[depth-1, :].index), df=df.ix[depth-1, :], mode=mode, mong=mong, depth=depth)
+                self.currencyMatrix(df=df, mode=mode, mong=mong, depth=depth)
             ########
-            
             #print de
             #print list(de)
             de.append(data)
