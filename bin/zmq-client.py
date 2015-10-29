@@ -78,6 +78,39 @@ class ZMQClient:
             dfm.ix[isp[1], isp[0]] = di[i]
         return dfm
     
+    def getLast(self, df, depth, n=None):
+        if n != None:
+            df=df.ix[len(df.index)-1-n, :]
+        else:
+            try:
+                df=df.ix[depth-1, :]
+            except:
+                df=df.ix[depth-2, :]
+        #print df
+        return df
+    
+    def processDfm(self, dfm):
+        try: dfm.ix['total', 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] = n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
+        except: ''
+        try:
+            dfm = dfm.convert_objects(convert_numeric=True)
+            dfu = dfm.ix[:, 'EUR USD GBP AUD CHF CAD'.split(' ')]
+            #print dfu[(dfu.values) > 0]
+            dfu = dfu.sort()
+            #print dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
+            #print dfm[(dfm.values < 5)] #.any(1)
+            #print dfm[(dfm.values < 1.5).any(1)].ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
+            #print dfm.ix[:,(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] < 10)]
+        except:
+            ''
+        #print n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
+        #print dfm.ix[:, ['USD']]
+        #dfu = dfm.ix[['USD'], :].transpose()
+        #dfu = dfu.convert_objects(convert_numeric=True)
+        
+        #print (dfu['USD'] != int(0))
+        return dfu
+    
     #@profile
     def currencyMatrix(self, df=None, mode=None, mong=None, depth=None):
         
@@ -113,49 +146,24 @@ class ZMQClient:
                 #df[i] = sigmoidme(n.array(df[i], dtype=float))
             """
         
+        df = p_DataFrame(mong[mode+'s'])
         #print df  
         #print depth
-        try:
-            df=df.ix[depth-1, :]
-        except:
-            df=df.ix[depth-2, :]
-
-        #print df
-        #print len(df)
+        df1 = self.getLast(df, depth)
+        #print len(df1)
 
         #from oandaq import OandaQ
         #oq = OandaQ()
         #pairs = ",".join(list(n.array(p_DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str)))
-        #pairs = list(df.ix[depth-1, :].index)
-        pairs = list(df.index)
-        """
-        list(df.ix[depth-1, :].index)
-        list(df.ix[depth-1, :].index)
-        list(df.ix[depth-1, :].index) 
-        """           
+        #pairs = list(df1.ix[depth-1, :].index)
+        dfm   = self.pivotTicksToCurrencyCode(list(df1.index), df1)
         
-        dfm = self.pivotTicksToCurrencyCode(pairs, df)
+        df2 = self.getLast(df, depth, n=1)
+        dfm2 = self.pivotTicksToCurrencyCode(list(df2.index), df2)
         #print dfm
         
-        try: dfm.ix['total', 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] = n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
-        except: ''
-        try:
-            dfm = dfm.convert_objects(convert_numeric=True)
-            dfu = dfm.ix[:, 'EUR USD GBP AUD CHF CAD'.split(' ')]
-            #print dfu[(dfu.values) > 0]
-            print dfu.sort()
-            #print dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
-            #print dfm[(dfm.values < 5)] #.any(1)
-            #print dfm[(dfm.values < 1.5).any(1)].ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
-            #print dfm.ix[:,(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] < 10)]
-        except:
-            ''
-        #print n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
-        #print dfm.ix[:, ['USD']]
-        dfu = dfm.ix[['USD'], :].transpose()
-        dfu = dfu.convert_objects(convert_numeric=True)
-        #print dfu
-        #print (dfu['USD'] != int(0))
+        print self.processDfm(dfm)
+        #print self.processDfm(dfm2)
     
     #@profile
     def client(self, mode='avg'):
