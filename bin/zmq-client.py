@@ -78,14 +78,19 @@ class ZMQClient:
             dfm.ix[isp[1], isp[0]] = di[i]
         return dfm
     
-    def getLast(self, df, depth, n=None):
-        if n != None:
-            df=df.ix[len(df.index)-1-n, :]
+    def getLast(self, df, depth, num=None, instruments=None):
+        if num != None:
+            df=df.ix[len(df.index)-1-num, :]
         else:
             try:
                 df=df.ix[depth-1, :]
             except:
                 df=df.ix[depth-2, :]
+                
+        if type(instruments) != type(None):
+            instruments['p'] = n.zeros(len(instruments.index))
+            df = df.combine_first(instruments['p'])
+        
         #print df
         return df
     
@@ -112,7 +117,7 @@ class ZMQClient:
         return dfu
     
     #@profile
-    def currencyMatrix(self, df=None, mode=None, mong=None, depth=None):
+    def currencyMatrix(self, df=None, mode=None, mong=None, depth=None, instruments=None):
         
         if mode == 'avg':
             #print mong['avgs'].keys()
@@ -147,23 +152,22 @@ class ZMQClient:
             """
         
         df = p_DataFrame(mong[mode+'s'])
+
         #print df  
         #print depth
-        df1 = self.getLast(df, depth)
-        #print len(df1)
+        df0 = self.getLast(df, depth, instruments=instruments)
+        df1 = self.getLast(df, depth, num=1, instruments=instruments)
 
         #from oandaq import OandaQ
         #oq = OandaQ()
         #pairs = ",".join(list(n.array(p_DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str)))
-        #pairs = list(df1.ix[depth-1, :].index)
-        dfm   = self.pivotTicksToCurrencyCode(list(df1.index), df1)
+        #pairs = list(df0.ix[depth-1, :].index)
+        dfm0 = self.pivotTicksToCurrencyCode(list(df0.index), df0)
+        dfm1 = self.pivotTicksToCurrencyCode(list(df1.index), df1)
+        #print dfm0
         
-        df2 = self.getLast(df, depth, n=1)
-        dfm2 = self.pivotTicksToCurrencyCode(list(df2.index), df2)
-        #print dfm
-        
-        print self.processDfm(dfm)
-        #print self.processDfm(dfm2)
+        print self.processDfm(dfm0)
+        #print self.processDfm(dfm1)
     
     #@profile
     def client(self, mode='avg'):
@@ -247,7 +251,7 @@ class ZMQClient:
             #print 'plot'
             
             #print list(df.ix[depth-1, :].index)
-            #self.currencyMatrix(df=df)
+            #self.currencyMatrix(df=df, instruments=instruments)
             ########
             # asks
             asks = _uwe2(asks, pair, data[1])
@@ -257,7 +261,7 @@ class ZMQClient:
             #for i in df.columns:
             #    df[i] = normalizeme(n.array(df[i], dtype=float))
             #    df[i] = sigmoidme(n.array(df[i], dtype=float))
-            #self.currencyMatrix(df=df)
+            #self.currencyMatrix(df=df, instruments=instruments)
             ########
             # avgs
             try: # catch exceptions from commodity instruments
@@ -273,7 +277,7 @@ class ZMQClient:
             df = p_DataFrame(avgs)
     
             if mode == 'avg':
-                self.currencyMatrix(df=df, mode=mode, mong=mong, depth=depth)
+                self.currencyMatrix(df=df, mode=mode, mong=mong, depth=depth, instruments=instruments)
             ########
             # spreads
             try: # catch exceptions from commodity instruments
@@ -288,7 +292,7 @@ class ZMQClient:
             #    df[i] = normalizeme(n.array(df[i], dtype=float))
             #    df[i] = sigmoidme(n.array(df[i], dtype=float))
             if mode == 'spread':
-                self.currencyMatrix(df=df, mode=mode, mong=mong, depth=depth)
+                self.currencyMatrix(df=df, mode=mode, mong=mong, depth=depth, instruments=instruments)
             ########
             #print de
             #print list(de)
