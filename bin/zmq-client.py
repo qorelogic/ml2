@@ -104,35 +104,6 @@ class ZMQClient:
     """
     
     #@profile
-    def renderArray(self, a, index=None, columns=None):
-        lsnlen = []
-        for i in a:
-            lsnlen.append(len(i))
-        lsnlenmax = n.max(lsnlen)
-        
-        # index
-        for j in xrange(len(index)):
-            stdscr.addstr(j+3, 0+10, '{:^8}'.format(index[j]), curses.color_pair(1))
-
-        # header
-        for j in xrange(len(columns)):
-            stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^12}'.format(columns[j]), curses.color_pair(1))
-            
-        # body
-        for i in xrange(len(a)):
-            for j in xrange(len(a[0])):
-                #curses.A_REVERSE
-                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>12}'.format('%1.6f' % a[i][j]), curses.color_pair(2))                
-                stdscr.refresh()
-        #time.sleep(0.01)
-    """
-    for i in xrange(100):
-        cn = 8
-        a = n.random.randn(40,cn)
-        zc.renderArray(a)
-    """
-    
-    #@profile
     def currencyMatrix(self, pairs, df=None, mode=None, mong=None, depth=None, verbose=False):
         #from oandaq import OandaQ
         #oq = OandaQ()
@@ -448,19 +419,6 @@ stdscr.keypad(1)
 # source: http://stackoverflow.com/questions/18837836/how-can-i-hide-the-cursor-in-ncurses
 curses.curs_set(0)
 curses.mousemask(1)
-
-stdscr = curses.initscr()
-
-curses.start_color()
-curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
-curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
-curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
-
-curses.noecho()
-curses.cbreak()
-stdscr.keypad(1)
-# source: http://stackoverflow.com/questions/18837836/how-can-i-hide-the-cursor-in-ncurses
-curses.curs_set(0)
 
 mode = sys.argv[2]
 zc = ZMQClient()
