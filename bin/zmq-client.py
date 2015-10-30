@@ -184,45 +184,6 @@ class ZMQClient:
         return dfu
     
     #@profile
-    def renderArray(self, a, index=None, columns=None):
-        lsnlen = []
-        for i in a:
-            lsnlen.append(len(i))
-        lsnlenmax = n.max(lsnlen)
-        
-        # index
-        for j in xrange(len(index)):
-            stdscr.addstr(j+3, 0+10, '{0}    '.format(index[j]), curses.A_REVERSE)
-
-        # header
-        for j in xrange(len(columns)):
-            stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{0}'.format(columns[j]), curses.A_REVERSE)
-            
-        # body
-        for i in xrange(len(a)):
-            for j in xrange(len(a[0])):
-                #curses.A_REVERSE
-                #stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>20}'.format('%1.6f' % a[i][j]), curses.color_pair(2))
-                vals = a[i][j].split(' ')
-                if float(vals[1]) > 0:
-                    color_pair = 2
-                elif float(vals[1]) < 0:
-                    color_pair = 3
-                else:
-                    color_pair = 1
-                
-                #if float(vals[1]) > 0 or float(vals[1]) < 0:
-                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>20}'.format(a[i][j]), curses.color_pair(color_pair))
-        stdscr.refresh()
-        #time.sleep(0.01)
-    """
-    for i in xrange(100):
-        cn = 8
-        a = n.random.randn(40,cn)
-        zc.renderArray(a)
-    """
-    
-    #@profile
     def currencyMatrix(self, df=None, mode=None, mong=None, depth=None, verbose=False, instruments=None):
         #from oandaq import OandaQ
         #oq = OandaQ()
