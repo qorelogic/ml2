@@ -54,7 +54,7 @@ class ZMQClient:
         
         #df = p_DataFrame()
         
-        self.hds = ['EUR','USD','GBP','AUD','CHF','CAD','JPY']
+        self.hdr = ['EUR','USD','GBP','AUD','NZD','CAD','MXN']
         self.indr = []
         
         #self.hdr0 = [[21,31], [34, 45], [50, 59], [65, 73]]
