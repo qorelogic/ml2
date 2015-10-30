@@ -82,13 +82,13 @@ class ZMQClient:
 
         # header
         for j in xrange(len(columns)):
-            stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^20}'.format(columns[j]), curses.color_pair(1))
+            stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(columns[j]), curses.color_pair(1))
             
         # body
         for i in xrange(len(a)):
             for j in xrange(len(a[0])):
                 #curses.A_REVERSE
-                #stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>20}'.format('%1.6f' % a[i][j]), curses.color_pair(2))
+                #stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>25}'.format('%1.6f' % a[i][j]), curses.color_pair(2))
                 vals = a[i][j].split(' ')
                 if float(vals[1]) > 0:
                     color_pair = 2
@@ -98,7 +98,7 @@ class ZMQClient:
                     color_pair = 4
                 
                 #if float(vals[1]) > 0 or float(vals[1]) < 0:
-                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>20}'.format(a[i][j]), curses.color_pair(color_pair))
+                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>25}'.format(a[i][j]), curses.color_pair(color_pair))
         stdscr.refresh()
         #time.sleep(0.01)
     """
@@ -427,7 +427,7 @@ class ZMQClient:
            event = stdscr.getch() 
            if event == ord("q"): break 
            if event == curses.KEY_MOUSE:
-               mm = curses.getmouse()
+               mm = curses.getmouse()               
                mip = self.getp(mm[1], mm[2])
                pair = '{0}_{1}'.format(mip[0], mip[1])
                #self.oq.buy(risk, stop, instrument='EUR_USD', tp=None, nostoploss=False)
@@ -436,6 +436,7 @@ class ZMQClient:
                self.oq.buy(risk, stop, instrument=pair, verbose=False)
                #stdscr.getstr()
                stdscr.addstr(mm[2],mm[1],'{2}_{3}'.format(mm[1], mm[2], mip[0], mip[1]))
+               #stdscr.addstr(mm[2],mm[1],'{0}_{1}'.format(mm[1], mm[2])) # for debugging
                stdscr.refresh()
 
     """
@@ -447,7 +448,8 @@ class ZMQClient:
     """
     def getp(self, x, y):
         #x = 57
-        a   = n.matrix('21 31; 34 45; 50 59; 65 73; 80 90; 95 105').A
+        #a   = n.matrix('21 31; 34 45; 50 59; 65 73; 80 90; 95 105').A
+        a   = n.matrix('20 35; 37 50; 51 67; 71 79; 82 96; 97 109; 114 129').A
         ar  = a.reshape(1,a.shape[0]*a.shape[1])[0]
         
         try:
@@ -473,11 +475,6 @@ stdscr.keypad(1)
 # source: http://stackoverflow.com/questions/18837836/how-can-i-hide-the-cursor-in-ncurses
 curses.curs_set(0)
 curses.mousemask(1)
-
-stdscr = curses.initscr()
-curses.noecho()
-curses.cbreak()
-stdscr.keypad(1)
 
 mode = sys.argv[2]
 zc = ZMQClient()
