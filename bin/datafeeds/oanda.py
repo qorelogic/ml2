@@ -123,7 +123,6 @@ class MyStreamer(oandapy.Streamer):
         #if self.ticks == 2: self.disconnect()
         try:
             while switch(self.mode):
-                """
                 if case('demo'):
                     print data
                     break
@@ -150,7 +149,6 @@ class MyStreamer(oandapy.Streamer):
                     #if res == False:
                     #    print data
                     break
-                """
                 if case('zmq'):
                     #res = oq.babysitTrades(self.trades, data['tick'], verbose=True)
                     #print j.dumps(res.get_values())
