@@ -54,7 +54,7 @@ class ZMQClient:
         
         #df = p_DataFrame()
         
-        self.hdr = 'EUR USD GBP AUD CHF CAD'.split(' ')
+        self.hds = ['EUR','USD','GBP','AUD','CHF','CAD','JPY']
         self.indr = []
         
         #self.hdr0 = [[21,31], [34, 45], [50, 59], [65, 73]]
@@ -153,9 +153,10 @@ class ZMQClient:
         #print df
         return df
     
+    #@profile
     def processDfm(self, dfm):
-        try: dfm.ix['total', 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] = n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
-        except: ''
+        #try: dfm.ix['total', 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] = n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
+        #except: ''
         try:
             dfm = dfm.convert_objects(convert_numeric=True)
             dfu = dfm.ix[:, self.hdr]
@@ -200,9 +201,20 @@ class ZMQClient:
         # body
         for i in xrange(len(a)):
             for j in xrange(len(a[0])):
-                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{0}'.format(a[i][j]), curses.A_REVERSE)
-                stdscr.refresh()
-        time.sleep(0.01)
+                #curses.A_REVERSE
+                #stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>20}'.format('%1.6f' % a[i][j]), curses.color_pair(2))
+                vals = a[i][j].split(' ')
+                if float(vals[1]) > 0:
+                    color_pair = 2
+                elif float(vals[1]) < 0:
+                    color_pair = 3
+                else:
+                    color_pair = 1
+                
+                #if float(vals[1]) > 0 or float(vals[1]) < 0:
+                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>20}'.format(a[i][j]), curses.color_pair(color_pair))
+        stdscr.refresh()
+        #time.sleep(0.01)
     """
     for i in xrange(100):
         cn = 8
@@ -282,13 +294,14 @@ class ZMQClient:
         dfmd = n.array([a0, a1])
         #print dfmd
         s = n.core.defchararray.add(n.array(dfmd[0], dtype=n.string0), ' ')
-        s = n.core.defchararray.add(s , n.array(n.around(dfmd[0]-dfmd[1], decimals=1), dtype=n.string0))
+        s = n.core.defchararray.add(s , n.array(n.around(dfmd[0]-dfmd[1], decimals=6), dtype=n.string0))
         s = n.core.defchararray.add(s, ' ')
-        s = n.core.defchararray.add(s , n.array(n.around((dfmd[0]-dfmd[1])/dfmd[0]*100, decimals=1), dtype=n.string0))
+        s = n.core.defchararray.add(s , n.array(n.around((dfmd[0]-dfmd[1])/dfmd[0]*1000, decimals=1), dtype=n.string0))
         dfum = p_DataFrame(s, index=dfu0.index, columns=dfu0.columns)
 
-        #self.renderArray(dfu0.sort().get_values(), index=dfu0.index, columns=dfu0.columns)
-        self.renderArray(dfum.sort().get_values(), index=dfum.index, columns=dfum.columns)
+        #self.renderArray(dfu0.get_values(), index=dfu0.index, columns=dfu0.columns)
+        dfum = dfum.sort()
+        self.renderArray(dfum.get_values(), index=dfum.index, columns=dfum.columns)
     
     #@profile
     def client(self, mode='avg'):
