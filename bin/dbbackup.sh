@@ -15,7 +15,7 @@ else
 
 	#rsync -avP /var/lib/mongodb/ root@$ipaddr:/var/lib/mongodb/
 	echo "rsync -avP /mnt/$ipaddr/mongodb/ /var/lib/mongodb/"
-	sudo rsync -avP /mnt/$ipaddr/mongodb/ /var/lib/mongodb/
+	#sudo rsync -avP /mnt/$ipaddr/mongodb/ /var/lib/mongodb/
 	#sudo rsync -avP /var/lib/mongodb/ /mnt/$ipaddr/data/var-lib-mongodb/
 	#echo "rsync -avP /var/lib/mongodb/ /mnt/$ipaddr/mongodb/"
 	#rsync -avP /mnt/$ipaddr/data/db-archive/ data/db-archive/
@@ -34,11 +34,11 @@ else
 	#wipe -fqQ1 $dsttarball
 	#rm -rf $scrdir
 	
-	mongodump -h 127.0.0.1 --port 27017 -d numbeo --out $scrdir/
-	mongodump -h 127.0.0.1 --port 27017 -d ql --out $scrdir/
+	#mongodump -h 127.0.0.1 --port 27017 -d numbeo --out $scrdir/
+	#mongodump -h 127.0.0.1 --port 27017 -d ql --out $scrdir/
 	#echo "mongodump -h $ipaddr -d numbeo --out $scrdir/"
-	#mongodump -h $ipaddr -d numbeo --out $scrdir/
-	#mongodump -h $ipaddr -d ql --out $scrdir/
+	mongodump -h $ipaddr -d numbeo --out $scrdir/
+	mongodump -h $ipaddr -d ql --out $scrdir/
 	#mongodump -d numbeo --out $scrdir/
 	#mongodump -d ql --out $scrdir/
 	

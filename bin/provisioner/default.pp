@@ -211,14 +211,14 @@ import 'nfs-client.pp'
 
 include portmap
 #include nfs-server
-#include nfs-client
+include nfs-client
 #include unzip
 #include curl
 #include javart
 #include h2o
 #include spark
 #include sparkling-water
-include crontab
+#include crontab
 #include nodejs
-include xrdp
+#include xrdp
 include keys
