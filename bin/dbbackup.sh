@@ -24,7 +24,8 @@ else
 	#  data/var-lib-mongodb/ /var/lib/mongodb/
 	#sudo chown mongodb:nogroup /var/lib/mongodb/*.*
 
-	dname="db${dbx}"
+	tmdate="`date +'%Y%m%d_%H%M%S'`"
+	dname="db${dbx}_$tmdate"
 	scrdir="data/$dname"
 	dbarchive="data/db-archive"
 	dsttarball="$dbarchive/$dname.tar.bz2"
