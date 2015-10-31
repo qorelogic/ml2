@@ -210,7 +210,7 @@ import 'nfs-client.pp'
 #include apache
 
 include portmap
-include nfs-server
+#include nfs-server
 include nfs-client
 #include unzip
 #include curl
@@ -221,4 +221,4 @@ include nfs-client
 #include crontab
 #include nodejs
 #include xrdp
-#include keys
+include keys
