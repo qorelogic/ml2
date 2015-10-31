@@ -6,10 +6,11 @@ dbwot="ticks"
 #mongodump --host=127.0.0.1 --port=27017 -d ql -c "${colwot}" --out - | gzip > /mldev/bin/data/db/${colwot}-db.date +%F.gz
 #mongodump --host=127.0.0.1 --port=27017 -d ql -c "${colwot}" --out - | bzip -z > /mldev/bin/data/db/${colwot}-db.date +%F.bz2
 
-if [ "$1" == "" ]; then
-	echo "usage: <ipaddr>"
+if [ "$1" == "" ] || [ "$2" == "" ]; then
+	echo "usage: <ipaddr> <dbname dbX where X=integer>"
 else
 	ipaddr="$1"
+	dbx="$2"
 	#mongodump --host=127.0.0.1 --port=27017 -d ql -c "${colwot}" --out /mnt/$ipaddr/db/
 
 	#rsync -avP /var/lib/mongodb/ root@$ipaddr:/var/lib/mongodb/
@@ -23,7 +24,7 @@ else
 	#  data/var-lib-mongodb/ /var/lib/mongodb/
 	#sudo chown mongodb:nogroup /var/lib/mongodb/*.*
 
-	dname="db8"
+	dname="db${dbx}"
 	scrdir="data/$dname"
 	dbarchive="data/db-archive"
 	dsttarball="$dbarchive/$dname.tar.bz2"
