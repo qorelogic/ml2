@@ -118,14 +118,14 @@ class Simulator:
                 if mode == 'csv':
                     stri = '{0}'.format(csv)
                     socket.send("%s %s" % (topic, stri)) # only for PUB
-                    print '{0}: {1}'.format(cnt, stri)
+#                    print '{0}: {1}'.format(cnt, stri)
                 #self.socket.send(stri)
                 
                 if mode == 'dict':                    
                     ddict = dfp.transpose()[0].to_dict()
                     ddict = j.dumps(ddict)
                     socket.send("%s %s" % (topic, ddict)) # only for PUB                
-                    print '{0}: {1}'.format(cnt, ddict)
+#                    print '{0}: {1}'.format(cnt, ddict)
 
                 cnt +=1
 
