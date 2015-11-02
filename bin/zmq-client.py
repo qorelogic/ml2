@@ -461,7 +461,7 @@ class ZMQClient:
            if event == ord('9'): 
                    self.risk = 9
                    stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
-           if event == ord("b"): 
+           if event == ord("b") or event == ord("w"):  # w alias for buy
                    self.activated = 1
                    self.side = 'b'
                    stdscr.addstr(4,marginDebug,'activated: {0}'.format(self.activated)) # for debugging
