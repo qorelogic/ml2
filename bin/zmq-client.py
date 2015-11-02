@@ -426,12 +426,41 @@ class ZMQClient:
     def getMouse(self):
         #stdscr.addstr("This is a Sample Curses Script\n\n") 
         marginDebug = 135
+        self.risk   = 1
+        stop        = 20
         while True: 
            event = stdscr.getch() 
            if event == ord("q"): 
                import sys
                sys.exit()
                break 
+           if event == ord('1'):
+                   self.risk = 1
+                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+           if event == ord('2'):
+                   self.risk = 2
+                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+           if event == ord('3'):
+                   self.risk = 3
+                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+           if event == ord('4'):
+                   self.risk = 4
+                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+           if event == ord('5'):
+                   self.risk = 5
+                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+           if event == ord('6'):
+                   self.risk = 6
+                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+           if event == ord('7'):
+                   self.risk = 7
+                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+           if event == ord('8'):
+                   self.risk = 8
+                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+           if event == ord('9'): 
+                   self.risk = 9
+                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
            if event == ord("b"): 
                    self.activated = 1
                    self.side = 'b'
@@ -449,14 +478,12 @@ class ZMQClient:
                try:
                    pair = '{0}_{1}'.format(mip[0], mip[1])
                    #self.oq.buy(risk, stop, instrument='EUR_USD', tp=None, nostoploss=False)
-                   risk = 1
-                   stop = 20
                    if self.activated == 1 and self.side == 'b':
-                       self.oq.buy(risk, stop, instrument=pair, verbose=False)
-                       stdscr.addstr(6,marginDebug,'message: buy {0} {1} {2}'.format(risk, stop, pair))
+                       self.oq.buy(self.risk, stop, instrument=pair, verbose=False)
+                       stdscr.addstr(6,marginDebug,'message: buy {0} {1} {2}'.format(self.risk, stop, pair))
                    if self.activated == 1 and self.side == 's':
-                       self.oq.sell(risk, stop, instrument=pair, verbose=False)
-                       stdscr.addstr(6,marginDebug,'message: sell {0} {1} {2}'.format(risk, stop, pair))
+                       self.oq.sell(self.risk, stop, instrument=pair, verbose=False)
+                       stdscr.addstr(6,marginDebug,'message: sell {0} {1} {2}'.format(self.risk, stop, pair))
                    #stdscr.getstr()
                    #stdscr.addstr(mm[2],mm[1],'{2}_{3}'.format(mm[1], mm[2], mip[0], mip[1]))
                    stdscr.addstr(mm[2],mm[1],'{0}_{1}'.format(mm[1], mm[2])) # for debugging
