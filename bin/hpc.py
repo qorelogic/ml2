@@ -21,7 +21,7 @@ class HPC:
         
         self.manager = digitalocean.Manager(token=self.token)
         
-    def getImages(self):
+    def getImages(self, verbose=True):
         self.qd._getMethod()
         
         #im = self.manager.get_all_images()
@@ -33,15 +33,16 @@ class HPC:
         ims = {}
         for i in im:
             ims[i.id] = i#.name
-        for img in ims:
-            print '{0} {1} {2}'.format(ims[img].id, ims[img].name.split(' ')[0], ims[img].created_at)
-        print
+        if verbose == True:
+            for img in ims:
+                print '{0} {1} {2}'.format(ims[img].id, ims[img].name.split(' ')[0], ims[img].created_at)
+            print
         return ims
 
     def getLastImage(self):
         self.qd._getMethod()
         
-        images = self.getImages()
+        images = self.getImages(verbose=False)
         #print images
         ims = images.keys()
         return n.max(ims)
@@ -78,14 +79,19 @@ class HPC:
         
         key = digitalocean.SSHKey(token=self.token)
         dkey = key.load_by_pub_key(self.pkey)
+        
+        nextSnapshotname = self.createNextSnapshotname()
+        lastImage        = self.getLastImage()
+        images           = self.getImages(verbose=False)
 
         droplet = digitalocean.Droplet(token=self.token,
-                                       name=self.createNextSnapshotname(), #'liquid-rc07',
+                                       name=nextSnapshotname, #'liquid-rc07',
                                        #region='nyc2', # New York 2
-                                       region=self.getImages()[self.getLastImage()].regions[0],
+                                       region=images[lastImage].regions[0],
                                        #image='ubuntu-14-04-x64', # Ubuntu 14.04 x64
-                                       image=self.getLastImage(),
+                                       image=lastImage,
                                        size_slug='512mb',  # 512MB
+                                       #size_slug='1gb',  # 512MB
                                        backups=True, ssh_keys=[dkey])
         droplet.create()
     
@@ -173,7 +179,7 @@ class HPC:
     def createNextSnapshotname(self):
         self.qd._getMethod()
         
-        lastImage = self.getImages()[self.getLastImage()]
+        lastImage = self.getImages(verbose=False)[self.getLastImage()]
         #print lastImage.created_at
         #print lastImage.name
         lim = lastImage.name.split('rc')
