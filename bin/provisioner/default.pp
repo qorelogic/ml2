@@ -33,6 +33,13 @@ class xrdp {
   }
 }
 
+class qpackages {
+  package { "wipe":
+    ensure  => present,
+    require => Class["system-update"],
+  }
+}
+
 class apache {
   package { "apache2":
     ensure  => present,
@@ -207,6 +214,7 @@ import 'system-update.pp'
 import 'nfs-server.pp'
 import 'nfs-client.pp'
 
+include qpackages
 #include apache
 
 include portmap
