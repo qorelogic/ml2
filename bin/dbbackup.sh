@@ -23,9 +23,10 @@ else
 	#  --exclude='admin.*' --exclude='local.*' --exclude='mongod.lock'  --exclude='mydb*'  --exclude='storage.*'  --exclude='journal*' \
 	#  data/var-lib-mongodb/ /var/lib/mongodb/
 	#sudo chown mongodb:nogroup /var/lib/mongodb/*.*
+	#sudo service mongod start
 
 	tmdate="`date +'%Y%m%d_%H%M%S'`"
-	dname="db${dbx}_$tmdate"
+	dname="db-${dbx}_$tmdate"
 	scrdir="data/$dname"
 	dbarchive="data/db-archive"
 	dsttarball="$dbarchive/$dname.tar.bz2"
@@ -34,7 +35,9 @@ else
 	#wipe -fqQ1 $dsttarball
 	#rm -rf $scrdir
 	
+	echo 'mongodump -h 127.0.0.1 --port 27017 -d numbeo --out $scrdir/'
 	mongodump -h 127.0.0.1 --port 27017 -d numbeo --out $scrdir/
+	echo 'mongodump -h 127.0.0.1 --port 27017 -d ql --out $scrdir/'
 	mongodump -h 127.0.0.1 --port 27017 -d ql --out $scrdir/
 	#echo "mongodump -h $ipaddr -d numbeo --out $scrdir/"
 	#mongodump -h $ipaddr -d numbeo --out $scrdir/
