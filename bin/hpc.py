@@ -67,8 +67,8 @@ class HPC:
                 print '    ipython notebook --ip={0}'.format(droplet.ip_address)
                 print '    ping {0}'.format(droplet.ip_address)
                 print '    http://{0}:5000'.format(droplet.ip_address)
-                print '    rsync -av /mldev/bin/datafeeds/config.csv \\'
-                print '              root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(droplet.ip_address)
+                print '    rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(droplet.ip_address)
+                print '    rsync -avPn root@{0}:/home/qore/mldev/bin/data/db-archive/ /mldev/bin/data/db-archive/'.format(droplet.ip_address)
                 print '    rdesktop -u qore -p - {0}'.format(droplet.ip_address)
         return droplets
 
