@@ -2,12 +2,12 @@
 _mongod() {
 	_mongodHdir="/etc"
 	if [ -e "$_mongodHdir/mongod.conf" ]; then 
-	sudo mongod --config=/$_mongodHdir/mongod.conf
+	sudo mongod --config=/$_mongodHdir/mongod.conf --rest
 	#echo 1
 	fi
 	if [ -e "$_mongodHdir/mongodb.conf" ]; then 
 	#echo 2
-	sudo mongod --config=/$_mongodHdir/mongodb.conf
+	sudo mongod --config=/$_mongodHdir/mongodb.conf --rest
 	fi
 }
 
