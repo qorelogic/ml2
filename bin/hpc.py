@@ -90,8 +90,8 @@ class HPC:
                                        region=images[lastImage].regions[0],
                                        #image='ubuntu-14-04-x64', # Ubuntu 14.04 x64
                                        image=lastImage,
-                                       size_slug='512mb',  # 512MB
-                                       #size_slug='1gb',  # 512MB
+                                       #size_slug='512mb',  # 512MB
+                                       size_slug='1gb',  # 512MB
                                        backups=True, ssh_keys=[dkey])
         droplet.create()
     
