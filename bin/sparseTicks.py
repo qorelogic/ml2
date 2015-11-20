@@ -100,7 +100,7 @@ def sparseTicks(num=2000):
 # convert sparse ticks dataframe to 3D matrix: 
 #       the 3rd dimension composed of historical price of depth mdepth
 #@profile
-def sparseTicks2dim3(df, mdepth=200, verbose=False):
+def sparseTicks2dim3(df, mdepth=200, verbose=False, returnList=False):
     
     import numpy as n
     import time
@@ -108,6 +108,7 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False):
     
     dfn = df.get_values()
     #dir(dfn)
+    #print df
 
     dfnl = dfn.shape[0]-mdepth
     dfm = n.resize(n.zeros(dfnl * mdepth * dfn.shape[1]), (dfnl, mdepth, dfn.shape[1]))
@@ -145,7 +146,10 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False):
 #        print 
         #p_DataFrame(dfm[i]).plot(legend=False)
     
-    return dfm
+    if returnList == True:
+        return [dfm, df.index, df.columns]
+    else:
+        return dfm
 
 #@profile
 def pipeline():
@@ -206,6 +210,117 @@ def pipeline():
             #print e
 
 ##################
+def generateData(fname):
+
+    import pandas as p
+    from qoreliquid import StatWing, normalizeme, sigmoidme
+
+    mdepth=1
+
+    df = sparseTicks(num=10000)
+    #for i in xrange(1):
+    #    sparseTicks2dim3(df, mdepth=5)
+    #print sparseTicks2dim3(df, mdepth=5)    
+
+    
+    """
+    dim3 = sparseTicks2dim3(df, mdepth=1)    
+    print len(dim3)
+    for i in dim3:
+        print p.DataFrame(i).transpose()
+    """
+    [dim3, indx, cols] = sparseTicks2dim3(df, mdepth=mdepth, returnList=True)
+    print dim3.shape
+    #print dim3
+    #dim3 = dim3.reshape(dim3.shape[0], dim3.shape[2], dim3.shape[1])
+    dim3 = dim3.reshape(dim3.shape[1], dim3.shape[0], dim3.shape[2])
+    print dim3.shape
+    #print dim3
+    dfm = p.DataFrame(dim3[0], index=indx[mdepth:len(indx)], columns=cols)#.transpose()
+    dfm = normalizeme(dfm)    
+    dfm = sigmoidme(dfm)    
+    sw = StatWing()
+    #pairLabel = 'EUR_USD'
+    pairLabel = 'USD_JPY'
+    windowFrame = 10
+    #dfm['label2'] = sw.nextBar(dfm, pairLabel, barsForward=3)
+    #dfm['label'] = sw.higherNextDay(dfm, pairLabel)*1 + sw.lowerNextDay(dfm, pairLabel)*2
+    dfm['label'] = sw.higherNextBars(dfm, pairLabel, barsForward=windowFrame)*1 + sw.lowerNextBars(dfm, pairLabel, barsForward=windowFrame)*-1    
+    
+    print dfm
+    dfm.to_csv(fname)
+
+class ML:
+    
+    def generateModel(self, fname):
+    
+        import h2o    
+        
+        label = 'label'
+        h2o.init()
+        
+        fr1 = h2o.import_frame(fname)
+        #fr1 = h2o.H2OFrame(f1)
+        
+        #self.splitFrame = fr1.split_frame([0.75])
+        self.splitFrame = fr1.split_frame([0.60, 0.20])
+        
+        self.model = h2o.deeplearning(           x=self.splitFrame[0].drop(label),            y=self.splitFrame[0][label], 
+                                      validation_x=self.splitFrame[1].drop(label), validation_y=self.splitFrame[1][label], 
+                                            epochs=100,
+                                            hidden=[100]*pow(2,4),
+                                            activation='TanhWithDropout',
+                                 )
+        """
+        self.model = h2o.gbm(           x=self.splitFrame[0].drop(label),            y=self.splitFrame[0][label], 
+                             validation_x=self.splitFrame[1].drop(label), validation_y=self.splitFrame[1][label], 
+                                   ntrees=1000, max_depth=100
+                            )
+        self.model = h2o.glm(           x=self.splitFrame[0].drop(label),            y=self.splitFrame[0][label], 
+                             validation_x=self.splitFrame[1].drop(label), validation_y=self.splitFrame[1][label] 
+                            )
+        """
+        print self.model
+        #print self.model.model_performance(self.splitFrame[1])
+
+        #print 
+        #print 'Model Performance:'
+        #print self.model.model_performance()
+        
+        print 
+        print '========================================'
+        print 'Model Performance on: TRAINING data::'
+        print self.model.model_performance(self.splitFrame[0])
+        print 
+        print '========================================'
+        print 'Model Performance on: VALIDATION data::'
+        print self.model.model_performance(self.splitFrame[1])
+        print 
+        print '========================================'
+        print 'Model Performance on: TEST data::'
+        print self.model.model_performance(self.splitFrame[2])
+
+    def predictFromModel(self):
+        
+        predict = self.model.predict(self.splitFrame[2])#.get_frame('C1')
+        #print predict
+        #print dir(predict)
+        #print predict.show()
+        
+        print 
+        #print 'Prediction Data Frame:'
+        #print predict.as_data_frame()
+        #print predict.split_frame()
+    
+        print 
+        print 'Prediction Summary:'
+        print predict.summary()
+        #print predict.table()
+        
+        #import matplotlib.pylab as plt
+        #plt.plot(predict.as_data_frame())
+        #plt.show()
+    
 ##########################
 if __name__ == "__main__":
 
@@ -214,6 +329,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', "--save", help="save to csv file", action="store_true")
     parser.add_argument('-t', "--train", help="train via h2o[deeplearning]", action="store_true")
+    parser.add_argument('-t2', "--train2", help="train via ML class h2o[deeplearning]", action="store_true")
     parser.add_argument('-n', "--num", help="number of rows")
     args = parser.parse_args()
     
@@ -227,12 +343,16 @@ if __name__ == "__main__":
     try:    num = int(args.num)
     except: num = 100
     
+    if args.train:
+        fname = '/tmp/ql.ticks.{0}.csv'.format(num)
+    if args.train2:
+        fname = '/tmp/sparseTicks-test-001.csv'
+    
     # if std input is passed
     if not sys.stdin.isatty():
         pipeline()
     # if std input is not passed
     else:
-        fname = '/tmp/ql.ticks.{0}.csv'.format(num)
         if args.save:
             df = sparseTicks(num=num)
             df = normalizeme(df)
@@ -287,6 +407,14 @@ if __name__ == "__main__":
             
             sys.exit()
 
+        if args.train2:
+            #generateData(fname)
+            
+            ml = ML()    
+            ml.generateModel(fname)
+            ml.predictFromModel()
+            sys.exit()
+            
         df = sparseTicks(num=num)
         print df
         #for i in xrange(1):
