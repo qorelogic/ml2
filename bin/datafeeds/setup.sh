@@ -82,6 +82,19 @@ minstall() {
             sudo pip install celery
 	fi
 
+	# H2O
+	if [ "`python -c 'import h2o' 2>&1`" != "" ]; then
+            sudo pip install h2o
+	fi
+	echo "need to fix ~/h2oflows, sure you want to remove directory ~/h2oflows? y/n: "
+	read ans
+	if [ "$ans" == "y" ]; then
+		rm -r ~/h2oflows
+		rm -rfv ~/h2oflows
+		ln -s $mldir/bin/h2oflows ~/h2oflows 2> /dev/null
+		echo 'linked $mldir/bin/h2oflows to ~/h2oflows'
+	fi
+
 	# still testing on ipython notebook
       if [ "`python -c 'import bitstampy' 2>&1`" != "" ]; then
             sudo pip install bitstampy
