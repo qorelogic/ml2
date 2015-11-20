@@ -410,7 +410,7 @@ if __name__ == "__main__":
         if args.train2:
             #generateData(fname)
             
-            ml = ML()    
+            ml = ML()
             ml.generateModel(fname)
             ml.predictFromModel()
             sys.exit()
