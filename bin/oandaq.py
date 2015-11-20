@@ -56,6 +56,7 @@ class OandaQ:
         #imports()
         from qore import QoreDebug
         import pandas as p
+        import sys
         self.qd = QoreDebug()
         self.qd._getMethod()
         
@@ -73,7 +74,10 @@ class OandaQ:
         oc = self.oandaConnection(self.oandaUsername, self.env2, self.access_token2)
         self.oanda2 = oc #oandapy.API(environment=self.env2, access_token=self.access_token2)
     
-        self.aid = self.oandaConnection().get_accounts()['accounts'][0]['accountId']
+        try:
+            self.aid = self.oandaConnection().get_accounts()['accounts'][0]['accountId']
+        except:
+            self.aid = 1
         #self.oandaConnection().create_order(aid, type='market', instrument='EUR_USD', side='sell', units=10)
         """
         if verbose == True:
@@ -114,14 +118,24 @@ class OandaQ:
             'M' : 1 * 2419200 # Month
         }
         
-        self.instruments = self.oandaConnection().get_instruments(self.aid)['instruments']
+        try:
+            self.instruments = self.oandaConnection().get_instruments(self.aid)['instruments']
+        except:
+            df = p.read_csv('/mldev/bin/data/oanda/cache/instruments.csv')
+            #print df
+            self.instruments = df
+            #print 'qwe'
+        #sys.exit()
         self.ticks = {}
         self.accountInfo = {}
         self.ctime = 0
         self.ptime = 0
 
         import pymongo as mong
-        self.mongo = mong.MongoClient()
+        try:
+            self.mongo = mong.MongoClient()
+        except:
+            ''
         
     def log(self, msg, printDot=False):
         #self.qd._getMethod()
