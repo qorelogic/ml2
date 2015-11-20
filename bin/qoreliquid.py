@@ -418,24 +418,30 @@ class StatWing:
         #print dfc.ix[1:len(dfa),['a','b','c']]
         return dfc['c']
 
-    def higherNextDay(self, dfa, k):
+    def higherNextDay(self, dfa, k, barsForward=1):
+        return self.higherNextBars(dfa, k, barsForward=barsForward)
+        
+    def higherNextBars(self, dfa, k, barsForward=1):
         self.qd._getMethod()
 
-        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-1])
+        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward])
         print type(dfc)
-        dfc['a'] = dfa.ix[0:len(dfa)-1, [k]].get_values()
-        dfc['b'] = dfa.ix[1:len(dfa),[k]].get_values()
+        dfc['a'] = dfa.ix[0:len(dfa)-barsForward, [k]].get_values()
+        dfc['b'] = dfa.ix[barsForward:len(dfa),[k]].get_values()
         dfc['c'] = list(n.array((dfc['b'] > dfc['a']), dtype=int))
         #print dfc['a']
         return dfc['c']
         #p.DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
     
-    def lowerNextDay(self, dfa, k):
+    def lowerNextDay(self, dfa, k, barsForward=1):
+        return self.lowerNextBars(dfa, k, barsForward=barsForward)
+        
+    def lowerNextBars(self, dfa, k, barsForward=1):
         self.qd._getMethod()
 
-        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-1], columns=dfa.columns)
-        dfc['a'] = dfa.ix[0:len(dfa)-1, [k]].get_values()
-        dfc['b'] = dfa.ix[1:len(dfa), [k]].get_values()
+        dfc = p.DataFrame(dfa, index=dfa.index[0:len(dfa)-barsForward], columns=dfa.columns)
+        dfc['a'] = dfa.ix[0:len(dfa)-barsForward, [k]].get_values()
+        dfc['b'] = dfa.ix[barsForward:len(dfa), [k]].get_values()
         dfc['c'] = n.array((dfc['b'] < dfc['a']), dtype=int)
         return dfc['c']
         #p.DataFrame(sw.higherPrev(df.ix[:, 0].get_values()))
