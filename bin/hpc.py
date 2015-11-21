@@ -74,22 +74,31 @@ class HPC:
 
         #    #droplet.shutdown()
     
-    def createNode(self):
+    def createNode(self, name=None):
         self.qd._getMethod()
         
         key = digitalocean.SSHKey(token=self.token)
         dkey = key.load_by_pub_key(self.pkey)
         
-        nextSnapshotname = self.createNextSnapshotname()
+        if name != None:
+            nextSnapshotname = name
+        else:
+            nextSnapshotname = self.createNextSnapshotname()
+            
         lastImage        = self.getLastImage()
         images           = self.getImages(verbose=False)
+        
+        if name == 'h2o-worker':
+            image = 'h2o-worker'
+        else:
+            image = lastImage
 
         droplet = digitalocean.Droplet(token=self.token,
                                        name=nextSnapshotname, #'liquid-rc07',
                                        #region='nyc2', # New York 2
                                        region=images[lastImage].regions[0],
                                        #image='ubuntu-14-04-x64', # Ubuntu 14.04 x64
-                                       image=lastImage,
+                                       image=image,
                                        size_slug='512mb',  # 512MB
                                        #size_slug='1gb',  # 512MB
                                        backups=True, ssh_keys=[dkey])
@@ -201,10 +210,24 @@ class HPC:
 
 if __name__ == "__main__":
     import sys
+    import threading
+    
     c = HPC()
+
+    def threadCreateNode():
+        c = HPC()
+        #nextSnapshotname = self.createNextSnapshotname()
+        c.createNode(name='h2o-worker')
+    
     try:
         if sys.argv[1] == 'on':
-            c.createNode()
+            if sys.argv[2] == 'h2o-worker':
+                for i in xrange(int(sys.argv[3])):
+                    thr[i] = threading.Thread(target=threadCreateNode, args=[])
+                    thr[i].daemon = False
+                    thr[i].start()
+            else:
+                c.createNode()
         if sys.argv[1] == 'nodes':
             # running nodes
             res = c.getNodes()
@@ -215,5 +238,5 @@ if __name__ == "__main__":
         if sys.argv[1] == 'destroy':
             print c.destroyAllDroplets()
     except Exception as e:
-        print 'usage: <hpc.py on | nodes | images | snapshot | destroy>'
+        print 'usage: <hpc.py on [h2o-master|h2o-worker <numberOfNodes>] | nodes | images | snapshot | destroy>'
         print e
