@@ -296,11 +296,11 @@ include nfs-client
 include unzip
 include curl
 include javart
-#include h2o
+include h2o
 include tensorflow
 #include spark
 #include sparkling-water
-#include crontab
+include crontab
 #include nodejs
 include xrdp
 #include keys
