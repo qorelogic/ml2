@@ -88,7 +88,7 @@ class HPC:
         images           = self.getImages(verbose=False)
         
         if name == 'h2o-worker':
-            image = 'h2o-worker'
+            image = 'h2o-worker-1448226543'
         else:
             image = lastImage
 
@@ -221,11 +221,14 @@ if __name__ == "__main__":
     try:
         if sys.argv[1] == 'on':
             if sys.argv[2] == 'h2o-worker':
-                for i in xrange(int(sys.argv[3])):
-                    thr[i] = threading.Thread(target=threadCreateNode, args=[])
+                thr = []
+                num = int(sys.argv[3])
+                for i in xrange(num):
+                    print 'starting {0} h2o-workers: h2o-worker-{1}'.format(num, i)
+                    thr.append(threading.Thread(target=threadCreateNode, args=[]))
                     thr[i].daemon = False
                     thr[i].start()
-            else:
+            if sys.argv[2] == 'liquid':
                 c.createNode()
         if sys.argv[1] == 'nodes':
             # running nodes
@@ -237,5 +240,5 @@ if __name__ == "__main__":
         if sys.argv[1] == 'destroy':
             print c.destroyAllDroplets()
     except Exception as e:
-        print 'usage: <hpc.py on [h2o-master|h2o-worker <numberOfNodes>] | nodes | images | snapshot | destroy>'
+        print 'usage: <hpc.py on [liquid|(h2o-master|h2o-worker <numberOfNodes>)] | nodes | images | snapshot | destroy>'
         print e
