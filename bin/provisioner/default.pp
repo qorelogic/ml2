@@ -199,6 +199,14 @@ class crontab {
 	}
 }
 
+class crontab-h2o-worker {
+	cron { "h2o-worker":
+	    command => "/usr/bin/puppet apply /mldev/bin/provisioner/default.pp",
+	    user    => "root",
+	    minute  => "*/5"
+	}
+}
+
 import 'system-update.pp'
 #import 'cassandra.pp'
 import 'mongodb.pp'
@@ -218,7 +226,8 @@ include curl
 include h2o
 #include spark
 #include sparkling-water
-include crontab
+#include crontab
+include crontab-h2o-worker
 #include nodejs
 #include xrdp
 #include keys
