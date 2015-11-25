@@ -288,7 +288,7 @@ class crontab-h2o-worker {
 	    command => "/usr/bin/java -jar /mldev/lib/ml/h2o/h2o-3.0.1.7/h2o.jar",
 	    user    => "qore",
 	    minute  => "*/2",
-	    before  => Exec["h2o-worker puppet"]
+#	    before  => Exec["h2o-worker puppet"]
 	}
 }
 
