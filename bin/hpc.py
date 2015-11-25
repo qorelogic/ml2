@@ -87,7 +87,7 @@ class HPC:
         lastImage        = self.getLastImage()
         images           = self.getImages(verbose=False)
         
-        if name == 'h2o-worker':
+        if name == 'h2o-worker-1448226543':
             image = 'h2o-worker-1448226543'
         else:
             image = lastImage
@@ -220,7 +220,7 @@ if __name__ == "__main__":
     
     try:
         if sys.argv[1] == 'on':
-            if sys.argv[2] == 'h2o-worker':
+            if sys.argv[2] == 'h2o-worker-1448226543':
                 thr = []
                 num = int(sys.argv[3])
                 for i in xrange(num):
