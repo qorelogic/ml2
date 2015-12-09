@@ -51,6 +51,12 @@ minstall() {
 		echo 'export PYTHONPATH=$PYTHONPATH:/ml.dev/lib/oanda/oandapy' >> ~/.bashrc
 		echo 'adding PYTHONPATH export ~/.bashrc'
 	fi
+	if [ ! -f $mldir/lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git ]; then
+		mkdir -p $mldir/lib/bitcoin/
+		echo 'py-localbitcoins'
+		git clone https://github.com/digithink/py-localbitcoins.git $mldir/lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git
+		echo 'cloned py-localbitcoins.'
+	fi
 
 	# python packages for datafeeds
 	sudo apt-get -y install python-pip
