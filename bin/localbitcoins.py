@@ -13,7 +13,7 @@ def defp(pt):
     try:    sys.path.index(pt)
     except: sys.path.append(pt)
 
-defp('/home/qore/qorelogic/assets/sec-svn.git/lib/digithink_py-localbitcoins.github.py.git')
+defp('../lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git')
 
 from api import LocalbitcoinsAPI
 

@@ -52,7 +52,7 @@ minstall() {
 		echo 'adding PYTHONPATH export ~/.bashrc'
 	fi
 	if [ ! -f $mldir/lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git ]; then
-		mkdir -p $mldir/lib/bitcoin/
+		mkdir -p $mldir/lib/bitcoin/localbitcoins/
 		echo 'py-localbitcoins'
 		git clone https://github.com/digithink/py-localbitcoins.git $mldir/lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git
 		echo 'cloned py-localbitcoins.'
