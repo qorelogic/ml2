@@ -57,6 +57,9 @@ minstall() {
 		git clone https://github.com/digithink/py-localbitcoins.git $mldir/lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git
 		echo 'cloned py-localbitcoins.'
 	fi
+	if [ "`python -c 'import drest' 2>&1`" != "" ]; then
+            sudo pip install drest
+	fi
 
 	# python packages for datafeeds
 	sudo apt-get -y install python-pip
