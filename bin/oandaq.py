@@ -460,6 +460,18 @@ class OandaQ:
         #print lsf
         return lsf
         
+    def generateInstruments(self):
+        import pandas as p
+        from qore import readcache, writecache
+        fname = '/mldev/bin/data/oanda/cache/instruments.csv'
+        try:
+            inst = readcache(fname)
+        except Exception as e:
+            print e     
+            inst = p.DataFrame(self.oandaConnection().get_instruments(self.aid)['instruments'])
+            writecache(inst, fname)
+        return inst
+
     def getPairsRelatedToOandaTickers(self, pair):
         self.qd._getMethod()
         
