@@ -104,6 +104,10 @@ minstall() {
             sudo pip install selenium
 	fi
 
+	if [ "`python -c 'import pymongo' 2>&1`" != "" ]; then
+            sudo pip install pymongo
+	fi
+
 	# MQ
 	if [ "`python -c 'import zmq' 2>&1`" != "" ]; then
             sudo pip install pyzmq
