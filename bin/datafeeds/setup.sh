@@ -62,8 +62,26 @@ minstall() {
 	fi
 
 	# python packages for datafeeds
-	sudo apt-get -y install python-pip
+	sudo apt-get -y install python-pip python-dev python-matplotlib
 	sudo pip install --upgrade pip
+	if [ "`python -c 'import ipython' 2>&1`" != "" ]; then
+            sudo pip install ipython
+	fi
+	if [ "`python -c 'import notebook' 2>&1`" != "" ]; then
+            sudo pip install notebook
+	fi
+	if [ "`python -c 'import numpy' 2>&1`" != "" ]; then
+            sudo pip install numpy
+	fi
+	if [ "`python -c 'import pandas' 2>&1`" != "" ]; then
+            sudo pip install pandas
+	fi
+	if [ "`python -c 'import plotly' 2>&1`" != "" ]; then
+            sudo pip install plotly
+	fi
+	if [ "`python -c 'import ujson' 2>&1`" != "" ]; then
+            sudo pip install ujson
+	fi
 	if [ "`python -c 'import digitalocean' 2>&1`" != "" ]; then
             sudo pip install python-digitalocean
 	fi

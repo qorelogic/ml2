@@ -21,11 +21,11 @@ class xrdp {
   $sysPackages = [ "xfce4", "xrdp" ]
   package { $sysPackages:
     ensure => "installed",
-    require => Exec['apt-get update'],
+    #require => Exec['apt-get update'],
     before  => Exec["setXsession"],
   }
   exec { 'setXsession':
-    command => 'cp -p /mldev/bin/provisioner/dot.xsession /home/qore/.xsession',
+    command => '/bin/cp -p /mldev/bin/provisioner/dot.xsession /home/qore/.xsession',
     before  => Exec["restart xrdp"],
   }
   exec { 'restart xrdp':

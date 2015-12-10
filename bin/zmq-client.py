@@ -135,6 +135,10 @@ class ZMQClient:
         avgs = {}
         spreads = {}
         from pandas import read_csv as p_read_csv
+	
+        from oandaq import OandaQ
+        oq = OandaQ()
+        oq.generateInstruments()
         instruments = p_read_csv('data/oanda/cache/instruments.csv').set_index('instrument')
     
         depth = 20
