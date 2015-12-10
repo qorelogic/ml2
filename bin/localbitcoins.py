@@ -20,8 +20,15 @@ from api import LocalbitcoinsAPI
 class LocalBitcoins:
 
     def __init__(self):
-        self.USD_in_ARS = 14.81
+
+        self.USD_in_ARS = self.getAmbitoUSDARSBlue()
+        #self.USD_in_ARS = 14.81
         #self.USD_in_ARS = 14.66
+
+    def getAmbitoUSDARSBlue(self):
+        blue = p.read_csv('/ml.dev/lib/DataPipeline/ambitoUSDARSblue_numbeo.csv')
+        #print blue
+        return blue.ix[0,'venta']
 
     def localbitcoinsOrderbook(self, currency='USD'):
         #from qore import *
@@ -165,7 +172,7 @@ class LocalBitcoins:
     
         return price_equation
     
-    def renderAdMessage(self, lang):
+    def renderAdMessage(self, lang, trade_type, online_provider):
         
         data = {}
         
@@ -190,24 +197,25 @@ class LocalBitcoins:
             data['msg']                             = """Term of Trade :
     PLEASE READ THIS BEFORE YOU START A TRADE! 
     MUST MEET ALL THE REQUIREMENTS!!!
-    I acсept trades with buyers who has:
+    I acсept trades with buyers who have:
     -100+ trades (DEALS) 
     -localbitcoins account older than 6 months
-    -Paypal VERIFIED account
-    -Paypal account matching localbitcoins verified name or I.D.
-    You are required to send pp only after my confirmation.
+    -{0} VERIFIED account
+    -{0} Account matching localbitcoins verified name or I.D.
+    You are required to send {0} only after my confirmation.
     I accept payment from EACH PayPal account only ONCE A DAY.
     If your localbitcoins account is less than 1 year old I will consider trading only once a week. 
     I leave the right to refuse trading with you without explanations.
     Please send as to family or friends or cover PP fee!
     Thanks!
-    """        
+    """.format(online_provider)
+        
         if lang == 'es':
-            data['msg']                             = """Transferencia bancaria Cualquier consulta o duda o referencias, por chat de localbitcoin . Envie sus , CBU , CUIT , tipo de cuenta. y hacemos la transferencia inmediata.
+            bankDetails = []
+            if trade_type == 'ONLINE_BUY':
+                bankDetails.append("""Transferencia bancaria Cualquier consulta o duda o referencias, por chat de localbitcoin . Envie sus , CBU , CUIT , tipo de cuenta. y hacemos la transferencia inmediata.
     Recibes tus pesos en el momento, las 24 hs inclusive los fines de semana. 
-    
-    Si es a altas horas de la madrugada, ni bien me levanto transfiero inmediato.
-    
+
     Es necesario enviarnos los siguientes datos:
     
     - Titular de la cuenta
@@ -215,13 +223,21 @@ class LocalBitcoins:
     - Nombre del banco 
     - CBU y Nro de cuenta
     
+    NOTA : Algunas transferencias bancarias pueden tardar 24/48 horas , dependiendo del sistema bancario y sus horarios o regulacione.s
+
+""")
+                bankDetails.append('transfiero')
+
+            else:
+                bankDetails.append('')
+                bankDetails.append('libero')
+            data['msg']                             = """{0}Si es a altas horas de la madrugada, ni bien me levanto {1} inmediato.
+    
     We speak english, change your BTC and get pesos with a better rate.
     
     Gracias
-    
-    NOTA : Algunas transferencias bancarias pueden tardar 24/48 horas , dependiendo del sistema bancario y sus horarios o regulacione.s
-    
-    """
+""".format(bankDetails[0], bankDetails[1])
+
         return data['msg']
     
     def updateAds(self):
@@ -242,18 +258,18 @@ class LocalBitcoins:
             if data['currency'].upper() == 'ARS':
                 
                 risk = 25
-                data['max_amount']     = int(float((12000.0-500-6000)*risk/100))
+                data['max_amount']     = int(float((12000.0)*risk/100))
                 data['min_amount']     = 100
-                print data
+                #print data
                 data['price_equation'] = self.renderPriceEquation(data['trade_type'], data['currency'])
-                data['msg']            = self.renderAdMessage('es')
+                data['msg']            = self.renderAdMessage('es', trade_type=data['trade_type'], online_provider=data['online_provider'])
                 
             if data['currency'].upper() == 'USD':
                 
                 #data['max_amount']     = 1
                 #data['min_amount']     = 1
                 data['price_equation'] = self.renderPriceEquation(data['trade_type'], data['currency'])
-                data['msg']            = self.renderAdMessage('en')        
+                data['msg']            = self.renderAdMessage('en', trade_type=data['trade_type'], online_provider=data['online_provider'])
     
             data['require_trusted_by_advertiser'] = False
             
@@ -276,7 +292,7 @@ class LocalBitcoins:
     
         from api import LocalbitcoinsAPI
         api = LocalbitcoinsAPI()
-    
+        data = {}
         data['amount']                          = str(amount)
         data['lat']                             = '0'
         data['lon']                             = '0'
@@ -293,7 +309,7 @@ class LocalBitcoins:
             data['location_string']                 = 'Buenos Aires, Autonomous City of Buenos Aires, Argentina'
             data['countrycode']                     = 'AR'
     
-            data['max_amount'] = (12000.0-500)*10/100
+            data['max_amount'] = int((12000.0-500)*10/100)
             data['min_amount'] = 1000
             
             data['price_equation'] = self.renderPriceEquation(data['trade_type'], currency)
@@ -303,15 +319,19 @@ class LocalBitcoins:
             else:
                 data['online_provider']                 = 'NATIONAL_BANK'
             
-            data['msg'] = renderAdMessage('es')
+            data['msg'] = self.renderAdMessage('es', trade_type=data['trade_type'], online_provider=data['online_provider'])
     
         if currency.upper() == 'USD':
             data['city']                            = 'New York'
             data['location_string']                 = 'New York, New York'
             data['countrycode']                     = 'US'
     
-            data['max_amount'] = int(floor(amount))
-            data['min_amount'] = 1
+            if online_provider.upper() == 'OKPAY':
+                data['max_amount'] = 1
+                data['min_amount'] = 1
+            else:
+                data['max_amount'] = int(n.floor(amount))
+                data['min_amount'] = 1
             
             data['price_equation'] = self.renderPriceEquation(data['trade_type'], currency)
     
@@ -320,12 +340,16 @@ class LocalBitcoins:
             if online_provider == None:
                 data['online_provider']                 = 'PAYPAL'
     
-            data['msg'] = renderAdMessage('en')
+            data['msg'] = self.renderAdMessage('en', trade_type=data['trade_type'], online_provider=data['online_provider'])
     
         data['account_info']                    = 'test'
         data['bank_name']                       = ''
         data['sms_verification_required']       = False
-        data['track_max_amount']                = True
+        try:
+            if online_provider.upper() != 'OKPAY':
+                data['track_max_amount']                = True
+        except:
+            ''
         data['require_trusted_by_advertiser']   = False
         data['require_identification']          = False
         
