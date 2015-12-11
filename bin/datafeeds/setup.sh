@@ -60,6 +60,12 @@ minstall() {
 	if [ "`python -c 'import drest' 2>&1`" != "" ]; then
             sudo pip install drest
 	fi
+	if [ ! -f $mldir/lib/bitcoin/1broker/aol1306_1broker-trading-API.github.py.git ]; then
+		mkdir -p $mldir/lib/bitcoin/1broker/
+		echo 'API1brokerlib'
+		git clone https://github.com/aol1306/1broker-trading-API.git $mldir/lib/bitcoin/1broker/aol1306_1broker-trading-API.github.py.git
+		echo 'cloned API1brokerlib.'
+	fi
 
 	# python packages for datafeeds
 	sudo apt-get -y install python-pip python-dev python-matplotlib
