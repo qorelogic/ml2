@@ -25,7 +25,7 @@ split_v 50
 split_h 50 1
 
 # Run commands.
-#run_cmd ".gpull" 0
+run_cmd "cd /ml.dev/bin" 0
 run_cmd "python main.py" 1
 #run_cmd "nano /mldev/bin/data/1broker/balances.json" 1
 run_cmd "python main.py" 2
