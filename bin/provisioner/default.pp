@@ -1,5 +1,5 @@
 
-#Exec { path => [ "/bin/", "/sbin/" , "/usr/bin/", "/usr/sbin/" ] }
+Exec { path => [ "/bin/", "/sbin/" , "/usr/bin/", "/usr/sbin/" ] }
 
 $hdir        = "/mldev"
 $installHdir = "$hdir/lib/ml"
