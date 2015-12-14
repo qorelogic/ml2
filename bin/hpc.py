@@ -178,12 +178,14 @@ class HPC:
     def createNextSnapshotname(self):
         self.qd._getMethod()
         
-        lastImage = self.getImages(verbose=False)[self.getLastImage()]
         #print lastImage.created_at
         #print lastImage.name
+        #lastImage = self.getImages(verbose=True)[self.getLastImage()]
+        lastImage = self.getImages(verbose=True)[13417249]
         lim = lastImage.name.split('rc')
         #print lim
-        lim = '{0}{1}{2}'.format(lim[0], 'rc', '%02d' % (int(lim[1].split(' ')[0])+1))
+        weq = (int(lim[1].split(' ')[0])+1)
+        lim = '{0}{1}{2}'.format(lim[0], 'rc', '%02d' % weq)
         #print lim
         return lim
 
