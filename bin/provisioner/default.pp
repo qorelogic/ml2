@@ -208,7 +208,7 @@ class crontab {
 
 import 'system-update.pp'
 #import 'cassandra.pp'
-#import 'mongodb.pp'
+import 'mongodb.pp'
 
 #include cassandra
 import 'nfs-server.pp'
@@ -220,7 +220,7 @@ include qpackages
 include portmap
 include nfs-server
 include nfs-client
-#include unzip
+include unzip
 #include curl
 #include javart
 #include h2o
