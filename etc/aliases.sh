@@ -46,7 +46,8 @@ alias al="alias | /bin/grep --color -F"
 
 # i'm just too lazy, i know...
 alias qoregrep="/bin/grep --color -rs --exclude *.svn-base"
-alias     grep="qoregrep -EHn"
+#alias     grep="qoregrep -EHn"
+alias     grep="grep --color=auto"
 alias    fgrep="qoregrep -F"
 alias    egrep="qoregrep -E"
 
