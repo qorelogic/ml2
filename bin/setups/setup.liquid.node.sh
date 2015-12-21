@@ -45,7 +45,7 @@ setupAlias() {
 	#echo 'Added by set.liquid.node.sh''
 	echo "$muser    ALL=(ALL:ALL) ALL" >> /etc/sudoers
 	echo ". /mldev/etc/aliases.sh" >> $userHdir/.bashrc
-	echo "alias p='. /mldev/etc/aliases.sh'" >> $muserHdir/.bashrc
+	echo "alias qp='. /mldev/etc/aliases.sh'" >> $muserHdir/.bashrc
 	fi
 }
 
