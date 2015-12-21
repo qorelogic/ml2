@@ -13,6 +13,7 @@ liquidInitialSetup() {
 	
 	sudo -u qore git clone git@github.com:qorelogic/ml2.git /home/qore/mldev
 	ln -s /home/qore/mldev /mldev
+	ln -s /home/qore/mldev /ml.dev
 	cd /mldev/bin
 	
 	apt-get update

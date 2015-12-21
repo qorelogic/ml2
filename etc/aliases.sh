@@ -222,3 +222,7 @@ alias ruby="ruby -Ku"
 
 # use fastri, always
 #alias ri="fri"
+
+# home paths
+alias .ghml='cd /mldev/bin'
+

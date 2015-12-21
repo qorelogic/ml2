@@ -208,6 +208,7 @@ class crontab {
 
 import 'system-update.pp'
 #import 'cassandra.pp'
+import 'javart.pp'
 import 'mongodb.pp'
 
 #include cassandra
