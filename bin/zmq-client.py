@@ -420,9 +420,6 @@ stdscr.keypad(1)
 curses.curs_set(0)
 curses.mousemask(1)
 
-mode = sys.argv[2]
-zc = ZMQClient()
-
 try:
     mode = sys.argv[2]
     zc = ZMQClient()
@@ -433,6 +430,7 @@ except Exception as e:
     curses.nocbreak(); stdscr.keypad(0); curses.echo()
     curses.endwin()
     print 'usage: <host:port> <avg|spread>'
+    sys.exit(0)
 
 curses.nocbreak(); 
 stdscr.keypad(0); 
