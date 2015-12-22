@@ -614,8 +614,8 @@ except Exception as e:
     curses.endwin()
     qd.logTraceBack(e)
     print 'usage: <host:port> <avg|spread>'
-    qd.on()
-    qd.printTraceBack()
+    #qd.on()
+    #qd.printTraceBack()
     sys.exit(0)
 
 curses.nocbreak(); 
