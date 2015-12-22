@@ -10,7 +10,8 @@ class vpn-server {
     #$qwe = generate("/bin/echo", "-n", "Hallo Welt")
     # source: https://groups.google.com/forum/#!topic/puppet-users/HXE4w_TlulM
     # source: http://stackoverflow.com/questions/5171901/sed-command-find-and-replace-in-file-and-overwrite-file-doesnt-work-it-empties
-    $localip = inline_template("<%= %x{ ifconfig | grep -i 'inet ' | grep -v '127.0.0.' | perl -pe 's/[\s]+/ /g' | cut -d' ' -f3 | cut -d':' -f2 } %>")
+    $localip = inline_template("<%= %x{ ifconfig | grep -i 'inet ' | grep -v '127.0.0.' | perl -pe 's/[\s]+/ /g' | cut -d' ' -f3 | cut -d':' -f2  | perl -pe 's/\n//g' } %>")
+    $miface = inline_template("<%= %x{ route -n | grep -i '0.0.0.0' | grep 'U ' | perl -pe 's/[\s]+/ /g' | cut -d' ' -f8  | perl -pe 's/\n//g' } %>")
     #$qwe  = generate("/bin/echo", "-n", "$mvar")
     exec { "pptpd.conf":
     	command => "sudo perl -pi -we 's/^localip (.*)/localip $localip/g' /etc/pptpd.conf",
@@ -38,7 +39,8 @@ class vpn-server {
     }
     exec { "masquerade":
     #	command => "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE && iptables-save",
-    	command => "iptables -t nat -A POSTROUTING -o venet0:0 -j MASQUERADE && iptables-save",
+    #	command => "iptables -t nat -A POSTROUTING -o venet0:0 -j MASQUERADE && iptables-save",
+    	command => "iptables -t nat -A POSTROUTING -o $miface -j MASQUERADE && iptables-save",
     }
 }
 
