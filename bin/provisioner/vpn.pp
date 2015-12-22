@@ -12,9 +12,14 @@ class vpn-server {
     # source: http://stackoverflow.com/questions/5171901/sed-command-find-and-replace-in-file-and-overwrite-file-doesnt-work-it-empties
     $localip = inline_template("<%= %x{ ifconfig | grep -i 'inet ' | grep -v '127.0.0.' | perl -pe 's/[\s]+/ /g' | cut -d' ' -f3 | cut -d':' -f2  | perl -pe 's/\n//g' } %>")
     $miface = inline_template("<%= %x{ route -n | grep -i '0.0.0.0' | grep 'U ' | perl -pe 's/[\s]+/ /g' | cut -d' ' -f8  | perl -pe 's/\n//g' } %>")
+    $qaz = inline_template("<%= %x{ echo 'box1 pptpd passwd *' >> /etc/ppp/chap-secrets } %>")
     #$qwe  = generate("/bin/echo", "-n", "$mvar")
-    exec { "pptpd.conf":
-    	command => "sudo perl -pi -we 's/^localip (.*)/localip $localip/g' /etc/pptpd.conf",
+    exec { "pptpd.conf localip":
+    	command => "sudo perl -pi -we 's/^(#)?localip (.*)/localip $localip/g' /etc/pptpd.conf",
+        before  => Exec["pptpd.conf remoteip"],
+    }
+    exec { "pptpd.conf remoteip":
+    	command => "sudo perl -pi -we 's/^(#)?remoteip (.*)/remoteip 192.168.0.234-238,192.168.0.245/g' /etc/pptpd.conf",
         before  => Exec["chap-secrets"],
     }
     exec { "chap-secrets":
