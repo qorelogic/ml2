@@ -292,12 +292,14 @@ class ZMQClient:
             #time.sleep(0.1)
 
 
-mode = sys.argv[2]
-zc = ZMQClient()
 try:
+    mode = sys.argv[2]
+    zc = ZMQClient()
     zc.client(mode=mode)
 except KeyboardInterrupt as e:
     print ''
+except Exception as e:
+    print 'usage: <port> <avg|spread>'
 
 #from pandas import read_csv as p_read_csv
 #instruments = p_read_csv('data/oanda/cache/instruments.csv').set_index('instrument')
