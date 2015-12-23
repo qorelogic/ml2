@@ -29,6 +29,11 @@ def sigmoidme(dfr):
 class ZMQClient:
 
     def __init__(self):
+
+        from qore import QoreDebug
+        self.qd = QoreDebug()
+        self.qd._getMethod()
+
         # option to change the port number from default 5555
         try:
             hostport = sys.argv[1]
