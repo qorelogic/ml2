@@ -72,6 +72,28 @@ class QoreDebug:
             print "*** print_exception:"
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
 
+    def logTraceBack(self):
+        self._on = True
+        if self._on == True:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.log("*** print_tb:")
+            
+            #fp = open('/tmp/qore.dev.log', 'a')
+            #traceback.print_tb(exc_traceback, limit=1, file=fp)
+            self.log(traceback.extract_tb(exc_traceback, limit=1))
+            self.log("*** print_exception:")
+            #traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=fp)
+            self.log(traceback.extract_stack(limit=1))
+            #fp.close()
+
+    def log(self, str, verbosity=8):
+        #if verbosity == 9:
+        if verbosity == 8:
+            #print str
+            logging.debug(str)
+    
+            #return str
+    
 # source: http://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python
 class switch(object):
     value = None
