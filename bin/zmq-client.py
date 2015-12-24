@@ -77,40 +77,96 @@ class ZMQClient:
         
         self.activated = 0
         
+        self.y_offset = 4
+        
     #@profile
+    def get_color_pair(self, val):
+        if float(val) > 0:
+            color_pair = 2
+            #self.qd.log('high')
+        elif float(val) < 0:
+            color_pair = 3
+            #self.qd.log('low')
+        else:
+            color_pair = 4
+            #self.qd.log('eq')
+        return color_pair
+    
     def renderArray(self, a, index=None, columns=None):
         lsnlen = []
         for i in a:
             lsnlen.append(len(i))
         lsnlenmax = n.max(lsnlen)
+        #self.qd.type(lsnlen)
+        #self.qd.type(lsnlenmax)
         
         self.indr = index
         
         # index
+        r1 = n.array(n.array(a, dtype=n.float16) > 0, dtype=int).sum(1, dtype=n.float16) / a.shape[1]
+        r1 = n.around(r1, decimals=3)
+        r2 = n.array(n.array(a, dtype=n.float16) < 0, dtype=int).sum(1, dtype=n.float16) / a.shape[1]
+        r2 = n.around(r2, decimals=3)
+        r3 = r1 - r2
+        #self.qd.log(r1)
         for j in xrange(len(index)):
-            try: stdscr.addstr(j+3, 0+10, '{:^8}'.format(index[j]), curses.color_pair(1))
+            try: stdscr.addstr(j+self.y_offset, 0+1, '{:^8}'.format(index[j]), curses.color_pair(1))
+            except: ''
+            try: stdscr.addstr(j+self.y_offset, 0+15, '{:^15}'.format(r3[j]), curses.color_pair(self.get_color_pair(r3[j])))
             except: ''
 
         # header
+        a = n.array(a, dtype=n.string0)
+        #self.qd.log(a)
+        
+        c1 = n.array(n.array(a, dtype=n.float16) > 0, dtype=int).sum(0, dtype=n.float16) / a.shape[0]
+        c1 = n.around(c1, decimals=3)
+        c2 = n.array(n.array(a, dtype=n.float16) < 0, dtype=int).sum(0, dtype=n.float16) / a.shape[0]
+        c2 = n.around(c2, decimals=3)
+        c3 = c1 - c2
+        
         for j in xrange(len(columns)):
             stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(columns[j]), curses.color_pair(1))
-            
+            stdscr.addstr(2, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(c3[j]), curses.color_pair(self.get_color_pair(c3[j])))
+            #stdscr.addstr(2, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(c1[j]), curses.color_pair(1))
+            #stdscr.addstr(3, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(c2[j]), curses.color_pair(1))
+        #self.qd.log(a.shape)
+        #self.qd.log(a.sum(0))
         # body
+        
         for i in xrange(len(a)):
             for j in xrange(len(a[0])):
                 #curses.A_REVERSE
                 #stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>25}'.format('%1.6f' % a[i][j]), curses.color_pair(2))
-                vals = a[i][j].split(' ')
-                if float(vals[1]) > 0:
-                    color_pair = 2
-                elif float(vals[1]) < 0:
-                    color_pair = 3
-                else:
-                    color_pair = 4
+                if type(a[i][j]) == type('') or type(a[i][j]) == type(n.string_('')):
+                    try:
+                        vals = a[i][j]
+                        val = vals.split(' ')[1]
+                        #self.qd.log(1)
+                    except:
+                        vals = a[i][j]#.split(' ')[0]
+                        val = vals#.split(' ')[0]
+                        #self.qd.type(val)
+                        #self.qd.type(a[i][j])
+                        #self.qd.log(2)
+                #else:
+                #    val = a[i][j]
+                    #self.qd.log('{0} {1}'.format(val, type(val)))
+                #val = float(val)
+                vals = n.string_(vals)
+                val = n.string_(val)
+                color_pair = self.get_color_pair(val)
                 
-                #if float(vals[1]) > 0 or float(vals[1]) < 0:
-                try: stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>25}'.format(a[i][j]), curses.color_pair(color_pair))
-                except: ''
+                #if float(val) > 0 or float(val) < 0:
+                try:
+                    #vals = '{:>25}'.format(a[i][j])
+                    vals = '{:>15}'.format(vals)
+                    #self.qd.type(a[i][j])
+                    #self.qd.type(vals)
+                    try: stdscr.addstr(i+self.y_offset, (j*lsnlenmax)+(j*8)+20, vals, curses.color_pair(color_pair))
+                    except: ''
+                except Exception as e:
+                    self.qd.log(e)
         stdscr.refresh()
         #time.sleep(0.01)
     """
@@ -266,6 +322,8 @@ class ZMQClient:
         #print a1.shape
         dfmd = n.array([a0, a1])
         #print dfmd
+        #s = dfmd
+        """
         s = n.core.defchararray.add(n.array(dfmd[0], dtype=n.string0), ' ')
         s = n.core.defchararray.add(s , n.array(n.around(dfmd[0]-dfmd[1], decimals=6), dtype=n.string0))
         s = n.core.defchararray.add(s, ' ')
@@ -274,7 +332,9 @@ class ZMQClient:
 
         #self.renderArray(dfu0.get_values(), index=dfu0.index, columns=dfu0.columns)
         dfum = dfum.sort()
-        self.renderArray(dfum.get_values(), index=dfum.index, columns=dfum.columns)
+        """
+        self.renderArray(n.around(dfmd[0]-dfmd[1], decimals=6), index=dfu0.index, columns=dfu0.columns)
+        #self.renderArray(dfum.get_values(), index=dfum.index, columns=dfum.columns)
     
     #@profile
     def client(self, mode='avg'):
@@ -501,7 +561,6 @@ class ZMQClient:
                    #stdscr.addstr(6,marginDebug,'message: {0}'.format(msg)) # for debugging
                except Exception as e:
                    #print e
-                   self.qd.log(e)
                    self.qd.logTraceBack(e)
                stdscr.refresh()
 
@@ -523,7 +582,7 @@ class ZMQClient:
             df = p_DataFrame(a, index=self.hdr)
             df['in'] = df.index
             df0 = df.set_index(0)
-            return [df0.ix[res[0], 'in'], self.indr[y-3]]
+            return [df0.ix[res[0], 'in'], self.indr[y-self.y_offset]]
         except:
             return ''
             
@@ -553,6 +612,7 @@ except KeyboardInterrupt as e:
 except Exception as e:
     curses.nocbreak(); stdscr.keypad(0); curses.echo()
     curses.endwin()
+    zc.qd.logTraceBack(e)
     print 'usage: <port> <avg|spread>'
     qd.on()
     qd.printTraceBack()
