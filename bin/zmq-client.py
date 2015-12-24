@@ -84,7 +84,6 @@ class ZMQClient:
         self.zmq = ZMQ()
         self.zmq.zmqInit()
         
-        
     #@profile
     def get_color_pair(self, val):
         if float(val) > 0:
