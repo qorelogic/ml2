@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import zmq, time, sys
 from pandas import DataFrame as p_DataFrame
