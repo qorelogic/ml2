@@ -206,14 +206,14 @@ class ZMQClient:
                 
         ######
         
-        if mode == 'avg':
+        #if mode == 'avg':
             #print mong['avgs'].keys()
             #for i in mong['avgs'].keys():
             #    print len(mong['avgs'][i])
             #    print mong['avgs'][i]
-            df = p_DataFrame(mong['avgs'])
+            #df = p_DataFrame(mong['avgs'])
             #print df
-            for i in df.columns:
+            #for i in df.columns:
                 #print df[i]
                 #a = list(n.array(df[i], dtype=float))
                 #a = filter(lambda x: x != 0, a)
@@ -226,7 +226,6 @@ class ZMQClient:
                 #df.ix[len(df)-len(b):len(df)-1, i] = b
                 #df[i] = normalizeme(n.array(df[i], dtype=float))
                 #df[i] = sigmoidme(n.array(df[i], dtype=float))
-                ''
             """
             df = p_DataFrame()
             for i in avgs:
@@ -297,6 +296,21 @@ class ZMQClient:
             data = data.split(' ')
             data = ' '.join(data[1:]) # fixes the previous space split
             data = data.split(',')
+            try:
+                last_ts = ts
+            except Exception as e:
+                last_ts = 0
+                self.qd.log(e)
+            try:
+                ts = time.time()
+                diff_ts_last_ts = abs(ts-float(last_ts))
+            except Exception as e:
+                self.qd.log(e)
+            tdiff = ts-float(data[4]) # difference in time between current timestamp and current ticks timestamp
+            overage = ''
+            if tdiff > 1: overage = 'overage'
+            self.qd.log('tsds:{0} tsd:{1} ts:{2} tsdiff:{5} tdiff:{3} {4}'.format(data[3], data[4], ts, tdiff, overage, diff_ts_last_ts))
+            stdscr.addstr(2, 1, '{:^12}'.format('UTC:{0}'.format(data[3])), curses.color_pair(1))
             ts = str(data[4][0:10])+str(data[3][19:26])
             #de.append(ts)
             
@@ -332,71 +346,78 @@ class ZMQClient:
             mong = {'bids':bids, 'asks':asks, 'avgs':avgs, 'spreads':spreads}
             ########
             # bids
-            bids = _uwe2(bids, pair, data[1])
-            
-            if len(pairs[pair]['bids']) >= depth: pairs[pair]['bids'].popleft()
-            #df = normalizeme(n.array(pairs[pair]['bids'], dtype=float))
-            #df = sigmoidme(n.array(bids, dtype=float))
-    
-            if len(bids[pair]) >= depth: bids[pair].popleft()
-            #df = normalizeme(n.array(bids[pair], dtype=float))
-            #df = sigmoidme(n.array(bids, dtype=float))
-            
-            #print pair
-            #print list(df)
-            #print pairs.keys()
-            df = p_DataFrame(bids)
-            for i in df.columns:
-                df[i] = normalizeme(n.array(df[i], dtype=float))
-                df[i] = sigmoidme(n.array(df[i], dtype=float))
-            #df = normalizeme(n.array(df, dtype=float))
-            #df[]
-            #print df.ix[depth-1, :]#.bfill().ffill()#.transpose()
-            #print 'plot'
-            
-            #print list(df.ix[depth-1, :].index)
-            #self.currencyMatrix(df=df, instruments=instruments)
+            if mode == 'bids':
+                bids = _uwe2(bids, pair, data[1])
+                
+                if len(pairs[pair]['bids']) >= depth: pairs[pair]['bids'].popleft()
+                #df = normalizeme(n.array(pairs[pair]['bids'], dtype=float))
+                #df = sigmoidme(n.array(bids, dtype=float))
+        
+                if len(bids[pair]) >= depth: bids[pair].popleft()
+                #df = normalizeme(n.array(bids[pair], dtype=float))
+                #df = sigmoidme(n.array(bids, dtype=float))
+                
+                #print pair
+                #print list(df)
+                #print pairs.keys()
+                df = p_DataFrame(bids)
+                for i in df.columns:
+                    df[i] = normalizeme(n.array(df[i], dtype=float))
+                    df[i] = sigmoidme(n.array(df[i], dtype=float))
+                #df = normalizeme(n.array(df, dtype=float))
+                #df[]
+                #print df.ix[depth-1, :]#.bfill().ffill()#.transpose()
+                #print 'plot'
+                
+                #print list(df.ix[depth-1, :].index)
+                #if tdiff < 1:
+                #self.currencyMatrix(df=df, instruments=instruments)
             ########
             # asks
-            asks = _uwe2(asks, pair, data[1])
-            
-            if len(asks[pair]) >= depth: asks[pair].popleft()
-            df = p_DataFrame(asks)
-            #for i in df.columns:
-            #    df[i] = normalizeme(n.array(df[i], dtype=float))
-            #    df[i] = sigmoidme(n.array(df[i], dtype=float))
-            #self.currencyMatrix(df=df, instruments=instruments)
+            if mode == 'asks':
+                asks = _uwe2(asks, pair, data[1])
+                
+                if len(asks[pair]) >= depth: asks[pair].popleft()
+                df = p_DataFrame(asks)
+                #for i in df.columns:
+                #    df[i] = normalizeme(n.array(df[i], dtype=float))
+                #    df[i] = sigmoidme(n.array(df[i], dtype=float))
+                #if tdiff < 1:
+                #self.currencyMatrix(df=df, instruments=instruments)
             ########
             # avgs
-            try: # catch exceptions from commodity instruments
-                avg = abs( (float(data[1]) + float(data[2]))/2 )
-            except:
-                continue
-            avgs = _uwe2(avgs, pair, avg)
-            
-            if len(avgs[pair]) >= depth:
-                #print 'len avg pair:{0} depth:{1}'.format(len(avgs[pair]), depth)
-                avgs[pair].popleft()
-                #print len(avgs[pair])
-            df = p_DataFrame(avgs)
-    
             if mode == 'avg':
-                self.currencyMatrix(df=df, mode=mode, mong=mong, depth=depth, instruments=instruments)
+                try: # catch exceptions from commodity instruments
+                    avg = abs( (float(data[1]) + float(data[2]))/2 )
+                except:
+                    continue
+                avgs = _uwe2(avgs, pair, avg)
+                
+                if len(avgs[pair]) >= depth:
+                    #print 'len avg pair:{0} depth:{1}'.format(len(avgs[pair]), depth)
+                    avgs[pair].popleft()
+                    #print len(avgs[pair])
+                df = p_DataFrame(avgs)
+        
+                #if tdiff > 1: continue # 
+                if tdiff < 1:
+                    self.currencyMatrix(df=df, mode=mode, mong=mong, depth=depth, instruments=instruments)
             ########
             # spreads
-            try: # catch exceptions from commodity instruments
-                spread = abs(float(data[1]) - float(data[2])) / instruments.ix[pair, 'pip']
-            except:
-                continue
-            spreads = _uwe2(spreads, pair, spread)
-            
-            if len(spreads[pair]) >= depth: spreads[pair].popleft()
-            df = p_DataFrame(spreads)
-            #for i in df.columns:
-            #    df[i] = normalizeme(n.array(df[i], dtype=float))
-            #    df[i] = sigmoidme(n.array(df[i], dtype=float))
             if mode == 'spread':
-                self.currencyMatrix(df=df, mode=mode, mong=mong, depth=depth, instruments=instruments)
+                try: # catch exceptions from commodity instruments
+                    spread = abs(float(data[1]) - float(data[2])) / instruments.ix[pair, 'pip']
+                except:
+                    continue
+                spreads = _uwe2(spreads, pair, spread)
+                
+                if len(spreads[pair]) >= depth: spreads[pair].popleft()
+                df = p_DataFrame(spreads)
+                #for i in df.columns:
+                #    df[i] = normalizeme(n.array(df[i], dtype=float))
+                #    df[i] = sigmoidme(n.array(df[i], dtype=float))
+                if tdiff < 1:
+                    self.currencyMatrix(df=df, mode=mode, mong=mong, depth=depth, instruments=instruments)
             ########
             #print de
             #print list(de)
