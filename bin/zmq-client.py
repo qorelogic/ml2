@@ -490,8 +490,9 @@ class ZMQClient:
                    stdscr.addstr(3,marginDebug,'buy or sell {2}? (b/s): '.format(mm[1], mm[2], pair)) # for debugging
                    #stdscr.addstr(6,marginDebug,'message: {0}'.format(msg)) # for debugging
                except Exception as e:
-                   print e
-                   ''
+                   #print e
+                   self.qd.log(e)
+                   self.qd.logTraceBack(e)
                stdscr.refresh()
 
     """
