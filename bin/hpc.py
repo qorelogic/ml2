@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 import digitalocean
+from vultr.vultr import Vultr
 import numpy as n
+import pandas as p
 import time
 
 from qore import QoreDebug
@@ -54,21 +56,44 @@ class HPC:
         #print 'nodes:'
         my_droplets = self.manager.get_all_droplets()
         droplets = {}
+        def printNodeManifest(node_id, ip_address, label, location, date_created, passwd=''):
+            print 'id:{0}'.format(node_id)
+            print 'label:{0}'.format(label)
+            print 'location:{0}'.format(location)
+            print 'date_created:{0}'.format(date_created)
+            print 'passwd:{0}'.format(passwd)
+            print '    ping {0}'.format(ip_address)
+            print '    ssh -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
+            print ''
+            print '  X11 Forwarding via SSH@{0}'.format(ip_address)
+            print '    ssh -X -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
+            print '    ipython notebook --ip={0}'.format(ip_address)
+            print '    http://{0}:5000'.format(ip_address)
+            print '    rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(ip_address)
+            print '    rsync -avP --partial root@{0}:/home/qore/mldev/bin/data/db-archive/ /mldev/bin/data/db-archive/'.format(ip_address)
+            print '    rdesktop -g 100% -u qore -p - {0}'.format(ip_address)
+            print 
+        
+        print '=== DigitalOcean ====='
         for droplet in my_droplets:
+            print '--------'
             droplets[droplet.id] = droplet
             #droplets.append(droplet)
+            #print droplets
+            #print dir(droplet)
             if quiet == False:
-                print droplet.id
-                print '    ping {0}'.format(droplet.ip_address)
-                print '    ssh -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
-                print ''
-                print '  X11 Forwarding via SSH@{0}'.format(droplet.ip_address)
-                print '    ssh -X -oStrictHostKeyChecking=no root@{0}'.format(droplet.ip_address)
-                print '    ipython notebook --ip={0}'.format(droplet.ip_address)
-                print '    http://{0}:5000'.format(droplet.ip_address)
-                print '    rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(droplet.ip_address)
-                print '    rsync -avP --partial root@{0}:/home/qore/mldev/bin/data/db-archive/ /mldev/bin/data/db-archive/'.format(droplet.ip_address)
-                print '    rdesktop -g 100% -u qore -p - {0}'.format(droplet.ip_address)
+                printNodeManifest(droplet.id, droplet.ip_address, droplet.name, droplet.region['name'], droplet.created_at)
+        
+        print '=== VULTR ====='
+        v = Vultr('')
+        res = v.server_list()
+        #print p.DataFrame(res)
+        for i in res:
+            print '--------'
+            #print res[i]
+            if quiet == False:
+                printNodeManifest(i, res[i]['main_ip'], res[i]['label'], res[i]['location'], res[i]['date_created'], passwd=res[i]['default_password'])
+
         return droplets
 
         #    #droplet.shutdown()
