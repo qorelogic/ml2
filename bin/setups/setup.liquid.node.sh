@@ -11,14 +11,16 @@ liquidInitialSetup() {
 	rsync -avP --partial qore@104.236.64.84:/home/qore/.ssh/id_rsa /home/qore/.ssh/id_rsa
 	rsync -avP --partial qore@104.236.64.84:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
 	
-	sudo -u qore git clone git@github.com:qorelogic/ml2.git /home/qore/mldev
+	apt-get update
+	apt-get install -y puppet git
+	
+	#sudo -u qore
+	git clone git@github.com:qorelogic/ml2.git /home/qore/mldev
+	sudo chown -R qore: /home/qore/mldev
 	ln -s /home/qore/mldev /mldev
 	ln -s /home/qore/mldev /ml.dev
 	cd /mldev/bin
-	
-	apt-get update
-	apt-get install -y puppet
-	
+
 	sudo -u qore git fetch origin forecaster.refactored-0.3:forecaster.refactored-0.3
 	sudo -u qore git checkout forecaster.refactored-0.3
 	sudo -u qore git pull origin forecaster.refactored-0.3
