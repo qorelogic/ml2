@@ -58,5 +58,5 @@ setupAliases() {
 	. ~/.bashrc
 }
 
-#liquidInitialSetup
+liquidInitialSetup
 setupAliases
