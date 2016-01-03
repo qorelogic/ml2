@@ -5,9 +5,9 @@ liquidInitialSetup() {
 	cd /home/qore/
 	export HOME='/home/qore'
 	
-	ssh-keygen 
+	ssh-keygen -f $HOME/.ssh/id_rsa -P ''
 	#ssh -oStrictHostKeyChecking=no qore@104.236.64.84
-	sudo -u qore ssh-keygen
+	sudo -u qore  ssh-keygen -f $HOME/.ssh/id_rsa -P ''
 	rsync -avP --partial qore@104.236.64.84:/home/qore/.ssh/id_rsa /home/qore/.ssh/id_rsa
 	rsync -avP --partial qore@104.236.64.84:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
 	
