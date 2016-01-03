@@ -14,8 +14,8 @@ liquidInitialSetup() {
 	apt-get update
 	apt-get install -y puppet git
 	
-	#sudo -u qore
-	git clone git@github.com:qorelogic/ml2.git /home/qore/mldev
+	cd /home/qore
+	sudo -u qore git clone git@github.com:qorelogic/ml2.git /home/qore/mldev
 	sudo chown -R qore: /home/qore/mldev
 	ln -s /home/qore/mldev /mldev
 	ln -s /home/qore/mldev /ml.dev
