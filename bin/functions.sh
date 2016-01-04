@@ -25,6 +25,10 @@ _mongodlog() {
 	fi
 }
 
-exportticks() {
-    mongoexport --csv -d ql -c ticks -f "instrument,bid,ask,time" | gzip > ticks.csv.gz
+mongo.ql.ticks2csv() {
+    ticks="`mongo --quiet --eval 'db.ticks.stats()["count"]' ql`"
+    echo "ticks: $ticks"
+    fname="ticks.csv.gz"
+    echo "writing to: $fname"
+    mongoexport --csv -d ql -c ticks -f "instrument,bid,ask,time" | gzip > $fname
 }
