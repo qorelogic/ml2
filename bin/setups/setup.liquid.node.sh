@@ -25,8 +25,11 @@ liquidInitialSetup() {
 	cd /mldev/bin
 
 	sudo -u qore git fetch origin forecaster.refactored-0.3:forecaster.refactored-0.3
+	sudo -u qore git fetch origin forecaster.refactored-0.3-setup.liquid.node:forecaster.refactored-0.3-setup.liquid.node
 	sudo -u qore git checkout forecaster.refactored-0.3
 	sudo -u qore git pull origin forecaster.refactored-0.3
+	sudo -u qore git checkout forecaster.refactored-0.3-setup.liquid.node
+	sudo -u qore git pull origin forecaster.refactored-0.3-setup.liquid.node
 	
 	#nano provisioner/default.pp 
 	puppet apply provisioner/default.pp
