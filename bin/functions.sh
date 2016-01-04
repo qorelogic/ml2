@@ -30,6 +30,7 @@ mongo.ql.ticks2csv() {
     echo "ticks: $ticks"
     fname="mongo.ql.ticks.csv.gz"
     echo "writing to: $fname"
+    # source: http://stackoverflow.com/questions/13577230/export-a-csv-from-mongodb
     mongoexport --csv -d ql -c ticks -f "instrument,bid,ask,time" | gzip > $fname
 }
 
