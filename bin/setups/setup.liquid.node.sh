@@ -1,15 +1,18 @@
 
 liquidInitialSetup() {
+
+     qhost="104.207.135.67"
+
 	adduser --home=/home/qore qore
 	
 	cd /home/qore/
 	export HOME='/home/qore'
 	
 	ssh-keygen -f $HOME/.ssh/id_rsa -P ''
-	#ssh -oStrictHostKeyChecking=no qore@104.236.64.84
+	#ssh -oStrictHostKeyChecking=no qore@${qhost}
 	sudo -u qore  ssh-keygen -f $HOME/.ssh/id_rsa -P ''
-	rsync -avP --partial qore@104.236.64.84:/home/qore/.ssh/id_rsa /home/qore/.ssh/id_rsa
-	rsync -avP --partial qore@104.236.64.84:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
+	rsync -avP --partial qore@${qhost}:/home/qore/.ssh/id_rsa /home/qore/.ssh/id_rsa
+	rsync -avP --partial qore@${qhost}:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
 	
 	apt-get update
 	apt-get install -y puppet git
