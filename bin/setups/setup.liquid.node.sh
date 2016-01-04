@@ -11,8 +11,8 @@ liquidInitialSetup() {
 	ssh-keygen -f $HOME/.ssh/id_rsa -P ''
 	#ssh -oStrictHostKeyChecking=no qore@${qhost}
 	sudo -u qore  ssh-keygen -f $HOME/.ssh/id_rsa -P ''
-	rsync -avP --partial qore@${qhost}:/home/qore/.ssh/id_rsa /home/qore/.ssh/id_rsa
-	rsync -avP --partial qore@${qhost}:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
+	rsync -avP --partial root@${qhost}:/home/qore/.ssh/id_rsa /home/qore/.ssh/id_rsa
+	rsync -avP --partial root@${qhost}:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
 	
 	apt-get update
 	apt-get install -y puppet git
