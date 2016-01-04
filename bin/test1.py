@@ -1,8 +1,8 @@
 
 import pandas as p
 import numpy as n
-
-@profile
+import threading
+#@profile
 def test1():
     
     lenn = 1000
@@ -14,8 +14,8 @@ def test1():
     
     step = lenn/100
     
-    dfm = p.DataFrame()
-    for i in xrange(lenn/step):
+    @profile
+    def thr1(df, i, step):
         print i
         dfn = df.ix[(i*step):(i+1)*step-1,:]
         #print dfn
@@ -23,6 +23,16 @@ def test1():
         #dfnp = dfnp.ffill().bfill()
         print dfnp
         #dfm = dfm.combine_first(dfnp)
+
+    dfm = p.DataFrame()
+    
+    # map
+    ts = []
+    for i in xrange(lenn/step):
+#        thr1(df, i, step)
+        ts.append(threading.Thread(target=thr1, args=[df, i, step]))
+        ts[i].daemon = False
+        ts[i].start()
 
     #print dfm.ffill().bfill()
     
