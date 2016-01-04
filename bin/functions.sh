@@ -24,3 +24,7 @@ _mongodlog() {
 	#echo 2
 	fi
 }
+
+exportticks() {
+    mongoexport --csv -d ql -c ticks -f "instrument,bid,ask,time" | gzip > ticks.csv.gz
+}
