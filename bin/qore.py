@@ -72,6 +72,41 @@ class QoreDebug:
             print "*** print_exception:"
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
 
+    def logTraceBack(self, e, limit=10):
+        self._on = True
+        if self._on == True:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.log('')
+            self.log("*** print_exception:")
+            self.log(e)
+            self.log("*** print_tb:")
+            
+            #fp = open('/tmp/qore.dev.log', 'a')
+            #traceback.print_tb(exc_traceback, limit=1, file=fp)
+            tb = traceback.extract_tb(exc_traceback, limit=limit)
+            #self.log(tb)
+            #self.log('{0}{1}'.format('\n', p.DataFrame(tb)))
+            for i in tb: self.log(i)
+            self.log("*** print_stack:")
+            #traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=fp)
+            stack = traceback.extract_stack(limit=limit)
+            #self.log(stack)
+            #self.log('{0}{1}'.format('\n', p.DataFrame(stack)))
+            for i in stack: self.log(i)
+            self.log('')
+            #fp.close()
+
+    def log(self, str, verbosity=8):
+        #if verbosity == 9:
+        if verbosity == 8:
+            #print str
+            logging.debug(str)
+    
+            #return str
+    
+    def type(self, v):
+        self.log('{0} {1}'.format(v, type(v)))
+    
 # source: http://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python
 class switch(object):
     value = None

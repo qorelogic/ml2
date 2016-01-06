@@ -187,11 +187,16 @@ class MyStreamer(oandapy.Streamer):
         
         # A+B feeds
         try:
-            self.socket.bind('tcp://*:5555')
+            port = 5555
+            url  = 'tcp://*:{0}'.format(port)
+            self.socket.bind(url)
         except:
-            self.socket.bind('tcp://*:5556')
+            port = 5556
+            url  = 'tcp://*:{0}'.format(port)
+            self.socket.bind(url)
         
         self.mongo = mong.MongoClient()
+        print 'feeding on {0}[zmq]'.format(url)
 
 #    @profile
     def zmqSend(self, data):
@@ -248,7 +253,6 @@ def do_work(mode, forever = True):
                 print usage()
                 break
             
-            print 'getbabysit:{0}'.format(pairs)
             if pairs != '':
                 print '------pairs-----'
                 print pairs

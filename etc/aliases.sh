@@ -113,6 +113,7 @@ alias .gici="git -a -m " # switch commit
 alias .gidb="git -a -m " # delete branch
 alias .gswitch="git remote set-url origin " # svn switch equivalent
 alias .gch="git checkout -m " # switch merge to given branch
+alias .gx="git checkout -m " # switch merge to given branch
 
 alias sc='scrapy'
 
@@ -222,3 +223,7 @@ alias ruby="ruby -Ku"
 
 # use fastri, always
 #alias ri="fri"
+
+# home paths
+alias .ghml='cd /mldev/bin'
+

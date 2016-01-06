@@ -13,6 +13,7 @@ liquidInitialSetup() {
 	
 	sudo -u qore git clone git@github.com:qorelogic/ml2.git /home/qore/mldev
 	ln -s /home/qore/mldev /mldev
+	ln -s /home/qore/mldev /ml.dev
 	cd /mldev/bin
 	
 	apt-get update
@@ -26,14 +27,36 @@ liquidInitialSetup() {
 	puppet apply provisioner/default.pp
 }
 
+
+setupAlias() {
+
+	if [ "$1" == "" ]; then
+		print "usage: <>"
+	else
+	muser="$1"
+
+	if [ "$muser" == "root" ]; then
+		muserHdir="/root"
+	else
+		muserHdir="/home/$muser"
+	fi
+
+	#echo ''
+	#echo 'Added by set.liquid.node.sh''
+	echo "$muser    ALL=(ALL:ALL) ALL" >> /etc/sudoers
+	echo ". /mldev/etc/aliases.sh" >> $userHdir/.bashrc
+	echo "alias qp='. /mldev/etc/aliases.sh'" >> $muserHdir/.bashrc
+	fi
+}
+
 setupAliases() {
-	echo 'qore    ALL=(ALL:ALL) ALL' >> /etc/sudoers
-	echo '. /mldev/etc/aliases.sh' >> /home/qore/.bashrc
-	echo '. /mldev/etc/aliases.sh' >> /root/.bashrc
-	echo "alias p='. /mldev/etc/aliases.sh'" >> /home/qore/.bashrc
-	echo "alias p='. /mldev/etc/aliases.sh'" >> /root/.bashrc
+
+	setupAlias root
+	setupAlias qore
+	setupAlias qore2
+
 	. ~/.bashrc
 }
 
-liquidInitialSetup
+#liquidInitialSetup
 setupAliases

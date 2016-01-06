@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import zmq, time, sys
 from pandas import DataFrame as p_DataFrame
@@ -25,16 +26,28 @@ def sigmoidme(dfr):
 class ZMQClient:
 
     def __init__(self):
+
+        from qore import QoreDebug
+        self.qd = QoreDebug()
+        self.qd._getMethod()
+
         # option to change the port number from default 5555
         try:
-            port = sys.argv[1]
+            hostport = sys.argv[1]
         except:
-            port = 5555    
+            hostport = 5555    
         
+        res      = hostport.split(':')
+        host     = res[len(res)-2]
+        if host == '': host = 'localhost'
+        port     = res[len(res)-1]
+        hostport = '{0}:{1}'.format(host, port)
+        connect  = 'tcp://{0}'.format(hostport)
+
         ctx = zmq.Context()
         #self.socket = ctx.socket(zmq.REQ)
         self.socket = ctx.socket(zmq.SUB)
-        self.socket.connect('tcp://localhost:{0}'.format(port))
+        self.socket.connect(connect)
         
         # Subscribe to tester
         topicfilter = 'tester'
@@ -292,12 +305,14 @@ class ZMQClient:
             #time.sleep(0.1)
 
 
-mode = sys.argv[2]
-zc = ZMQClient()
 try:
+    mode = sys.argv[2]
+    zc = ZMQClient()
     zc.client(mode=mode)
 except KeyboardInterrupt as e:
     print ''
+except Exception as e:
+    print 'usage: <host:port> <avg|spread>'
 
 #from pandas import read_csv as p_read_csv
 #instruments = p_read_csv('data/oanda/cache/instruments.csv').set_index('instrument')

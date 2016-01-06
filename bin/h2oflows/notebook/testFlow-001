@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "cells": [
+    {
+      "type": "cs",
+      "input": "importFiles [ \"/coursera/ml-007/programming-exercises/mlclass-ex1/ex1data2.txt\" ]"
+    },
+    {
+      "type": "cs",
+      "input": "setupParse paths: [ \"/coursera/ml-007/programming-exercises/mlclass-ex1/ex1data2.txt\" ]"
+    },
+    {
+      "type": "cs",
+      "input": "parseFiles\n  paths: [\"/coursera/ml-007/programming-exercises/mlclass-ex1/ex1data2.txt\"]\n  destination_frame: \"ex1data21.hex\"\n  parse_type: \"CSV\"\n  separator: 44\n  number_columns: 3\n  single_quotes: false\n  column_names: [\"2104\",\"3\",\"399900\"]\n  column_types: [\"Numeric\",\"Numeric\",\"Numeric\"]\n  delete_on_done: true\n  check_header: 1\n  chunk_size: 4194304"
+    },
+    {
+      "type": "cs",
+      "input": "getFrameSummary \"ex1data21.hex\""
+    },
+    {
+      "type": "cs",
+      "input": "assist splitFrame, \"ex1data21.hex\""
+    },
+    {
+      "type": "cs",
+      "input": "splitFrame \"ex1data21.hex\", [0.25], [\"ex1data21.hex_0.250\",\"ex1data21.hex_0.750\"]"
+    },
+    {
+      "type": "cs",
+      "input": "assist buildModel, null, training_frame: \"ex1data21.hex\""
+    },
+    {
+      "type": "cs",
+      "input": "buildModel 'gbm', {\"model_id\":\"gbm-558a8618-69f5-4f1f-86d9-ed2cda0169f2\",\"training_frame\":\"ex1data21.hex_0.750\",\"validation_frame\":\"ex1data21.hex_0.250\",\"nfolds\":0,\"response_column\":\"399900\",\"ignored_columns\":[],\"ignore_const_cols\":true,\"ntrees\":\"10000\",\"max_depth\":\"10\",\"min_rows\":10,\"nbins\":20,\"nbins_cats\":1024,\"seed\":8264190140267150000,\"learn_rate\":0.1,\"distribution\":\"AUTO\",\"score_each_iteration\":false,\"r2_stopping\":0.999999,\"build_tree_one_node\":false,\"checkpoint\":\"\",\"nbins_top_level\":1024}"
+    },
+    {
+      "type": "cs",
+      "input": "predict model: \"gbm-558a8618-69f5-4f1f-86d9-ed2cda0169f2\""
+    },
+    {
+      "type": "cs",
+      "input": "predict model: \"gbm-558a8618-69f5-4f1f-86d9-ed2cda0169f2\", frame: \"ex1data21.hex_0.250\", predictions_frame: \"prediction-fbba4c4a-e531-4c18-9b60-20b13fb5d415\""
+    },
+    {
+      "type": "cs",
+      "input": "inspect getPrediction model: \"gbm-558a8618-69f5-4f1f-86d9-ed2cda0169f2\", frame: \"ex1data21.hex_0.250\""
+    },
+    {
+      "type": "cs",
+      "input": "grid inspect \"Prediction\", getPrediction model: \"gbm-558a8618-69f5-4f1f-86d9-ed2cda0169f2\", frame: \"ex1data21.hex_0.250\""
+    }
+  ]
+}

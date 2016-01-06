@@ -804,6 +804,11 @@ class OandaQ:
 
     def logEquity(self, daemon=True, csvSave=True, mongodbSave=True):
         self.qd._getMethod()
+	from qore import mkdir_p
+	from pandas import DataFrame as p_DataFrame
+	from numpy import array as n_array
+	from numpy import string0 as n_string0
+	import time
 
         fname = '/mldev/bin/data/oanda/logs/{0}.equity.log.csv'.format(self.oandaUsername)
         
@@ -816,14 +821,14 @@ class OandaQ:
             print '---------'
             res = self.oandaConnection().get_accounts()['accounts']
             #print res
-            for i in list(p.DataFrame(res).ix[:, 'accountId']):
+            for i in list(p_DataFrame(res).ix[:, 'accountId']):
                 #print i
                 ctime = time.time()
-                df = p.DataFrame(self.oandaConnection().get_account(i), index=[ctime])#.transpose()
+                df = p_DataFrame(self.oandaConnection().get_account(i), index=[ctime])#.transpose()
                 df['ts'] = ctime
                 #print df.columns
                 
-                ldf = list(n.array(df, dtype=string0)[0])
+                ldf = list(n_array(df, dtype=n_string0)[0])
                 csv = ','.join(ldf)
                 print csv                
                 if csvSave == True:
