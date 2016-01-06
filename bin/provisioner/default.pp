@@ -105,6 +105,31 @@ class h2o {
 	#exec { 'run h2o':      command => "java -jar $h2oHdir/h2o-3.0.1.7/h2o.jar",      timeout => 5, tries   => 3 }
 }
 
+# source: 
+class openflights {
+	exec { "mkdir_${h2oHdir}": command => "mkdir -p $h2oHdir" }
+	exec { "gitclone_":
+		command => "git clone https://github.com/jpatokal/openflights.git /mldev/lib/crawlers/transport/jpatokal_openflights.github.py.git",
+		#command => "wget -nc $h2oTarball",
+		#cwd => "$h2oHdir",
+		timeout => 60,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+		#refreshonly => true,
+		#notify => Exec['unzip h2o'],
+		before  => Exec["unzip openflights"],
+	}
+	exec { 'unzip openflights': 
+		command => "unzip -o /mldev/lib/crawlers/transport/jpatokal_openflights.github.py.git/data/DAFIFT_0610_ed6.zip -d /mldev/lib/crawlers/transport/jpatokal_openflights.github.py.git/data/DAFIFT_0610_ed6", 
+		#command => "/usr/bin/unzip -o $h2oHdir/h2o-3.0.1.7.zip",
+		#cwd => "$h2oHdir",
+		timeout => 60, 
+		tries   => 3,
+		require => Class["unzip"],
+	}
+	#exec { 'run h2o':      command => "java -jar $h2oHdir/h2o-3.0.1.7/h2o.jar",      timeout => 5, tries   => 3 }
+}
+
 class sparkling-water {
 	exec { "mkdir $sparklingWaterHdir": command => "mkdir -p $sparklingWaterHdir" }
 	exec { "bashrc touch":
@@ -230,3 +255,4 @@ include unzip
 #include nodejs
 #include xrdp
 include keys
+#include openflights
