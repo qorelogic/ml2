@@ -1,4 +1,13 @@
 #!/usr/bin/python
+
+import sys
+def defp(pt):
+    try:    sys.path.index(pt)
+    except: sys.path.append(pt)
+defp('bin')
+#defp('/mldev/bin')
+#defp('/mldev/lib/oanda/oandapy')
+
 from flask import Flask
 from flask import render_template
 
