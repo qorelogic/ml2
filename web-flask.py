@@ -20,7 +20,8 @@ import pandas as p
 #import gmaps
 import ujson as j
 
-hdir = '/mldev/lib/crawlers/transport/jpatokal_openflights.github.py.git/data'
+#hdir = '/mldev/lib/crawlers/transport/jpatokal_openflights.github.py.git/data'
+hdir = 'lib/crawlers/transport/jpatokal_openflights.github.py.git/data'
 
 app = Flask(__name__)
 
