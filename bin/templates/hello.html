@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+<title>maps</title>
+    <style type="text/css">
+      html, body { height: 100%; margin: 0; padding: 0; }
+      #map { height: 100%; }
+    </style>
+  </head>
+  <body>
+{#
+{% if name %}
+  <h1>Hello {{ name }}!</h1>
+{% else %}
+  <h1>Hello World!</h1>
+{% endif %}
+
+{% if data %}
+{{ data }}
+{% endif %}
+#}
+    <div id="map"></div>
+    <script type="text/javascript">
+
+data = {{ data }};
+
+var map;
+function initMap() {
+
+var heatmapData = [];
+for (var i = 0; i < data.length; i++) {
+ //console.log(data[i]);
+ heatmapData[i] = {location: new google.maps.LatLng(data[i][0], data[i][1]), weight: 1};
+}
+
+var central = new google.maps.LatLng(37.782, -122.435);
+
+map = new google.maps.Map(document.getElementById('map'), {
+  center: central,
+  zoom: 3,
+  mapTypeId: google.maps.MapTypeId.SATELLITE
+});
+
+var heatmap = new google.maps.visualization.HeatmapLayer({
+  data: heatmapData,
+  maxIntensity: 5,
+  radius: 21,
+  opacity: 0.4,
+});
+heatmap.setMap(map);
+
+}
+
+    </script>
+{#
+<script type="text/javascript"
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7HyeyVnsVOEtjeWG8wlYvvEo6PEwlfvI">
+</script>
+#}
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7HyeyVnsVOEtjeWG8wlYvvEo6PEwlfvI&libraries=visualization&sensor=true_or_false&callback=initMap">
+</script>
+  </body>
+</html>
+{#
+
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: {lat: -34.397, lng: 150.644},
+    zoom: 3
+  });
+
+//for (var i = 0; i < data.length; i++) {
+for (var i = 0; i < 10; i++) {
+ //console.log(data[i]);
+ // Create a marker and set its position.
+  var marker = new google.maps.Marker({
+    map: map,
+    position: {lat: data[i][0], lng: data[i][1]},
+    title: 'Hello World!'
+  });
+
+}
+
+#}
