@@ -11,7 +11,7 @@ defp('bin')
 from flask import Flask
 from flask import render_template
 
-from datafeeds.analyzer import Feeder
+#from datafeeds.analyzer import Feeder
 #from qore import *
 #from qoreliquid import *
 #import threading
@@ -29,8 +29,8 @@ app = Flask(__name__)
 @app.route("/hello")
 @app.route('/hello/<name>')
 def hello(name=None):
-    an = Feeder()
-    an.fireupThreads()  
+    #an = Feeder()
+    #an.fireupThreads()  
     
     df = p.read_csv(hdir+'/airports.dat', header=None)
     #print df.ix[0, :].get_values()
