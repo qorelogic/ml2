@@ -1,11 +1,20 @@
 #!/usr/bin/python
+
+import sys
+def defp(pt):
+    try:    sys.path.index(pt)
+    except: sys.path.append(pt)
+defp('bin')
+#defp('/mldev/bin')
+#defp('/mldev/lib/oanda/oandapy')
+
 from flask import Flask
 from flask import render_template
 
 from datafeeds.analyzer import Feeder
 #from qore import *
 #from qoreliquid import *
-import threading
+#import threading
 
 import pandas as p
 #import gmaps

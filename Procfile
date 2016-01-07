@@ -1,2 +1,2 @@
-web: python code.py $PATH
+web: python web-flask.py $PATH
 
