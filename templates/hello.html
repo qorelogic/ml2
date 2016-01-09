@@ -15,22 +15,23 @@
   <h1>Hello World!</h1>
 {% endif %}
 
-{% if data %}
-{{ data }}
+{% if airports %}
+{{ airports }}
 {% endif %}
 #}
     <div id="map"></div>
     <script type="text/javascript">
 
-data = {{ data }};
+airports = {{ airports }};
+routes = {{ routes }};
 
 var map;
 function initMap() {
 
 var heatmapData = [];
-for (var i = 0; i < data.length; i++) {
- //console.log(data[i]);
- heatmapData[i] = {location: new google.maps.LatLng(data[i][0], data[i][1]), weight: 1};
+for (var i = 0; i < airports.length; i++) {
+ //console.log(airports[i]);
+ heatmapData[i] = {location: new google.maps.LatLng(airports[i][0], airports[i][1]), weight: 1};
 }
 
 var central = new google.maps.LatLng(37.782, -122.435);
@@ -40,6 +41,30 @@ map = new google.maps.Map(document.getElementById('map'), {
   zoom: 3,
   mapTypeId: google.maps.MapTypeId.SATELLITE
 });
+
+// ----
+  //var map = new google.maps.Map(document.getElementById('map'), {
+  //  zoom: 3,
+  //  center: {lat: 0, lng: -180},
+  //  mapTypeId: google.maps.MapTypeId.TERRAIN
+  //});
+
+for (var i = 0; i < routes.length; i++) {
+  //console.log(routes[i][0][0]);
+  var flightPlanCoordinates = [
+    {lat: routes[i][0][0], lng: routes[i][0][1]},
+    {lat: routes[i][1][0], lng: routes[i][1][1]},
+  ];
+  var flightPath = new google.maps.Polyline({
+    path: flightPlanCoordinates,
+    geodesic: true,
+    strokeColor: '#FF0000',
+    strokeOpacity: 0.4,
+    strokeWeight: 1
+  });
+  flightPath.setMap(map);
+}
+// -----
 
 var heatmap = new google.maps.visualization.HeatmapLayer({
   data: heatmapData,
@@ -69,13 +94,13 @@ heatmap.setMap(map);
     zoom: 3
   });
 
-//for (var i = 0; i < data.length; i++) {
+//for (var i = 0; i < airports.length; i++) {
 for (var i = 0; i < 10; i++) {
- //console.log(data[i]);
+ //console.log(airports[i]);
  // Create a marker and set its position.
   var marker = new google.maps.Marker({
     map: map,
-    position: {lat: data[i][0], lng: data[i][1]},
+    position: {lat: airports[i][0], lng: airports[i][1]},
     title: 'Hello World!'
   });
 
