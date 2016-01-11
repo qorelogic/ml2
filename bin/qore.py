@@ -1,5 +1,6 @@
 
-import urllib2 as u
+import urllib3 as u
+u.disable_warnings()
 import json as j
 import os, errno, sys
 import logging

@@ -35,7 +35,8 @@ def imports():
     import pandas as p
     import Quandl as q
     import datetime as dd
-    import urllib2 as u
+    import urllib3 as u
+    u.disable_warnings()
     import html2text
     import exceptions as ex
     import re, sys
