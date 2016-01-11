@@ -82,9 +82,9 @@ class portmap {
 
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
-	exec { "mkdir_${h2oHdir}": command => "mkdir -p $h2oHdir" }
+	exec { "mkdir_${h2oHdir}": command => "/bin/mkdir -p $h2oHdir" }
 	exec { "wget_${h2oTarball}":
-		command => "wget -nc $h2oTarball -P $h2oHdir/",
+		command => "/usr/bin/wget -nc $h2oTarball -P $h2oHdir/",
 		#command => "wget -nc $h2oTarball",
 		#cwd => "$h2oHdir",
 		timeout => 60,
@@ -95,7 +95,7 @@ class h2o {
 		before  => Exec["unzip h2o"],
 	}
 	exec { 'unzip h2o': 
-		command => "unzip -o $h2oHdir/h2o-3.0.1.7.zip -d $h2oHdir/", 
+		command => "/usr/bin/unzip -o $h2oHdir/h2o-3.0.1.7.zip -d $h2oHdir/", 
 		#command => "/usr/bin/unzip -o $h2oHdir/h2o-3.0.1.7.zip",
 		#cwd => "$h2oHdir",
 		timeout => 60, 
@@ -247,13 +247,13 @@ include portmap
 include nfs-server
 include nfs-client
 include unzip
-#include curl
-#include javart
+include curl
+include javart
 #include h2o
 #include spark
 #include sparkling-water
 #include crontab
 #include nodejs
-#include xrdp
-include keys
+include xrdp
+#include keys
 #include openflights
