@@ -79,6 +79,15 @@ class portmap {
     }
 }
 
+# https://www.tensorflow.org/versions/0.6.0/get_started/os_setup.html#pip_install
+class tensorflow {
+	exec { "pip install tensorflow":
+		command => "/usr/local/bin/pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.5.0-cp27-none-linux_x86_64.whl",
+		timeout => 60,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+	}
+}
 
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
@@ -250,6 +259,7 @@ include unzip
 include curl
 include javart
 #include h2o
+#include tensorflow
 #include spark
 #include sparkling-water
 #include crontab
