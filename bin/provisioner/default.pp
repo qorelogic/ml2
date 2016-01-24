@@ -81,9 +81,29 @@ class portmap {
 
 # https://www.tensorflow.org/versions/0.6.0/get_started/os_setup.html#pip_install
 class tensorflow {
+	#sudo apt-get install python-scipy
+	$sysPackages = [ "python-scipy" ]
+	package { $sysPackages:
+		ensure => "installed",
+		require => Exec['apt-get update'],
+	}
+	#sudo pip install sklearn
+	exec { "pip install sklearn":
+		command => "/usr/local/bin/pip install sklearn",
+		timeout => 60,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+	}
 	exec { "pip install tensorflow":
 		command => "/usr/local/bin/pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.5.0-cp27-none-linux_x86_64.whl",
 		timeout => 60,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+	}
+	# git clone https://github.com/tensorflow/tensorflow
+	exec { "git clone tensorflow":
+		command => "/usr/bin/git clone https://github.com/tensorflow/tensorflow /mldev/lib/ml/tensorflow",
+		timeout => 300,
 		tries   => 3,
 		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
 	}
