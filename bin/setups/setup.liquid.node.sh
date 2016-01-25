@@ -17,6 +17,14 @@ liquidInitialSetup() {
         cd /home/qore/
         export HOME='/home/qore'
         
+        #ssh-keygen -N '' -f /root/.ssh/id_rsa
+	echo -e  'y\n'|ssh-keygen -q -t rsa -N "" -f /root/.ssh/id_rsa
+        #ssh -oStrictHostKeyChecking=no qore@$ipaddr
+        #sudo -u qore ssh-keygen -N '' -f /home/qore/.ssh/id_rsa
+	echo -e  'y\n' | sudo -u qore ssh-keygen -q -t rsa -N "" -f /home/qore/.ssh/id_rsa
+#        rsync -avP  -e 'ssh -oStrictHostKeyChecking=no' --partial qore@$ipaddr:/home/qore/.ssh/id_rsa /home/qore/.ssh/id_rsa
+#        rsync -avP  -e 'ssh -oStrictHostKeyChecking=no' --partial qore@$ipaddr:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
+
 	echo '-----BEGIN RSA PRIVATE KEY-----
 MIIEpgIBAAKCAQEA6KTgumtTekyT2DY1nUHjVzvlrKJ+TGE7f7ky9R8J/o85crfV
 K7Nf33sNubdWrZuGPvIRL/uFeCxaeC14dqlk3cnUPKiHB5/B3/xY79y3P4LPR/Q/
@@ -50,14 +58,6 @@ Xw/xa8PCZQlcQni0YF+7vOyIU/9PJ+NV91eAOFbnycVXiVv3X1U2uJN8
 	echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDopOC6a1N6TJPYNjWdQeNXO+Wson5MYTt/uTL1Hwn+jzlyt9Urs1/few25t1atm4Y+8hEv+4V4LFp4LXh2qWTdydQ8qIcHn8Hf/Fjv3Lc/gs9H9D84H0ibmcwTKcpx75LRZq0owDiWd4hV4zgmNC0LPLUaqbBaoSPCNcg/02MwFYNeu3AzXq7RqbkT9hL5TnLGhRy0u8Flh3oPyua/bA9Izk9Lm8NoILjDMK7NQkyhPrkWJWJLHPm8oY8EKnMCN6K4ARltrF5VPGNo1UiCjGUPIHqKXL7eRd+PAEgFSuRRI+MGlz3KNhSJu2bcLkM2NIv7vFc7v8e4XFzQxK0Jd9RR qore@vultr.guest' > /home/qore/.ssh/id_rsa.pub
 	chown qore: /home/qore/.ssh/id_rsa.pub
 	chmod 0644 /home/qore/.ssh/id_rsa.pub
-
-        #ssh-keygen -N '' -f /root/.ssh/id_rsa
-	#echo -e  'y\n'|ssh-keygen -q -t rsa -N "" -f /root/.ssh/id_rsa
-        #ssh -oStrictHostKeyChecking=no qore@$ipaddr
-        #sudo -u qore ssh-keygen -N '' -f /home/qore/.ssh/id_rsa
-	#echo -e  'y\n' | sudo -u qore ssh-keygen -q -t rsa -N "" -f /home/qore/.ssh/id_rsa
-#        rsync -avP  -e 'ssh -oStrictHostKeyChecking=no' --partial qore@$ipaddr:/home/qore/.ssh/id_rsa /home/qore/.ssh/id_rsa
-#        rsync -avP  -e 'ssh -oStrictHostKeyChecking=no' --partial qore@$ipaddr:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
         
 	# source: http://debuggable.com/posts/disable-strict-host-checking-for-git-clone:49896ff3-0ac0-4263-9703-1eae4834cda3
 	echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > /root/.ssh/config
