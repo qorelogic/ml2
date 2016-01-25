@@ -52,10 +52,10 @@ Xw/xa8PCZQlcQni0YF+7vOyIU/9PJ+NV91eAOFbnycVXiVv3X1U2uJN8
 	chmod 0644 /home/qore/.ssh/id_rsa.pub
 
         #ssh-keygen -N '' -f /root/.ssh/id_rsa
-	echo -e  'y\n'|ssh-keygen -q -t rsa -N "" -f /root/.ssh/id_rsa
+	#echo -e  'y\n'|ssh-keygen -q -t rsa -N "" -f /root/.ssh/id_rsa
         #ssh -oStrictHostKeyChecking=no qore@$ipaddr
         #sudo -u qore ssh-keygen -N '' -f /home/qore/.ssh/id_rsa
-	echo -e  'y\n' | sudo -u qore ssh-keygen -q -t rsa -N "" -f /home/qore/.ssh/id_rsa
+	#echo -e  'y\n' | sudo -u qore ssh-keygen -q -t rsa -N "" -f /home/qore/.ssh/id_rsa
 #        rsync -avP  -e 'ssh -oStrictHostKeyChecking=no' --partial qore@$ipaddr:/home/qore/.ssh/id_rsa /home/qore/.ssh/id_rsa
 #        rsync -avP  -e 'ssh -oStrictHostKeyChecking=no' --partial qore@$ipaddr:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
         
