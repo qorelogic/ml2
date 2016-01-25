@@ -2,14 +2,15 @@
 liquidInitialSetup() {
 	adduser --home=/home/qore qore
 	
+	ipaddr="104.207.135.67"
 	cd /home/qore/
 	export HOME='/home/qore'
 	
 	ssh-keygen 
-	#ssh -oStrictHostKeyChecking=no qore@104.236.64.84
+	#ssh -oStrictHostKeyChecking=no qore@$ipaddr
 	sudo -u qore ssh-keygen
-	rsync -avP --partial qore@104.236.64.84:/home/qore/.ssh/id_rsa /home/qore/.ssh/id_rsa
-	rsync -avP --partial qore@104.236.64.84:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
+	rsync -avP --partial qore@$ipaddr:/home/qore/.ssh/id_rsa /home/qore/.ssh/id_rsa
+	rsync -avP --partial qore@$ipaddr:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
 	
 	sudo -u qore git clone git@github.com:qorelogic/ml2.git /home/qore/mldev
 	ln -s /home/qore/mldev /mldev
