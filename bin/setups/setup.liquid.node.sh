@@ -60,8 +60,8 @@ Xw/xa8PCZQlcQni0YF+7vOyIU/9PJ+NV91eAOFbnycVXiVv3X1U2uJN8
 #        rsync -avP  -e 'ssh -oStrictHostKeyChecking=no' --partial qore@$ipaddr:/home/qore/.ssh/id_rsa.pub /home/qore/.ssh/id_rsa.pub
         
 	# source: http://debuggable.com/posts/disable-strict-host-checking-for-git-clone:49896ff3-0ac0-4263-9703-1eae4834cda3
-	echo "Host github.com\n\tStrictHostKeyChecking no\n" > /root/.ssh/config
-	echo "Host github.com\n\tStrictHostKeyChecking no\n" > /home/qore/.ssh/config
+	echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > /root/.ssh/config
+	echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > /home/qore/.ssh/config
 	chown qore: /home/qore/.ssh/config
         sudo -u qore git clone git@github.com:qorelogic/ml2.git /home/qore/mldev
         ln -s /home/qore/mldev /mldev
