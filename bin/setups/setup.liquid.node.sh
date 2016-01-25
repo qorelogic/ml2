@@ -98,6 +98,9 @@ setupAlias() {
         echo "$muser    ALL=(ALL:ALL) ALL" >> /etc/sudoers
         echo ". /mldev/etc/aliases.sh" >> $muserHdir/.bashrc
         echo "alias qp='. /mldev/etc/aliases.sh'" >> $muserHdir/.bashrc
+        echo "export LC_ALL=en_US.UTF-8" >> $muserHdir/.bashrc
+        echo "export LANG=en_US.UTF-8" >> $muserHdir/.bashrc
+        echo "export LANGUAGE=en_US.UTF-8" >> $muserHdir/.bashrc
         fi
 }
 

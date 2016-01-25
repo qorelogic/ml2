@@ -82,7 +82,7 @@ class portmap {
 # https://www.tensorflow.org/versions/0.6.0/get_started/os_setup.html#pip_install
 class tensorflow {
 	#sudo apt-get install python-scipy
-	$sysPackages = [ "python-scipy" ]
+	$sysPackages = [ "python-scipy", 'ipython', 'ipython-notebook' ]
 	package { $sysPackages:
 		ensure => "installed",
 		require => Exec['apt-get update'],
