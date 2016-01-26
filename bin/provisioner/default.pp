@@ -1,5 +1,5 @@
 
-Exec { path => [ "/bin/", "/sbin/" , "/usr/bin/", "/usr/sbin/" ] }
+#Exec { path => [ "/bin/", "/sbin/" , "/usr/bin/", "/usr/sbin/" ] }
 
 $hdir        = "/mldev"
 $installHdir = "$hdir/lib/ml"
@@ -82,7 +82,7 @@ class portmap {
 # https://www.tensorflow.org/versions/0.6.0/get_started/os_setup.html#pip_install
 class tensorflow {
 	#sudo apt-get install python-scipy
-	$sysPackages = [ "python-scipy", 'ipython', 'ipython-notebook' ]
+	$sysPackages = [ "python-scipy", 'ipython', 'ipython-notebook', 'python-matplotlib', 'python-tk', 'python-pil' ]
 	package { $sysPackages:
 		ensure => "installed",
 		require => Exec['apt-get update'],
@@ -90,6 +90,13 @@ class tensorflow {
 	#sudo pip install sklearn
 	exec { "pip install sklearn":
 		command => "/usr/local/bin/pip install sklearn",
+		timeout => 60,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+	}
+	#sudo pip install jupyter
+	exec { "pip install jupyter":
+		command => "/usr/local/bin/pip install jupyter",
 		timeout => 60,
 		tries   => 3,
 		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
@@ -103,6 +110,13 @@ class tensorflow {
 	# git clone https://github.com/tensorflow/tensorflow
 	exec { "git clone tensorflow":
 		command => "/usr/bin/git clone https://github.com/tensorflow/tensorflow /mldev/lib/ml/tensorflow",
+		timeout => 300,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+		before  => Exec["git clone tensorflow2"],
+	}
+	exec { "git clone tensorflow2":
+		command => "chown -R qore: /mldev/lib/ml/tensorflow",
 		timeout => 300,
 		tries   => 3,
 		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
@@ -279,7 +293,7 @@ include unzip
 include curl
 include javart
 #include h2o
-#include tensorflow
+include tensorflow
 #include spark
 #include sparkling-water
 #include crontab
