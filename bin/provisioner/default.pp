@@ -1,5 +1,5 @@
 
-Exec { path => [ "/bin/", "/sbin/" , "/usr/bin/", "/usr/sbin/" ] }
+#Exec { path => [ "/bin/", "/sbin/" , "/usr/bin/", "/usr/sbin/" ] }
 
 $hdir        = "/mldev"
 $installHdir = "$hdir/lib/ml"
@@ -79,12 +79,55 @@ class portmap {
     }
 }
 
+# https://www.tensorflow.org/versions/0.6.0/get_started/os_setup.html#pip_install
+class tensorflow {
+	#sudo apt-get install python-scipy
+	$sysPackages = [ "python-scipy", 'ipython', 'ipython-notebook', 'python-matplotlib', 'python-tk', 'python-pil' ]
+	package { $sysPackages:
+		ensure => "installed",
+		require => Exec['apt-get update'],
+	}
+	#sudo pip install sklearn
+	exec { "pip install sklearn":
+		command => "/usr/local/bin/pip install sklearn",
+		timeout => 60,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+	}
+	#sudo pip install jupyter
+	exec { "pip install jupyter":
+		command => "/usr/local/bin/pip install jupyter",
+		timeout => 60,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+	}
+	exec { "pip install tensorflow":
+		command => "/usr/local/bin/pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.5.0-cp27-none-linux_x86_64.whl",
+		timeout => 60,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+	}
+	# git clone https://github.com/tensorflow/tensorflow
+	exec { "git clone tensorflow":
+		command => "/usr/bin/git clone https://github.com/tensorflow/tensorflow /mldev/lib/ml/tensorflow",
+		timeout => 300,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+		before  => Exec["git clone tensorflow2"],
+	}
+	exec { "git clone tensorflow2":
+		command => "chown -R qore: /mldev/lib/ml/tensorflow",
+		timeout => 300,
+		tries   => 3,
+		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
+	}
+}
 
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
-	exec { "mkdir_${h2oHdir}": command => "mkdir -p $h2oHdir" }
+	exec { "mkdir_${h2oHdir}": command => "/bin/mkdir -p $h2oHdir" }
 	exec { "wget_${h2oTarball}":
-		command => "wget -nc $h2oTarball -P $h2oHdir/",
+		command => "/usr/bin/wget -nc $h2oTarball -P $h2oHdir/",
 		#command => "wget -nc $h2oTarball",
 		#cwd => "$h2oHdir",
 		timeout => 60,
@@ -95,7 +138,7 @@ class h2o {
 		before  => Exec["unzip h2o"],
 	}
 	exec { 'unzip h2o': 
-		command => "unzip -o $h2oHdir/h2o-3.0.1.7.zip -d $h2oHdir/", 
+		command => "/usr/bin/unzip -o $h2oHdir/h2o-3.0.1.7.zip -d $h2oHdir/", 
 		#command => "/usr/bin/unzip -o $h2oHdir/h2o-3.0.1.7.zip",
 		#cwd => "$h2oHdir",
 		timeout => 60, 
@@ -247,13 +290,14 @@ include portmap
 include nfs-server
 include nfs-client
 include unzip
-#include curl
-#include javart
+include curl
+include javart
 #include h2o
+include tensorflow
 #include spark
 #include sparkling-water
 #include crontab
 #include nodejs
-#include xrdp
-include keys
+include xrdp
+#include keys
 #include openflights
