@@ -3,14 +3,14 @@ import pandas as p
 import numpy as n
 import threading
 #@profile
-def pivot_dataframe(ds, order):
+def pivot_dataframe(ds, order, splitFactor=10):
     
     df = p.DataFrame(ds)
     #df = df.convert_objects(convert_numeric=False)
     #print df
     print 'len(df):\t{0}'.format(len(df))
     
-    step = lenn/10
+    step = lenn / splitFactor
     print 'step:\t{0}'.format(step)
     
     # source: http://stackoverflow.com/questions/6893968/how-to-get-the-return-value-from-a-thread-in-python
@@ -57,14 +57,13 @@ def pivot_dataframe(ds, order):
     
     #print " ".join(results)
     return dfo
-    
 
     #print dfm.ffill().bfill()
     
     #print
     #print df
 
-lenn = 100
-ds = n.random.randn(lenn,3)
-df = pivot_dataframe(ds, order=(0,1,2))
+lenn = 1000
+ds = n.random.randn(lenn,30)
+df = pivot_dataframe(ds, order=(0,1,2), splitFactor=10)
 print df
