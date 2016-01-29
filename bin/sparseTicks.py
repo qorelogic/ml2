@@ -2,7 +2,7 @@
 
 from simulator import Simulator
 from oandaq import OandaQ
-import sys, pandas as p
+import sys, pandas as p, numpy as n
 
 def imports():
     import numpy as n
@@ -156,6 +156,15 @@ def pipeline():
     #fp = open(sys.stdin)
     fp = sys.stdin
     df = p.DataFrame()
+    tail = 5
+    r = tail; c = 10;
+    
+    #ndf = n.zeros(r*c).reshape(r,c);
+    ndf = n.random.randn(r*c).reshape(r,c);
+    dfi = n.zeros(r)
+    #dfc = n.zeros(c)
+    dfc = {}
+    
     while True:
         try:
             i = fp.readline()
@@ -163,36 +172,42 @@ def pipeline():
             #print i
             li = i.replace('"', '').replace('\n', '').split(',')
             #print li[0]
-            li.append(OandaQ.oandaToTimestamp_S(li[0]))
+            ts = OandaQ.oandaToTimestamp_S(li[0])
+            li.append(ts)
             #print li
             #print li[0]
-            #dfi = p.DataFrame([li])#.transpose()
-            #dfi = dfi.set_index(4)
-            #print dfi#.transpose()
-            #dfi = p.DataFrame([dfi.ix[0,2]], index=[dfi.ix[0,4]], columns=[dfi.ix[0,1]])
-            #dfi = p.DataFrame([li[2]], index=[li[4]], columns=[li[1]])
-            #dfi = dfi.pivot(4,1,2)
-            #dfi['ts'] = li[0]
-            #print dfi#.transpose()
-            #print df#.transpose()
-            #print 'index::{0}'.format(dfi.index[0])
-            #print 'columns::{0}'.format(dfi.columns[0])
-            #df.ix[str(dfi.index[0]), str(dfi.columns[0])] = dfi.ix[dfi.index[0], dfi.columns[0]]
+            """
             #df.loc[str(li[4]), str(li[1])] = li[2]
             df.ix[str(li[4]), str(li[1])] = li[2]
-            #df.ix[dfi.index[0], dfi.columns[0]] = 876
-            #print dfi.ix[dfi.index[0], dfi.columns[0]]
-            #df = df.combine_first(dfi)
-            #df = dfi.combine_first(df)
-            df = df.tail(5)
+            """
+            dfi = n.append(dfi, [li[4]]); dfi = n.delete(dfi, [0])
+            #dfc = n.append(dfc, [li[1]]); dfc = n.delete(dfc, [0])
+            dfc[str(li[1])] = 0
+            dfc_keys = dfc.keys()
+            #ndf[str(li[4]), str(li[1])] = li[2]
+            ndf = n.concatenate([n.concatenate(ndf[1:r,:]), ndf[r-1,:]]).reshape(r,c)
+            #print '{0} {1} {2}'.format(ndf[4,dfc_keys.index(str(li[1]))], dfc_keys.index(str(li[1])), str(li[1]))
+            ndf[4,dfc_keys.index(str(li[1]))] = li[2]
+            #print '{0} {1} {2}'.format(ndf[4,dfc_keys.index(str(li[1]))], dfc_keys.index(str(li[1])), str(li[1]))
+            """
+            df = df.tail(tail)
             df = df.ffill()
             df = df.bfill()
             df = df.sort()
-            print df.ix[:, [0,1,2,3,4,5]]
+            """
+            #print df.ix[:, [0,1,2,3,4,5]].get_values()
             #print df.ix[:, :]
+            """
+            print dfi
+            print dfc_keys
+            print ndf
+            """
+            #print '{0}:{1}'.format(li[1], li[2])
+            print p.DataFrame(ndf, index=dfi, columns=dfc_keys[0:10])#.transpose()
             #print ''
         except Exception as e:
-            print e
+            ''
+            #print e
 
 ##################
 ##########################
