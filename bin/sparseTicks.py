@@ -1,5 +1,8 @@
+#!/usr/bin/env python
 
 from simulator import Simulator
+from oandaq import OandaQ
+import sys, pandas as p
 
 def imports():
     import numpy as n
@@ -148,11 +151,61 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False):
     
     return dfm
 
+#@profile
+def pipeline():
+    #fp = open(sys.stdin)
+    fp = sys.stdin
+    df = p.DataFrame()
+    while True:
+        try:
+            i = fp.readline()
+            #print '---'
+            #print i
+            li = i.replace('"', '').replace('\n', '').split(',')
+            #print li[0]
+            li.append(OandaQ.oandaToTimestamp_S(li[0]))
+            #print li
+            #print li[0]
+            #dfi = p.DataFrame([li])#.transpose()
+            #dfi = dfi.set_index(4)
+            #print dfi#.transpose()
+            #dfi = p.DataFrame([dfi.ix[0,2]], index=[dfi.ix[0,4]], columns=[dfi.ix[0,1]])
+            #dfi = p.DataFrame([li[2]], index=[li[4]], columns=[li[1]])
+            #dfi = dfi.pivot(4,1,2)
+            #dfi['ts'] = li[0]
+            #print dfi#.transpose()
+            #print df#.transpose()
+            #print 'index::{0}'.format(dfi.index[0])
+            #print 'columns::{0}'.format(dfi.columns[0])
+            #df.ix[str(dfi.index[0]), str(dfi.columns[0])] = dfi.ix[dfi.index[0], dfi.columns[0]]
+            #df.loc[str(li[4]), str(li[1])] = li[2]
+            df.ix[str(li[4]), str(li[1])] = li[2]
+            #df.ix[dfi.index[0], dfi.columns[0]] = 876
+            #print dfi.ix[dfi.index[0], dfi.columns[0]]
+            #df = df.combine_first(dfi)
+            #df = dfi.combine_first(df)
+            df = df.tail(5)
+            df = df.ffill()
+            df = df.bfill()
+            df = df.sort()
+            print df.ix[:, [0,1,2,3,4,5]]
+            #print df.ix[:, :]
+            #print ''
+        except Exception as e:
+            print e
+
 ##################
 ##########################
 
 if __name__ == "__main__":
-    df = sparseTicks(num=10000)
-    #for i in xrange(1):
-    #    sparseTicks2dim3(df, mdepth=5)
-    sparseTicks2dim3(df, mdepth=5)
+
+    # if std input is passed
+    if not sys.stdin.isatty():
+        pipeline()
+    # if std input is not passed
+    else:
+        df = sparseTicks(num=1000)
+        print df
+        #for i in xrange(1):
+        #    sparseTicks2dim3(df, mdepth=5)
+        print sparseTicks2dim3(df, mdepth=5)
