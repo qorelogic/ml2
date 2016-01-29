@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-from simulator import Simulator
-from oandaq import OandaQ
-import sys, pandas as p, numpy as n
-
 def imports():
     import numpy as n
     import pandas as p
@@ -211,16 +207,40 @@ def pipeline():
 
 ##################
 ##########################
-
 if __name__ == "__main__":
+
+    import argparse
+    # source: https://docs.python.org/2/howto/argparse.html
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', "--save", help="save to csv file", action="store_true")
+    parser.add_argument('-n', "--num", help="number of rows")
+    args = parser.parse_args()
+    
+    from simulator import Simulator
+    from oandaq import OandaQ
+    import sys, pandas as p, numpy as n
+    from qoreliquid import normalizeme
+    from qoreliquid import sigmoidme
 
     # if std input is passed
     if not sys.stdin.isatty():
         pipeline()
     # if std input is not passed
     else:
-        df = sparseTicks(num=1000)
-        print df
-        #for i in xrange(1):
-        #    sparseTicks2dim3(df, mdepth=5)
-        print sparseTicks2dim3(df, mdepth=5)
+        if args.save:
+            num = int(args.num)
+            df = sparseTicks(num=num)
+            df = normalizeme(df)
+            df = sigmoidme(df)
+            print df
+            fname = '/tmp/ql.ticks.{0}.csv'.format(num)
+            df.to_csv(fname)
+            print 'saved to {0}'.format(fname)
+            #os.system("rsync -avrz /opt/data/filename root@ip:/opt/data/file")
+        else:
+            num=100
+            df = sparseTicks(num=num)
+            print df
+            #for i in xrange(1):
+            #    sparseTicks2dim3(df, mdepth=5)
+            #print sparseTicks2dim3(df, mdepth=5)
