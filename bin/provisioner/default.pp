@@ -125,6 +125,12 @@ class tensorflow {
 
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
+	#sudo pip install h2o
+	exec { "pip install h2o":
+		command => "/usr/local/bin/pip install h2o",
+		timeout => 60,
+		tries   => 3,
+	}
 	exec { "mkdir_${h2oHdir}": command => "/bin/mkdir -p $h2oHdir" }
 	exec { "wget_${h2oTarball}":
 		command => "/usr/bin/wget -nc $h2oTarball -P $h2oHdir/",
