@@ -8,7 +8,7 @@ class Simulator:
     
         # Connection to Mongo DB
         try:
-            conn = pymongo.MongoClient(port=27017)
+            conn = pymongo.MongoClient(host='127.0.0.1', port=3310)
             #print "Connected successfully!!!"
         except pymongo.errors.ConnectionFailure, e:
             print "Could not connect to MongoDB: %s" % e 

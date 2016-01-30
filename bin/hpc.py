@@ -63,10 +63,10 @@ class HPC:
             print 'date_created:{0}'.format(date_created)
             print 'passwd:{0}'.format(passwd)
             print '    ping {0}'.format(ip_address)
-            print '    ssh -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
+            print '    ssh -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
             print ''
             print '  X11 Forwarding via SSH@{0}'.format(ip_address)
-            print '    ssh -X -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
+            print '    ssh -X -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
             print '    ipython notebook --ip={0}'.format(ip_address)
             print '    http://{0}:5000'.format(ip_address)
             print '    rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(ip_address)
