@@ -213,34 +213,83 @@ if __name__ == "__main__":
     # source: https://docs.python.org/2/howto/argparse.html
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', "--save", help="save to csv file", action="store_true")
+    parser.add_argument('-t', "--train", help="train via h2o[deeplearning]", action="store_true")
     parser.add_argument('-n', "--num", help="number of rows")
     args = parser.parse_args()
     
     from simulator import Simulator
     from oandaq import OandaQ
     import sys, pandas as p, numpy as n
+    import matplotlib.pylab as plt
     from qoreliquid import normalizeme
     from qoreliquid import sigmoidme
-
+    
+    try:    num = int(args.num)
+    except: num = 100
+    
     # if std input is passed
     if not sys.stdin.isatty():
         pipeline()
     # if std input is not passed
     else:
+        fname = '/tmp/ql.ticks.{0}.csv'.format(num)
         if args.save:
-            num = int(args.num)
             df = sparseTicks(num=num)
             df = normalizeme(df)
             df = sigmoidme(df)
             print df
-            fname = '/tmp/ql.ticks.{0}.csv'.format(num)
             df.to_csv(fname)
             print 'saved to {0}'.format(fname)
             #os.system("rsync -avrz /opt/data/filename root@ip:/opt/data/file")
-        else:
-            num=100
-            df = sparseTicks(num=num)
-            print df
-            #for i in xrange(1):
-            #    sparseTicks2dim3(df, mdepth=5)
-            #print sparseTicks2dim3(df, mdepth=5)
+            sys.exit()
+
+        if args.train:
+            print 'training'
+            import h2o
+            
+            h2o.init()            
+            
+            fr1 = h2o.import_frame(fname); label = 'EUR_USD'
+            #fr1 = h2o.H2OFrame(f1)
+            print fr1
+            
+            #p1 = h2o.parse_setup(fr1)
+            #print p1            
+            #print p1['destination_frame']
+            
+            sp1 = fr1.split_frame([0.75])
+            
+            print sp1#[0]
+            #sp1[0].drop(label)
+            print sp1[0][label]
+            #sp1[1].drop(label)
+            print sp1[1][label]
+            
+            model = h2o.gbm(x=sp1[0].drop(label), y=sp1[0][label], validation_x=sp1[1].drop(label), validation_y=sp1[1][label], ntrees=10000, max_depth=100)
+            print model            
+            predict = model.predict(sp1[1])#.get_frame('C1')
+            print model.model_performance(sp1[1])
+            
+            """
+            model2 = h2o.deeplearning(x=sp1[0].drop(label), y=sp1[0][label], validation_x=sp1[1].drop(label), validation_y=sp1[1][label])
+            #print model2
+            predict = model2.predict(sp1[1])#.get_frame('C1')
+            print model2.model_performance(sp1[1])
+            """
+            
+            # show prediction and plot data
+            print predict
+            df = predict.as_data_frame()
+            df = df.combine_first(sp1[1].as_data_frame())
+            print df.ix[:, ['EUR_USD', 'predict']]
+            df.ix[:, ['EUR_USD', 'predict']].plot()
+            plt.show()
+            
+            sys.exit()
+
+        df = sparseTicks(num=num)
+        print df
+        #for i in xrange(1):
+        #    sparseTicks2dim3(df, mdepth=5)
+        #print sparseTicks2dim3(df, mdepth=5)
+        sys.exit()
