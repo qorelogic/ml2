@@ -92,34 +92,29 @@ class tensorflow {
 		command => "/usr/local/bin/pip install sklearn",
 		timeout => 60,
 		tries   => 3,
-		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
 	}
 	#sudo pip install jupyter
 	exec { "pip install jupyter":
 		command => "/usr/local/bin/pip install jupyter",
 		timeout => 60,
 		tries   => 3,
-		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
 	}
 	exec { "pip install tensorflow":
 		command => "/usr/local/bin/pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.5.0-cp27-none-linux_x86_64.whl",
 		timeout => 60,
 		tries   => 3,
-		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
 	}
 	# git clone https://github.com/tensorflow/tensorflow
 	exec { "git clone tensorflow":
 		command => "/usr/bin/git clone https://github.com/tensorflow/tensorflow /mldev/lib/ml/tensorflow",
 		timeout => 300,
 		tries   => 3,
-		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
 		before  => Exec["git clone tensorflow2"],
 	}
 	exec { "git clone tensorflow2":
 		command => "chown -R qore: /mldev/lib/ml/tensorflow",
 		timeout => 300,
 		tries   => 3,
-		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
 	}
 }
 
@@ -138,14 +133,12 @@ class h2o {
 		#cwd => "$h2oHdir",
 		timeout => 60,
 		tries   => 3,
-		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
 		#refreshonly => true,
 		#notify => Exec['unzip h2o'],
 		before  => Exec["unzip h2o"],
 	}
 	exec { 'unzip h2o': 
 		command => "/usr/bin/unzip -o $h2oHdir/h2o-3.0.1.7.zip -d $h2oHdir/", 
-		#command => "/usr/bin/unzip -o $h2oHdir/h2o-3.0.1.7.zip",
 		#cwd => "$h2oHdir",
 		timeout => 60, 
 		tries   => 3,
@@ -156,27 +149,23 @@ class h2o {
 
 # source: 
 class openflights {
-	exec { "mkdir_${h2oHdir}": command => "mkdir -p $h2oHdir" }
-	exec { "gitclone_":
+	exec { "mkdir_openflights": 
+		command => "mkdir -p /mldev/lib/crawlers/transport/"
+		before  => Exec["gitclone_openflights"],
+     }
+	exec { "gitclone_openflights":
 		command => "git clone https://github.com/jpatokal/openflights.git /mldev/lib/crawlers/transport/jpatokal_openflights.github.py.git",
-		#command => "wget -nc $h2oTarball",
-		#cwd => "$h2oHdir",
 		timeout => 60,
 		tries   => 3,
-		#creates => "$h2oHdir/h2o-3.0.1.7.zip",
 		#refreshonly => true,
-		#notify => Exec['unzip h2o'],
 		before  => Exec["unzip openflights"],
 	}
 	exec { 'unzip openflights': 
 		command => "unzip -o /mldev/lib/crawlers/transport/jpatokal_openflights.github.py.git/data/DAFIFT_0610_ed6.zip -d /mldev/lib/crawlers/transport/jpatokal_openflights.github.py.git/data/DAFIFT_0610_ed6", 
-		#command => "/usr/bin/unzip -o $h2oHdir/h2o-3.0.1.7.zip",
-		#cwd => "$h2oHdir",
 		timeout => 60, 
 		tries   => 3,
 		require => Class["unzip"],
 	}
-	#exec { 'run h2o':      command => "java -jar $h2oHdir/h2o-3.0.1.7/h2o.jar",      timeout => 5, tries   => 3 }
 }
 
 class sparkling-water {
