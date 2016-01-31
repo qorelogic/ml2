@@ -90,12 +90,6 @@ class portmap {
 
 # https://www.tensorflow.org/versions/0.6.0/get_started/os_setup.html#pip_install
 class tensorflow {
-	#sudo apt-get install python-scipy
-	$sysPackages = [ "python-scipy", 'ipython', 'ipython-notebook', 'python-matplotlib', 'python-tk', 'python-pil' ]
-	package { $sysPackages:
-		ensure => "installed",
-		require => Exec['apt-get update'],
-	}
 	#sudo pip install sklearn
 	exec { "pip install sklearn":
 		command => "/usr/local/bin/pip install sklearn",
@@ -125,6 +119,128 @@ class tensorflow {
 		timeout => 300,
 		tries   => 3,
 	}
+}
+
+
+class datafeeds {
+
+#MPWD=`pwd`
+
+#mlocal=~/.tmuxifier
+#mldir=/ml.dev
+
+#mdependencies() {
+#	sleep 1
+#	echo ''
+#	echo -n 'Need to install tmuxifier..  '
+#	sleep 3
+#	echo ' ..installing..'
+#	echo ''
+#	sleep 3
+#	git clone https://github.com/jimeh/tmuxifier.git $mlocal
+#
+#	echo ''
+#	echo 'dependencies complete.'
+
+#}
+
+#minstall() {
+
+	#sleep 1
+	#if [ "`which puppet`" == "" ]; then
+     #       sudo apt-get update
+     #       sudo apt-get -y install puppet
+	#fi
+	#if [ ! -f $mlocal/layouts/qlm.window.sh ]; then
+	#	echo "$mlocal/layouts contents:"
+	#	ls -l $mlocal/layouts
+	#	echo "need to fix $mlocal/layouts, sure you want to remove directory $mlocal/layouts? y/n: "
+	#	read ans
+	#	if [ "$ans" == "y" ]; then
+	#		rm -r $mlocal/layouts
+	#		rm -rfv $mlocal/layouts
+	#		ln -s $mldir/bin/tmuxifier/layouts $mlocal/layouts 2> /dev/null
+	#		echo 'linked mldev/bin/tmuxifier/layouts to ~/.tmuxifier/layouts'
+	#	fi
+	#fi
+	#if [ ! -f $mldir/lib/oanda/oandapy/oandapy.py ]; then
+	#	mkdir -p $mldir/lib/oanda/
+	#	echo 'oandapy'
+	#	git clone https://github.com/oanda/oandapy.git /ml.dev/lib/oanda/oandapy
+	#	echo 'cloned oandapy.'
+	#fi
+	#if [ "`echo $PYTHONPATH | grep -i oandapy`" == "" ]; then
+	#	export PYTHONPATH=$PYTHONPATH:/ml.dev/lib/oanda/oandapy
+	#	echo 'adding path to Python path '
+	#fi
+	#if [ "`cat ~/.bashrc | grep -i oandapy`" == "" ]; then
+	#	echo 'export PYTHONPATH=$PYTHONPATH:/ml.dev/lib/oanda/oandapy' >> ~/.bashrc
+	#	echo 'adding PYTHONPATH export ~/.bashrc'
+	#fi
+	#if [ ! -f $mldir/lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git ]; then
+	#	mkdir -p $mldir/lib/bitcoin/localbitcoins/
+	#	echo 'py-localbitcoins'
+	#	git clone https://github.com/digithink/py-localbitcoins.git $mldir/lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git
+	#	echo 'cloned py-localbitcoins.'
+	#fi
+	exec { "pip install drest": command => "/usr/local/bin/pip install drest", timeout => 60, tries => 3 }
+	#if [ ! -f $mldir/lib/bitcoin/1broker/aol1306_1broker-trading-API.github.py.git ]; then
+	#	mkdir -p $mldir/lib/bitcoin/1broker/
+	#	echo 'API1brokerlib'
+	#	git clone https://github.com/aol1306/1broker-trading-API.git $mldir/lib/bitcoin/1broker/aol1306_1broker-trading-API.github.py.git
+	#	echo 'cloned API1brokerlib.'
+	#fi
+
+	#sudo pip install --upgrade pip
+	#exec { "pip install ipython":
+	#	command => "if [ "`python -c 'import ipython' 2>&1`" != "" ]; then /usr/local/bin/pip install ipython; fi",
+	#	timeout => 60,
+	#	tries   => 3,
+	#}
+	exec { "pip install ipython": command => "/usr/local/bin/pip install ipython", timeout => 60, tries => 3 }
+	exec { "pip install notebook": command => "/usr/local/bin/pip install notebook", timeout => 60, tries => 3 }
+	exec { "pip install numpy": command => "/usr/local/bin/pip install numpy", timeout => 60, tries => 3 }
+	exec { "pip install pandas": command => "/usr/local/bin/pip install pandas", timeout => 60, tries => 3 }
+	exec { "pip install plotly": command => "/usr/local/bin/pip install plotly", timeout => 60, tries => 3 }
+	exec { "pip install ujson": command => "/usr/local/bin/pip install ujson", timeout => 60, tries => 3 }
+	#if [ "`python -c 'import digitalocean' 2>&1`" != "" ]; then
+     #       sudo pip install python-digitalocean
+	#fi
+	exec { "pip install python-digitalocean": command => "/usr/local/bin/pip install python-digitalocean", timeout => 60, tries => 3 }
+	exec { "pip install vultr": command => "/usr/local/bin/pip install vultr", timeout => 60, tries => 3 }
+	exec { "pip install QSTK": command => "/usr/local/bin/pip install QSTK", timeout => 60, tries => 3 }
+	exec { "pip install Quandl": command => "/usr/local/bin/pip install Quandl", timeout => 60, tries => 3 }
+	exec { "pip install html2text": command => "/usr/local/bin/pip install html2text", timeout => 60, tries => 3 }
+	exec { "pip install selenium": command => "/usr/local/bin/pip install selenium", timeout => 60, tries => 3 }
+
+	# MQ
+	#if [ "`python -c 'import zmq' 2>&1`" != "" ]; then
+     #       sudo pip install pyzmq
+	#fi
+	exec { "pip install pyzmq": command => "/usr/local/bin/pip install pyzmq", timeout => 60, tries => 3 }
+	#if [ "`python -c 'import tailf' 2>&1`" != "" ]; then
+     #       sudo pip install pytailf
+	#fi
+	exec { "pip install pytailf": command => "/usr/local/bin/pip install pytailf", timeout => 60, tries => 3 }
+	exec { "pip install flask": command => "/usr/local/bin/pip install flask", timeout => 60, tries => 3 }
+	exec { "pip install celery": command => "/usr/local/bin/pip install celery", timeout => 60, tries => 3 }
+
+	# still testing on ipython notebook
+	exec { "pip install bitstampy": command => "/usr/local/bin/pip install bitstampy", timeout => 60, tries => 3 }
+	exec { "pip install krakenex": command => "/usr/local/bin/pip install krakenex", timeout => 60, tries => 3 }
+
+	#echo ''
+	#echo 'install complete.'
+#}
+
+#if [ -d $mlocal ]; then
+#	minstall
+#else
+#	mdependencies
+#	minstall
+#fi
+
+
 }
 
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
@@ -159,7 +275,7 @@ class h2o {
 # source: 
 class openflights {
 	exec { "mkdir_openflights": 
-		command => "mkdir -p /mldev/lib/crawlers/transport/"
+		command => "mkdir -p /mldev/lib/crawlers/transport/",
 		before  => Exec["gitclone_openflights"],
      }
 	exec { "gitclone_openflights":
@@ -296,6 +412,8 @@ import 'system-update.pp'
 #import 'cassandra.pp'
 import 'javart.pp'
 import 'mongodb.pp'
+
+include datafeeds
 
 #include cassandra
 import 'nfs-server.pp'
