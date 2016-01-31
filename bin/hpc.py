@@ -61,7 +61,7 @@ class HPC:
             print 'label:{0}'.format(label)
             print 'location:{0}'.format(location)
             print 'date_created:{0}'.format(date_created)
-            print 'passwd:{0}'.format(passwd)
+            print 'passwd: ___'.format(passwd)
             print '    ping {0}'.format(ip_address)
             print '    ssh -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
             print ''
