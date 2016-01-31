@@ -7,7 +7,10 @@ $h2oHdir     = "$installHdir/h2o"
 $sparkHdir   = "$installHdir/spark"
 $sparklingWaterHdir   = "$installHdir/spark"
 
-$h2oTarball   = "http://h2o-release.s3.amazonaws.com/h2o/rel-simons/7/h2o-3.0.1.7.zip"
+$version_h2o      = "3.0.1.7"
+#$version_h2o     = "3.6.0.8"
+
+$h2oTarball   = "http://h2o-release.s3.amazonaws.com/h2o/rel-simons/7/h2o-$version_h2o.zip"
 $sparkTarball = "http://d3kbcqa49mib13.cloudfront.net/spark-1.4.0-bin-hadoop2.4.tgz"
 $sparklingWaterTarball = "http://h2o-release.s3.amazonaws.com/sparkling-water/rel-1.4/3/sparkling-water-1.4.3.zip"
 
@@ -138,13 +141,13 @@ class h2o {
 		before  => Exec["unzip h2o"],
 	}
 	exec { 'unzip h2o': 
-		command => "/usr/bin/unzip -o $h2oHdir/h2o-3.0.1.7.zip -d $h2oHdir/", 
+		command => "/usr/bin/unzip -o $h2oHdir/h2o-$version_h2o.zip -d $h2oHdir/", 
 		#cwd => "$h2oHdir",
 		timeout => 60, 
 		tries   => 3,
 		require => Class["unzip"],
 	}
-	#exec { 'run h2o':      command => "java -jar $h2oHdir/h2o-3.0.1.7/h2o.jar",      timeout => 5, tries   => 3 }
+	#exec { 'run h2o':      command => "java -jar $h2oHdir/h2o-$version_h2o/h2o.jar",      timeout => 5, tries   => 3 }
 }
 
 # source: 
