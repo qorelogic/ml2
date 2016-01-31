@@ -155,8 +155,8 @@ def pipeline():
     tail = 5
     r = tail; c = 10;
     
-    #ndf = n.zeros(r*c).reshape(r,c);
-    ndf = n.random.randn(r*c).reshape(r,c);
+    ndf = n.zeros(r*c).reshape(r,c);
+    #ndf = n.random.randn(r*c).reshape(r,c);
     dfi = n.zeros(r)
     #dfc = n.zeros(c)
     dfc = {}
@@ -192,7 +192,7 @@ def pipeline():
             #ndf[str(li[4]), str(li[1])] = li[2]
             ndf = n.concatenate([n.concatenate(ndf[1:r,:]), ndf[r-1,:]]).reshape(r,c)
             #print '{0} {1} {2}'.format(ndf[4,dfc_keys.index(str(li[1]))], dfc_keys.index(str(li[1])), str(li[1]))
-            ndf[4,dfc_keys.index(str(li[1]))] = li[2]
+            ndf[r-1,dfc_keys.index(str(li[1]))] = li[2]
             #print '{0} {1} {2}'.format(ndf[4,dfc_keys.index(str(li[1]))], dfc_keys.index(str(li[1])), str(li[1]))
             """
             df = df.tail(tail)
