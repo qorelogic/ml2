@@ -9,9 +9,10 @@ $sparklingWaterHdir   = "$installHdir/spark"
 
 $version_h2o      = "3.0.1.7"
 #$version_h2o     = "3.6.0.8"
+$version_spark    = "1.4.0-bin-hadoop2.4"
 
 $h2oTarball   = "http://h2o-release.s3.amazonaws.com/h2o/rel-simons/7/h2o-$version_h2o.zip"
-$sparkTarball = "http://d3kbcqa49mib13.cloudfront.net/spark-1.4.0-bin-hadoop2.4.tgz"
+$sparkTarball = "http://d3kbcqa49mib13.cloudfront.net/spark-$version_spark.tgz"
 $sparklingWaterTarball = "http://h2o-release.s3.amazonaws.com/sparkling-water/rel-1.4/3/sparkling-water-1.4.3.zip"
 
 $nodeV           = "node-v4.1.0-linux-x64"
@@ -174,7 +175,7 @@ class openflights {
 class sparkling-water {
 	exec { "mkdir $sparklingWaterHdir": command => "mkdir -p $sparklingWaterHdir" }
 	exec { "bashrc touch":
-		command => "echo \"export SPARK_HOME='/home/qore/mldev/lib/ml/spark/spark-1.4.0-bin-hadoop2.4'\" >> /home/qore/.bashrc",
+		command => "echo \"export SPARK_HOME='/home/qore/mldev/lib/ml/spark/spark-$version_spark'\" >> /home/qore/.bashrc",
 		before  => Exec["wget $sparklingWaterTarball"],
 	}
 	exec { "wget $sparklingWaterTarball":
@@ -208,12 +209,12 @@ class spark {
 		before  => Exec["untar spark"],
 	}
 	exec { 'untar spark': 
-		command => "tar zxf $sparkHdir/spark-1.4.0-bin-hadoop2.4.tgz -C $sparkHdir/", 
+		command => "tar zxf $sparkHdir/spark-$version_spark.tgz -C $sparkHdir/", 
 		timeout => 60, 
 		tries   => 3,
-		#require => File["$sparkHdir/spark-1.4.0-bin-hadoop2.4.tgz"],
+		#require => File["$sparkHdir/spark-$version_spark.tgz"],
 	}
-	#exec { 'run spark':      command => "$sparkHdir/spark-1.4.0-bin-hadoop2.4/bin/spark-shell",        timeout => 60, tries   => 3 }
+	#exec { 'run spark':      command => "$sparkHdir/spark-$version_spark/bin/spark-shell",        timeout => 60, tries   => 3 }
 }
 
 class nodejs {
