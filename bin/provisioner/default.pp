@@ -90,12 +90,6 @@ class portmap {
 
 # https://www.tensorflow.org/versions/0.6.0/get_started/os_setup.html#pip_install
 class tensorflow {
-	#sudo apt-get install python-scipy
-	$sysPackages = [ "python-scipy", 'ipython', 'ipython-notebook', 'python-matplotlib', 'python-tk', 'python-pil' ]
-	package { $sysPackages:
-		ensure => "installed",
-		require => Exec['apt-get update'],
-	}
 	#sudo pip install sklearn
 	exec { "pip install sklearn":
 		command => "/usr/local/bin/pip install sklearn",
@@ -198,13 +192,6 @@ class datafeeds {
 	#	git clone https://github.com/aol1306/1broker-trading-API.git $mldir/lib/bitcoin/1broker/aol1306_1broker-trading-API.github.py.git
 	#	echo 'cloned API1brokerlib.'
 	#fi
-
-	# python packages for datafeeds
-	$sysPackages = [ "python-pip", 'python-dev', 'python-matplotlib' ]
-	package { $sysPackages:
-		ensure => "installed",
-		require => Exec['apt-get update'],
-	}
 
 	#sudo pip install --upgrade pip
 	#if [ "`python -c 'import ipython' 2>&1`" != "" ]; then
