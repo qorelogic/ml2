@@ -161,6 +161,15 @@ def pipeline():
     #dfc = n.zeros(c)
     dfc = {}
     
+    p.set_option('expand_frame_repr', False)
+    #p.set_option('max_colwidth',10)
+    p.set_option('precision', 3)
+    #p.set_eng_float_format(accuracy=3, use_eng_prefix=False)
+    #p.set_eng_float_format(use_eng_prefix=False)
+    
+    # Format / Suppress Scientific Notation
+    p.set_option('display.float_format', lambda x: '%2.10f' % x)
+    
     while True:
         try:
             i = fp.readline()
@@ -199,7 +208,15 @@ def pipeline():
             print ndf
             """
             #print '{0}:{1}'.format(li[1], li[2])
-            print p.DataFrame(ndf, index=dfi, columns=dfc_keys[0:10])#.transpose()
+            df = p.DataFrame(ndf, index=dfi, columns=dfc_keys[0:c])#.transpose()
+            
+            stdev = n.std(ndf, 0)
+            df.ix['stdev', :] = stdev
+            
+            df =  df.ix['stdev',:]
+            print df
+            #print df.get_values()
+            
             #print ''
         except Exception as e:
             ''
