@@ -205,6 +205,45 @@ def pipeline():
             ''
             #print e
 
+# source: http://stackoverflow.com/questions/24196932/how-can-i-get-the-ip-address-of-eth0-in-python
+def getActiveIface():
+    import os, re
+    li = []
+    f = os.popen('grep 0 /proc/net/dev')
+    for i in f.read().strip().split('\n'):
+        res = re.sub(re.compile(r'[\s]+'), ' ', i)
+        res = res.strip().split(' ')
+        iface = res[0].replace(':', '').strip()
+        if int(res[1]) > 0 and iface != 'lo':
+            li.append(res)
+            return iface
+    #print p.DataFrame(li)#.transpose()
+iface1 = getActiveIface()
+"""
+def getipaddr():
+    import socket, fcntl, struct
+    def get_ip_address(ifname):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return socket.inet_ntoa(fcntl.ioctl(
+            s.fileno(),
+            0x8915,  # SIOCGIFADDR
+            struct.pack('256s', ifname[:15])
+        )[20:24])
+    return get_ip_address(iface1)  # '192.168.0.110'
+"""
+def getIpAddr():
+    import socket
+    def get_ip_address():
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    return get_ip_address()
+"""
+def getipaddr():
+    import os
+    f = os.popen('ifconfig %s | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1' % iface1)
+    return f.read()
+"""
 ##################
 ##########################
 if __name__ == "__main__":
@@ -247,7 +286,7 @@ if __name__ == "__main__":
             print 'training'
             import h2o
             
-            h2o.init()            
+            h2o.init(ip=getIpAddr(), port=54321)
             
             fr1 = h2o.import_frame(fname); label = 'EUR_USD'
             #fr1 = h2o.H2OFrame(f1)
