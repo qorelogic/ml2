@@ -7,12 +7,30 @@ class Simulator:
         from pandas import DataFrame as p_DataFrame
     
         # Connection to Mongo DB
+        host = '127.0.0.1'
+        portA = 3310
+        portB = 27017
         try:
-            conn = pymongo.MongoClient(host='127.0.0.1', port=3310)
+            try:
+                print ''
+                port = portA
+                print 'Attempting connect:'
+                print "                     MongoDB[%s:%s]" % (host, port)
+                conn = pymongo.MongoClient(host=host, port=port)
+            except Exception as e:
+                print "Could not connect to MongoDB[%s:%s]: %s" % (host, port, e)
+                port = portB
+                print 'Attempting failover connect:'
+                print "                     MongoDB[%s:%s]" % (host, port)
+                conn = pymongo.MongoClient(host=host, port=port)
             #print "Connected successfully!!!"
         except pymongo.errors.ConnectionFailure, e:
-            print "Could not connect to MongoDB: %s" % e 
-            ''
+            print "Could not connect to MongoDB[%s:%s]: %s" % (host, port, e)
+            print 'Try starting mongodb:'
+            print '$ mx w mongo'
+            print ''
+            import sys
+            sys.exit()
         ##############
         
         #@profile
@@ -37,7 +55,12 @@ class Simulator:
             return p_DataFrame(lis, columns=k)
     
         # sparse ticks
-        db = conn.ql
+        try:
+            db = conn.ql
+        except Exception as e:
+            print e
+            import sys
+            sys.exit()
         dfi = {}    
         
         #df = _pe(db, dfi, , num=num)
