@@ -11,9 +11,14 @@ $version_h2o      = "3.0.1.7"
 #$version_h2o     = "3.6.0.8"
 $version_spark    = "1.4.0-bin-hadoop2.4"
 
+$version_sparklingWater_major = "1.4"
+$version_sparklingWater_minor = "3"
+$version_sparklingWater       = "$version_sparklingWater_major.$version_sparklingWater_minor"
+
+
 $h2oTarball   = "http://h2o-release.s3.amazonaws.com/h2o/rel-simons/7/h2o-$version_h2o.zip"
 $sparkTarball = "http://d3kbcqa49mib13.cloudfront.net/spark-$version_spark.tgz"
-$sparklingWaterTarball = "http://h2o-release.s3.amazonaws.com/sparkling-water/rel-1.4/3/sparkling-water-1.4.3.zip"
+$sparklingWaterTarball = "http://h2o-release.s3.amazonaws.com/sparkling-water/rel-$version_sparklingWater_major/$version_sparklingWater_minor/sparkling-water-$version_sparklingWater.zip"
 
 $nodeV           = "node-v4.1.0-linux-x64"
 $nodeTarball     = "$nodeV.tar.gz"
@@ -184,20 +189,20 @@ class sparkling-water {
 		#cwd => "$sparklingWaterHdir",
 		timeout => 60,
 		tries   => 3,
-		#creates => "$sparklingWaterHdir/sparkling-water-1.4.3.zip",
+		#creates => "$sparklingWaterHdir/sparkling-water-$version_sparklingWater.zip",
 		#refreshonly => true,
 		#notify => Exec['unzip sparkling'],
 		before  => Exec["unzip sparkling"],
 	}
 	exec { 'unzip sparkling': 
-		command => "unzip -o $sparklingWaterHdir/sparkling-water-1.4.3.zip -d $sparklingWaterHdir/", 
-		#command => "/usr/bin/unzip -o $sparklingWaterHdir/sparkling-water-1.4.3.zip",
+		command => "unzip -o $sparklingWaterHdir/sparkling-water-$version_sparklingWater.zip -d $sparklingWaterHdir/", 
+		#command => "/usr/bin/unzip -o $sparklingWaterHdir/sparkling-water-$version_sparklingWater.zip",
 		#cwd => "$sparklingWaterHdir",
 		timeout => 60, 
 		tries   => 3,
 		require => Class["unzip"],
 	}
-	#exec { 'run sparkling':      command => "$sparklingWaterHdir/sparkling-water-1.4.3/bin/sparkling-shell",      timeout => 5, tries   => 3 }
+	#exec { 'run sparkling':      command => "$sparklingWaterHdir/sparkling-water-$version_sparklingWater/bin/sparkling-shell",      timeout => 5, tries   => 3 }
 }
 
 class spark {
