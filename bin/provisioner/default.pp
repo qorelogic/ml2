@@ -159,7 +159,7 @@ class h2o {
 # source: 
 class openflights {
 	exec { "mkdir_openflights": 
-		command => "mkdir -p /mldev/lib/crawlers/transport/"
+		command => "mkdir -p /mldev/lib/crawlers/transport/",
 		before  => Exec["gitclone_openflights"],
      }
 	exec { "gitclone_openflights":
