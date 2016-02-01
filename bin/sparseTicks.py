@@ -106,11 +106,11 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False):
     import time
     from pandas import DataFrame as p_DataFrame
     
-    dfn = df.get_values()
     #n.set_printoptions(threshold=10)
     n.set_printoptions(suppress=False)
     n.set_printoptions(threshold=n.nan)
     
+    dfn = df.get_values()#.T
     #dir(dfn)
 
     dfnl = dfn.shape[0]-mdepth
@@ -156,8 +156,8 @@ def pipeline():
     #fp = open(sys.stdin)
     fp = sys.stdin
     df = p.DataFrame()
-    tail = 5
-    r = tail; c = 10;
+    tail = 100
+    r = tail; c = 4;
     
     ndf = n.zeros(r*c).reshape(r,c);
     #ndf = n.random.randn(r*c).reshape(r,c);
@@ -213,7 +213,7 @@ def pipeline():
             stdev = n.std(ndf, 0)
             df.ix['stdev', :] = stdev
             
-            df =  df.ix['stdev',:]
+            #df =  df.ix['stdev',:]
             print df
             #print df.get_values()
             
