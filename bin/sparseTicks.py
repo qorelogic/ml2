@@ -275,6 +275,8 @@ if __name__ == "__main__":
     import argparse
     # source: https://docs.python.org/2/howto/argparse.html
     parser = argparse.ArgumentParser()
+    
+    # saving options
     parser.add_argument('-s', "--save", help="save to csv file", action="store_true")
     
     # statistics options
@@ -282,8 +284,14 @@ if __name__ == "__main__":
     parser.add_argument("--stdev", help="standard deviation", action="store_true")
     parser.add_argument("--mdepth", help="The depth of the 3-dimensional matrix. How many ticks past should be considered to compute statistics.")
 
+    # machine learning options
     parser.add_argument('-t', "--train", help="train via h2o[deeplearning]", action="store_true")
+    
+    # dataset size options
     parser.add_argument('-n', "--num", help="number of rows")
+    
+    # connection options
+    parser.add_argument('-p', "--port", help="port number")
     args = parser.parse_args()
     
     from simulator import Simulator
