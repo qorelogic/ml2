@@ -134,9 +134,17 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False):
         for i in xrange(midepth):
             #print dfn[i:mdepth+i]
             #print df.ix[i:mdepth+i]
-            print p_DataFrame(dfn[i:mdepth+i], index=df.ix[i:mdepth+i].index, columns=df.columns)
+            dfv = p_DataFrame(dfn[i:mdepth+i], index=df.ix[i:mdepth+i].index, columns=df.columns)
+            dfv.ix['stdev', :] = n.std(dfn[i:mdepth+i], 0)
+            print dfv
             #print
         #print p_DataFrame(dfn)
+    
+    # prep the dataframe indeces into a list
+    dfi = []
+    for i in xrange(midepth):
+        #dfi.append(df.ix[i:mdepth+i].index)
+        dfi.append(df.ix[i:mdepth+i].index)
         
     #print dfm
     #print 'shape dfn: {0}'.format(dfn.shape)
@@ -149,7 +157,7 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False):
 #        print 
         #p_DataFrame(dfm[i]).plot(legend=False)
     
-    return dfm
+    return [dfm, dfi, df.columns]
 
 #@profile
 def pipeline():
@@ -210,8 +218,7 @@ def pipeline():
             #print '{0}:{1}'.format(li[1], li[2])
             df = p.DataFrame(ndf, index=dfi, columns=dfc_keys[0:c])#.transpose()
             
-            stdev = n.std(ndf, 0)
-            df.ix['stdev', :] = stdev
+            df.ix['stdev', :] = n.std(ndf, 0)
             
             #df =  df.ix['stdev',:]
             print df
@@ -269,6 +276,12 @@ if __name__ == "__main__":
     # source: https://docs.python.org/2/howto/argparse.html
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', "--save", help="save to csv file", action="store_true")
+    
+    # statistics options
+    parser.add_argument('-d3', "--dim3", help="3 dimensional matrix", action="store_true")
+    parser.add_argument("--stdev", help="standard deviation", action="store_true")
+    parser.add_argument("--mdepth", help="The depth of the 3-dimensional matrix. How many ticks past should be considered to compute statistics.")
+
     parser.add_argument('-t', "--train", help="train via h2o[deeplearning]", action="store_true")
     parser.add_argument('-n', "--num", help="number of rows")
     args = parser.parse_args()
@@ -349,8 +362,38 @@ if __name__ == "__main__":
             sys.exit()
 
         df = sparseTicks(num=num)
+
+        if args.dim3 or args.stdev:
+            try:    mdepth = int(args.mdepth)
+            except: mdepth = 15
+            #for i in xrange(1):
+            #    sparseTicks2dim3(df, mdepth=mdepth)
+            
+            if args.stdev:
+                d3 = sparseTicks2dim3(df, mdepth=mdepth, verbose=False)
+                stdev = n.std(d3[0], 1)
+                #print d3
+                #print d3[1][0][len(d3[1][0])-1]
+                indx = p.DataFrame(d3[1]).ix[:, len(d3[1][0])-1]
+                df = p.DataFrame(stdev, index=indx.get_values(), columns=d3[2])
+            else:
+                d3 = sparseTicks2dim3(df, mdepth=mdepth, verbose=True)
+                df = d3[0]
+                
+            df = normalizeme(df)
+            df = sigmoidme(df)
+
+            if args.save:
+                print df
+                fname = '/tmp/ql.ticks.{0}.dim3.csv'.format(num)
+                df.to_csv(fname)
+                print 'saved to {0}'.format(fname)
+                sys.exit()
+                
+            print df
+            df.plot()
+            plt.show()            
+            sys.exit()
+
         print df
-        #for i in xrange(1):
-        #    sparseTicks2dim3(df, mdepth=5)
-        #print sparseTicks2dim3(df, mdepth=5)
         sys.exit()
