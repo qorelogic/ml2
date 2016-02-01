@@ -107,6 +107,10 @@ def sparseTicks2dim3(df, mdepth=200, verbose=False):
     from pandas import DataFrame as p_DataFrame
     
     dfn = df.get_values()
+    #n.set_printoptions(threshold=10)
+    n.set_printoptions(suppress=False)
+    n.set_printoptions(threshold=n.nan)
+    
     #dir(dfn)
 
     dfnl = dfn.shape[0]-mdepth
@@ -161,14 +165,10 @@ def pipeline():
     #dfc = n.zeros(c)
     dfc = {}
     
-    p.set_option('expand_frame_repr', False)
     #p.set_option('max_colwidth',10)
     p.set_option('precision', 3)
     #p.set_eng_float_format(accuracy=3, use_eng_prefix=False)
     #p.set_eng_float_format(use_eng_prefix=False)
-    
-    # Format / Suppress Scientific Notation
-    p.set_option('display.float_format', lambda x: '%2.10f' % x)
     
     while True:
         try:
@@ -280,6 +280,11 @@ if __name__ == "__main__":
     from qoreliquid import normalizeme
     from qoreliquid import sigmoidme
     
+    p.set_option('expand_frame_repr', False)
+    # http://stackoverflow.com/questions/21137150/format-suppress-scientific-notation-from-python-pandas-aggregation-results
+    # Format / Suppress Scientific Notation
+    p.set_option('display.float_format', lambda x: '%2.10f' % x)
+
     try:    num = int(args.num)
     except: num = 100
     
