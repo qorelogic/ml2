@@ -356,17 +356,17 @@ if __name__ == "__main__":
             #sp1[1].drop(label)
             print sp1[1][label]
             
+            """
             model = h2o.gbm(x=sp1[0].drop(label), y=sp1[0][label], validation_x=sp1[1].drop(label), validation_y=sp1[1][label], ntrees=10000, max_depth=100)
             print model            
             predict = model.predict(sp1[1])#.get_frame('C1')
             print model.model_performance(sp1[1])
-            
             """
+            
             model2 = h2o.deeplearning(x=sp1[0].drop(label), y=sp1[0][label], validation_x=sp1[1].drop(label), validation_y=sp1[1][label])
             #print model2
             predict = model2.predict(sp1[1])#.get_frame('C1')
             print model2.model_performance(sp1[1])
-            """
             
             # show prediction and plot data
             print predict
