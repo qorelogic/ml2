@@ -372,8 +372,8 @@ if __name__ == "__main__":
             print predict
             df = predict.as_data_frame()
             df = df.combine_first(sp1[1].as_data_frame())
-            print df.ix[:, ['EUR_USD', 'predict']]
-            df.ix[:, ['EUR_USD', 'predict']].plot()
+            print df.ix[:, [label, 'predict']]
+            df.ix[:, [label, 'predict']].plot()
             plt.show()
             
             sys.exit()
