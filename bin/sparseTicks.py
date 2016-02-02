@@ -321,7 +321,7 @@ if __name__ == "__main__":
     # if std input is not passed
     else:
         fname = '/tmp/ql.ticks.{0}.csv'.format(num)
-        if args.save:
+        if args.save and not (args.dim3 or args.stdev):
             df = sparseTicks(num=num)
             df = normalizeme(df)
             df = sigmoidme(df)
@@ -380,6 +380,10 @@ if __name__ == "__main__":
         dfl = df.ix[:, label]
 
         if args.dim3 or args.stdev:
+            if args.dim3:
+                mode = 'dim3'
+            if args.stdev:
+                mode = 'stdev'
             try:    mdepth = int(args.mdepth)
             except: mdepth = 15
             #for i in xrange(1):
@@ -400,15 +404,16 @@ if __name__ == "__main__":
             df = sigmoidme(df)
 
             if args.save:
-                print df
-                fname = '/tmp/ql.ticks.{0}.dim3.csv'.format(num)
+                fname = '/tmp/ql.ticks.%s.%s.csv' % (num, mode)
                 df.to_csv(fname)
                 print 'saved to {0}'.format(fname)
-                sys.exit()
-                
-            print df
-            df.plot()
-            plt.show()            
+             
+            print '----------df-------'
+            with p.option_context('display.max_rows', 2000, 'display.max_columns', 500):
+                print df
+            #print df
+            #df.plot()
+            #plt.show()            
             sys.exit()
 
         print df
