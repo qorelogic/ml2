@@ -14,6 +14,7 @@ class vpn-server {
     $miface = inline_template("<%= %x{ route -n | grep -i '0.0.0.0' | grep 'U ' | perl -pe 's/[\s]+/ /g' | cut -d' ' -f8  | perl -pe 's/\n//g' } %>")
     $qaz = inline_template("<%= %x{ echo 'box1 pptpd passwd *' >> /etc/ppp/chap-secrets } %>")
     #$qwe  = generate("/bin/echo", "-n", "$mvar")
+
     exec { "pptpd.conf localip":
     	command => "sudo perl -pi -we 's/^(#)?localip (.*)/localip $localip/g' /etc/pptpd.conf",
         before  => Exec["pptpd.conf remoteip"],
@@ -26,10 +27,13 @@ class vpn-server {
     	command => "sudo perl -pi -we 's/^box1 (.*)/box1 pptpd qweqwe */g' /etc/ppp/chap-secrets",
         before  => Exec["ms-dns"],
     }
+    exec { "": command => "sudo perl -pi -e 's/.*(logwtmp.*)/#\1/g' /etc/ppp/pptpd-options", before  => Exec["p1"] }
     exec { "ms-dns":
-    	command => "sudo perl -pi -we 's/^ms-dns (.*)/ms-dns 8.8.8.8/g' /etc/ppp/pptpd-options",
-        before  => Exec["pptpd restart"],
+    	command => "sudo perl -pi -we 's/.*ms-dns (.*)//g' /etc/ppp/pptpd-options",
+        before  => Exec["p1"],
     }
+    exec { "p1": before => Exec["p2"],            command => "echo 'ms-dns 8.8.8.8' >> /etc/ppp/pptpd-options"}
+    exec { "p2": before => Exec["pptpd restart"], command => "echo 'ms-dns 8.8.4.4' >> /etc/ppp/pptpd-options"}
     exec { "pptpd restart":
     	command => "service pptpd restart",
         before  => Exec["forwarding"],
