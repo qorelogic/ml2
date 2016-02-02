@@ -307,6 +307,9 @@ if __name__ == "__main__":
     # http://stackoverflow.com/questions/21137150/format-suppress-scientific-notation-from-python-pandas-aggregation-results
     # Format / Suppress Scientific Notation
     p.set_option('display.float_format', lambda x: '%2.10f' % x)
+    #p.set_option('display.precision', 2)    
+    p.set_option('display.width', p.util.terminal.get_terminal_size()[0])
+    p.set_option('max_colwidth', 800)
 
     try:    num = int(args.num)
     except: num = 100
@@ -402,15 +405,119 @@ if __name__ == "__main__":
                 
             df = normalizeme(df)
             df = sigmoidme(df)
+            
+            currencyColumns = df.columns
+            
+            # labels
+            #from qoreliquid import StatWing
+            #sw = StatWing()
+            #sw.
+            df['ts0'] = OandaQ.oandaToTimestamp_S(df.index)
+            df['ts1'] = n.int32(OandaQ.oandaToTimestamp_S(df.index))
+            #df['ts2'] = n.array(n.int32(OandaQ.oandaToTimestamp_S(df.index)) % 2 == 0, dtype=int)
+            
+            dfl0 = p.DataFrame()
+            dfl0['ts1'] = df['ts1']
+            dfl0['ts0'] = df['ts0']
+            dfl0['la'] = dfl
+            
+            #dfl0['tss'] = dfl0.index
+            #dfl0 = dfl0.set_index('ts1')
+            #for i in [1,2,3,5,8,13,21,34,55,89,144]:
+            for i in [1,2,3,5,10,15,30,60,240,1440]:
+                dfl0['ts+%s' % i] = dfl0['ts1'] + i
+                #dfl0['la+%s' % i] = dfl0.ix[dfl0['ts+%s' % i][0],:]
+                #dfl0.ix['la+%s' % i] =
+                id1 = dfl0.ix[:, 'ts+%s' % i][0]
+                try:
+                    dfl0.ix[id1,:]
+                except Exception as e:
+                    ''
+
+                #print len(dfl0['la+%s' % i])
+                #print len(dfl0['ts+%s' % i])
+            
+            #print dfl0.groupby(['ts1'])
+            #print dfl0
+            #dfl0.to_csv()
+            #dfl0.to_csv('/tmp/dfl0.csv')
+            
+            # http://stackoverflow.com/questions/15707746/python-how-can-i-get-rows-which-have-the-max-value-of-the-group-to-which-they
+            # timestamps for each period
+            for i in [1,2,3,5,10,15,30,60,240,1440]:
+                dfl0['ts%s' % i] =  dfl0.ix[dfl0.ix[:, 'ts1'] % i == 0, 'ts1']
+            dfl0 = dfl0.ffill()
+            
+            df_by_second = dfl0.groupby('ts1').apply(lambda t: t[t.ts0==t.ts0.max()])
+            df_by_second['la1'] = df_by_second['la']
+            df_by_second['tsi'] = df_by_second.index
+            df_by_second = df_by_second.set_index('ts1')
+            
+            df_by_2second = dfl0.groupby('ts2').apply(lambda t: t[t.ts0==t.ts0.max()])
+            df_by_2second['la2'] = df_by_2second['la']
+            df_by_2second['tsi'] = df_by_2second.index
+            df_by_2second = df_by_2second.set_index('ts1')
+
+            df_by_5second = dfl0.groupby('ts5').apply(lambda t: t[t.ts0==t.ts0.max()])
+            df_by_5second['la5'] = df_by_5second['la']
+            df_by_5second['tsi'] = df_by_5second.index
+            df_by_5second = df_by_5second.set_index('ts1')
+            
+            #print df_by_second.ix[df_by_second.ix[:,'ts+1'], 'la']
+            #print df_by_second.ix[[1442932286, 1442932287, 1442933724], 'la']
+            df_by_second['ts1'] = df_by_second.index
+            #df_by_second = df_by_second.set_index('ts1')
+            
+            #print df_by_second#.set_index('ts0')
+            
+            print '----------dfl0-------'
+            print dfl0.ix[dfl0.ix[:, 'ts+%s' % 1].index[0:10],:]
+            print dfl0.ix[dfl0.ix[:, 'ts+%s' % 1].index,:]
+
+            dfl0 = dfl0.set_index('ts1')
+            print '----------dfl0-------'
+            print dfl0.index
+            print dfl0
+            df['label1'] = dfl
+            df['tsi'] = df.index
+            df = df.set_index('ts0')
+            df.to_csv('/tmp/df.csv')
+            df_by_second.to_csv('/tmp/df_by_second.csv')
+            
+            print '----------df_by_second-------'
+            print df_by_second.index
+            print df_by_second
+            
+            print '----------df-------'
+            print df.index
+            print df
+            
+            print '----------label+1-------'
+            df['label+1'] = df_by_second.ix[list(df_by_second.ix[:,'ts+1']), 'la']#.get_values()
+            
+            # http://pandas.pydata.org/pandas-docs/stable/merging.html
+            df = p.concat([df, df_by_second, df_by_2second, df_by_5second], join='outer').sort()
+            df = df.ffill().bfill().fillna(0)
+            df['la>label1'] = n.array(df['la'] > df['label1'], dtype=int)
+            df['la1b']      = n.array(df['la1'] > df['label1'], dtype=int)
+            df['la2b']      = n.array(df['la2'] > df['label1'], dtype=int)
+            df['la5b']      = n.array(df['la5'] > df['label1'], dtype=int)            
+            
+            labels = ['la', 'la1', 'la1b', 'la2', 'la2b', 'la5', 'la5b', 'label1']
+            #n.array(p.concat([p.DataFrame(currencyColumns), p.DataFrame(labels)], axis=0).transpose(), dtype=int).tolist()[0]
+            Xy = n.concatenate([currencyColumns, labels]).tolist()
 
             if args.save:
                 fname = '/tmp/ql.ticks.%s.%s.csv' % (num, mode)
-                df.to_csv(fname)
+                df.ix[:, Xy].to_csv(fname)
                 print 'saved to {0}'.format(fname)
              
             print '----------df-------'
-            with p.option_context('display.max_rows', 2000, 'display.max_columns', 500):
+            with p.option_context('display.max_rows', 2000, 'display.max_columns', 2000):
+                #print df.ix[:, labels]
+                #print df.ix[:, Xy].tail(10)
                 print df
+                
             #print df
             #df.plot()
             #plt.show()            
