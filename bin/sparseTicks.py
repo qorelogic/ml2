@@ -278,6 +278,8 @@ if __name__ == "__main__":
     
     # saving options
     parser.add_argument('-s', "--save", help="save to csv file", action="store_true")
+
+    parser.add_argument('-l', "--label", help="label")
     
     # statistics options
     parser.add_argument('-d3', "--dim3", help="3 dimensional matrix", action="store_true")
@@ -309,6 +311,10 @@ if __name__ == "__main__":
     try:    num = int(args.num)
     except: num = 100
     
+    try:    label = args.label
+    except: label = 'EUR_USD'
+    if label == None: label = 'EUR_USD'
+    
     # if std input is passed
     if not sys.stdin.isatty():
         pipeline()
@@ -331,7 +337,7 @@ if __name__ == "__main__":
             
             h2o.init(ip=getIpAddr(), port=54321)
             
-            fr1 = h2o.import_frame(fname); label = 'EUR_USD'
+            fr1 = h2o.import_frame(fname);
             #fr1 = h2o.H2OFrame(f1)
             print fr1
             
@@ -370,6 +376,8 @@ if __name__ == "__main__":
             sys.exit()
 
         df = sparseTicks(num=num)
+        print 'label: %s' % label
+        dfl = df.ix[:, label]
 
         if args.dim3 or args.stdev:
             try:    mdepth = int(args.mdepth)
