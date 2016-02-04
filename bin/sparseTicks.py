@@ -279,6 +279,8 @@ if __name__ == "__main__":
     # source: https://docs.python.org/2/howto/argparse.html
     parser = argparse.ArgumentParser()
     
+    parser.add_argument('-f', "--file", help="dataset filename")
+
     # saving options
     parser.add_argument('-s', "--save", help="save to csv file", action="store_true")
     parser.add_argument('-v', "--verbose", help="verbose", action="store_true")
@@ -293,12 +295,13 @@ if __name__ == "__main__":
 
     # machine learning options
     parser.add_argument('-t', "--train", help="train via h2o[deeplearning]", action="store_true")
+    parser.add_argument('-p', "--predict", help="predict via h2o[deeplearning]", action="store_true")
     
     # dataset size options
     parser.add_argument('-n', "--num", help="number of rows")
     
     # connection options
-    parser.add_argument('-p', "--port", help="port number")
+    parser.add_argument("--port", help="port number")
     args = parser.parse_args()
     
     from simulator import Simulator
@@ -316,19 +319,37 @@ if __name__ == "__main__":
     p.set_option('display.width', p.util.terminal.get_terminal_size()[0])
     p.set_option('max_colwidth', 800)
 
+    if args.dim3:   mode = 'dim3'
+    if args.stdev:  mode = 'stdev'
+    try:    mode
+    except: mode = 'stdev'
+        
+
     try:    num = int(args.num)
     except: num = 100
     
     try:    label = args.label
-    except: label = 'EUR_USD'
+    except: label = None
     if label == None: label = 'EUR_USD'
+    
+    try:    fname = args.file
+    except Exception as e:
+        fname = None
+    if fname == None:
+        import subprocess
+        def get_git_revision_hash():
+            return subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
+        def get_git_revision_short_hash():
+            return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
+        current_hash = get_git_revision_hash()
+        #fname = '/tmp/ql.ticks.%s.%s.%s.%s.csv' % (num, mode, label, current_hash)
+        fname = '/tmp/ql.ticks.%s.%s.%s.csv' % (num, mode, current_hash)
     
     # if std input is passed
     if not sys.stdin.isatty():
         pipeline()
     # if std input is not passed
     else:
-        fname = '/tmp/ql.ticks.{0}.csv'.format(num)
         if args.save and not (args.dim3 or args.stdev):
             df = sparseTicks(num=num)
             df = normalizeme(df)
@@ -339,11 +360,15 @@ if __name__ == "__main__":
             #os.system("rsync -avrz /opt/data/filename root@ip:/opt/data/file")
             sys.exit()
 
-        if args.train:
-            print 'training'
-            import h2o
-            
+        import h2o
+        import pickle
+        fnameModel = '%s.model.h2o.pkl' % (fname)
+        if args.train or args.predict:
             h2o.init(ip=getIpAddr(), port=54321)
+            
+        if args.train:# or args.predict:
+
+            print 'Dataset import..'
             
             fr1 = h2o.import_frame(fname);
             #fr1 = h2o.H2OFrame(f1)
@@ -355,27 +380,79 @@ if __name__ == "__main__":
             
             sp1 = fr1.split_frame([0.75])
             
-            print sp1#[0]
+            #print sp1#[0]
             #sp1[0].drop(label)
-            print sp1[0][label]
+            print sp1[0][label].as_data_frame()
             #sp1[1].drop(label)
-            print sp1[1][label]
-            
+            print sp1[1][label].as_data_frame()
+
+        if args.train:
+
+            print 'Training..'
+
             """
             model = h2o.gbm(x=sp1[0].drop(label), y=sp1[0][label], validation_x=sp1[1].drop(label), validation_y=sp1[1][label], ntrees=10000, max_depth=100)
             print model            
             predict = model.predict(sp1[1])#.get_frame('C1')
             print model.model_performance(sp1[1])
-            """
             
-            model2 = h2o.deeplearning(x=sp1[0].drop(label), y=sp1[0][label], validation_x=sp1[1].drop(label), validation_y=sp1[1][label])
+            model2 = h2o.deeplearning(x           =sp1[0].drop(label), 
+                                      y           =sp1[0][label], 
+                                      validation_x=sp1[1].drop(label), 
+                                      validation_y=sp1[1][label])
+            """
+            model2 = h2o.deeplearning(x           =fr1.drop(label), 
+                                      y           =fr1[label], 
+                                      validation_x=fr1.drop(label), 
+                                      validation_y=fr1[label])
+            
+            # save model object to pickle file
+            s = pickle.dumps(model2)            
+            fp = open(fnameModel, 'w')
+            fp.write(s)
+            fp.close()            
+            model2 = pickle.loads(s)
+            print 'saved model to %s' % (fnameModel)
+            
             #print model2
-            predict = model2.predict(sp1[1])#.get_frame('C1')
-            print model2.model_performance(sp1[1])
+            #predict = model2.predict(sp1[1])#.get_frame('C1')
+            #print model2.model_performance(sp1[1])
+            predict = model2.predict(fr1)#.get_frame('C1')
+            print model2.model_performance(fr1)
             
             # show prediction and plot data
-            print predict
+            #print predict
             df = predict.as_data_frame()
+            #df = df.combine_first(sp1[0].as_data_frame())
+            #df = df.combine_first(sp1[1].as_data_frame())
+            df = df.combine_first(fr1.as_data_frame())
+            print df.ix[:, [label, 'predict']]
+            df.ix[:, [label, 'predict']].plot()
+            plt.show()
+            
+            sys.exit()
+
+        if args.predict:
+            # read model object from pickle file
+            fp = open(fnameModel, 'r')
+            s = fp.read()
+            fp.close()            
+            model2 = pickle.loads(s)
+            print 'model read from %s' % (fnameModel)
+            
+            #print model2
+            sp1 = p.read_csv(fname)
+            sp1 = list(sp1.get_values())
+            fr1 = h2o.H2OFrame(sp1[0])
+            
+            predict = model2.predict(sp1[1])#.get_frame('C1')
+            print model2.model_performance(sp1[1])
+            print model2.confusion_matrix()
+            
+            # show prediction and plot data
+            #print predict
+            df = predict.as_data_frame()
+            #df = df.combine_first(sp1[0].as_data_frame())
             df = df.combine_first(sp1[1].as_data_frame())
             print df.ix[:, [label, 'predict']]
             df.ix[:, [label, 'predict']].plot()
@@ -388,10 +465,6 @@ if __name__ == "__main__":
         dfl = df.ix[:, label]
 
         if args.dim3 or args.stdev:
-            if args.dim3:
-                mode = 'dim3'
-            if args.stdev:
-                mode = 'stdev'
             try:    mdepth = int(args.mdepth)
             except: mdepth = 15
             #for i in xrange(1):
@@ -503,7 +576,7 @@ if __name__ == "__main__":
             # http://pandas.pydata.org/pandas-docs/stable/merging.html
             df = p.concat([df, df_by_second, df_by_2second, df_by_5second], join='outer').sort()
             df = df.ffill().bfill().fillna(0)
-            df['la>label1'] = n.array(df['la'] > df['label1'], dtype=int)
+            #df['la>label1'] = n.array(df['la'] > df['label1'], dtype=int)
             df['la1b']      = n.array(df['la1'] > df['label1'], dtype=int)
             df['la2b']      = n.array(df['la2'] > df['label1'], dtype=int)
             df['la5b']      = n.array(df['la5'] > df['label1'], dtype=int)            
@@ -513,7 +586,6 @@ if __name__ == "__main__":
             Xy = n.concatenate([currencyColumns, labels]).tolist()
 
             if args.save:
-                fname = '/tmp/ql.ticks.%s.%s.csv' % (num, mode)
                 df.ix[:, Xy].to_csv(fname)
                 print 'saved to {0}'.format(fname)
              
