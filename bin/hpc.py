@@ -85,7 +85,7 @@ class HPC:
                 printNodeManifest(droplet.id, droplet.ip_address, droplet.name, droplet.region['name'], droplet.created_at)
         
         print '=== VULTR ====='
-        v = Vultr('')
+        v = Vultr(self.key_vultr)
         res = v.server_list()
         #print p.DataFrame(res)
         for i in res:
@@ -98,26 +98,33 @@ class HPC:
 
         #    #droplet.shutdown()
     
-    def createNode(self):
+    def createNode(self, provider):
         self.qd._getMethod()
         
-        key = digitalocean.SSHKey(token=self.token)
-        dkey = key.load_by_pub_key(self.pkey)
-        
-        nextSnapshotname = self.createNextSnapshotname()
-        lastImage        = self.getLastImage()
-        images           = self.getImages(verbose=False)
+        #provider = raw_input('Prepping node..  ..which provider? (d=DigitalOcean, v=Vultr): ')
+ 
+        if provider == 'd':
+            key = digitalocean.SSHKey(token=self.token)
+            dkey = key.load_by_pub_key(self.pkey)
+            
+            nextSnapshotname = self.createNextSnapshotname()
+            lastImage        = self.getLastImage()
+            images           = self.getImages(verbose=False)
+            
+            droplet = digitalocean.Droplet(token=self.token,
+                                           name=nextSnapshotname, #'liquid-rc07',
+                                           #region='nyc2', # New York 2
+                                           region=images[lastImage].regions[0],
+                                           #image='ubuntu-14-04-x64', # Ubuntu 14.04 x64
+                                           image=lastImage,
+                                           size_slug='512mb',  # 512MB
+                                           #size_slug='1gb',  # 512MB
+                                           backups=True, ssh_keys=[dkey])
+            droplet.create()
 
-        droplet = digitalocean.Droplet(token=self.token,
-                                       name=nextSnapshotname, #'liquid-rc07',
-                                       #region='nyc2', # New York 2
-                                       region=images[lastImage].regions[0],
-                                       #image='ubuntu-14-04-x64', # Ubuntu 14.04 x64
-                                       image=lastImage,
-                                       size_slug='512mb',  # 512MB
-                                       #size_slug='1gb',  # 512MB
-                                       backups=True, ssh_keys=[dkey])
-        droplet.create()
+        if provider == 'v':
+            v = Vultr(self.key_vultr)
+            #v.server_create(DCID=, VPSPLANID=, OSID=)
     
     def makeNewSnapshot(self, droplet):
         self.qd._getMethod()
@@ -227,19 +234,56 @@ class HPC:
 
 if __name__ == "__main__":
     import sys
+
+    import argparse
+    # source: https://docs.python.org/2/howto/argparse.html
+    parser = argparse.ArgumentParser()
+    
+    #        if sys.argv[1] == 'on':
+    #            c.createNode()
+    parser.add_argument("-on", help="d=DigitalOcean, v=Vultr")
+    #        if sys.argv[1] == 'nodes':
+    #            # running nodes
+    #            res = c.getNodes()
+    parser.add_argument("-n", "-nodes", "--nodes", help="c.getNodes()", action="store_true")
+    ##        if sys.argv[1] == 'images':
+    #            c.getImages()
+    parser.add_argument("-i", "-images", "--images", help="c.getImages()", action="store_true")
+    #        if sys.argv[1] == 'snapshot':
+    #            print c.snapshotAllDroplets()
+    parser.add_argument("-s", "-snapshot", "--snapshot", help="c.snapshotAllDroplets()", action="store_true")
+    #        if sys.argv[1] == 'destroy':
+    #            print c.destroyAllDroplets()
+    parser.add_argument("-d", "-destroy", "--destroy", help="c.destroyAllDroplets()", action="store_true")
+    #        if sys.argv[1] == 'regions':
+    #            print c.regions()
+    parser.add_argument("-r", "-regions", "--regions", help="c.regions()", action="store_true")
+    #print 'usage: <hpc.py on | nodes | images | snapshot | destroy | regions>'
+
+    args = parser.parse_args()
+    
+    import digitalocean
+    from vultr.vultr import Vultr
+    import numpy as n
+    import pandas as p
+    import time
+    from qore import QoreDebug
+    
+    qd = QoreDebug()
+    qd.off()
+    qd.stackTraceOff()
+
     c = HPC()
-    try:
-        if sys.argv[1] == 'on':
-            c.createNode()
-        if sys.argv[1] == 'nodes':
-            # running nodes
-            res = c.getNodes()
-        if sys.argv[1] == 'images':
-            c.getImages()
-        if sys.argv[1] == 'snapshot':
-            print c.snapshotAllDroplets()
-        if sys.argv[1] == 'destroy':
-            print c.destroyAllDroplets()
-    except Exception as e:
-        print 'usage: <hpc.py on | nodes | images | snapshot | destroy>'
-        print e
+
+    if args.on:
+        c.createNode(args.on)
+    if args.nodes:
+        c.getNodes()
+    if args.images:
+        c.getImages()
+    if args.snapshot:
+        c.snapshotAllDroplets()
+    if args.destroy:
+        c.destroyAllDroplets()
+    if args.regions:
+        c.regions()
