@@ -113,12 +113,35 @@ class HPC:
 
         if provider == 'v':
             v = Vultr(self.key_vultr)
-            #v.server_create(DCID=, VPSPLANID=, OSID=)
+            res = self.plans()
+            print res.ix[['29', '94'], :].transpose()
+            v.server_create(DCID=1, VPSPLANID=94, OSID=191)
     
     def regions(self):
             v = Vultr(self.key_vultr)
-            rg = v.regions_list()
-            print p.DataFrame(rg).transpose()
+            res = v.regions_list()
+            df = p.DataFrame(res).transpose()
+            df = df.convert_objects(convert_numeric=True)
+            df = df.set_index('DCID')
+            print df.sort()
+        
+    def plans(self):
+            v = Vultr(self.key_vultr)
+            res = v.plans_list()
+            df = p.DataFrame(res).transpose()
+            df = df.convert_objects(convert_numeric=True)
+            df['price_per_hour'] = df.ix[:, 'price_per_month'] / 24 / 30
+            return df.sort(['ram','vcpu_count'], ascending=False)
+        
+    def os(self):
+            v = Vultr(self.key_vultr)
+            res = v.os_list()
+            print p.DataFrame(res).transpose()
+        
+    def startupScripts(self):
+            v = Vultr(self.key_vultr)
+            res = v.startupscript_list()
+            print p.DataFrame(res).transpose()
         
     def makeNewSnapshot(self, droplet):
         self.qd._getMethod()
@@ -252,6 +275,9 @@ if __name__ == "__main__":
     #        if sys.argv[1] == 'regions':
     #            print c.regions()
     parser.add_argument("-r", "-regions", "--regions", help="c.regions()", action="store_true")
+    parser.add_argument("-p", "-plans",   "--plans",   help="c.plans()",   action="store_true")
+    parser.add_argument("-os",   "--os",   help="c.os()",   action="store_true")
+    parser.add_argument("-ss",   "--startup",   help="c.startupScripts()",   action="store_true")
     #print 'usage: <hpc.py on | nodes | images | snapshot | destroy | regions>'
 
     args = parser.parse_args()
@@ -281,3 +307,9 @@ if __name__ == "__main__":
         c.destroyAllDroplets()
     if args.regions:
         c.regions()
+    if args.plans:
+        print c.plans()
+    if args.os:
+        c.os()
+    if args.startup:
+        c.startupScripts()
