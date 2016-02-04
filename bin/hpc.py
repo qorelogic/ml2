@@ -38,6 +38,24 @@ class HPC:
         ims = images.keys()
         return n.max(ims)
     
+    def printNodeManifest(self, node_id, ip_address, label, location, date_created, passwd=''):
+        print 'id:{0}'.format(node_id)
+        print 'label:{0}'.format(label)
+        print 'location:{0}'.format(location)
+        print 'date_created:{0}'.format(date_created)
+        print 'passwd: {0}'.format(passwd)
+        print '    ping {0}'.format(ip_address)
+        print '    ssh -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
+        print ''
+        print '  X11 Forwarding via SSH@{0}'.format(ip_address)
+        print '    ssh -X -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
+        print '    ipython notebook --ip={0}'.format(ip_address)
+        print '    http://{0}:5000'.format(ip_address)
+        print '    rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(ip_address)
+        print '    rsync -avP --partial root@{0}:/home/qore/mldev/bin/data/db-archive/ /mldev/bin/data/db-archive/'.format(ip_address)
+        print '    rdesktop -g 100% -u qore -p - {0}'.format(ip_address)
+        print 
+    
     def getNodes(self, quiet=False):
         self.qd._getMethod()
         
@@ -45,23 +63,6 @@ class HPC:
         #print 'nodes:'
         my_droplets = self.manager.get_all_droplets()
         droplets = {}
-        def printNodeManifest(node_id, ip_address, label, location, date_created, passwd=''):
-            print 'id:{0}'.format(node_id)
-            print 'label:{0}'.format(label)
-            print 'location:{0}'.format(location)
-            print 'date_created:{0}'.format(date_created)
-            print 'passwd: ___'.format(passwd)
-            print '    ping {0}'.format(ip_address)
-            print '    ssh -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
-            print ''
-            print '  X11 Forwarding via SSH@{0}'.format(ip_address)
-            print '    ssh -X -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
-            print '    ipython notebook --ip={0}'.format(ip_address)
-            print '    http://{0}:5000'.format(ip_address)
-            print '    rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(ip_address)
-            print '    rsync -avP --partial root@{0}:/home/qore/mldev/bin/data/db-archive/ /mldev/bin/data/db-archive/'.format(ip_address)
-            print '    rdesktop -g 100% -u qore -p - {0}'.format(ip_address)
-            print 
         
         print '=== DigitalOcean ====='
         for droplet in my_droplets:
@@ -71,7 +72,7 @@ class HPC:
             #print droplets
             #print dir(droplet)
             if quiet == False:
-                printNodeManifest(droplet.id, droplet.ip_address, droplet.name, droplet.region['name'], droplet.created_at)
+                self.printNodeManifest(droplet.id, droplet.ip_address, droplet.name, droplet.region['name'], droplet.created_at)
         
         print '=== VULTR ====='
         v = Vultr(self.key_vultr)
@@ -81,7 +82,7 @@ class HPC:
             print '--------'
             #print res[i]
             if quiet == False:
-                printNodeManifest(i, res[i]['main_ip'], res[i]['label'], res[i]['location'], res[i]['date_created'], passwd=res[i]['default_password'])
+                self.printNodeManifest(i, res[i]['main_ip'], res[i]['label'], res[i]['location'], res[i]['date_created'], passwd=res[i]['default_password'])
 
         return droplets
 
@@ -115,7 +116,9 @@ class HPC:
             v = Vultr(self.key_vultr)
             res = self.plans()
             print res.ix[['29', '94'], :].transpose()
-            v.server_create(DCID=1, VPSPLANID=94, OSID=191)
+            #v.server_create(DCID=1, VPSPLANID=94, OSID=191, SCRIPTID=12633, SSHKEYID='5674534d396cf', label='liquid-compute-rc1')
+            v.server_create(1, 94, 191, SCRIPTID=12633, SSHKEYID='5674534d396cf', label='liquid-compute-rc1')
+            #v.server_create({'DCID':1, 'VPSPLANID':94, 'OSID':191, 'SCRIPTID':12633, 'SSHKEYID':'5674534d396cf', 'label':'liquid-compute-rc1'})
     
     def regions(self):
             v = Vultr(self.key_vultr)
@@ -141,7 +144,12 @@ class HPC:
     def startupScripts(self):
             v = Vultr(self.key_vultr)
             res = v.startupscript_list()
-            print p.DataFrame(res).transpose()
+            print p.DataFrame(res)#.transpose()
+        
+    def sshkeys(self):
+            v = Vultr(self.key_vultr)
+            res = v.sshkey_list()
+            print p.DataFrame(res)#.transpose()
         
     def makeNewSnapshot(self, droplet):
         self.qd._getMethod()
@@ -195,6 +203,7 @@ class HPC:
         # destroy droplets
         wait = 5
         
+        print '=== DigitalOcean ====='
         droplets = self.getNodes(quiet=True)
         for id in droplets:
             
@@ -217,6 +226,23 @@ class HPC:
                         break
             else:
                 print 'nothing done'
+                
+        print '=== VULTR ====='
+        v = Vultr(self.key_vultr)
+        res = v.server_list()
+        #print p.DataFrame(res)
+        for i in res:
+            print '--------'
+            
+            #ans = raw_input('destroy droplet {0}[{1}:{2}]? y/n: '.format(droplet.id, droplet.name, droplet.ip_address))
+            #print res[i]
+            #print p.DataFrame([res[i]]).transpose()
+            #if quiet == False:
+            self.printNodeManifest(i, res[i]['main_ip'], res[i]['label'], res[i]['location'], res[i]['date_created'], passwd=res[i]['default_password'])
+            ans = raw_input('destroy vultr node {0}[{1}:{2}]? y/n: '.format(i, res[i]['label'], res[i]['main_ip']))
+            if ans == 'y':
+                v.server_destroy(i)
+                
 
     def getLastImageName(self):
         self.qd._getMethod()
@@ -278,6 +304,8 @@ if __name__ == "__main__":
     parser.add_argument("-p", "-plans",   "--plans",   help="c.plans()",   action="store_true")
     parser.add_argument("-os",   "--os",   help="c.os()",   action="store_true")
     parser.add_argument("-ss",   "--startup",   help="c.startupScripts()",   action="store_true")
+    parser.add_argument("-sk",   "--sshkeys",   help="c.sshkeys()",   action="store_true")
+
     #print 'usage: <hpc.py on | nodes | images | snapshot | destroy | regions>'
 
     args = parser.parse_args()
@@ -313,3 +341,5 @@ if __name__ == "__main__":
         c.os()
     if args.startup:
         c.startupScripts()
+    if args.sshkeys:
+        c.sshkeys()
