@@ -149,6 +149,16 @@ class HPC:
             v = Vultr(self.key_vultr)
             res = v.sshkey_list()
             print p.DataFrame(res)#.transpose()
+
+    def snapshots(self):
+            v = Vultr(self.key_vultr)
+            res = v.snapshot_list()
+            print p.DataFrame(res)#.transpose()
+            
+    def snapshotcreate(self, subid):
+            v = Vultr(self.key_vultr)
+            res = v.snapshot_create(subid)
+            print res
         
     def makeNewSnapshot(self, droplet):
         self.qd._getMethod()
@@ -304,6 +314,8 @@ if __name__ == "__main__":
     parser.add_argument("-os",   "--os",   help="c.os()",   action="store_true")
     parser.add_argument("-ss",   "--startup",   help="c.startupScripts()",   action="store_true")
     parser.add_argument("-sk",   "--sshkeys",   help="c.sshkeys()",   action="store_true")
+    parser.add_argument("-sn",   "--snapshots",   help="c.snapshots()",   action="store_true")
+    parser.add_argument("-snc",   "--snapshotcreate",   help="c.snapshots()")
 
     #print 'usage: <hpc.py on | nodes | images | snapshot | destroy | regions>'
 
@@ -342,3 +354,7 @@ if __name__ == "__main__":
         c.startupScripts()
     if args.sshkeys:
         c.sshkeys()
+    if args.snapshots:
+        c.snapshots()
+    if args.snapshotcreate:
+        c.snapshotcreate(args.snapshotcreate)
