@@ -126,6 +126,11 @@ class HPC:
             v = Vultr(self.key_vultr)
             #v.server_create(DCID=, VPSPLANID=, OSID=)
     
+    def regions(self):
+            v = Vultr(self.key_vultr)
+            rg = v.regions_list()
+            print p.DataFrame(rg).transpose()
+        
     def makeNewSnapshot(self, droplet):
         self.qd._getMethod()
         
