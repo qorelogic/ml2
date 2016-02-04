@@ -302,6 +302,8 @@ if __name__ == "__main__":
     
     # connection options
     parser.add_argument("--port", help="port number")
+    parser.add_argument("-ip", "--h2o_ip", help="h2o ip address")
+
     args = parser.parse_args()
     
     from simulator import Simulator
@@ -323,7 +325,10 @@ if __name__ == "__main__":
     if args.stdev:  mode = 'stdev'
     try:    mode
     except: mode = 'stdev'
-        
+    
+    try:    h2o_ip = (args.h2o_ip)
+    except: h2o_ip = None
+    if h2o_ip == None: h2o_ip = getIpAddr()
 
     try:    num = int(args.num)
     except: num = 100
@@ -364,7 +369,7 @@ if __name__ == "__main__":
         import pickle
         fnameModel = '%s.model.h2o.pkl' % (fname)
         if args.train or args.predict:
-            h2o.init(ip=getIpAddr(), port=54321)
+            h2o.init(ip=h2o_ip, port=54321)
             
         if args.train:# or args.predict:
 
@@ -588,12 +593,16 @@ if __name__ == "__main__":
             if args.save:
                 df.ix[:, Xy].to_csv(fname)
                 print 'saved to {0}'.format(fname)
+                if h2o_ip != getIpAddr():
+                    import os
+                    print 'Deploying dataset to h2o cluster @ %s' % h2o_ip
+                    print os.system("rsync -avz %s root@%s:%s" % (fname, h2o_ip, fname))
              
             print '----------df-------'
             with p.option_context('display.max_rows', 2000, 'display.max_columns', 2000):
                 #print df.ix[:, labels]
                 #print df.ix[:, Xy].tail(10)
-                print df
+                debug(df)
                 
             #print df
             #df.plot()
