@@ -117,7 +117,10 @@ class HPC:
             res = self.plans()
             print res.ix[['29', '94'], :].transpose()
             
-            v.server_create(1, 29, 191, scriptid=12633, sshkeyid='5674534d396cf', label='liquid-compute-rc1')
+            # ubuntu load
+            #v.server_create(1, 29, 191, scriptid=12633, sshkeyid='5674534d396cf', label='liquid-compute-rc1')
+            # snapshot load
+            v.server_create(1, 29, 164, snapshotid='71056b3453c4c', sshkeyid='5674534d396cf', label='liquid-compute-rc2')
     
     def regions(self):
             v = Vultr(self.key_vultr)
