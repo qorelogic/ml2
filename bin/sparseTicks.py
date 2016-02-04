@@ -268,6 +268,9 @@ def getipaddr():
     f = os.popen('ifconfig %s | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1' % iface1)
     return f.read()
 """
+def debug(msg):
+    if args.verbose: 
+        return msg
 ##################
 ##########################
 if __name__ == "__main__":
@@ -278,6 +281,8 @@ if __name__ == "__main__":
     
     # saving options
     parser.add_argument('-s', "--save", help="save to csv file", action="store_true")
+    parser.add_argument('-v', "--verbose", help="verbose", action="store_true")
+    parser.add_argument('-vv', "--verbose2", help="debugs", action="store_true")
 
     parser.add_argument('-l', "--label", help="label")
     
