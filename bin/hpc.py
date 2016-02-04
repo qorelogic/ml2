@@ -1,17 +1,5 @@
 #!/usr/bin/env python
 
-import digitalocean
-from vultr.vultr import Vultr
-import numpy as n
-import pandas as p
-import time
-
-from qore import QoreDebug
-
-qd = QoreDebug()
-qd.off()
-qd.stackTraceOff()
-
 class HPC:
     
     def __init__(self):
@@ -20,6 +8,7 @@ class HPC:
         
         self.token = "fb13f87e074de9bcfba1fca4844b4823a85272d7902418a5776445bcdea250b9"
         self.pkey  = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCoa61+j5xyI1c0cfRhmx1ggEzScbzs2VBLvEsbNB5M1rNqWqVT/Wou7XnEWZzijcNuuZtYDZZRegCRfN4VH+DNpT4uaykShYp1XNRuDK7fXttDbxhg2XIrfBoW6lvTt1K2xWQP/dOMg0DjRmjRbGL3OQpcyaOofmE7+0WMDqySa/MhYk7AJhgBVYoBh43W0f4Jv+JAaxz4RTxiHGwIIYDHLDI67nupWXgzFOvj29LNh3/qtfJAQUhdBRfcuOpZyglBxYlMw5o/7euSe+oYhmdWM11g/0MOOYonkOl1Yg3/E5AACV7P9y5db7aVttAfnAD6XXIqUj74u3PHJ8Nji5dB kiizaa@gmail.com'
+        self.key_vultr = ''
         
         self.manager = digitalocean.Manager(token=self.token)
         
