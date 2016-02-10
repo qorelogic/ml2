@@ -597,10 +597,13 @@ if __name__ == "__main__":
             if args.save:
                 df.ix[:, Xy].to_csv(fname)
                 print 'saved to {0}'.format(fname)
-                if h2o_ip != getIpAddr():
-                    import os
-                    print 'Deploying dataset to h2o cluster @ %s' % h2o_ip
-                    print os.system("rsync -avz %s root@%s:%s" % (fname, h2o_ip, fname))
+                try:
+                    if h2o_ip != getIpAddr():
+                        import os
+                        print 'Deploying dataset to h2o cluster @ %s' % h2o_ip
+                        print os.system("rsync -avz %s root@%s:%s" % (fname, h2o_ip, fname))
+                except:
+                    ''
              
             print '----------df-------'
             with p.option_context('display.max_rows', 2000, 'display.max_columns', 2000):
