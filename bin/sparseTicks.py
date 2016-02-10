@@ -328,7 +328,11 @@ if __name__ == "__main__":
     
     try:    h2o_ip = (args.h2o_ip)
     except: h2o_ip = None
-    if h2o_ip == None: h2o_ip = getIpAddr()
+    if h2o_ip == None:
+        try:
+            h2o_ip = getIpAddr()
+        except Exception as e:
+            h2o_ip = '127.0.0.1'
 
     try:    num = int(args.num)
     except: num = 100
