@@ -287,6 +287,7 @@ if __name__ == "__main__":
     parser.add_argument('-vv', "--verbose2", help="debugs", action="store_true")
 
     parser.add_argument('-l', "--label", help="label")
+    parser.add_argument('-la', "--la", help="la")
     
     # statistics options
     parser.add_argument('-d3', "--dim3", help="3 dimensional matrix", action="store_true")
@@ -341,6 +342,10 @@ if __name__ == "__main__":
     except: label = None
     if label == None: label = 'EUR_USD'
     
+    try:    la = args.la
+    except: la = None
+    if la == None: la = 'la'
+    
     try:    fname = args.file
     except Exception as e:
         fname = None
@@ -350,9 +355,15 @@ if __name__ == "__main__":
             return subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
         def get_git_revision_short_hash():
             return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
+        def hostname():
+            fname = '/etc/hostname'
+            fp    = open(fname)
+            res   = fp.read().strip()
+            fp.close()
+            return res        
         current_hash = get_git_revision_hash()
         #fname = '/tmp/ql.ticks.%s.%s.%s.%s.csv' % (num, mode, label, current_hash)
-        fname = '/tmp/ql.ticks.%s.%s.%s.csv' % (num, mode, current_hash)
+        fname = '/tmp/ql.ticks.num=%s.mode=%s.githash=%s.la=%s.hostname=%s.csv' % (num, mode, current_hash, label, hostname())
     
     # if std input is passed
     if not sys.stdin.isatty():
@@ -371,7 +382,14 @@ if __name__ == "__main__":
 
         import h2o
         import pickle
-        fnameModel = '%s.model.h2o.pkl' % (fname)
+        
+        # there are two types of labels: 
+        #  - reading label: this copies the labeled row (eg. EUR_USD) to the 'la' column before 
+        #                   applying the prefilters (normalization filter / sigmoid filter, and so on..)
+        #  - training/predicting label: this label sets the y vector label to the defined label prefiltered state.
+        if not args.save:
+            label = la
+        
         if args.train or args.predict:
             h2o.init(ip=h2o_ip, port=54321)
             
@@ -416,6 +434,9 @@ if __name__ == "__main__":
                                       validation_y=fr1[label])
             
             # save model object to pickle file
+            startTime = model2._model_json['output']['start_time']
+            endTime   = model2._model_json['output']['end_time']
+            fnameModel = '%s.label=%s.starttime=%s.endtime=%s.model.h2o.pkl' % (fname, label, startTime, endTime)
             s = pickle.dumps(model2)            
             fp = open(fnameModel, 'w')
             fp.write(s)
@@ -506,6 +527,7 @@ if __name__ == "__main__":
             dfl0 = p.DataFrame()
             dfl0['ts1'] = df['ts1']
             dfl0['ts0'] = df['ts0']
+            # la
             dfl0['la'] = dfl
             
             #dfl0['tss'] = dfl0.index
