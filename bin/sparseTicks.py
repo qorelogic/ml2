@@ -490,6 +490,14 @@ if __name__ == "__main__":
             fp.close()            
             model2 = pickle.loads(s)
             print 'saved model to %s' % (fnameModel)
+
+            # insert model to db.models
+            import pymongo as mong
+            mongo = mong.MongoClient()
+            parsedFname = parseFname(fnameModel)
+            parsedFname['pickle'] = s
+            mongo.ql.models.insert(parsedFname)
+            mongo.close()
             
             #print model2
             #predict = model2.predict(sp1[1])#.get_frame('C1')
