@@ -195,10 +195,26 @@ alias .gl="git log --graph"
 alias .glp="git log --graph -p"
 alias .glo="git log --oneline"
 alias .gla="git log --all | sg2p | less"
+# list git tag annotation messages
+alias .gt="git tag -ln99"
+# fetch and push remote tags
+alias .gtpull="git fetch origin --tags"
+alias .gtpush="git push origin --tags"
 alias .gci=".gb && sleep 0 && git commit -m "
 alias .ga="git add -i "
 alias .grh="git reset --hard "
 alias .gri="git rebase -i "
+# quick git rebase -i HEAD~n method
+grin() {
+	if [ "$1" == "" ]; then
+	echo "usage: <number of commuits>"
+	else
+	git rebase -i HEAD~$1
+	fi
+}
+alias .grin="grin "
+alias .gra="git commit --amend"
+alias .grc="git rebase --continue"
 alias .gstl="git stash list "
 alias .gc="git commit "
 
