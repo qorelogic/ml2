@@ -183,9 +183,6 @@ class datafeeds {
 	#	git clone https://github.com/digithink/py-localbitcoins.git $mldir/lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git
 	#	echo 'cloned py-localbitcoins.'
 	#fi
-	#if [ "`python -c 'import drest' 2>&1`" != "" ]; then
-	#       sudo pip install drest
-	#fi
 	exec { "pip install drest": command => "/usr/local/bin/pip install drest", timeout => 60, tries => 3 }
 	#if [ ! -f $mldir/lib/bitcoin/1broker/aol1306_1broker-trading-API.github.py.git ]; then
 	#	mkdir -p $mldir/lib/bitcoin/1broker/
@@ -195,56 +192,25 @@ class datafeeds {
 	#fi
 
 	#sudo pip install --upgrade pip
-	#if [ "`python -c 'import ipython' 2>&1`" != "" ]; then
-     #       sudo pip install ipython
-	#fi
-	#sudo pip install ipython
 	#exec { "pip install ipython":
 	#	command => "if [ "`python -c 'import ipython' 2>&1`" != "" ]; then /usr/local/bin/pip install ipython; fi",
 	#	timeout => 60,
 	#	tries   => 3,
 	#}
 	exec { "pip install ipython": command => "/usr/local/bin/pip install ipython", timeout => 60, tries => 3 }
-	#if [ "`python -c 'import notebook' 2>&1`" != "" ]; then
-     #       sudo pip install notebook
-	#fi
 	exec { "pip install notebook": command => "/usr/local/bin/pip install notebook", timeout => 60, tries => 3 }
-	#if [ "`python -c 'import numpy' 2>&1`" != "" ]; then
-     #       sudo pip install numpy
-	#fi
 	exec { "pip install numpy": command => "/usr/local/bin/pip install numpy", timeout => 60, tries => 3 }
-	#if [ "`python -c 'import pandas' 2>&1`" != "" ]; then
-     #       sudo pip install pandas
-	#fi
 	exec { "pip install pandas": command => "/usr/local/bin/pip install pandas", timeout => 60, tries => 3 }
-	#if [ "`python -c 'import plotly' 2>&1`" != "" ]; then
-     #       sudo pip install plotly
-	#fi
 	exec { "pip install plotly": command => "/usr/local/bin/pip install plotly", timeout => 60, tries => 3 }
-	#if [ "`python -c 'import ujson' 2>&1`" != "" ]; then
-     #       sudo pip install ujson
-	#fi
 	exec { "pip install ujson": command => "/usr/local/bin/pip install ujson", timeout => 60, tries => 3 }
 	#if [ "`python -c 'import digitalocean' 2>&1`" != "" ]; then
      #       sudo pip install python-digitalocean
 	#fi
 	exec { "pip install python-digitalocean": command => "/usr/local/bin/pip install python-digitalocean", timeout => 60, tries => 3 }
 	exec { "pip install vultr": command => "/usr/local/bin/pip install vultr", timeout => 60, tries => 3 }
-	#if [ "`python -c 'import QSTK' 2>&1`" != "" ]; then
-     #       sudo pip install QSTK
 	exec { "pip install QSTK": command => "/usr/local/bin/pip install QSTK", timeout => 60, tries => 3 }
-	#fi
-	#if [ "`python -c 'import Quandl' 2>&1`" != "" ]; then
-     #       sudo pip install Quandl
-	#fi
 	exec { "pip install Quandl": command => "/usr/local/bin/pip install Quandl", timeout => 60, tries => 3 }
-	#if [ "`python -c 'import html2text' 2>&1`" != "" ]; then
-     #       sudo pip install html2text
-	#fi
 	exec { "pip install html2text": command => "/usr/local/bin/pip install html2text", timeout => 60, tries => 3 }
-	#if [ "`python -c 'import selenium' 2>&1`" != "" ]; then
-     #       sudo pip install selenium
-	#fi
 	exec { "pip install selenium": command => "/usr/local/bin/pip install selenium", timeout => 60, tries => 3 }
 
 	# MQ
@@ -256,23 +222,11 @@ class datafeeds {
      #       sudo pip install pytailf
 	#fi
 	exec { "pip install pytailf": command => "/usr/local/bin/pip install pytailf", timeout => 60, tries => 3 }
-	#if [ "`python -c 'import flask' 2>&1`" != "" ]; then
-     #       sudo pip install flask
-	#fi
 	exec { "pip install flask": command => "/usr/local/bin/pip install flask", timeout => 60, tries => 3 }
-	#if [ "`python -c 'import celery' 2>&1`" != "" ]; then
-     #       sudo pip install celery
-	#fi
 	exec { "pip install celery": command => "/usr/local/bin/pip install celery", timeout => 60, tries => 3 }
 
 	# still testing on ipython notebook
-     # if [ "`python -c 'import bitstampy' 2>&1`" != "" ]; then
-     #       sudo pip install bitstampy
-	#fi
 	exec { "pip install bitstampy": command => "/usr/local/bin/pip install bitstampy", timeout => 60, tries => 3 }
-     # if [ "`python -c 'import krakenex' 2>&1`" != "" ]; then
-     #       sudo pip install krakenex
-	#fi
 	exec { "pip install krakenex": command => "/usr/local/bin/pip install krakenex", timeout => 60, tries => 3 }
 
 	#echo ''
