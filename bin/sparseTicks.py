@@ -268,7 +268,14 @@ def getipaddr():
     f = os.popen('ifconfig %s | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1' % iface1)
     return f.read()
 """
-def getLastQlPklFilename(num=0):
+
+# preps df for h2o dict
+def removeIndexFromDict(di):
+    for i in di.keys(): di[i] = di[i].values()
+    #print di
+    return di
+
+def getLastQlPklFilename(num=0, type='model'):
     #import os
     #print os.system("ls -t /tmp/ql*.pkl")
     import subprocess
@@ -279,12 +286,34 @@ def getLastQlPklFilename(num=0):
     import re
     li = []
     for i in res.split('\n'):
-        if re.match(re.compile(r'.*ql.*pkl'), i):
+        if type == 'model':
+            rx = r'.*ql.*pkl$'
+        if type == 'dataset':
+            rx = r'.*ql.*csv$'
+        if re.match(re.compile(rx), i):
             fname = '%s%s' % (hdir, i)
             li.append(fname)
     print li[num]
     return li[num]
     #return '%s%s' % (hdir, li[num])
+
+def parseFname(fnameModel):
+    import re
+    k = []
+    v = []
+    for i in fnameModel.split('.'):
+        res = re.match(re.compile(r'(.*=.*)'), i)#.groups(0)
+        try:
+            #print dir(res)
+            rs = res.group(0).split('=')
+            k.append(rs[0])
+            v.append(rs[1])
+            #print i
+        except:
+            ''
+    #print k
+    #print v
+    return dict(zip(k, v))
 
 def debug(msg):
     if args.verbose: 
@@ -474,13 +503,92 @@ if __name__ == "__main__":
             #df = df.combine_first(sp1[0].as_data_frame())
             #df = df.combine_first(sp1[1].as_data_frame())
             df = df.combine_first(fr1.as_data_frame())
-            print df.ix[:, [label, 'predict']]
+            #print df.ix[:, [label, 'predict']]
+
+            # print correlation coeficient
+            a = df[label].get_values()
+            b = df['predict'].get_values()
+            print 'correlation coefficient: %s' % n.corrcoef(a, b)[0][1]
+            #print dfp
+
             df.ix[:, [label, 'predict']].plot()
             plt.show()
             
             sys.exit()
 
         if args.predict:
+            #fname = "/tmp/ql.ticks.10000.stdev.987674089fe7815fb7872325d179127957df4209.csv"
+            #fname = "/tmp/ql.ticks.1000.stdev.f9fd45fc4da82b8bf1064a5f9a15dff1fe038c1f.la=EUR_USD.muurl.csv"
+            fname = getLastQlPklFilename(num=0, type='dataset')
+            
+            #fnameModel = '/tmp/ql.ticks.10000.stdev.987674089fe7815fb7872325d179127957df4209.csv.model.h2o.pkl'
+            #fnameModel = '/tmp/ql.ticks.1000.stdev.f9fd45fc4da82b8bf1064a5f9a15dff1fe038c1f.la=EUR_USD.muurl.csv.model.h2o.pkl'
+            #fnameModel = '/tmp/ql.ticks.10000.stdev.f9fd45fc4da82b8bf1064a5f9a15dff1fe038c1f.la=EUR_USD.muurl.csv.label=la.model.h2o.pkl'
+            fnameModel = getLastQlPklFilename(num=0, type='model')
+            
+            fp = open(fnameModel)
+            #print fp.read()
+            model = pickle.loads(fp.read())
+            fp.close()
+            #print model
+            
+            #####
+            #####
+            
+            #data_test = h2o.import_frame(fname)
+            #data_test = h2o.H2OFrame([fname])
+            #data_path = [h2o.locate(fname)]
+            #data_test = h2o.H2OFrame([data_test])
+            
+            #####
+            #####
+            
+            cnt = 5000
+            df = p.read_csv(fname)
+            df = df.ix[df.tail(cnt).index,:]
+            df = df.set_index('Unnamed: 0')
+            print df.columns
+            #print 'dataframe df:'
+            #print df
+            examples = df.to_dict()
+            #print 'examples:'
+            #print examples
+            #print fixdict(examples)
+            #print 'dataframe examples:'
+            #print p.DataFrame(examples)
+            #fr1 = h2o.H2OFrame(python_obj = examples)
+            #fr1 = h2o.H2OFrame(examples)
+            fr1 = h2o.H2OFrame(removeIndexFromDict(examples))
+            
+            #####
+            #####
+            
+            #label = 'la1b'
+            #label = 'EUR_USD'
+            modelParams = parseFname(fnameModel)
+            label = modelParams['label']
+            model_pred = model.predict(fr1.drop(label))
+            print model_pred
+            #print dir(model_pred)
+            dfp = model_pred.as_data_frame()
+            #print 'fr1 as dataframe:'
+            fr1df = fr1.as_data_frame().ix[:, [label]]
+            #print fr1df
+            dfp = dfp.combine_first(fr1df)
+            
+            # print correlation coeficient
+            a = dfp[label].get_values()
+            b = dfp['predict'].get_values()
+            print 'correlation coefficient: %s' % n.corrcoef(a, b)[0][1]
+            #print dfp
+
+            dfp.plot()
+            plt.show()
+            
+            sys.exit()
+        
+        """
+        if args.predict2:
             # read model object from pickle file
             #fnameModel = '%s.label=%s.model.h2o.pkl' % (fname, label)
             fnameModel = getLastQlPklFilename()
@@ -491,9 +599,12 @@ if __name__ == "__main__":
             print 'model read from %s' % (fnameModel)
             
             #print model2
+            
             sp1 = p.read_csv(fname)
+            " ""
             sp1 = list(sp1.get_values())
             fr1 = h2o.H2OFrame(sp1[0])
+            " ""
             
             predict = model2.predict(sp1[1])#.get_frame('C1')
             print model2.model_performance(sp1[1])
@@ -509,6 +620,7 @@ if __name__ == "__main__":
             plt.show()
             
             sys.exit()
+        """
 
         df = sparseTicks(num=num)
         print 'label: %s' % label
