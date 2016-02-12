@@ -45,13 +45,20 @@ class Simulator:
         def _pe2(db, dfi, num=100):
             lis = []
             #for i in db.ticks.find(dfi)[0:num]:
-            ticks = db.ticks.find(dfi)
+            #ticks = db.ticks.find(dfi).limit(num)
+            #db.ticks.createIndex( { 'time': 1 } )
+            #ticks = db.ticks.find().sort({time:-1}).limit(num)
+            # http://stackoverflow.com/questions/4421207/mongodb-how-to-get-the-last-n-records
+            ticks = db.ticks.find().sort([('time',-1)]).limit(num)
             #print dir(ticks)
-            if num == 0: num = ticks.count()
+            
+            # https://docs.mongodb.org/v3.0/reference/method/cursor.count/
+            if num == 0: num = ticks.count(True)
             for i in ticks[0:num]:
                 k = i.keys()
                 v = i.values()
                 lis.append(v)
+                #lis.insert(0, v)
             return p_DataFrame(lis, columns=k)
     
         # sparse ticks
@@ -61,7 +68,7 @@ class Simulator:
             print e
             import sys
             sys.exit()
-        dfi = {}    
+        dfi = {}
         
         #df = _pe(db, dfi, , num=num)
         df = _pe2(db, dfi, num=num)
