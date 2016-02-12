@@ -268,6 +268,24 @@ def getipaddr():
     f = os.popen('ifconfig %s | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1' % iface1)
     return f.read()
 """
+def getLastQlPklFilename(num=0):
+    #import os
+    #print os.system("ls -t /tmp/ql*.pkl")
+    import subprocess
+    hdir = '/tmp/'
+    cmd  = 'ls -t %s' % hdir
+    #subprocess.check_output(['ls', '-t', '/tmp/ql*.pkl']).strip()
+    res = subprocess.check_output(cmd.split(' ')).strip()
+    import re
+    li = []
+    for i in res.split('\n'):
+        if re.match(re.compile(r'.*ql.*pkl'), i):
+            fname = '%s%s' % (hdir, i)
+            li.append(fname)
+    print li[num]
+    return li[num]
+    #return '%s%s' % (hdir, li[num])
+
 def debug(msg):
     if args.verbose: 
         return msg
@@ -464,6 +482,8 @@ if __name__ == "__main__":
 
         if args.predict:
             # read model object from pickle file
+            #fnameModel = '%s.label=%s.model.h2o.pkl' % (fname, label)
+            fnameModel = getLastQlPklFilename()
             fp = open(fnameModel, 'r')
             s = fp.read()
             fp.close()            
