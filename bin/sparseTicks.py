@@ -469,20 +469,30 @@ if __name__ == "__main__":
             print model            
             predict = model.predict(sp1[1])#.get_frame('C1')
             print model.model_performance(sp1[1])
+            """
             
             model2 = h2o.deeplearning(x           =sp1[0].drop(label), 
                                       y           =sp1[0][label], 
                                       validation_x=sp1[1].drop(label), 
-                                      validation_y=sp1[1][label])
+                                      validation_y=sp1[1][label],
+                                      hidden       = [100,100,100],
+                                      epochs       = 10,
+                                      #variable_importances = True,
+                                      #balance_classes      = True,
+                                      #loss                 = "Automatic",
+                                      )
             """
             model2 = h2o.deeplearning(x           =fr1.drop(label), 
                                       y           =fr1[label], 
                                       validation_x=fr1.drop(label), 
                                       validation_y=fr1[label])
+            """
             
             # save model object to pickle file
             startTime = model2._model_json['output']['start_time']
             endTime   = model2._model_json['output']['end_time']
+            # features in X
+            #print model._model_json['output']['names']
             fnameModel = '%s.label=%s.starttime=%s.endtime=%s.model.h2o.pkl' % (fname, label, startTime, endTime)
             s = pickle.dumps(model2)            
             fp = open(fnameModel, 'w')
