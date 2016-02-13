@@ -651,7 +651,16 @@ if __name__ == "__main__":
 
         df = sparseTicks(num=num)
         print 'label: %s' % label
-        dfl = df.ix[:, label]
+        try:
+            dfl = df.ix[:, label]
+        except KeyError as e:
+            print
+            print '%s not found in the upstream:' % e
+            print ' - this may be caused by receiving too few ticks:-'
+            print '   - %s had not changed within the given window' % e
+            print ' - increasing the -n/--num option to %s may solve this.' % (num*10)
+            print
+            sys.exit()
 
         if args.dim3 or args.stdev:
             try:    mdepth = int(args.mdepth)
