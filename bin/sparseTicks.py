@@ -321,10 +321,8 @@ def parseFname(fnameModel):
 def debug(msg):
     if args.verbose: 
         return msg
-##################
-##########################
-if __name__ == "__main__":
 
+def setupargs():
     import argparse
     # source: https://docs.python.org/2/howto/argparse.html
     parser = argparse.ArgumentParser()
@@ -358,6 +356,14 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
+    return args
+
+##################
+##########################
+if __name__ == "__main__":
+
+    args = setupargs()
+        
     from simulator import Simulator
     from oandaq import OandaQ
     import sys, pandas as p, numpy as n
