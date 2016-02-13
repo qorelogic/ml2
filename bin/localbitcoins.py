@@ -131,7 +131,7 @@ class LocalBitcoins:
 
         #dfi = df.ix[:,['temp_price', 'temp_price_usd','p', 'p1', 'p2','profile', 'payment_method', 'trade_type']].sort('temp_price')
         #dfi = df.ix[:,['temp_price', 'temp_price_usd','p', 'p2','profile', 'payment_method', 'trade_type', 'online_provider', 'payment_window_minutes', 'max_amount', 'max_amount_available', 'max_amount_diff', 'max_amount_pcnt', 'min_amount', 'url']].sort('temp_price')
-        dfi = df.ix[:,['url', 'sms_verification_required', 'online_provider', 'currency', 'temp_price', 'temp_price_usd', 'temp_price_usdblue', 'max_amount', 'max_amount_available', 'min_amount', 'max_amount_diff', 'max_amount_pcnt', 'trade_type', 'bank_name', 'city', 'countrycode', 'created_at', 'first_time_limit_btc', 'location_string', 'msg', 'payment_window_minutes', 'reference_type', 'require_feedback_score', 'require_identification', 'require_trade_volume', 'trusted_required', 'visible', 'volume_coefficient_btc']].sort('temp_price')
+        dfi = df.ix[:,['url', 'sms_verification_required', 'require_feedback_score', 'online_provider', 'currency', 'temp_price', 'temp_price_usd', 'temp_price_usdblue', 'max_amount', 'max_amount_available', 'min_amount', 'max_amount_diff', 'max_amount_pcnt', 'trade_type', 'bank_name', 'city', 'countrycode', 'created_at', 'first_time_limit_btc', 'location_string', 'msg', 'payment_window_minutes', 'reference_type', 'require_identification', 'require_trade_volume', 'trusted_required', 'visible', 'volume_coefficient_btc']].sort('temp_price')
 
         #dfi.plot()
         #print dfi.sort('max_amount_pcnt')
