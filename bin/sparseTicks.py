@@ -74,14 +74,15 @@ def timestampToDatetime(tst):
 ##################
 
 #@profile
-def sparseTicks(num=2000):
+def sparseTicks(num=2000, verbose=True):
 
     from matplotlib import pyplot as plt
     from pylab import rcParams
     from oandaq import OandaQ
     
     s = Simulator()
-    df = s.getTicks(num=num)
+    
+    df = s.getTicks(num=num, verbose=verbose)
     
     df = df.drop_duplicates('time')
     indexby = 'time'
@@ -395,6 +396,10 @@ if __name__ == "__main__":
     p.set_option('display.width', p.util.terminal.get_terminal_size()[0])
     p.set_option('max_colwidth', 800)
 
+    if args.verbose:  verbose = (args.verbose)
+    try:    verbose
+    except: verbose = False
+
     if args.dim3:   mode = 'dim3'
     if args.stdev:  mode = 'stdev'
     try:    mode
@@ -433,7 +438,7 @@ if __name__ == "__main__":
     # if std input is not passed
     else:
         if args.save and not (args.dim3 or args.stdev):
-            df = sparseTicks(num=num)
+            df = sparseTicks(num=num, verbose=verbose)
             df = normalizeme(df)
             df = sigmoidme(df)
             if args.printdfs: print df
@@ -660,7 +665,7 @@ if __name__ == "__main__":
             sys.exit()
         """
 
-        df = sparseTicks(num=num)
+        df = sparseTicks(num=num, verbose=verbose)
         print 'label: %s' % label
         try:
             dfl = df.ix[:, label]
@@ -866,7 +871,7 @@ if __name__ == "__main__":
                     df = df.ix[df.tail(num).index,:]
                     df = df.set_index('Unnamed: 0')
                     """
-                    df = sparseTicks(num=num)
+                    df = sparseTicks(num=num, verbose=verbose)
                     if args.printdfs: print df
                     try:    dfl = df.ix[:, label]
                     except: ''

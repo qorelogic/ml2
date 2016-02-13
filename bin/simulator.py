@@ -1,7 +1,7 @@
 
 class Simulator:
     
-    def getTicks(self, num=2000):
+    def getTicks(self, num=2000, verbose=True):
         import pymongo
         #import pandas as p
         from pandas import DataFrame as p_DataFrame
@@ -12,23 +12,26 @@ class Simulator:
         portB = 27017
         try:
             try:
-                print ''
                 port = portA
-                print 'Attempting connect:'
-                print "                     MongoDB[%s:%s]" % (host, port)
+                if verbose:
+                    print ''
+                    print 'Attempting connect:'
+                    print "                     MongoDB[%s:%s]" % (host, port)
                 conn = pymongo.MongoClient(host=host, port=port)
             except Exception as e:
-                print "Could not connect to MongoDB[%s:%s]: %s" % (host, port, e)
                 port = portB
-                print 'Attempting failover connect:'
-                print "                     MongoDB[%s:%s]" % (host, port)
+                if verbose:
+                    print "Could not connect to MongoDB[%s:%s]: %s" % (host, port, e)
+                    print 'Attempting failover connect:'
+                    print "                     MongoDB[%s:%s]" % (host, port)
                 conn = pymongo.MongoClient(host=host, port=port)
             #print "Connected successfully!!!"
         except pymongo.errors.ConnectionFailure, e:
-            print "Could not connect to MongoDB[%s:%s]: %s" % (host, port, e)
-            print 'Try starting mongodb:'
-            print '$ mx w mongo'
-            print ''
+            if verbose:
+                print "Could not connect to MongoDB[%s:%s]: %s" % (host, port, e)
+                print 'Try starting mongodb:'
+                print '$ mx w mongo'
+                print ''
             import sys
             sys.exit()
         ##############
