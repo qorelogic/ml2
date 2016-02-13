@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+#./sparseTicks.py -n10000 --stdev -t -l EUR_USD -la la
+#./sparseTicks.py -n500 --stdev -p -l EUR_USD -la la5b 
+ 
 def imports():
     import numpy as n
     import pandas as p
@@ -423,8 +426,9 @@ if __name__ == "__main__":
             df = normalizeme(df)
             df = sigmoidme(df)
             print df
+            print 'saving to {0} ..'.format(fname)
             df.to_csv(fname)
-            print 'saved to {0}'.format(fname)
+            print 'saved.'
             #os.system("rsync -avrz /opt/data/filename root@ip:/opt/data/file")
             sys.exit()
 
@@ -509,6 +513,8 @@ if __name__ == "__main__":
             parsedFname['pickle'] = s
             mongo.ql.models.insert(parsedFname)
             mongo.close()
+            print 'inserted model to db.models'
+            
             
             #print model2
             #predict = model2.predict(sp1[1])#.get_frame('C1')
@@ -770,8 +776,9 @@ if __name__ == "__main__":
             Xy = n.concatenate([currencyColumns, labels]).tolist()
 
             if args.save:
+                print 'saving to {0} ..'.format(fname)
                 df.ix[:, Xy].to_csv(fname)
-                print 'saved to {0}'.format(fname)
+                print 'saved.'
                 try:
                     if h2o_ip != getIpAddr():
                         import os
