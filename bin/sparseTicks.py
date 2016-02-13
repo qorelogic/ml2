@@ -344,6 +344,7 @@ if __name__ == "__main__":
     # machine learning options
     parser.add_argument('-t', "--train", help="train via h2o[deeplearning]", action="store_true")
     parser.add_argument('-p', "--predict", help="predict via h2o[deeplearning]", action="store_true")
+    parser.add_argument('-vp', "--viewplots", help="show the plot after training/prediction", action="store_true")
     
     # dataset size options
     parser.add_argument('-n', "--num", help="number of rows")
@@ -529,8 +530,9 @@ if __name__ == "__main__":
             print 'correlation coefficient: %s' % n.corrcoef(a, b)[0][1]
             #print dfp
 
-            df.ix[:, [label, 'predict']].plot()
-            plt.show()
+            if args.viewplots:
+                df.ix[:, [label, 'predict']].plot()
+                plt.show()
             
             sys.exit()
 
@@ -634,8 +636,9 @@ if __name__ == "__main__":
             #df = df.combine_first(sp1[0].as_data_frame())
             df = df.combine_first(sp1[1].as_data_frame())
             print df.ix[:, [label, 'predict']]
-            df.ix[:, [label, 'predict']].plot()
-            plt.show()
+            if args.viewplots:
+                df.ix[:, [label, 'predict']].plot()
+                plt.show()
             
             sys.exit()
         """
@@ -784,8 +787,105 @@ if __name__ == "__main__":
                 debug(df)
                 
             #print df
-            #df.plot()
-            #plt.show()            
+            #if args.viewplots:
+            #    df.plot()
+            #    plt.show()            
+            
+            if not args.predict:
+                sys.exit()
+
+        if args.predict:
+                
+            #fname = "/tmp/ql.ticks.10000.stdev.987674089fe7815fb7872325d179127957df4209.csv"
+            #fname = "/tmp/ql.ticks.1000.stdev.f9fd45fc4da82b8bf1064a5f9a15dff1fe038c1f.la=EUR_USD.muurl.csv"
+            fname = getLastQlPklFilename(num=0, type='dataset')
+            
+            #fnameModel = '/tmp/ql.ticks.10000.stdev.987674089fe7815fb7872325d179127957df4209.csv.model.h2o.pkl'
+            #fnameModel = '/tmp/ql.ticks.1000.stdev.f9fd45fc4da82b8bf1064a5f9a15dff1fe038c1f.la=EUR_USD.muurl.csv.model.h2o.pkl'
+            #fnameModel = '/tmp/ql.ticks.10000.stdev.f9fd45fc4da82b8bf1064a5f9a15dff1fe038c1f.la=EUR_USD.muurl.csv.label=la.model.h2o.pkl'
+            fnameModel = getLastQlPklFilename(num=0, type='model')
+            
+            fp = open(fnameModel)
+            #print fp.read()
+            model = pickle.loads(fp.read())
+            fp.close()
+            #print model
+            
+            #####
+            #####
+            
+            #data_test = h2o.import_frame(fname)
+            #data_test = h2o.H2OFrame([fname])
+            #data_path = [h2o.locate(fname)]
+            #data_test = h2o.H2OFrame([data_test])
+            
+            #####
+            #####
+            
+            msg = '(p)redict, (pp)lot, (q)uit: '
+            ans = raw_input(msg)
+            while ans != 'q':
+                
+                if ans == 'p':
+                    
+                    """
+                    df = p.read_csv(fname)
+                    df = df.ix[df.tail(num).index,:]
+                    df = df.set_index('Unnamed: 0')
+                    """
+                    df = sparseTicks(num=num)
+                    print df
+                    try:    dfl = df.ix[:, label]
+                    except: ''
+                    df = normalizeme(df)
+                    df = sigmoidme(df)                    
+                    try:    df['la'] = dfl
+                    except: ''
+                    
+                    print df.columns
+                    print 'dataframe df:'
+                    print df
+                    examples = df.to_dict()
+                    #print 'examples:'
+                    #print examples
+                    #print fixdict(examples)
+                    #print 'dataframe examples:'
+                    #print p.DataFrame(examples)
+                    #fr1 = h2o.H2OFrame(python_obj = examples)
+                    #fr1 = h2o.H2OFrame(examples)
+                    fr1 = h2o.H2OFrame(removeIndexFromDict(examples))
+                    
+                    #####
+                    #####
+                    
+                    #label = 'la1b'
+                    #label = 'EUR_USD'
+                    modelParams = parseFname(fnameModel)
+                    label = modelParams['label']
+                    model_pred = model.predict(fr1.drop(label))
+                    print model_pred
+                    #print dir(model_pred)
+                    dfp = model_pred.as_data_frame()
+                    #print 'fr1 as dataframe:'
+                    fr1df = fr1.as_data_frame().ix[:, [label]]
+                    #print fr1df
+                    dfp = dfp.combine_first(fr1df)
+                    
+                    # print correlation coeficient
+                    a = dfp[label].get_values()
+                    b = dfp['predict'].get_values()
+                    corrs = n.corrcoef(a, b)
+                    print dfp
+                    print corrs
+                    print 'correlation coefficient: %s' % corrs[0][1]
+        
+                if ans == 'pp':
+                    if args.viewplots:
+                        dfp.plot()
+                        plt.show()
+
+                ans = raw_input(msg)            
+            
             sys.exit()
 
         print df
