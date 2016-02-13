@@ -348,6 +348,7 @@ def setupargs():
     parser.add_argument('-s', "--save", help="save to csv file", action="store_true")
     parser.add_argument('-v', "--verbose", help="verbose", action="store_true")
     parser.add_argument('-vv', "--verbose2", help="debugs", action="store_true")
+    parser.add_argument('-df', "--printdfs", help="debugs", action="store_true")
 
     parser.add_argument('-l', "--label", help="label")
     parser.add_argument('-la', "--la", help="la")
@@ -435,7 +436,7 @@ if __name__ == "__main__":
             df = sparseTicks(num=num)
             df = normalizeme(df)
             df = sigmoidme(df)
-            print df
+            if args.printdfs: print df
             print 'saving to {0} ..'.format(fname)
             df.to_csv(fname)
             print 'saved.'
@@ -461,7 +462,7 @@ if __name__ == "__main__":
             
             fr1 = h2o.import_frame(fname);
             #fr1 = h2o.H2OFrame(f1)
-            print fr1
+            if args.printdfs: print fr1
             
             #p1 = h2o.parse_setup(fr1)
             #print p1            
@@ -471,9 +472,9 @@ if __name__ == "__main__":
             
             #print sp1#[0]
             #sp1[0].drop(label)
-            print sp1[0][label].as_data_frame()
+            if args.printdfs: print sp1[0][label].as_data_frame()
             #sp1[1].drop(label)
-            print sp1[1][label].as_data_frame()
+            if args.printdfs: print sp1[1][label].as_data_frame()
 
         if args.train:
 
@@ -538,13 +539,13 @@ if __name__ == "__main__":
             #df = df.combine_first(sp1[0].as_data_frame())
             #df = df.combine_first(sp1[1].as_data_frame())
             df = df.combine_first(fr1.as_data_frame())
-            #print df.ix[:, [label, 'predict']]
+            #if args.printdfs: print df.ix[:, [label, 'predict']]
 
             # print correlation coeficient
             a = df[label].get_values()
             b = df['predict'].get_values()
             print 'correlation coefficient: %s' % n.corrcoef(a, b)[0][1]
-            #print dfp
+            #if args.printdfs: dfp
 
             if args.viewplots:
                 df.ix[:, [label, 'predict']].plot()
@@ -651,7 +652,7 @@ if __name__ == "__main__":
             df = predict.as_data_frame()
             #df = df.combine_first(sp1[0].as_data_frame())
             df = df.combine_first(sp1[1].as_data_frame())
-            print df.ix[:, [label, 'predict']]
+            if args.printdfs: print df.ix[:, [label, 'predict']]
             if args.viewplots:
                 df.ix[:, [label, 'predict']].plot()
                 plt.show()
@@ -681,8 +682,8 @@ if __name__ == "__main__":
             if args.stdev:
                 d3 = sparseTicks2dim3(df, mdepth=mdepth, verbose=False)
                 stdev = n.std(d3[0], 1)
-                #print d3
-                #print d3[1][0][len(d3[1][0])-1]
+                #if args.printdfs: print d3
+                #if args.printdfs: print d3[1][0][len(d3[1][0])-1]
                 indx = p.DataFrame(d3[1]).ix[:, len(d3[1][0])-1]
                 df = p.DataFrame(stdev, index=indx.get_values(), columns=d3[2])
             else:
@@ -725,7 +726,7 @@ if __name__ == "__main__":
                 #print len(dfl0['ts+%s' % i])
             
             #print dfl0.groupby(['ts1'])
-            #print dfl0
+            #if args.printdfs: print dfl0
             #dfl0.to_csv()
             #dfl0.to_csv('/tmp/dfl0.csv')
             
@@ -750,36 +751,41 @@ if __name__ == "__main__":
             df_by_5second['tsi'] = df_by_5second.index
             df_by_5second = df_by_5second.set_index('ts1')
             
-            #print df_by_second.ix[df_by_second.ix[:,'ts+1'], 'la']
-            #print df_by_second.ix[[1442932286, 1442932287, 1442933724], 'la']
+            #if args.printdfs: print df_by_second.ix[df_by_second.ix[:,'ts+1'], 'la']
+            #if args.printdfs: print df_by_second.ix[[1442932286, 1442932287, 1442933724], 'la']
             df_by_second['ts1'] = df_by_second.index
             #df_by_second = df_by_second.set_index('ts1')
             
-            #print df_by_second#.set_index('ts0')
+            #if args.printdfs: print df_by_second#.set_index('ts0')
             
-            print '----------dfl0-------'
-            print dfl0.ix[dfl0.ix[:, 'ts+%s' % 1].index[0:10],:]
-            print dfl0.ix[dfl0.ix[:, 'ts+%s' % 1].index,:]
+            if args.printdfs: 
+                print '----------dfl0-------'
+                print dfl0.ix[dfl0.ix[:, 'ts+%s' % 1].index[0:10],:]
+                print dfl0.ix[dfl0.ix[:, 'ts+%s' % 1].index,:]
 
             dfl0 = dfl0.set_index('ts1')
-            print '----------dfl0-------'
-            print dfl0.index
-            print dfl0
+            if args.printdfs: 
+                print '----------dfl0-------'
+                print dfl0.index
+                print dfl0
             df['label1'] = dfl
             df['tsi'] = df.index
             df = df.set_index('ts0')
             df.to_csv('/tmp/df.csv')
             df_by_second.to_csv('/tmp/df_by_second.csv')
             
-            print '----------df_by_second-------'
-            print df_by_second.index
-            print df_by_second
+            if args.printdfs: 
+                print '----------df_by_second-------'
+                print df_by_second.index
+                print df_by_second
             
-            print '----------df-------'
-            print df.index
-            print df
+            if args.printdfs: 
+                print '----------df-------'
+                print df.index
+                print df
             
-            print '----------label+1-------'
+            if args.printdfs: 
+                print '----------label+1-------'
             df['label+1'] = df_by_second.ix[list(df_by_second.ix[:,'ts+1']), 'la']#.get_values()
             
             # http://pandas.pydata.org/pandas-docs/stable/merging.html
@@ -806,13 +812,14 @@ if __name__ == "__main__":
                 except:
                     ''
              
-            print '----------df-------'
+            if args.printdfs: 
+                print '----------df-------'
             with p.option_context('display.max_rows', 2000, 'display.max_columns', 2000):
-                #print df.ix[:, labels]
-                #print df.ix[:, Xy].tail(10)
-                debug(df)
+                #if args.printdfs: print df.ix[:, labels]
+                #if args.printdfs: print df.ix[:, Xy].tail(10)
+                if args.printdfs: debug(df)
                 
-            #print df
+            #if args.printdfs: print df
             #if args.viewplots:
             #    df.plot()
             #    plt.show()            
@@ -860,7 +867,7 @@ if __name__ == "__main__":
                     df = df.set_index('Unnamed: 0')
                     """
                     df = sparseTicks(num=num)
-                    print df
+                    if args.printdfs: print df
                     try:    dfl = df.ix[:, label]
                     except: ''
                     df = normalizeme(df)
@@ -870,7 +877,7 @@ if __name__ == "__main__":
                     
                     print df.columns
                     print 'dataframe df:'
-                    print df
+                    if args.printdfs: print df
                     examples = df.to_dict()
                     #print 'examples:'
                     #print examples
@@ -892,16 +899,16 @@ if __name__ == "__main__":
                     print model_pred
                     #print dir(model_pred)
                     dfp = model_pred.as_data_frame()
-                    #print 'fr1 as dataframe:'
+                    #if args.printdfs: print 'fr1 as dataframe:'
                     fr1df = fr1.as_data_frame().ix[:, [label]]
-                    #print fr1df
+                    #if args.printdfs: print fr1df
                     dfp = dfp.combine_first(fr1df)
                     
                     # print correlation coeficient
                     a = dfp[label].get_values()
                     b = dfp['predict'].get_values()
                     corrs = n.corrcoef(a, b)
-                    print dfp
+                    if args.printdfs: print dfp
                     print corrs
                     print 'correlation coefficient: %s' % corrs[0][1]
         
@@ -914,5 +921,5 @@ if __name__ == "__main__":
             
             sys.exit()
 
-        print df
+        if args.printdfs: print df
         sys.exit()
