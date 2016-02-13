@@ -322,6 +322,21 @@ def debug(msg):
     if args.verbose: 
         return msg
 
+import subprocess
+def get_git_revision_hash():
+    return subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
+    
+def get_git_revision_short_hash():
+    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
+
+def hostname():
+    fname = '/etc/hostname'
+    fp    = open(fname)
+    res   = fp.read().strip()
+    fp.close()
+    return res
+
+#class ST:
 def setupargs():
     import argparse
     # source: https://docs.python.org/2/howto/argparse.html
@@ -407,17 +422,6 @@ if __name__ == "__main__":
     except Exception as e:
         fname = None
     if fname == None:
-        import subprocess
-        def get_git_revision_hash():
-            return subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
-        def get_git_revision_short_hash():
-            return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
-        def hostname():
-            fname = '/etc/hostname'
-            fp    = open(fname)
-            res   = fp.read().strip()
-            fp.close()
-            return res        
         current_hash = get_git_revision_hash()
         #fname = '/tmp/ql.ticks.%s.%s.%s.%s.csv' % (num, mode, label, current_hash)
         fname = '/tmp/ql.ticks.num=%s.mode=%s.githash=%s.la=%s.hostname=%s.csv' % (num, mode, current_hash, label, hostname())
