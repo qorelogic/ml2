@@ -375,6 +375,28 @@ def setupargs():
     
     return args
 
+
+def importDataset():
+    print 'Dataset import..'
+    
+    fr1 = h2o.import_frame(fname);
+    #fr1 = h2o.H2OFrame(f1)
+    if args.printdfs: print fr1
+    
+    #p1 = h2o.parse_setup(fr1)
+    #print p1            
+    #print p1['destination_frame']
+    
+    sp1 = fr1.split_frame([0.75])
+    
+    #print sp1#[0]
+    #sp1[0].drop(label)
+    if args.printdfs: print sp1[0][label].as_data_frame()
+    #sp1[1].drop(label)
+    if args.printdfs: print sp1[1][label].as_data_frame()
+        
+    return sp1
+
 ##################
 ##########################
 if __name__ == "__main__":
@@ -462,24 +484,8 @@ if __name__ == "__main__":
             h2o.init(ip=h2o_ip, port=54321)
             
         if args.train:# or args.predict:
-
-            print 'Dataset import..'
-            
-            fr1 = h2o.import_frame(fname);
-            #fr1 = h2o.H2OFrame(f1)
-            if args.printdfs: print fr1
-            
-            #p1 = h2o.parse_setup(fr1)
-            #print p1            
-            #print p1['destination_frame']
-            
-            sp1 = fr1.split_frame([0.75])
-            
-            #print sp1#[0]
-            #sp1[0].drop(label)
-            if args.printdfs: print sp1[0][label].as_data_frame()
-            #sp1[1].drop(label)
-            if args.printdfs: print sp1[1][label].as_data_frame()
+                
+            sp1 = importDataset()
 
         if args.train:
 
@@ -533,17 +539,17 @@ if __name__ == "__main__":
             
             
             #print model2
-            #predict = model2.predict(sp1[1])#.get_frame('C1')
-            #print model2.model_performance(sp1[1])
-            predict = model2.predict(fr1)#.get_frame('C1')
-            print model2.model_performance(fr1)
+            predict = model2.predict(sp1[1])#.get_frame('C1')
+            print model2.model_performance(sp1[1])
+            #predict = model2.predict(fr1)#.get_frame('C1')
+            #print model2.model_performance(fr1)
             
             # show prediction and plot data
             #print predict
             df = predict.as_data_frame()
             #df = df.combine_first(sp1[0].as_data_frame())
-            #df = df.combine_first(sp1[1].as_data_frame())
-            df = df.combine_first(fr1.as_data_frame())
+            df = df.combine_first(sp1[1].as_data_frame())
+            #df = df.combine_first(fr1.as_data_frame())
             #if args.printdfs: print df.ix[:, [label, 'predict']]
 
             # print correlation coeficient
