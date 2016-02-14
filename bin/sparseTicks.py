@@ -457,7 +457,8 @@ def train():
     # print correlation coeficient
     a = df[label].get_values()
     b = df['predict'].get_values()
-    print 'correlation coefficient: %s' % n.corrcoef(a, b)[0][1]
+    corrcoefValidationData = n.corrcoef(a, b)[0][1]
+    print 'correlation coefficient[validation data]: %s' % corrcoefValidationData
     #if args.printdfs: dfp
 
     if args.viewplots:
@@ -470,6 +471,7 @@ def train():
         mongo = mong.MongoClient()
         parsedFname = parseFname(fnameModel)
         parsedFname['pickle'] = s
+        parsedFname['corrcoefValidationData'] = corrcoefValidationData
 
         # insert plot image[base64]
         from pylab import rcParams
