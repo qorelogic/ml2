@@ -578,46 +578,10 @@ if __name__ == "__main__":
             h2o.init(ip=h2o_ip, port=54321)
             
         if args.train:# or args.predict:
-                
+            
             sp1 = importDataset()
 
         if args.train:
-
-        """
-        if args.predict2:
-            # read model object from pickle file
-            #fnameModel = '%s.label=%s.model.h2o.pkl' % (fname, label)
-            fnameModel = getLastQlPklFilename()
-            fp = open(fnameModel, 'r')
-            s = fp.read()
-            fp.close()            
-            model2 = pickle.loads(s)
-            print 'model read from %s' % (fnameModel)
-            
-            #print model2
-            
-            sp1 = p.read_csv(fname)
-            " ""
-            sp1 = list(sp1.get_values())
-            fr1 = h2o.H2OFrame(sp1[0])
-            " ""
-            
-            predict = model2.predict(sp1[1])#.get_frame('C1')
-            print model2.model_performance(sp1[1])
-            print model2.confusion_matrix()
-            
-            # show prediction and plot data
-            #print predict
-            df = predict.as_data_frame()
-            #df = df.combine_first(sp1[0].as_data_frame())
-            df = df.combine_first(sp1[1].as_data_frame())
-            if args.printdfs: print df.ix[:, [label, 'predict']]
-            if args.viewplots:
-                df.ix[:, [label, 'predict']].plot()
-                plt.show()
-            
-            sys.exit()
-        """
             train()
 
         df = sparseTicks(num=num, verbose=verbose)
@@ -880,6 +844,42 @@ if __name__ == "__main__":
                 ans = raw_input(msg)            
             
             sys.exit()
+
+        """
+        if args.predict2:
+            # read model object from pickle file
+            #fnameModel = '%s.label=%s.model.h2o.pkl' % (fname, label)
+            fnameModel = getLastQlPklFilename()
+            fp = open(fnameModel, 'r')
+            s = fp.read()
+            fp.close()
+            model2 = pickle.loads(s)
+            print 'model read from %s' % (fnameModel)
+            
+            #print model2
+            
+            sp1 = p.read_csv(fname)
+            " ""
+            sp1 = list(sp1.get_values())
+            fr1 = h2o.H2OFrame(sp1[0])
+            " ""
+            
+            predict = model2.predict(sp1[1])#.get_frame('C1')
+            print model2.model_performance(sp1[1])
+            print model2.confusion_matrix()
+            
+            # show prediction and plot data
+            #print predict
+            df = predict.as_data_frame()
+            #df = df.combine_first(sp1[0].as_data_frame())
+            df = df.combine_first(sp1[1].as_data_frame())
+            if args.printdfs: print df.ix[:, [label, 'predict']]
+            if args.viewplots:
+                df.ix[:, [label, 'predict']].plot()
+                plt.show()
+            
+            sys.exit()
+        """
 
         if args.printdfs: print df
         sys.exit()
