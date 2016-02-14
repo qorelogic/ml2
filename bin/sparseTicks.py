@@ -363,6 +363,8 @@ def setupargs():
     parser.add_argument('-t', "--train", help="train via h2o[deeplearning]", action="store_true")
     parser.add_argument('-p', "--predict", help="predict via h2o[deeplearning]", action="store_true")
     parser.add_argument('-vp', "--viewplots", help="show the plot after training/prediction", action="store_true")
+    parser.add_argument('-e',  "--epochs",    help="set the number of epochs to train")
+    parser.add_argument('-hl', "--hiddenLayers",    help="set the hidden neuron layer")
     
     # dataset size options
     parser.add_argument('-n', "--num", help="number of rows")
@@ -445,7 +447,19 @@ if __name__ == "__main__":
     try:    la = args.la
     except: la = None
     if la == None: la = 'la'
-    
+
+    try:    hiddenLayers = args.hiddenLayers
+    except: hiddenLayers = None
+    if hiddenLayers == None: hiddenLayers = '100 100'
+    hiddenLayers = hiddenLayers.strip().split(' ')
+    hl = []
+    for i in hiddenLayers: hl.append(int(i))
+    hiddenLayers = hl
+
+    try:    epochs = args.epochs
+    except: epochs = None
+    if epochs == None: epochs = 10
+
     try:    fname = args.file
     except Exception as e:
         fname = None
@@ -502,8 +516,8 @@ if __name__ == "__main__":
                                       y           =sp1[0][label], 
                                       validation_x=sp1[1].drop(label), 
                                       validation_y=sp1[1][label],
-                                      hidden       = [100,100,100],
-                                      epochs       = 10,
+                                      hidden       = hiddenLayers,
+                                      epochs       = epochs,
                                       #variable_importances = True,
                                       #balance_classes      = True,
                                       #loss                 = "Automatic",
