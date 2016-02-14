@@ -399,6 +399,85 @@ def importDataset():
         
     return sp1
 
+def train():
+    print 'Training..'
+
+    """
+    model = h2o.gbm(x=sp1[0].drop(label), y=sp1[0][label], validation_x=sp1[1].drop(label), validation_y=sp1[1][label], ntrees=10000, max_depth=100)
+    print model            
+    predict = model.predict(sp1[1])#.get_frame('C1')
+    print model.model_performance(sp1[1])
+    """
+    
+    model2 = h2o.deeplearning(x           =sp1[0].drop(label), 
+                              y           =sp1[0][label], 
+                              validation_x=sp1[1].drop(label), 
+                              validation_y=sp1[1][label],
+                              hidden       = hiddenLayers,
+                              epochs       = epochs,
+                              #variable_importances = True,
+                              #balance_classes      = True,
+                              #loss                 = "Automatic",
+                              )
+    """
+    model2 = h2o.deeplearning(x           =fr1.drop(label), 
+                              y           =fr1[label], 
+                              validation_x=fr1.drop(label), 
+                              validation_y=fr1[label])
+    """
+    
+    # save model object to pickle file
+    startTime = model2._model_json['output']['start_time']
+    endTime   = model2._model_json['output']['end_time']
+    # features in X
+    #print model._model_json['output']['names']
+    fnameModel = '%s.label=%s.starttime=%s.endtime=%s.model.h2o.pkl' % (fname, label, startTime, endTime)
+    s = pickle.dumps(model2)            
+    fp = open(fnameModel, 'w')
+    fp.write(s)
+    fp.close()            
+    model2 = pickle.loads(s)
+    print 'saved model to %s' % (fnameModel)
+
+    # insert model to db.models
+    try:
+        import pymongo as mong
+        mongo = mong.MongoClient()
+        parsedFname = parseFname(fnameModel)
+        parsedFname['pickle'] = s
+        mongo.ql.models.insert(parsedFname)
+        mongo.close()
+        print 'inserted model to db.models'
+    except:
+        ''
+    
+    #print model2
+    predict = model2.predict(sp1[1])#.get_frame('C1')
+    print model2.model_performance(sp1[1])
+    #predict = model2.predict(fr1)#.get_frame('C1')
+    #print model2.model_performance(fr1)
+    
+    # show prediction and plot data
+    #print predict
+    df = predict.as_data_frame()
+    #df = df.combine_first(sp1[0].as_data_frame())
+    df = df.combine_first(sp1[1].as_data_frame())
+    #df = df.combine_first(fr1.as_data_frame())
+    #if args.printdfs: print df.ix[:, [label, 'predict']]
+
+    # print correlation coeficient
+    a = df[label].get_values()
+    b = df['predict'].get_values()
+    print 'correlation coefficient: %s' % n.corrcoef(a, b)[0][1]
+    #if args.printdfs: dfp
+
+    if args.viewplots:
+        df.ix[:, [label, 'predict']].plot()
+        plt.show()
+    
+    sys.exit()
+
+
 ##################
 ##########################
 if __name__ == "__main__":
@@ -503,154 +582,6 @@ if __name__ == "__main__":
 
         if args.train:
 
-            print 'Training..'
-
-            """
-            model = h2o.gbm(x=sp1[0].drop(label), y=sp1[0][label], validation_x=sp1[1].drop(label), validation_y=sp1[1][label], ntrees=10000, max_depth=100)
-            print model            
-            predict = model.predict(sp1[1])#.get_frame('C1')
-            print model.model_performance(sp1[1])
-            """
-            
-            model2 = h2o.deeplearning(x           =sp1[0].drop(label), 
-                                      y           =sp1[0][label], 
-                                      validation_x=sp1[1].drop(label), 
-                                      validation_y=sp1[1][label],
-                                      hidden       = hiddenLayers,
-                                      epochs       = epochs,
-                                      #variable_importances = True,
-                                      #balance_classes      = True,
-                                      #loss                 = "Automatic",
-                                      )
-            """
-            model2 = h2o.deeplearning(x           =fr1.drop(label), 
-                                      y           =fr1[label], 
-                                      validation_x=fr1.drop(label), 
-                                      validation_y=fr1[label])
-            """
-            
-            # save model object to pickle file
-            startTime = model2._model_json['output']['start_time']
-            endTime   = model2._model_json['output']['end_time']
-            # features in X
-            #print model._model_json['output']['names']
-            fnameModel = '%s.label=%s.starttime=%s.endtime=%s.model.h2o.pkl' % (fname, label, startTime, endTime)
-            s = pickle.dumps(model2)            
-            fp = open(fnameModel, 'w')
-            fp.write(s)
-            fp.close()            
-            model2 = pickle.loads(s)
-            print 'saved model to %s' % (fnameModel)
-
-            # insert model to db.models
-            try:
-                import pymongo as mong
-                mongo = mong.MongoClient()
-                parsedFname = parseFname(fnameModel)
-                parsedFname['pickle'] = s
-                mongo.ql.models.insert(parsedFname)
-                mongo.close()
-                print 'inserted model to db.models'
-            except:
-                ''
-            
-            #print model2
-            predict = model2.predict(sp1[1])#.get_frame('C1')
-            print model2.model_performance(sp1[1])
-            #predict = model2.predict(fr1)#.get_frame('C1')
-            #print model2.model_performance(fr1)
-            
-            # show prediction and plot data
-            #print predict
-            df = predict.as_data_frame()
-            #df = df.combine_first(sp1[0].as_data_frame())
-            df = df.combine_first(sp1[1].as_data_frame())
-            #df = df.combine_first(fr1.as_data_frame())
-            #if args.printdfs: print df.ix[:, [label, 'predict']]
-
-            # print correlation coeficient
-            a = df[label].get_values()
-            b = df['predict'].get_values()
-            print 'correlation coefficient: %s' % n.corrcoef(a, b)[0][1]
-            #if args.printdfs: dfp
-
-            if args.viewplots:
-                df.ix[:, [label, 'predict']].plot()
-                plt.show()
-            
-            sys.exit()
-
-        if args.predict:
-            #fname = "/tmp/ql.ticks.10000.stdev.987674089fe7815fb7872325d179127957df4209.csv"
-            #fname = "/tmp/ql.ticks.1000.stdev.f9fd45fc4da82b8bf1064a5f9a15dff1fe038c1f.la=EUR_USD.muurl.csv"
-            fname = getLastQlPklFilename(num=0, type='dataset')
-            
-            #fnameModel = '/tmp/ql.ticks.10000.stdev.987674089fe7815fb7872325d179127957df4209.csv.model.h2o.pkl'
-            #fnameModel = '/tmp/ql.ticks.1000.stdev.f9fd45fc4da82b8bf1064a5f9a15dff1fe038c1f.la=EUR_USD.muurl.csv.model.h2o.pkl'
-            #fnameModel = '/tmp/ql.ticks.10000.stdev.f9fd45fc4da82b8bf1064a5f9a15dff1fe038c1f.la=EUR_USD.muurl.csv.label=la.model.h2o.pkl'
-            fnameModel = getLastQlPklFilename(num=0, type='model')
-            
-            fp = open(fnameModel)
-            #print fp.read()
-            model = pickle.loads(fp.read())
-            fp.close()
-            #print model
-            
-            #####
-            #####
-            
-            #data_test = h2o.import_frame(fname)
-            #data_test = h2o.H2OFrame([fname])
-            #data_path = [h2o.locate(fname)]
-            #data_test = h2o.H2OFrame([data_test])
-            
-            #####
-            #####
-            
-            cnt = 5000
-            df = p.read_csv(fname)
-            df = df.ix[df.tail(cnt).index,:]
-            df = df.set_index('Unnamed: 0')
-            print df.columns
-            #print 'dataframe df:'
-            #print df
-            examples = df.to_dict()
-            #print 'examples:'
-            #print examples
-            #print fixdict(examples)
-            #print 'dataframe examples:'
-            #print p.DataFrame(examples)
-            #fr1 = h2o.H2OFrame(python_obj = examples)
-            #fr1 = h2o.H2OFrame(examples)
-            fr1 = h2o.H2OFrame(removeIndexFromDict(examples))
-            
-            #####
-            #####
-            
-            #label = 'la1b'
-            #label = 'EUR_USD'
-            modelParams = parseFname(fnameModel)
-            label = modelParams['label']
-            model_pred = model.predict(fr1.drop(label))
-            print model_pred
-            #print dir(model_pred)
-            dfp = model_pred.as_data_frame()
-            #print 'fr1 as dataframe:'
-            fr1df = fr1.as_data_frame().ix[:, [label]]
-            #print fr1df
-            dfp = dfp.combine_first(fr1df)
-            
-            # print correlation coeficient
-            a = dfp[label].get_values()
-            b = dfp['predict'].get_values()
-            print 'correlation coefficient: %s' % n.corrcoef(a, b)[0][1]
-            #print dfp
-
-            dfp.plot()
-            plt.show()
-            
-            sys.exit()
-        
         """
         if args.predict2:
             # read model object from pickle file
@@ -686,6 +617,7 @@ if __name__ == "__main__":
             
             sys.exit()
         """
+            train()
 
         df = sparseTicks(num=num, verbose=verbose)
         print 'label: %s' % label
