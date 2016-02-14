@@ -440,18 +440,6 @@ def train():
     model2 = pickle.loads(s)
     print 'saved model to %s' % (fnameModel)
 
-    # insert model to db.models
-    try:
-        import pymongo as mong
-        mongo = mong.MongoClient()
-        parsedFname = parseFname(fnameModel)
-        parsedFname['pickle'] = s
-        mongo.ql.models.insert(parsedFname)
-        mongo.close()
-        print 'inserted model to db.models'
-    except:
-        ''
-    
     #print model2
     predict = model2.predict(sp1[1])#.get_frame('C1')
     print model2.model_performance(sp1[1])
@@ -476,8 +464,55 @@ def train():
         df.ix[:, [label, 'predict']].plot()
         plt.show()
     
+    # insert model to db.models
+    try:
+        import pymongo as mong
+        mongo = mong.MongoClient()
+        parsedFname = parseFname(fnameModel)
+        parsedFname['pickle'] = s
+
+        # insert plot image[base64]
+        from pylab import rcParams
+        jo = 2
+        rcParams['figure.figsize'] = 16*jo, 9*jo
+        fnameImagePlot = '/tmp/foo.png'
+        plt.plot(df)
+        plt.savefig(fnameImagePlot, bbox_inches='tight')
+        encoded_string = encodeFilenameBase64(fnameImagePlot)
+        parsedFname['plot'] = encoded_string
+
+        mongo.ql.models.insert(parsedFname)
+        mongo.close()
+        print 'inserted model to db.models'
+    except Exception as e:
+        print e
     sys.exit()
 
+# http://stackoverflow.com/questions/11915770/saving-picture-to-mongodb
+def encodeFilenameBase64(fname):
+    import base64
+    with open(fname, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read())
+    #print encoded_string
+    return encoded_string
+
+def insert_image(fname):
+    import pymongo
+    encoded_string = encodeFilenameBase64(fname)
+    #print encoded_string
+    conn = pymongo.Connection()
+    db = conn.ql
+    abc=db.models.insert({"image":encoded_string})
+    return True
+
+def retrieve_image(request):
+    data = db.database_name.find()
+    data1 = json.loads(dumps(data))
+    img = data1[0]
+    img1 = img['image']
+    decode=img1.decode()
+    img_tag = '<img alt="sample" src="data:image/png;base64,{0}">'.format(decode)
+    return HttpResponse(img_tag)
 
 ##################
 ##########################
