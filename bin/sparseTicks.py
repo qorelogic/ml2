@@ -408,10 +408,9 @@ def train():
     predict = model.predict(sp1[1])#.get_frame('C1')
     print model.model_performance(sp1[1])
     """
-    
-    model2 = h2o.deeplearning(x           =sp1[0].drop(label), 
+    model2 = h2o.deeplearning(x           =sp1[0].drop('la').drop('la1').drop('la1b').drop('la2').drop('la2b').drop('la5').drop('la5b').drop('label1'), 
                               y           =sp1[0][label], 
-                              validation_x=sp1[1].drop(label), 
+                              validation_x=sp1[1].drop('la').drop('la1').drop('la1b').drop('la2').drop('la2b').drop('la5').drop('la5b').drop('label1'), 
                               validation_y=sp1[1][label],
                               hidden       = hiddenLayers,
                               epochs       = epochs,
