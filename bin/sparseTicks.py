@@ -431,7 +431,8 @@ def train():
     endTime   = model2._model_json['output']['end_time']
     # features in X
     #print model._model_json['output']['names']
-    fnameModel = '%s.label=%s.starttime=%s.endtime=%s.model.h2o.pkl' % (fname, label, startTime, endTime)
+    hl = '-'.join(n.array(hiddenLayers, dtype=n.string0).tolist())
+    fnameModel = '%s.label=%s.starttime=%s.endtime=%s.epochs=%s.hiddenLayers=%s.model.h2o.pkl' % (fname, label, startTime, endTime, epochs, hl)
     s = pickle.dumps(model2)            
     fp = open(fnameModel, 'w')
     fp.write(s)
