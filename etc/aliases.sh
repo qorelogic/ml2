@@ -144,7 +144,7 @@ alias sc='scrapy'
 }
 .gstshow() {
 	for x in `git stash list | cut -d'{' -f2 | cut -d'}' -f1`; do
-		git stash show stash@{$x}; echo '';
+		git stash show -p stash@{$x}; echo '';
 	done
 }
 
