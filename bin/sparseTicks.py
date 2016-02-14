@@ -529,14 +529,16 @@ if __name__ == "__main__":
             print 'saved model to %s' % (fnameModel)
 
             # insert model to db.models
-            import pymongo as mong
-            mongo = mong.MongoClient()
-            parsedFname = parseFname(fnameModel)
-            parsedFname['pickle'] = s
-            mongo.ql.models.insert(parsedFname)
-            mongo.close()
-            print 'inserted model to db.models'
-            
+            try:
+                import pymongo as mong
+                mongo = mong.MongoClient()
+                parsedFname = parseFname(fnameModel)
+                parsedFname['pickle'] = s
+                mongo.ql.models.insert(parsedFname)
+                mongo.close()
+                print 'inserted model to db.models'
+            except:
+                ''
             
             #print model2
             predict = model2.predict(sp1[1])#.get_frame('C1')
