@@ -128,7 +128,7 @@ class HPC:
             df = p.DataFrame(res).transpose()
             df = df.convert_objects(convert_numeric=True)
             df = df.set_index('DCID')
-            print df.sort()
+            return  df.sort()
         
     def plans(self):
             v = Vultr(self.key_vultr)
@@ -141,22 +141,22 @@ class HPC:
     def os(self):
             v = Vultr(self.key_vultr)
             res = v.os_list()
-            print p.DataFrame(res).transpose()
+            return p.DataFrame(res).transpose()
         
     def startupScripts(self):
             v = Vultr(self.key_vultr)
             res = v.startupscript_list()
-            print p.DataFrame(res)#.transpose()
+            return p.DataFrame(res)#.transpose()
         
     def sshkeys(self):
             v = Vultr(self.key_vultr)
             res = v.sshkey_list()
-            print p.DataFrame(res)#.transpose()
+            return p.DataFrame(res)#.transpose()
 
     def snapshots(self):
             v = Vultr(self.key_vultr)
             res = v.snapshot_list()
-            print p.DataFrame(res)#.transpose()
+            return p.DataFrame(res)#.transpose()
             
     def snapshotcreate(self, subid):
             v = Vultr(self.key_vultr)
@@ -413,17 +413,17 @@ if __name__ == "__main__":
     if args.destroy:
         c.destroyAllDroplets()
     if args.regions:
-        c.regions()
+        print c.regions()
     if args.plans:
         print c.plans()
     if args.os:
-        c.os()
+        print c.os()
     if args.startup:
-        c.startupScripts()
+        print c.startupScripts()
     if args.sshkeys:
-        c.sshkeys()
+        print c.sshkeys()
     if args.snapshots:
-        c.snapshots()
+        print c.snapshots()
     if args.snapshotcreate:
         c.snapshotcreate(args.snapshotcreate)
     if args.costanalysis:
