@@ -287,6 +287,69 @@ class HPC:
         #print type(str2)
         return '{0}rc{1}'.format(str1, str2)
 
+    def costanalysis(self, sortby=None):
+        import matplotlib.pylab as plt
+        from qoreliquid import normalizeme
+        
+        lowCost = {
+             'bandwidth':'',
+             'disk':'',
+             'ram':'',
+             'vcpu':'',
+        }
+         
+        sortby = 'vcpu_count ram disk bandwidth_gb'.split(' ')
+        
+        v = Vultr(self.key_vultr)
+        res = v.plans_list()
+        df = p.DataFrame(res).transpose()
+        df = df.convert_objects(convert_numeric=True)
+        df['price_per_hour'] = df.ix[:, 'price_per_month'] / 24 / 30
+        res0 = df.sort(['ram','vcpu_count'], ascending=False)
+        #p.set_option('max_colwidth', 80)
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            columns = 'bandwidth bandwidth_gb disk price_per_month ram vcpu_count price_per_hour'
+            a = res0.ix[0, columns.split(' ')]
+            b = res0.ix[:, columns.split(' ')]
+            res = a / b
+            #res = b
+            #plt.plot(res)
+            #res = normalizeme(res)
+            #res = sigmoidme(res)
+            res = res.convert_objects(convert_numeric=True)
+            c = n.array(res, dtype=float).T / n.array(res.ix[:,'price_per_hour'], dtype=float)
+            c = (res.transpose() / res.ix[:,'price_per_hour']).transpose()
+
+            sortbytxt = ', '.join(sortby)
+            title = 'sortby: %s' % (sortbytxt)
+            
+            b['available_locations']   = res0.ix[:, 'available_locations']
+            b['price_per_hour']        = res0.ix[:, 'price_per_hour']
+            print
+            print title
+            print b.sort(sortby)
+            
+            
+            res['available_locations']   = res0.ix[:, 'available_locations']
+            res['price_per_hour']        = res0.ix[:, 'price_per_hour']
+            print
+            print title
+            print res.sort(sortby)
+            
+            c['available_locations']   = res0.ix[:, 'available_locations']
+            c['price_per_hour']        = res0.ix[:, 'price_per_hour']
+            print
+            print title
+            print c.sort(sortby)
+
+            c.sort(sortby).plot()
+            plt.title(title)
+            plt.show()
+            #res.plot()
+            #plt.show()
+            
+        return res
+
 if __name__ == "__main__":
     import sys
 
@@ -319,6 +382,8 @@ if __name__ == "__main__":
     parser.add_argument("-sk",   "--sshkeys",   help="c.sshkeys()",   action="store_true")
     parser.add_argument("-sn",   "--snapshots",   help="c.snapshots()",   action="store_true")
     parser.add_argument("-snc",   "--snapshotcreate",   help="c.snapshots()")
+
+    parser.add_argument("-ca", "--costanalysis",  help="cost analysis",   action="store_true")
 
     #print 'usage: <hpc.py on | nodes | images | snapshot | destroy | regions>'
 
@@ -361,3 +426,5 @@ if __name__ == "__main__":
         c.snapshots()
     if args.snapshotcreate:
         c.snapshotcreate(args.snapshotcreate)
+    if args.costanalysis:
+        c.costanalysis()
