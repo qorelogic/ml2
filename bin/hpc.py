@@ -200,26 +200,21 @@ class HPC:
                 sys.exit()
             ca = c.costanalysis(region, sortby='vcpu_count ram disk bandwidth_gb', silent=True)
 
-            vpsplanid  = ca.index[0]
-            regions    = c.regions()
-            plans      = c.plans()
-            os_type    = 164 # snapshot
-            #os_type    = 191 # ubuntu
-            scriptid   = 12633
-            snapshotid = '71056b3453c4c'
-            sshkeyid   = '5674534d396cf'
-            label      = 'liquid-compute-rc2'
-
-            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                print regions
-                print 'vpsplanid: %s' % vpsplanid
-                print plans.ix[vpsplanid, :]
+            def createNode(region, group=''):
+                vpsplanid  = ca.index[0]
+                regions    = c.regions()
+                plans      = c.plans()
+                os_type    = 164 # snapshot
+                #os_type    = 191 # ubuntu
+                scriptid   = 12633
+                snapshotid = '71056b3453c4c'
+                sshkeyid   = '5674534d396cf'
+                label      = 'liquid-compute-[%s]-rc2' % group
                 
-                if verbose:
-                    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                        print regions
-                        print 'vpsplanid: %s' % vpsplanid
-                        print plans.ix[vpsplanid, :]
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    print regions
+                    print 'vpsplanid: %s' % vpsplanid
+                    print plans.ix[vpsplanid, :]
                     
                 if region:
                     
@@ -505,6 +500,7 @@ if __name__ == "__main__":
     #        if sys.argv[1] == 'on':
     #            c.createNode()
     parser.add_argument("-on", help="d=DigitalOcean, v=Vultr")
+    parser.add_argument("-n", "-num", "--num", help="c.getNodes()")
     #        if sys.argv[1] == 'nodes':
     #            # running nodes
     #            res = c.getNodes()
@@ -551,7 +547,7 @@ if __name__ == "__main__":
     c = HPC()
 
     if args.on:
-        c.createNode(args.on, region=args.region)
+        c.createNode(args.on, region=args.region, num=args.num)
     if args.nodes:
         c.getNodes()
     if args.images:
