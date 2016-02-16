@@ -88,7 +88,7 @@ class HPC:
 
         #    #droplet.shutdown()
     
-    def createNode(self, provider):
+    def createNode(self, provider, region=False):
         self.qd._getMethod()
         
         #provider = raw_input('Prepping node..  ..which provider? (d=DigitalOcean, v=Vultr): ')
@@ -115,12 +115,41 @@ class HPC:
         if provider == 'v':
             v = Vultr(self.key_vultr)
             res = self.plans()
-            print res.ix[['29', '94'], :].transpose()
-            
-            # ubuntu load
-            #v.server_create(1, 29, 191, scriptid=12633, sshkeyid='5674534d396cf', label='liquid-compute-rc1')
-            # snapshot load
-            v.server_create(1, 29, 164, snapshotid='71056b3453c4c', sshkeyid='5674534d396cf', label='liquid-compute-rc2')
+            #p.set_option('display.width',       1000000)
+            #p.set_option('display.max_rows',    8000)
+            #p.set_option('display.max_columns', 8000)
+
+            if not region:
+                print
+                print '\terror: requires -r or --region argument'
+                print
+                sys.exit()
+            ca = c.costanalysis(region, sortby='vcpu_count ram disk bandwidth_gb')
+
+            vpsplanid  = ca.index[0]
+            regions    = c.regions()
+            plans      = c.plans()
+            os_type    = 164 # snapshot
+            #os_type    = 191 # ubuntu
+            scriptid   = 12633
+            snapshotid = '71056b3453c4c'
+            sshkeyid   = '5674534d396cf'
+            label      = 'liquid-compute-rc2'
+
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                print regions
+                print 'vpsplanid: %s' % vpsplanid
+                print plans.ix[vpsplanid, :]
+                
+            if region:
+                
+                if os_type == 191:
+                    # load ubuntu
+                    v.server_create(region, vpsplanid, os_type, scriptid=scriptid, sshkeyid=sshkeyid, label=label)
+
+                if os_type == 164:
+                    # load snapshot
+                    v.server_create(region, vpsplanid, os_type, snapshotid=snapshotid, sshkeyid=sshkeyid, label=label)
     
     def regions(self):
             v = Vultr(self.key_vultr)
@@ -128,7 +157,7 @@ class HPC:
             df = p.DataFrame(res).transpose()
             df = df.convert_objects(convert_numeric=True)
             df = df.set_index('DCID')
-            return  df.sort()
+            return df.sort().ix[:, 'name'.split()]
         
     def plans(self):
             v = Vultr(self.key_vultr)
@@ -287,9 +316,16 @@ class HPC:
         #print type(str2)
         return '{0}rc{1}'.format(str1, str2)
 
-    def costanalysis(self, sortby=None):
+    def costanalysis(self, regionid, sortby='vcpu_count ram disk bandwidth_gb'):
         import matplotlib.pylab as plt
         from qoreliquid import normalizeme
+        
+        if not regionid:
+            print
+            print '\terror: requires -r or --region argument'
+            print
+            sys.exit()
+        #print 'regionid: %s' % regionid
         
         lowCost = {
              'bandwidth':'',
@@ -298,7 +334,7 @@ class HPC:
              'vcpu':'',
         }
          
-        sortby = 'vcpu_count ram disk bandwidth_gb'.split(' ')
+        sortby = sortby.split(' ')
         
         v = Vultr(self.key_vultr)
         res = v.plans_list()
@@ -306,49 +342,55 @@ class HPC:
         df = df.convert_objects(convert_numeric=True)
         df['price_per_hour'] = df.ix[:, 'price_per_month'] / 24 / 30
         res0 = df.sort(['ram','vcpu_count'], ascending=False)
+        
+        columns = 'bandwidth bandwidth_gb disk price_per_month ram vcpu_count price_per_hour'
+        a = res0.ix[0, columns.split(' ')]
+        b = res0.ix[:, columns.split(' ')]
+        res = a / b
+        #res = b
+        #plt.plot(res)
+        #res = normalizeme(res)
+        #res = sigmoidme(res)
+        res = res.convert_objects(convert_numeric=True)
+        c = n.array(res, dtype=float).T / n.array(res.ix[:,'price_per_hour'], dtype=float)
+        c = (res.transpose() / res.ix[:,'price_per_hour']).transpose()
+
+        sortbytxt = ', '.join(sortby)
+        title = 'sortby: %s' % (sortbytxt)
+        
         #p.set_option('max_colwidth', 80)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            columns = 'bandwidth bandwidth_gb disk price_per_month ram vcpu_count price_per_hour'
-            a = res0.ix[0, columns.split(' ')]
-            b = res0.ix[:, columns.split(' ')]
-            res = a / b
-            #res = b
-            #plt.plot(res)
-            #res = normalizeme(res)
-            #res = sigmoidme(res)
-            res = res.convert_objects(convert_numeric=True)
-            c = n.array(res, dtype=float).T / n.array(res.ix[:,'price_per_hour'], dtype=float)
-            c = (res.transpose() / res.ix[:,'price_per_hour']).transpose()
 
-            sortbytxt = ', '.join(sortby)
-            title = 'sortby: %s' % (sortbytxt)
-            
             b['available_locations']   = res0.ix[:, 'available_locations']
             b['price_per_hour']        = res0.ix[:, 'price_per_hour']
-            print
-            print title
-            print b.sort(sortby)
-            
+            #print
+            #print title
+            #print b.sort(sortby)            
             
             res['available_locations']   = res0.ix[:, 'available_locations']
             res['price_per_hour']        = res0.ix[:, 'price_per_hour']
-            print
-            print title
-            print res.sort(sortby)
+            #print
+            #print title
+            #print res.sort(sortby)
             
             c['available_locations']   = res0.ix[:, 'available_locations']
             c['price_per_hour']        = res0.ix[:, 'price_per_hour']
             print
             print title
-            print c.sort(sortby)
+            #c['available_locations'] = map(lambda x: x.index(1), c['available_locations'])
+            for i in xrange(len(c['available_locations'])):
+                try:    c.ix[i, 'available_locations'] = c['available_locations'][i].index(int(regionid))
+                except: c.ix[i, 'available_locations'] = -2
+            c = c[c['available_locations'] > -1]
+            c = c.sort(sortby)
+            print c
 
-            c.sort(sortby).plot()
-            plt.title(title)
-            plt.show()
-            #res.plot()
-            #plt.show()
-            
-        return res
+        c.plot()
+        plt.title(title)
+        plt.show()
+        #res.plot()
+        #plt.show()            
+        return c
 
 if __name__ == "__main__":
     import sys
@@ -375,13 +417,16 @@ if __name__ == "__main__":
     parser.add_argument("-d", "-destroy", "--destroy", help="c.destroyAllDroplets()", action="store_true")
     #        if sys.argv[1] == 'regions':
     #            print c.regions()
-    parser.add_argument("-r", "-regions", "--regions", help="c.regions()", action="store_true")
-    parser.add_argument("-p", "-plans",   "--plans",   help="c.plans()",   action="store_true")
+    parser.add_argument("-lr", "-regions", "--regions", help="c.regions()", action="store_true")
+    parser.add_argument("-r",  "-region",  "--region",  help="set the region")
+    parser.add_argument("-lp", "-plans",   "--plans",   help="c.plans()",   action="store_true")
     parser.add_argument("-os",   "--os",   help="c.os()",   action="store_true")
     parser.add_argument("-ss",   "--startup",   help="c.startupScripts()",   action="store_true")
     parser.add_argument("-sk",   "--sshkeys",   help="c.sshkeys()",   action="store_true")
-    parser.add_argument("-sn",   "--snapshots",   help="c.snapshots()",   action="store_true")
-    parser.add_argument("-snc",   "--snapshotcreate",   help="c.snapshots()")
+    parser.add_argument("-sn",   "--snapshots",   help="c.snapshots()", action="store_true")
+    parser.add_argument("-snc",   "--snapshotcreate",   help="subid,description")
+    #parser.add_argument("--subid",   help="subid,description", action="store_true")
+    #parser.add_argument("--description",   help="subid,description", action="store_true")
 
     parser.add_argument("-ca", "--costanalysis",  help="cost analysis",   action="store_true")
 
@@ -395,7 +440,7 @@ if __name__ == "__main__":
     import pandas as p
     import time
     from qore import QoreDebug
-    
+
     qd = QoreDebug()
     qd.off()
     qd.stackTraceOff()
@@ -403,7 +448,7 @@ if __name__ == "__main__":
     c = HPC()
 
     if args.on:
-        c.createNode(args.on)
+        c.createNode(args.on, region=args.region)
     if args.nodes:
         c.getNodes()
     if args.images:
@@ -415,7 +460,8 @@ if __name__ == "__main__":
     if args.regions:
         print c.regions()
     if args.plans:
-        print c.plans()
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print c.plans()
     if args.os:
         print c.os()
     if args.startup:
@@ -427,4 +473,4 @@ if __name__ == "__main__":
     if args.snapshotcreate:
         c.snapshotcreate(args.snapshotcreate)
     if args.costanalysis:
-        c.costanalysis()
+        c.costanalysis(args.region, sortby='vcpu_count ram disk bandwidth_gb')
