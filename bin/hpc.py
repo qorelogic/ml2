@@ -38,26 +38,55 @@ class HPC:
         ims = images.keys()
         return n.max(ims)
     
-    def printNodeManifest(self, node_id, ip_address, label, location, date_created, passwd=''):
-        print 'id:{0}'.format(node_id)
-        print 'label:{0}'.format(label)
-        print 'location:{0}'.format(location)
-        print 'date_created:{0}'.format(date_created)
-        print 'passwd: {0}'.format(passwd)
-        print '    ping {0}'.format(ip_address)
-        print '    ssh -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
-        print ''
-        print '  X11 Forwarding via SSH@{0}'.format(ip_address)
-        print '    ssh -X -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
-        print '    ipython notebook --ip={0}'.format(ip_address)
-        print '    http://{0}:5000'.format(ip_address)
-        print '    rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(ip_address)
-        print '    rsync -avP --partial root@{0}:/home/qore/mldev/bin/data/db-archive/ /mldev/bin/data/db-archive/'.format(ip_address)
-        print '    rdesktop -g 100% -u qore -p - {0}'.format(ip_address)
-        print 
-    
-    def getNodes(self, quiet=False):
+    def printNodeManifest(self, node_id, ip_address, label, location, date_created, passwd='', maskPasswd=True, ptype='verbose'):
+        
+        getPasswd = lambda x: passwd if (maskPasswd==False) else '---'
+
+        di = {
+            'node_id':       node_id,
+            'ip_address':    ip_address,
+            'label':         label,
+            'location':      location,
+            'date_created':  date_created,
+            #'passwd':        passwd,
+            'passwd':        getPasswd(True),
+
+            'ping-to':       'ping {0}'.format(ip_address),
+            'ssh-to':        'ssh -X -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address),
+            'x11-to':        'X11 Forwarding via SSH@{0}'.format(ip_address),
+            'ipynb':         'ipython notebook --ip={0}'.format(ip_address),
+            'na1':           'http://{0}:5000'.format(ip_address),
+            'config.csv':    'rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(ip_address),
+            'db-archive':    'rsync -avP --partial root@{0}:/home/qore/mldev/bin/data/db-archive/ /mldev/bin/data/db-archive/'.format(ip_address),
+            'rdesktop':      'rdesktop -g 100% -u qore -p - {0}'.format(ip_address),
+        }
+        #print ' '.join(di.keys())
+
+        if ptype == 'list':
+            df = p.DataFrame(di, index=[0]).set_index('node_id')#.transpose()
+            return df
+        else:
+            print 'id:{0}'.format(node_id)
+            print 'label:{0}'.format(label)
+            print 'location:{0}'.format(location)
+            print 'date_created:{0}'.format(date_created)
+            print 'passwd: {0}'.format(getPasswd(True))
+            print '    ping {0}'.format(ip_address)
+            print '    ssh -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
+            print ''
+            print '  X11 Forwarding via SSH@{0}'.format(ip_address)
+            print '    ssh -X -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@{0}'.format(ip_address)
+            print '    ipython notebook --ip={0}'.format(ip_address)
+            print '    http://{0}:5000'.format(ip_address)
+            print '    rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(ip_address)
+            print '    rsync -avP --partial root@{0}:/home/qore/mldev/bin/data/db-archive/ /mldev/bin/data/db-archive/'.format(ip_address)
+            print '    rdesktop -g 100% -u qore -p - {0}'.format(ip_address)
+            print 
+        
+    def getNodes(self, quiet=False, ptype = 'list'):
         self.qd._getMethod()
+        
+        ch = 'label date_created ssh-to passwd ping-to rdesktop node_id ipynb ip_address id x11-to config.csv na1 location db-archive'
         
         #print
         #print 'nodes:'
@@ -72,17 +101,22 @@ class HPC:
             #print droplets
             #print dir(droplet)
             if quiet == False:
-                self.printNodeManifest(droplet.id, droplet.ip_address, droplet.name, droplet.region['name'], droplet.created_at)
+                self.printNodeManifest(droplet.id, droplet.ip_address, droplet.name, droplet.region['name'], droplet.created_at, ptype=ptype)
         
         print '=== VULTR ====='
         v = Vultr(self.key_vultr)
         res = v.server_list()
         #print p.DataFrame(res)
+        df = p.DataFrame()
         for i in res:
             print '--------'
             #print res[i]
             if quiet == False:
-                self.printNodeManifest(i, res[i]['main_ip'], res[i]['label'], res[i]['location'], res[i]['date_created'], passwd=res[i]['default_password'])
+                dfi = self.printNodeManifest(i, res[i]['main_ip'], res[i]['label'], res[i]['location'], res[i]['date_created'], passwd=res[i]['default_password'], ptype=ptype)
+                if ptype == 'list':
+                    df = df.combine_first(dfi)
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000, 'display.max_colwidth', 1000):
+            print df.ix[:, ch.split(' ')]#.transpose()
 
         return droplets
 
@@ -474,7 +508,7 @@ if __name__ == "__main__":
     #        if sys.argv[1] == 'nodes':
     #            # running nodes
     #            res = c.getNodes()
-    parser.add_argument("-n", "-nodes", "--nodes", help="c.getNodes()", action="store_true")
+    parser.add_argument("-ln", "-nodes", "--nodes", help="c.getNodes()", action="store_true")
     ##        if sys.argv[1] == 'images':
     #            c.getImages()
     parser.add_argument("-i", "-images", "--images", help="c.getImages()", action="store_true")
