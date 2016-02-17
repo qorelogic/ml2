@@ -533,6 +533,8 @@ if __name__ == "__main__":
     #parser.add_argument("--description",   help="subid,description", action="store_true")
 
     parser.add_argument("-ca", "--costanalysis",  help="cost analysis",   action="store_true")
+    
+    parser.add_argument("-fl", "--h2oflatfile",  help="h2oFlatfile",   action="store_true")
 
     #print 'usage: <hpc.py on | nodes | images | snapshot | destroy | regions>'
 
@@ -555,6 +557,8 @@ if __name__ == "__main__":
         c.createNode(args.on, region=args.region, num=args.num)
     if args.nodes:
         c.getNodes()
+    if args.h2oflatfile:
+        c.h2oFlatfile()
     if args.images:
         c.getImages()
     if args.snapshot:
