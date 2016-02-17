@@ -88,7 +88,47 @@ class HPC:
 
         #    #droplet.shutdown()
     
-    def createNode(self, provider, region=False):
+    def h2oFlatfile(self, quiet=False, ptype='list'):
+        self.qd._getMethod()
+        
+        fname = '/tmp/ql-h2o-flatfile.txt'
+
+        my_droplets = self.manager.get_all_droplets()
+        droplets = {}
+        
+        """
+        print '=== DigitalOcean ====='
+        for droplet in my_droplets:
+            print '--------'
+            droplets[droplet.id] = droplet
+            if quiet == False:
+                self.printNodeManifest(droplet.id, droplet.ip_address, droplet.name, droplet.region['name'], droplet.created_at, ptype=ptype)
+        """
+        
+        #print '=== VULTR ====='
+        v = Vultr(self.key_vultr)
+        res = v.server_list()
+        df = p.DataFrame()
+        li = []
+        for i in res:
+            if quiet == False:
+                li.append(res[i]['main_ip'])
+                dfi = p.DataFrame([res[i]['main_ip']], index=[i], columns=['ip'])
+                if ptype == 'list':
+                    df = df.combine_first(dfi)
+        df['port'] = ['54321']*len(df.index)
+        #print df
+        #df.to_csv(fname)
+        #df = p.read_csv(fname)
+        #df = df.set_index('Unnamed: 0')
+        li = list(df.get_values()[:,0])            
+        res = '\n'.join(map(lambda x: x+':54321', li))
+        print res
+        fp = open(fname, 'w')
+        fp.write(res)
+        fp.close()
+    
+    def createNode(self, provider, region=False, num=1, verbose=False):
         self.qd._getMethod()
         
         #provider = raw_input('Prepping node..  ..which provider? (d=DigitalOcean, v=Vultr): ')
@@ -124,7 +164,7 @@ class HPC:
                 print '\terror: requires -r or --region argument'
                 print
                 sys.exit()
-            ca = c.costanalysis(region, sortby='vcpu_count ram disk bandwidth_gb')
+            ca = c.costanalysis(region, sortby='vcpu_count ram disk bandwidth_gb', silent=True)
 
             vpsplanid  = ca.index[0]
             regions    = c.regions()
@@ -141,16 +181,44 @@ class HPC:
                 print 'vpsplanid: %s' % vpsplanid
                 print plans.ix[vpsplanid, :]
                 
-            if region:
-                
-                if os_type == 191:
-                    # load ubuntu
-                    v.server_create(region, vpsplanid, os_type, scriptid=scriptid, sshkeyid=sshkeyid, label=label)
-
-                if os_type == 164:
-                    # load snapshot
-                    v.server_create(region, vpsplanid, os_type, snapshotid=snapshotid, sshkeyid=sshkeyid, label=label)
-    
+                if verbose:
+                    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                        print regions
+                        print 'vpsplanid: %s' % vpsplanid
+                        print plans.ix[vpsplanid, :]
+                    
+                if region:
+                    
+                    if os_type == 191:
+                        # load ubuntu
+                        try:
+                            v.server_create(region, vpsplanid, os_type, scriptid=scriptid, sshkeyid=sshkeyid, label=label)
+                        except Exception as e:
+                            print e
+                    
+                    if os_type == 164:
+                        # load snapshot
+                        try:
+                            v.server_create(region, vpsplanid, os_type, snapshotid=snapshotid, sshkeyid=sshkeyid, label=label)
+                            ''
+                        except Exception as e:
+                            print e
+            
+            if not num: num = 1
+            else:       num = int(num)
+            # map
+            ts = []
+            import threading, time
+            #print 'num: %s[%s]' % (num, type(num))
+            for i in xrange(num):
+                ts.append(threading.Thread(target=createNode, args=(region, 'cluster-01')))
+                ts[i].daemon = False
+                ts[i].start()
+                # vultr has a 1 sec/node limit
+                time.sleep(1.1)
+            #for i in xrange(num):
+            #    createNode(region, 'cluster-01')
+            
     def regions(self):
             v = Vultr(self.key_vultr)
             res = v.regions_list()
@@ -316,7 +384,7 @@ class HPC:
         #print type(str2)
         return '{0}rc{1}'.format(str1, str2)
 
-    def costanalysis(self, regionid, sortby='vcpu_count ram disk bandwidth_gb'):
+    def costanalysis(self, regionid, sortby='vcpu_count ram disk bandwidth_gb', silent=False):
         import matplotlib.pylab as plt
         from qoreliquid import normalizeme
         
@@ -375,21 +443,22 @@ class HPC:
             
             c['available_locations']   = res0.ix[:, 'available_locations']
             c['price_per_hour']        = res0.ix[:, 'price_per_hour']
-            print
-            print title
             #c['available_locations'] = map(lambda x: x.index(1), c['available_locations'])
             for i in xrange(len(c['available_locations'])):
                 try:    c.ix[i, 'available_locations'] = c['available_locations'][i].index(int(regionid))
                 except: c.ix[i, 'available_locations'] = -2
             c = c[c['available_locations'] > -1]
             c = c.sort(sortby)
-            print c
+            if silent == False:
+                print
+                print title
+                print c
 
-        c.plot()
-        plt.title(title)
-        plt.show()
-        #res.plot()
-        #plt.show()            
+                c.plot()
+                plt.title(title)
+                plt.show()
+                #res.plot()
+                #plt.show()            
         return c
 
 if __name__ == "__main__":
