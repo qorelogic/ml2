@@ -116,7 +116,7 @@ class HPC:
                 if ptype == 'list':
                     df = df.combine_first(dfi)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000, 'display.max_colwidth', 1000):
-            print df.ix[:, ch.split(' ')]#.transpose()
+            print df.ix[:, ch.split(' ')].sort('date_created')#.transpose()
 
         return droplets
 
@@ -200,6 +200,7 @@ class HPC:
                 sys.exit()
             ca = c.costanalysis(region, sortby='vcpu_count ram disk bandwidth_gb', silent=True)
 
+            import hashlib as hl
             def createNode(region, group=''):
                 vpsplanid  = ca.index[0]
                 regions    = c.regions()
@@ -209,7 +210,8 @@ class HPC:
                 scriptid   = 12633
                 snapshotid = '71056b3453c4c'
                 sshkeyid   = '5674534d396cf'
-                label      = 'liquid-compute-[%s]-rc2' % group
+                hpad       = hl.md5(str(time.time())).hexdigest()[0:10]
+                label      = 'liquid-compute-[%s]-rc2.%s' % (group, hpad)
                 
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     print regions
@@ -379,7 +381,10 @@ class HPC:
             self.printNodeManifest(i, res[i]['main_ip'], res[i]['label'], res[i]['location'], res[i]['date_created'], passwd=res[i]['default_password'])
             ans = raw_input('destroy vultr node {0}[{1}:{2}]? y/n: '.format(i, res[i]['label'], res[i]['main_ip']))
             if ans == 'y':
-                v.server_destroy(i)
+                try:
+                    v.server_destroy(i)
+                except Exception as e:
+                    print e
                 
 
     def getLastImageName(self):
