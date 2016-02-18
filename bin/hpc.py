@@ -156,11 +156,23 @@ class HPC:
         #df = p.read_csv(fname)
         #df = df.set_index('Unnamed: 0')
         li = list(df.get_values()[:,0])            
-        res = '\n'.join(map(lambda x: x+':54321', li))
-        print res
+        ips = '\n'.join(map(lambda x: x+':54321', li))
+        #print ips
         fp = open(fname, 'w')
-        fp.write(res)
+        fp.write(ips)
         fp.close()
+        
+        for i in res:
+            h2o_ip = res[i]['main_ip']
+            try:
+                #if h2o_ip != getIpAddr():
+                import os
+                cmd = "rsync -avz %s root@%s:%s" % (fname, h2o_ip, fname)
+                print 'Deploying dataset to h2o cluster @ %s' % h2o_ip
+                print cmd
+                print os.system(cmd)
+            except Exception as e:
+                print e
     
     def createNode(self, provider, region=False, num=1, verbose=False):
         self.qd._getMethod()

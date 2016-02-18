@@ -20,7 +20,7 @@ run_cmd "p" 1
 run_cmd "ipn" 1
 run_cmd "htop" 2
 
-send_keys "java -jar h2o.jar" 0
+send_keys "java -jar h2o.jar -flatfile /tmp/ql-h2o-flatfile.txt -name ql" 0
 #send_keys "./push.sh" 1
 
 # Set active pane.
