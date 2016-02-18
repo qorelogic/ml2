@@ -250,6 +250,32 @@ class HPC:
             #for i in xrange(num):
             #    createNode(region, 'cluster-01')
             
+    def connect(self):
+
+        import subprocess, os
+        
+        #print '=== VULTR ====='
+        v = Vultr(self.key_vultr)
+        res = v.server_list()
+        df = p.DataFrame()
+        for i in res:
+            dfi = p.DataFrame([res[i]['main_ip']], index=[i], columns=['ip'])
+            df = df.combine_first(dfi)
+        hosts = list(df['ip'].get_values())
+        # source: https://exyr.org/2011/gnome-terminal-tabs/
+        #command = 'ls -l'
+        terminal = ['gnome-terminal']
+        for host  in hosts:
+            terminal.extend(['--tab', '-e', '''
+                bash -c '
+                    #ssh -X -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@%(host)s
+                    ssh -oStrictHostKeyChecking=no root@%(host)s
+                    #read
+                '
+            ''' % locals()])
+        os.environ['NO_AT_BRIDGE'] = "1"
+        subprocess.call(terminal)
+    
     def regions(self):
             v = Vultr(self.key_vultr)
             res = v.regions_list()
@@ -505,6 +531,7 @@ if __name__ == "__main__":
     #        if sys.argv[1] == 'on':
     #            c.createNode()
     parser.add_argument("-on", help="d=DigitalOcean, v=Vultr")
+    parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
     parser.add_argument("-n", "-num", "--num", help="c.getNodes()")
     #        if sys.argv[1] == 'nodes':
     #            # running nodes
@@ -555,6 +582,8 @@ if __name__ == "__main__":
 
     if args.on:
         c.createNode(args.on, region=args.region, num=args.num)
+    if args.connect:
+        c.connect()
     if args.nodes:
         c.getNodes()
     if args.h2oflatfile:
