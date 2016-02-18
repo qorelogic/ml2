@@ -8,7 +8,17 @@ $sparkHdir   = "$installHdir/spark"
 $sparklingWaterHdir   = "$installHdir/spark"
 
 $version_h2o      = "3.0.1.7"
+$codename_h2o    = "simons"
+$minor_h2o       = "7"
+
 #$version_h2o     = "3.6.0.8"
+#$codename_h2o    = "tibshirani"
+#$minor_h2o       = "8"
+
+#$version_h2o     = "3.8.0.4"
+#$codename_h2o    = "tukey"
+#$minor_h2o       = "4"
+
 $version_spark    = "1.4.0-bin-hadoop2.4"
 
 $version_sparklingWater_major = "1.4"
@@ -16,7 +26,7 @@ $version_sparklingWater_minor = "3"
 $version_sparklingWater       = "$version_sparklingWater_major.$version_sparklingWater_minor"
 
 
-$h2oTarball   = "http://h2o-release.s3.amazonaws.com/h2o/rel-simons/7/h2o-$version_h2o.zip"
+$h2oTarball   = "http://h2o-release.s3.amazonaws.com/h2o/rel-$codename_h2o/$minor_h2o/h2o-$version_h2o.zip"
 $sparkTarball = "http://d3kbcqa49mib13.cloudfront.net/spark-$version_spark.tgz"
 $sparklingWaterTarball = "http://h2o-release.s3.amazonaws.com/sparkling-water/rel-$version_sparklingWater_major/$version_sparklingWater_minor/sparkling-water-$version_sparklingWater.zip"
 
@@ -246,11 +256,18 @@ class datafeeds {
 # source: http://stackoverflow.com/questions/11327582/puppet-recipe-installing-tarball
 class h2o {
 	#sudo pip install h2o
+	exec { "pip uninstall h2o":
+		command => "/usr/local/bin/pip uninstall h2o",
+		timeout => 60,
+		tries   => 3,
+		before  => Exec["pip install h2o"],
+	}
 	exec { "pip install h2o":
-		command => "/usr/local/bin/pip install h2o",
+		command => "/usr/local/bin/pip install http://h2o-release.s3.amazonaws.com/h2o/rel-$codename_h2o/$minor_h2o/Python/h2o-$version_h2o-py2.py3-none-any.whl",
 		timeout => 60,
 		tries   => 3,
 	}
+
 	exec { "mkdir_${h2oHdir}": command => "/bin/mkdir -p $h2oHdir" }
 	exec { "wget_${h2oTarball}":
 		command => "/usr/bin/wget -nc $h2oTarball -P $h2oHdir/",
