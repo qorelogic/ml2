@@ -9,6 +9,9 @@ import os
 import curses
 import threading
 
+from qore import QoreDebug
+qd = QoreDebug()
+
 def normalizeme(dfr, pinv=False):
     
     nmean = n.mean(dfr, axis=0)
@@ -551,6 +554,8 @@ except Exception as e:
     curses.nocbreak(); stdscr.keypad(0); curses.echo()
     curses.endwin()
     print 'usage: <port> <avg|spread>'
+    qd.on()
+    qd.printTraceBack()
     sys.exit(0)
 
 curses.nocbreak(); 
