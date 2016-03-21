@@ -193,7 +193,7 @@ class datafeeds {
 	#	git clone https://github.com/digithink/py-localbitcoins.git $mldir/lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git
 	#	echo 'cloned py-localbitcoins.'
 	#fi
-	exec { "pip install drest": command => "/usr/local/bin/pip install drest", timeout => 60, tries => 3 }
+	exec { "pip install drest": command => "/usr/local/bin/pip install drest==0.9.12", timeout => 60, tries => 3 }
 	#if [ ! -f $mldir/lib/bitcoin/1broker/aol1306_1broker-trading-API.github.py.git ]; then
 	#	mkdir -p $mldir/lib/bitcoin/1broker/
 	#	echo 'API1brokerlib'
@@ -207,36 +207,36 @@ class datafeeds {
 	#	timeout => 60,
 	#	tries   => 3,
 	#}
-	exec { "pip install ipython": command => "/usr/local/bin/pip install ipython", timeout => 60, tries => 3 }
-	exec { "pip install notebook": command => "/usr/local/bin/pip install notebook", timeout => 60, tries => 3 }
-	exec { "pip install numpy": command => "/usr/local/bin/pip install numpy", timeout => 60, tries => 3 }
-	exec { "pip install pandas": command => "/usr/local/bin/pip install pandas", timeout => 60, tries => 3 }
-	exec { "pip install plotly": command => "/usr/local/bin/pip install plotly", timeout => 60, tries => 3 }
-	exec { "pip install ujson": command => "/usr/local/bin/pip install ujson", timeout => 60, tries => 3 }
+	exec { "pip install ipython": command => "/usr/local/bin/pip install ipython==4.0.3", timeout => 60, tries => 3 }
+	exec { "pip install notebook": command => "/usr/local/bin/pip install notebook==4.1.0", timeout => 60, tries => 3 }
+	exec { "pip install numpy": command => "/usr/local/bin/pip install numpy==1.9.2", timeout => 60, tries => 3 }
+	exec { "pip install pandas": command => "/usr/local/bin/pip install pandas==0.15.2", timeout => 60, tries => 3 }
+	exec { "pip install plotly": command => "/usr/local/bin/pip install plotly==1.6.10", timeout => 60, tries => 3 }
+	exec { "pip install ujson": command => "/usr/local/bin/pip install ujson==1.33", timeout => 60, tries => 3 }
 	#if [ "`python -c 'import digitalocean' 2>&1`" != "" ]; then
      #       sudo pip install python-digitalocean
 	#fi
-	exec { "pip install python-digitalocean": command => "/usr/local/bin/pip install python-digitalocean", timeout => 60, tries => 3 }
-	exec { "pip install vultr": command => "/usr/local/bin/pip install vultr", timeout => 60, tries => 3 }
-	exec { "pip install QSTK": command => "/usr/local/bin/pip install QSTK", timeout => 60, tries => 3 }
-	exec { "pip install Quandl": command => "/usr/local/bin/pip install Quandl", timeout => 60, tries => 3 }
-	exec { "pip install html2text": command => "/usr/local/bin/pip install html2text", timeout => 60, tries => 3 }
-	exec { "pip install selenium": command => "/usr/local/bin/pip install selenium", timeout => 60, tries => 3 }
+	exec { "pip install python-digitalocean": command => "/usr/local/bin/pip install python-digitalocean==1.6", timeout => 60, tries => 3 }
+	exec { "pip install vultr": command => "/usr/local/bin/pip install vultr==0.1.2", timeout => 60, tries => 3 }
+	exec { "pip install QSTK": command => "/usr/local/bin/pip install QSTK==0.2.8", timeout => 60, tries => 3 }
+	exec { "pip install Quandl": command => "/usr/local/bin/pip install Quandl==1.5", timeout => 60, tries => 3 }
+	exec { "pip install html2text": command => "/usr/local/bin/pip install html2text==2014.12.29", timeout => 60, tries => 3 }
+	exec { "pip install selenium": command => "/usr/local/bin/pip install selenium==2.45.0", timeout => 60, tries => 3 }
 
 	# MQ
 	#if [ "`python -c 'import zmq' 2>&1`" != "" ]; then
      #       sudo pip install pyzmq
 	#fi
-	exec { "pip install pyzmq": command => "/usr/local/bin/pip install pyzmq", timeout => 60, tries => 3 }
+	exec { "pip install pyzmq": command => "/usr/local/bin/pip install pyzmq==14.0.1", timeout => 60, tries => 3 }
 	#if [ "`python -c 'import tailf' 2>&1`" != "" ]; then
      #       sudo pip install pytailf
 	#fi
-	exec { "pip install pytailf": command => "/usr/local/bin/pip install pytailf", timeout => 60, tries => 3 }
-	exec { "pip install flask": command => "/usr/local/bin/pip install flask", timeout => 60, tries => 3 }
-	exec { "pip install celery": command => "/usr/local/bin/pip install celery", timeout => 60, tries => 3 }
+	exec { "pip install pytailf": command => "/usr/local/bin/pip install pytailf==1.1", timeout => 60, tries => 3 }
+	exec { "pip install flask": command => "/usr/local/bin/pip install flask==0.10.1", timeout => 60, tries => 3 }
+	exec { "pip install celery": command => "/usr/local/bin/pip install celery==3.1.17", timeout => 60, tries => 3 }
 
 	# still testing on ipython notebook
-	exec { "pip install bitstampy": command => "/usr/local/bin/pip install bitstampy", timeout => 60, tries => 3 }
+	exec { "pip install bitstampy": command => "/usr/local/bin/pip install bitstampy==0.0.8", timeout => 60, tries => 3 }
 	exec { "pip install krakenex": command => "/usr/local/bin/pip install krakenex", timeout => 60, tries => 3 }
 
 	#echo ''
