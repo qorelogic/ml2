@@ -223,6 +223,9 @@ class datafeeds {
 	exec { "pip install html2text": command => "/usr/local/bin/pip install html2text==2014.12.29", timeout => 60, tries => 3 }
 	exec { "pip install selenium": command => "/usr/local/bin/pip install selenium==2.45.0", timeout => 60, tries => 3 }
 
+	# Mongo
+	exec { "pip install pymongo": command => "/usr/local/bin/pip install pymongo", timeout => 60, tries => 3 }
+
 	# MQ
 	#if [ "`python -c 'import zmq' 2>&1`" != "" ]; then
      #       sudo pip install pyzmq
