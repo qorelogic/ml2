@@ -226,6 +226,9 @@ class datafeeds {
 	# Mongo
 	exec { "pip install pymongo": command => "/usr/local/bin/pip install pymongo", timeout => 60, tries => 3 }
 
+	# Mongo
+	exec { "pip install pymongo": command => "/usr/local/bin/pip install pymongo", timeout => 60, tries => 3 }
+
 	# MQ
 	#if [ "`python -c 'import zmq' 2>&1`" != "" ]; then
      #       sudo pip install pyzmq
