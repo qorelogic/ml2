@@ -80,7 +80,8 @@ class ZMQClient:
         
         # index
         for j in xrange(len(index)):
-            stdscr.addstr(j+3, 0+10, '{:^8}'.format(index[j]), curses.color_pair(1))
+            try: stdscr.addstr(j+3, 0+10, '{:^8}'.format(index[j]), curses.color_pair(1))
+            except: ''
 
         # header
         for j in xrange(len(columns)):
@@ -100,7 +101,8 @@ class ZMQClient:
                     color_pair = 4
                 
                 #if float(vals[1]) > 0 or float(vals[1]) < 0:
-                stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>25}'.format(a[i][j]), curses.color_pair(color_pair))
+                try: stdscr.addstr(i+3, (j*lsnlenmax)+(j*8)+20, '{:>25}'.format(a[i][j]), curses.color_pair(color_pair))
+                except: ''
         stdscr.refresh()
         #time.sleep(0.01)
     """
