@@ -32,6 +32,7 @@ class QoreDebug:
     def __init__(self, on=False, stackTrace=False):
         self._on        = on
         self.stackTrace = stackTrace
+        self.limit      = 100
         
     def on(self):
         self.debugOn()
@@ -70,9 +71,9 @@ class QoreDebug:
             print "*** print_tb:"
             traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
             print "*** print_exception:"
-            traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
+            traceback.print_exception(exc_type, exc_value, exc_traceback, limit=self.limit, file=sys.stdout)
 
-    def logTraceBack(self, e, limit=10):
+    def logTraceBack(self, e, limit=100):
         self._on = True
         if self._on == True:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -83,7 +84,7 @@ class QoreDebug:
             
             #fp = open('/tmp/qore.dev.log', 'a')
             #traceback.print_tb(exc_traceback, limit=1, file=fp)
-            tb = traceback.extract_tb(exc_traceback, limit=limit)
+            tb = traceback.extract_tb(exc_traceback, limit=self.limit)
             #self.log(tb)
             #self.log('{0}{1}'.format('\n', p.DataFrame(tb)))
             for i in tb: self.log(i)
