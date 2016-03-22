@@ -113,8 +113,9 @@ class ZMQClient:
         r2 = n.array(n.array(a, dtype=n.float16) < 0, dtype=int).sum(1, dtype=n.float16) / a.shape[1]
         r2 = n.around(r2, decimals=3)
         r3 = r1 - r2
-        self.zmq.zmqSend('')
-        self.zmq.zmqSend(p.DataFrame(r3, index=index))
+        #self.zmq.zmqSend(p.DataFrame(r3, index=index))
+        self.zmq.zmqSend(','.join(list(n.array(r3, dtype=n.string0))))
+        self.zmq.zmqSend('\n')
         #self.qd.log(r1)
         for j in xrange(len(index)):
             try: stdscr.addstr(j+self.y_offset, 0+1, '{:^8}'.format(index[j]), curses.color_pair(1))
