@@ -13,6 +13,20 @@ from PyQt4 import QtCore, QtGui
 import PyQt4.Qwt5 as Qwt
 #from qwt_plot import QwtPlot
 
+import numpy
+
+numPoints=1000
+xs=numpy.arange(numPoints)
+ys=numpy.sin(3.14159*xs*10/numPoints) #this is our data
+
+#@profile
+def plotSomething():
+    global ys
+    ys=numpy.roll(ys,-1)
+    c.setData(xs, ys)
+    #print '%s: %s' % (xs, ys)
+    uiplot.qwtPlot.replot()
+
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
@@ -34,7 +48,7 @@ class Ui_MainWindow(object):
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.horizontalLayoutWidget = QtGui.QWidget(self.centralwidget)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(0, 10, 411, 236))
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(0, 10, 631, 431))
         self.horizontalLayoutWidget.setObjectName(_fromUtf8("horizontalLayoutWidget"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setMargin(0)
@@ -61,7 +75,18 @@ if __name__ == "__main__":
     import sys
     app = QtGui.QApplication(sys.argv)
     MainWindow = QtGui.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
+    #ui = Ui_MainWindow()
+    #ui.setupUi(MainWindow)
+    uiplot = Ui_MainWindow()
+    uiplot.setupUi(MainWindow)
+    
+    # set up the QwtPlot (pay attention!)
+    # source: http://www.swharden.com/blog/
+    c=Qwt.QwtPlotCurve()  #make a curve
+    c.attach(uiplot.qwtPlot) #attach it to the qwtPlot object
+    uiplot.timer = QtCore.QTimer() #start a timer (to call replot events)
+    uiplot.timer.start(10.0) #set the interval (in ms)
+    MainWindow.connect(uiplot.timer, QtCore.SIGNAL('timeout()'), plotSomething)
+    
     MainWindow.show()
     sys.exit(app.exec_())
