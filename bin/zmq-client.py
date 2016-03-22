@@ -115,7 +115,6 @@ class ZMQClient:
         r3 = r1 - r2
         #self.zmq.zmqSend(p.DataFrame(r3, index=index))
         self.zmq.zmqSend(','.join(list(n.array(r3, dtype=n.string0))))
-        self.zmq.zmqSend('\n')
         #self.qd.log(r1)
         for j in xrange(len(index)):
             try: stdscr.addstr(j+self.y_offset, 0+1, '{:^8}'.format(index[j]), curses.color_pair(1))
@@ -642,9 +641,7 @@ class ZMQ:
         msg = "%s %s" % (topic, stri)
         self.socket.send(msg) # only for PUB
         #self.socket.send(stri)
-        self.fp.write(msg)
-      
-
+        self.fp.write(msg+'\n')
             
 stdscr = curses.initscr()
 
