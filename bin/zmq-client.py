@@ -4,6 +4,7 @@ import zmq, time, sys
 from pandas import DataFrame as p_DataFrame
 from numpy import array as n_array
 import numpy as n
+import pandas as p
 from collections import deque
 import os
 import curses
@@ -79,6 +80,10 @@ class ZMQClient:
         
         self.y_offset = 4
         
+        self.zmq = ZMQ()
+        self.zmq.zmqInit()
+        
+        
     #@profile
     def get_color_pair(self, val):
         if float(val) > 0:
@@ -108,6 +113,8 @@ class ZMQClient:
         r2 = n.array(n.array(a, dtype=n.float16) < 0, dtype=int).sum(1, dtype=n.float16) / a.shape[1]
         r2 = n.around(r2, decimals=3)
         r3 = r1 - r2
+        self.zmq.zmqSend('')
+        self.zmq.zmqSend(p.DataFrame(r3, index=index))
         #self.qd.log(r1)
         for j in xrange(len(index)):
             try: stdscr.addstr(j+self.y_offset, 0+1, '{:^8}'.format(index[j]), curses.color_pair(1))
@@ -585,6 +592,58 @@ class ZMQClient:
             return [df0.ix[res[0], 'in'], self.indr[y-self.y_offset]]
         except:
             return ''
+
+import pymongo as mong
+class ZMQ:
+
+    def log(st):
+        print st        
+
+#    @profile
+    def zmqInit(self):
+        fname = '/tmp/zmq.log'
+        self.fp = open(fname, 'a')
+        ctx = zmq.Context()
+        #socket = ctx.socket(zmq.REP)
+        #socket = ctx.socket(zmq.PUSH)
+        self.socket = ctx.socket(zmq.PUB);
+        
+        # A+B feeds
+        try:
+            port = 5555
+            url  = 'tcp://*:{0}'.format(port)
+            self.socket.bind(url)
+        except:
+            port = 5556
+            url  = 'tcp://*:{0}'.format(port)
+            self.socket.bind(url)
+        
+        try:
+            self.mongo = mong.MongoClient()
+        except:
+            ''
+        #self.log('feeding on {0}[zmq]'.format(url))
+
+#    @profile
+    def zmqSend(self, data):
+        #csvc = getCsvc(data)
+        csv = data
+        #csv = ",".join(csvc)
+        #print csvc
+        #if res == False:
+        #    print data
+        
+        #self.socket.recv(0) # only for REP
+        #stri = 'world {0}'.format(int(n.random.rand()*10))
+        stri = '{0}'.format(csv)
+        #print stri
+        topic = 'tester'
+        msg = "%s %s" % (topic, stri)
+        self.socket.send(msg) # only for PUB
+        #self.socket.send(stri)
+        self.fp.write(msg)
+      
+
             
 stdscr = curses.initscr()
 
