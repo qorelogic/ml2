@@ -25,13 +25,19 @@ ys = n.sin(3.14159*xs*10/numPoints) #this is our data
 def plotSomething(res):
     global ys
     res = list(res)
+    #print p.DataFrame(dict(zip(xs, ys)), index=[0]).transpose().tail(41)
+    print p.DataFrame(res)#.transpose()#.tail(41)
+    print len(res)
+    xs = n.arange(len(res))
     #print len(xs)
     #print len(ys)
     #print dict(zip(xs, ys))
-    print p.DataFrame(dict(zip(xs, ys)), index=[0]).transpose().tail(41)
-    ys = n.roll(ys,-1)
-    c.setData(xs, ys)
+
+    #ys = n.roll(ys,-1)
+    #c.setData(xs, ys)
+    c.setData(xs, res)
     #print '%s: %s' % (xs, ys)
+
     uiplot.qwtPlot.replot()
 
 try:
