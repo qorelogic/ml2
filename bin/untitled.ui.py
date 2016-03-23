@@ -13,16 +13,23 @@ from PyQt4 import QtCore, QtGui
 import PyQt4.Qwt5 as Qwt
 #from qwt_plot import QwtPlot
 
-import numpy
+import pandas as p
+import numpy as n
+import zmq
 
-numPoints=1000
-xs=numpy.arange(numPoints)
-ys=numpy.sin(3.14159*xs*10/numPoints) #this is our data
+numPoints = 1000
+xs = n.arange(numPoints)
+ys = n.sin(3.14159*xs*10/numPoints) #this is our data
 
 #@profile
-def plotSomething():
+def plotSomething(res):
     global ys
-    ys=numpy.roll(ys,-1)
+    res = list(res)
+    #print len(xs)
+    #print len(ys)
+    #print dict(zip(xs, ys))
+    print p.DataFrame(dict(zip(xs, ys)), index=[0]).transpose().tail(41)
+    ys = n.roll(ys,-1)
     c.setData(xs, ys)
     #print '%s: %s' % (xs, ys)
     uiplot.qwtPlot.replot()
@@ -85,8 +92,52 @@ if __name__ == "__main__":
     c=Qwt.QwtPlotCurve()  #make a curve
     c.attach(uiplot.qwtPlot) #attach it to the qwtPlot object
     uiplot.timer = QtCore.QTimer() #start a timer (to call replot events)
-    uiplot.timer.start(10.0) #set the interval (in ms)
-    MainWindow.connect(uiplot.timer, QtCore.SIGNAL('timeout()'), plotSomething)
+    uiplot.timer.start(10.0) # emmitter #set the interval (in ms)
+    #MainWindow.connect(uiplot.timer, QtCore.SIGNAL('timeout()'), plotSomething)
+
+    MainWindow.connect(MainWindow, QtCore.SIGNAL('test123'), plotSomething)
+    
+    def recc(widget):
+        # option to change the port number from default 5555
+        #argv1 = '104.207.135.67:5555'
+        argv1 = '127.0.0.1:5555'
+        #argv1 = sys.argv[1]
+        try:
+            hostport = argv1
+        except:
+            hostport = 5555
+        
+        try:
+            res      = hostport.split(':')
+        except:
+            res = hostport
+        host     = res[len(res)-2]
+        if host == '': host = 'localhost'
+        port     = res[len(res)-1]
+        hostport = '{0}:{1}'.format(host, port)
+        connect  = 'tcp://{0}'.format(hostport)
+    
+        ctx = zmq.Context()
+        #self.socket = ctx.socket(zmq.REQ)
+        socket = ctx.socket(zmq.SUB)
+        socket.connect(connect)
+        
+        # Subscribe to tester
+        topicfilter = 'tester'
+        #socket.subscribe(topicfilter) # only for SUB
+        socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
+    
+        while True:
+            data = socket.recv(0)
+            res = data[7:].split(',')
+            res = n.array(res, dtype=n.float)
+            widget.emit(QtCore.SIGNAL('test123'), res)
+
+    
+    import threading
+    t0 = threading.Thread(target=recc, args=[MainWindow])
+    t0.daemon = False
+    t0.start()
     
     MainWindow.show()
     sys.exit(app.exec_())
