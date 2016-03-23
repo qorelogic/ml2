@@ -5,6 +5,7 @@ from pandas import DataFrame as p_DataFrame
 from numpy import array as n_array
 import numpy as n
 import pandas as p
+import ujson as u
 from collections import deque
 import os
 import curses
@@ -113,8 +114,6 @@ class ZMQClient:
         r2 = n.array(n.array(a, dtype=n.float16) < 0, dtype=int).sum(1, dtype=n.float16) / a.shape[1]
         r2 = n.around(r2, decimals=3)
         r3 = r1 - r2
-        #self.zmq.zmqSend(p.DataFrame(r3, index=index))
-        self.zmq.zmqSend(','.join(list(n.array(r3, dtype=n.string0))))
         #self.qd.log(r1)
         for j in xrange(len(index)):
             try: stdscr.addstr(j+self.y_offset, 0+1, '{:^8}'.format(index[j]), curses.color_pair(1))
@@ -132,6 +131,38 @@ class ZMQClient:
         c2 = n.around(c2, decimals=3)
         c3 = c1 - c2
         
+        #self.zmq.zmqSend(p.DataFrame(r3, index=index))
+        
+        #pc3 = dict(zip(columns, c3))
+        #pc3 = u.dumps(c3)
+        #self.zmq.zmqSend(','.join(list(n.array(c3, dtype=n.string0))))
+
+        #se1 = ','.join(list(n.array(c3, dtype=n.string0)))
+        se1 = list(n.array(c3, dtype=n.string0))
+        #se2 = ','.join(list(n.array(columns, dtype=n.string0)))
+        se2 = list(n.array(columns, dtype=n.string0))
+        se0 = [se1, se2]
+        #se0 = u.dumps(se0)
+        se0 = p.DataFrame(se0).transpose().set_index(1)
+        #se0 = '[[%s], [%s]]' % (se1, se2)
+        #self.zmq.zmqSend(se0)
+
+        #re1 = ','.join(list(n.array(r3, dtype=n.string0)))
+        re1 = list(n.array(r3, dtype=n.string0))
+        #re2 = ','.join(list(n.array(index, dtype=n.string0)))
+        re2 = list(n.array(index, dtype=n.string0))
+        re0 = [re1, re2]
+        #re0 = u.dumps(re0)
+        re0 = p.DataFrame(re0).transpose().set_index(1)
+        #re0 = '[[%s], [%s]]' % (re1, re2)
+        #self.zmq.zmqSend(re0)
+        
+        te0 = se0.combine_first(re0)
+        te0[1] = te0.index
+        te0 = [list(te0[0]), list(te0.index)]
+        te0 = u.dumps(te0)
+        self.zmq.zmqSend(te0)
+
         for j in xrange(len(columns)):
             stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(columns[j]), curses.color_pair(1))
             stdscr.addstr(2, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(c3[j]), curses.color_pair(self.get_color_pair(c3[j])))

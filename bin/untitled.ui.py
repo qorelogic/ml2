@@ -9,6 +9,7 @@
 
 import pandas as p
 import numpy as n
+import ujson as u
 import zmq
 
 try:
@@ -27,9 +28,14 @@ ys = n.sin(3.14159*xs*10/numPoints) #this is our data
 #@profile
 def plotSomething(res):
     global ys
+    index = list(res.index)
+    res = res.transpose()
+    res = n.array(res.get_values()[0], dtype=n.float)
     res = list(res)
     #print p.DataFrame(dict(zip(xs, ys)), index=[0]).transpose().tail(41)
-    print p.DataFrame(res)#.transpose()#.tail(41)
+    df = p.DataFrame(res, index=index)#.transpose()#.tail(41)
+    df['ar'] = range(0, len(df.index))
+    print df
     print len(res)
     xs = n.arange(len(res))
     #print len(xs)
@@ -143,10 +149,13 @@ if __name__ == "__main__":
     
         while True:
             data = socket.recv(0)
-            res = data[7:].split(',')
-            res = n.array(res, dtype=n.float)
+            data = data[7:]
+            #print data
+            data = u.loads(data)
+            #print data
+            res = p.DataFrame(data).transpose().set_index(1)
+            #res = data[7:].split(',')
             widget.emit(QtCore.SIGNAL('test123'), res)
-
     
     import threading
     t0 = threading.Thread(target=recc, args=[MainWindow])
