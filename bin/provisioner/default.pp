@@ -144,6 +144,13 @@ class tensorflow {
 
 class datafeeds {
 
+    # PyQt4, QWT5
+    $sysPackages = [ "python-qt4", "python-qwt5-qt4" ]
+    package { $sysPackages:
+        ensure => "installed",
+        require => Exec['apt-get update'],
+    }
+
 #MPWD=`pwd`
 
 #mlocal=~/.tmuxifier
