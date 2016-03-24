@@ -89,7 +89,11 @@ class MyStreamer(oandapy.Streamer):
             if case('demo'):
                 break
             if case('feed'):
-                self.mongo = mong.MongoClient()
+                try:
+                    self.mongo = mong.MongoClient()
+                except Exception as e:
+                    print '%s: connection to mongodb failed' % e
+                    sys.exit()
                 self.zmqInit()
                 break
             if case('csv'):
@@ -300,6 +304,7 @@ def do_work(mode, forever = True):
             break
         except Exception as e:
             qd.printTraceBack()
+            print '7:'
             print e
             print 'unhandled error'
         #------------------------------
