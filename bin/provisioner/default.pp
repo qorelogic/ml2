@@ -441,6 +441,9 @@ import 'system-update.pp'
 import 'javart.pp'
 import 'mongodb.pp'
 
+#import 'trac.pp'
+#include trac
+
 include datafeeds
 
 #include cassandra
