@@ -281,7 +281,7 @@ class HPC:
             terminal.extend(['--tab', '-e', '''
                 bash -c '
                     #ssh -X -L 3310:127.0.0.1:27017 -oStrictHostKeyChecking=no root@%(host)s
-                    ssh -oStrictHostKeyChecking=no root@%(host)s
+                    ssh -X -oStrictHostKeyChecking=no root@%(host)s
                     #read
                 '
             ''' % locals()])
