@@ -10,6 +10,8 @@ oq = OandaQ()
 
 app = Flask(__name__)
 
+iface = 'eth0'
+
 import socket, fcntl, struct
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -42,7 +44,7 @@ def zmq(name=None):
     pairs = oq.getBabySitPairs()#.split(',')
     #print pairs
     #pairs = j.dumps(pairs)
-    liquid_ipaddr=get_ip_address('eth0')
+    liquid_ipaddr=get_ip_address(iface)
     return render_template('zmq-client.html', name=name, liquid_ipaddr=liquid_ipaddr, pairs=pairs)
     
 if __name__ == '__main__':
@@ -72,5 +74,9 @@ if __name__ == '__main__':
     #file_handler.setLevel(logging.CRITICAL)
     app.logger.addHandler(file_handler)
 
-    app.run(host='0.0.0.0')
+    #host = '0.0.0.0'    
+    host = get_ip_address(iface)
+    port = 5000
+    print 'serving on http://%s:%s [http]' % (host, port)
+    app.run(host=host, port=port)
     url_for('static', filename='style.css')

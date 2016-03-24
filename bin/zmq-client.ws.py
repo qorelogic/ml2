@@ -54,7 +54,9 @@ application = tornado.web.Application([
 
 
 if __name__ == "__main__":
+    port = 8888
+    print 'serving on http://*:%s [http]' % port
     http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(8888)
+    http_server.listen(port)
     setupZmqSubscriber()
     tornado.ioloop.IOLoop.instance().start()
