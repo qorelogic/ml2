@@ -1,15 +1,22 @@
 
 #Exec { path => [ "/bin/", "/sbin/" , "/usr/bin/", "/usr/sbin/" ] }
 
+
+
+
+###############################################################################
+### Start config ##############################################################
+###############################################################################
 $hdir        = "/mldev"
 $installHdir = "$hdir/lib/ml"
 $h2oHdir     = "$installHdir/h2o"
 $sparkHdir   = "$installHdir/spark"
 $sparklingWaterHdir   = "$installHdir/spark"
 
+### H2O #######################################################################
 $version_h2o      = "3.0.1.7"
-$codename_h2o    = "simons"
-$minor_h2o       = "7"
+$codename_h2o     = "simons"
+$minor_h2o        = "7"
 
 #$version_h2o     = "3.6.0.8"
 #$codename_h2o    = "tibshirani"
@@ -19,21 +26,30 @@ $minor_h2o       = "7"
 #$codename_h2o    = "tukey"
 #$minor_h2o       = "4"
 
-$version_spark    = "1.4.0-bin-hadoop2.4"
+$h2oTarball       = "http://h2o-release.s3.amazonaws.com/h2o/rel-$codename_h2o/$minor_h2o/h2o-$version_h2o.zip"
 
+### Spark #####################################################################
+$version_spark    = "1.4.0-bin-hadoop2.4"
+$sparkTarball     = "http://d3kbcqa49mib13.cloudfront.net/spark-$version_spark.tgz"
+
+### SparklingWater ############################################################
 $version_sparklingWater_major = "1.4"
 $version_sparklingWater_minor = "3"
 $version_sparklingWater       = "$version_sparklingWater_major.$version_sparklingWater_minor"
+$sparklingWaterTarball        = "http://h2o-release.s3.amazonaws.com/sparkling-water/rel-$version_sparklingWater_major/$version_sparklingWater_minor/sparkling-water-$version_sparklingWater.zip"
 
-
-$h2oTarball   = "http://h2o-release.s3.amazonaws.com/h2o/rel-$codename_h2o/$minor_h2o/h2o-$version_h2o.zip"
-$sparkTarball = "http://d3kbcqa49mib13.cloudfront.net/spark-$version_spark.tgz"
-$sparklingWaterTarball = "http://h2o-release.s3.amazonaws.com/sparkling-water/rel-$version_sparklingWater_major/$version_sparklingWater_minor/sparkling-water-$version_sparklingWater.zip"
-
+### NodeJS ####################################################################
 $nodeV           = "node-v4.1.0-linux-x64"
 $nodeTarball     = "$nodeV.tar.gz"
 $nodeTarballURL  = "https://nodejs.org/dist/latest/$nodeTarball"
 $nodeHdir        = "$installHdir/node"
+
+###############################################################################
+### End config ################################################################
+###############################################################################
+
+
+
 
 class xrdp {
 
