@@ -243,4 +243,18 @@ alias ruby="ruby -Ku"
 
 # home paths
 alias .ghml='cd /mldev/bin'
+alias .ghmllive='cd /mllive/bin'
 
+# https://help.ubuntu.com/community/IptablesHowTo
+qiptables-list() {
+	fname="/tmp/iptables"
+	sudo sh -c "iptables-save > $fname"
+	cat $fname
+}
+qiptables() {
+	sudo iptables -vL -t filter
+	sudo iptables -vL -t nat
+	sudo iptables -vL -t mangle
+	sudo iptables -vL -t raw
+	sudo iptables -vL -t security
+}
