@@ -336,7 +336,25 @@ class OandaQ:
         #mprice = self.oandaConnection().get_prices(instruments='EUR_USD')['prices'][0]['ask']
         #leverage = 50
         
-        amount = self.calculateAmount(acc['marginAvail'], risk, stop)
+        # fix JPY pairs
+        stopFactorJPY = 100
+        if instrument[0:3].strip().lower() == 'jpy' or instrument[4:7].strip().lower() == 'jpy':
+            stopFactor = stopFactorJPY
+            #print 5
+        else:
+            #print 6
+            stopFactor = 1
+        stop = stop * stopFactor
+        #print '0:{0}'.format(mip[0].strip().lower())
+        #print '1:{0}'.format(mip[1].strip().lower())
+        if verbose == True: print stopFactor
+        
+        if instrument[0:3].lower() == 'jpy' or instrument[4:7].lower() == 'jpy':
+            astop = float(stop) / stopFactorJPY
+        else:
+            astop = float(stop)
+            
+        amount = self.calculateAmount(acc['marginAvail'], risk, astop, verbose=verbose)
         
         #print acc['marginAvail'] * float(leverage) / mprice
         #print acc
