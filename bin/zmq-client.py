@@ -591,9 +591,11 @@ class ZMQClient:
                    pair = '{0}_{1}'.format(mip[0], mip[1])
                    #self.oq.buy(risk, stop, instrument='EUR_USD', tp=None, nostoploss=False)
                    if self.activated == 1 and self.side == 'b':
+                       print "self.oq.buy(%s, %s, instrument=%s, verbose=%s)" % (self.risk, stop, pair, False)
                        self.oq.buy(self.risk, stop, instrument=pair, verbose=False)
                        stdscr.addstr(6,self.marginDebug,'message: buy {0} {1} {2}'.format(self.risk, stop, pair))
                    if self.activated == 1 and self.side == 's':
+                       print "self.oq.buy(%s, %s, instrument=%s, verbose=%s)" % (self.risk, stop, pair, False)
                        self.oq.sell(self.risk, stop, instrument=pair, verbose=False)
                        stdscr.addstr(6,self.marginDebug,'message: sell {0} {1} {2}'.format(self.risk, stop, pair))
                    #stdscr.getstr()
