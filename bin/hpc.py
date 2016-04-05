@@ -59,6 +59,7 @@ class HPC:
             'config.csv':    'rsync -av /mldev/bin/datafeeds/config.csv root@{0}:/home/qore/mldev/bin/datafeeds/config.csv'.format(ip_address),
             'db-archive':    'rsync -avP --partial root@{0}:/home/qore/mldev/bin/data/db-archive/ /mldev/bin/data/db-archive/'.format(ip_address),
             'rdesktop':      'rdesktop -g 100% -u qore -p - {0}'.format(ip_address),
+            'zmq-client':    'python zmq-client.py %s:5555 avg' % ip_address,
         }
         #print ' '.join(di.keys())
 
@@ -86,7 +87,7 @@ class HPC:
     def getNodes(self, quiet=False, ptype = 'list'):
         self.qd._getMethod()
         
-        ch = 'label date_created ssh-to passwd ping-to rdesktop node_id ipynb ip_address id x11-to config.csv na1 location db-archive'
+        ch = 'label date_created ssh-to passwd ping-to rdesktop node_id ipynb ip_address id x11-to config.csv na1 location db-archive zmq-client'
         
         #print
         #print 'nodes:'
