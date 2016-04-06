@@ -38,12 +38,6 @@ $version_sparklingWater_minor = "3"
 $version_sparklingWater       = "$version_sparklingWater_major.$version_sparklingWater_minor"
 $sparklingWaterTarball        = "http://h2o-release.s3.amazonaws.com/sparkling-water/rel-$version_sparklingWater_major/$version_sparklingWater_minor/sparkling-water-$version_sparklingWater.zip"
 
-### NodeJS ####################################################################
-$nodeV           = "node-v4.1.0-linux-x64"
-$nodeTarball     = "$nodeV.tar.gz"
-$nodeTarballURL  = "https://nodejs.org/dist/latest/$nodeTarball"
-$nodeHdir        = "$installHdir/node"
-
 ###############################################################################
 ### End config ################################################################
 ###############################################################################
@@ -380,35 +374,6 @@ class spark {
 	#exec { 'run spark':      command => "$sparkHdir/spark-$version_spark/bin/spark-shell",        timeout => 60, tries   => 3 }
 }
 
-class nodejs {
-	exec { "mkdir -p $nodeHdir": command => "mkdir -p $nodeHdir" }
-	exec { "wget -nc $nodeTarball":
-		command => "wget -nc $nodeTarballURL -P $nodeHdir/",
-		timeout => 60,
-		tries   => 3,
-		before  => Exec["untar node"],
-	}
-	exec { 'untar node': 
-		command => "tar zxf $nodeHdir/$nodeTarball -C $nodeHdir/", 
-		timeout => 60, 
-		tries   => 3,
-		#require => File["$nodeHdir/$nodeTarball"],
-		before  => Exec["rm node symlinks"],
-	}
-	exec { 'rm node symlinks':
-		command => "rm -f /usr/bin/node; rm -f /usr/bin/npm;", 
-		timeout => 60, 
-		tries   => 3,
-		before  => Exec["node symlinks"],
-	}
-	exec { 'node symlinks':
-		command => "ln -s $nodeHdir/$nodeV/bin/node /usr/bin/node; ln -s $nodeHdir/$nodeV/bin/npm /usr/bin/npm;",
-		timeout => 60, 
-		tries   => 3,
-	}
-	#exec { 'run node':      command => "$nodeHdir/bin/node",        timeout => 60, tries   => 3 }
-}
-
 class keys {
 	exec { 'run node':      command => "cat /home/qore/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys",        timeout => 60, tries   => 3 }
 }
@@ -464,6 +429,7 @@ include tensorflow
 #include spark
 #include sparkling-water
 #include crontab
+#import 'nodejs.pp'
 #include nodejs
 include xrdp
 #include keys
