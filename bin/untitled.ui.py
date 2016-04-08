@@ -7,16 +7,19 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-# http://www.qtcentre.org/threads/53341-Qt4-designer-on-RPi-no-module-named-qwt_plot
-import PyQt4.Qwt5 as Qwt
-#from qwt_plot import QwtPlot
-
 import pandas as p
 import numpy as n
 import zmq
 
+try:
+    from PyQt4 import QtCore, QtGui
+    
+    # http://www.qtcentre.org/threads/53341-Qt4-designer-on-RPi-no-module-named-qwt_plot
+    import PyQt4.Qwt5 as Qwt
+    #from qwt_plot import QwtPlot
+except Exception as e:
+    ''
+    
 numPoints = 1000
 xs = n.arange(numPoints)
 ys = n.sin(3.14159*xs*10/numPoints) #this is our data
@@ -45,6 +48,9 @@ try:
 except AttributeError:
     def _fromUtf8(s):
         return s
+except Exception as e:
+    print e
+    
 
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
@@ -53,6 +59,8 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
+except Exception as e:
+    print e
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
