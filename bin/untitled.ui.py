@@ -103,7 +103,7 @@ class Ui_MainWindow(object):
 def reccInit(widget=None, args=None):
     # option to change the port number from default 5555
     #argv1 = '104.207.135.67:5555'
-    argv1 = '127.0.0.1:5555'
+    argv1 = '127.0.0.1:5557'
     #argv1 = sys.argv[1]
     try:
         hostport = argv1
