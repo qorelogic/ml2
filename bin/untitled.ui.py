@@ -328,12 +328,23 @@ if __name__ == "__main__":
     
     parser.add_argument("-qt", help="PyQt Version", action="store_true")
     parser.add_argument("-nc", help="ncurses Version", action="store_true")
+    parser.add_argument("-mtc", help="mongo ticks count", action="store_true")
     parser.add_argument("-v", '--verbose', help="ncurses Version", action="store_true")
     #parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
     #parser.add_argument("-n", "-num", "--num", help="c.getNodes()")
 
     args = parser.parse_args()
 
+    if args.mtc:
+
+        socket = reccInit(args=args)
+    
+        while True:
+            data = socket.recv(0)
+            data = data[7:]
+            print data
+        
+        
     if args.nc:
 
 
