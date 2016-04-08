@@ -120,7 +120,12 @@ alias sc='scrapy'
 .gpush() {
 	currentBranch="`git branch | grep '\*' | cut -d':' -f3 | cut -c 3-`"                                                       
 	echo "Pushing to branch $currentBranch.."
-	git push origin $currentBranch
+	if [ "$1" == "-f" ]; then
+		goption="$1"
+	else
+		goption=""
+	fi
+	git push $goption origin $currentBranch:$currentBranch
 }
 .gpull() {
 	currentBranch="`git branch | grep '\*' | cut -d':' -f3 | cut -c 3-`"                                                       
@@ -142,6 +147,43 @@ alias sc='scrapy'
 		sleep $nsleep;
 	done
 }
+
+.grebaseWaterfall() {
+	if [ "$1" == "" ] || [ "$2" == "" ]; then
+		echo "usage: <from to>"
+	else
+		for i in `git branch | grep "$2" | xargs echo`; do
+
+			echo "=========="
+			echo ""
+			echo -n "git rebase $1 $i; ? (y/n): "
+			read ans
+			if [ "$ans" == "y" ]; then
+				echo "rebasing: git rebase $1 $i"
+				git rebase $1 $i;
+			fi
+
+			echo "----------"
+			echo ""
+			echo -n "git push $i; ? (y/n): "
+			read ans
+			if [ "$ans" == "y" ]; then
+				echo "pushing $i"
+				.gpush
+
+				echo ""
+				echo -n "git push -f $i; [FORCE] ? (y/n): "
+				read ans
+				if [ "$ans" == "y" ]; then
+					echo "force pushing $i"
+					.gpush -f
+				fi
+
+			fi
+		done
+	fi
+}
+
 .gstshow() {
 	for x in `git stash list | cut -d'{' -f2 | cut -d'}' -f1`; do
 		git stash show -p stash@{$x}; echo '';
