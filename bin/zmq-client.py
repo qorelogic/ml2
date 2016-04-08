@@ -640,11 +640,11 @@ class ZMQ:
         
         # A+B feeds
         try:
-            port = 5555
+            port = 5557
             url  = 'tcp://*:{0}'.format(port)
             self.socket.bind(url)
         except:
-            port = 5556
+            port = 5558
             url  = 'tcp://*:{0}'.format(port)
             self.socket.bind(url)
         
