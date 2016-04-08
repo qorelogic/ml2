@@ -612,8 +612,8 @@ except KeyboardInterrupt as e:
 except Exception as e:
     curses.nocbreak(); stdscr.keypad(0); curses.echo()
     curses.endwin()
-    zc.qd.logTraceBack(e)
-    print 'usage: <port> <avg|spread>'
+    qd.logTraceBack(e)
+    print 'usage: <host:port> <avg|spread>'
     qd.on()
     qd.printTraceBack()
     sys.exit(0)
