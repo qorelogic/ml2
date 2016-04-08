@@ -100,15 +100,10 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
 
 
-def reccInit(widget=None, args=None):
-    # option to change the port number from default 5555
-    #argv1 = '104.207.135.67:5555'
-    argv1 = '127.0.0.1:5557'
-    #argv1 = sys.argv[1]
-    try:
-        hostport = argv1
-    except:
-        hostport = 5555
+def reccInit(widget=None, args=None, hostport='127.0.0.1:5555', topic = 'tester', verbose=True):
+
+    #hostport = '104.207.135.67:5555'
+    #hostport = '127.0.0.1:5557'
     
     try:
         res      = hostport.split(':')
@@ -117,6 +112,7 @@ def reccInit(widget=None, args=None):
     host     = res[len(res)-2]
     if host == '': host = 'localhost'
     port     = res[len(res)-1]
+    
     hostport = '{0}:{1}'.format(host, port)
     connect  = 'tcp://{0}'.format(hostport)
 
@@ -126,16 +122,19 @@ def reccInit(widget=None, args=None):
     socket.connect(connect)
     
     # Subscribe to tester
-    topicfilter = 'tester'
+    topicfilter = topic
     #socket.subscribe(topicfilter) # only for SUB
     socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
+    
+    if verbose == True:
+        print 'subscribing to: %s, topic:%s' % (hostport, topicfilter)
     
     return socket
     
     
 def recc(widget=None, args=None):
     
-    socket = reccInit(widget=widget, args=args)
+    socket = reccInit(widget=widget, args=args, hostport='127.0.0.1:5557', topic = 'tester')
 
     while True:
         data = socket.recv(0)
@@ -201,7 +200,7 @@ def renderNcurses():
     cur_x = 10
     cur_y = 10
     
-    socket = reccInit(args=args)
+    socket = reccInit(args=args, hostport='127.0.0.1:5557', topic = 'tester')
 
     while True:
         data = socket.recv(0)
@@ -337,7 +336,7 @@ if __name__ == "__main__":
 
     if args.mtc:
 
-        socket = reccInit(args=args)
+        socket = reccInit(args=args, hostport='127.0.0.1:5557', topic = 'tester')
     
         while True:
             data = socket.recv(0)
