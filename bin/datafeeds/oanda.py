@@ -85,6 +85,8 @@ class MyStreamer(oandapy.Streamer):
         
         self.mode = mode        
 
+        self.zmq = ZMQ()
+
         while switch(self.mode):
             if case('demo'):
                 break
@@ -94,7 +96,7 @@ class MyStreamer(oandapy.Streamer):
                 except Exception as e:
                     print '%s: connection to mongodb failed' % e
                     sys.exit()
-                self.zmqInit()
+                self.zmq.zmqInit()
                 break
             if case('csv'):
                 break
@@ -113,7 +115,7 @@ class MyStreamer(oandapy.Streamer):
                 self.trades = oq.oandaConnection().get_trades(oq.aid)['trades']
                 self.account = oq.oandaConnection().get_account(oq.aid)
                 #oq.gotoMarket()
-                self.zmqInit()
+                self.zmq.zmqInit()
                 break
 
             print usage()
@@ -133,7 +135,7 @@ class MyStreamer(oandapy.Streamer):
                 if case('feed'):
                     # insert to ql mongodb
                     self.mongo.ql.ticks.insert(data['tick'])
-                    self.zmqSend(data)
+                    self.zmq.zmqSend(data)
                     break
                 if case('csv'):
                     csv = ",".join(getCsvc(data))            
@@ -157,7 +159,7 @@ class MyStreamer(oandapy.Streamer):
                     #res = oq.babysitTrades(self.trades, data['tick'], verbose=True)
                     #print j.dumps(res.get_values())
                     #print (res.to_dict())
-                    self.zmqSend(data)
+                    self.zmq.zmqSend(data)
                     break
                 print usage()
                 break
@@ -182,8 +184,15 @@ class MyStreamer(oandapy.Streamer):
         
         self.disconnect()
 
+class ZMQ:
+
+    def log(st):
+        print st        
+
 #    @profile
     def zmqInit(self):
+        #fname = '/tmp/zmq.log'
+        #self.fp = open(fname, 'a')
         ctx = zmq.Context()
         #socket = ctx.socket(zmq.REP)
         #socket = ctx.socket(zmq.PUSH)
@@ -199,8 +208,11 @@ class MyStreamer(oandapy.Streamer):
             url  = 'tcp://*:{0}'.format(port)
             self.socket.bind(url)
         
-        self.mongo = mong.MongoClient()
-        print 'feeding on {0}[zmq]'.format(url)
+        try:
+            self.mongo = mong.MongoClient()
+        except:
+            ''
+        #self.log('feeding on {0}[zmq]'.format(url))
 
 #    @profile
     def zmqSend(self, data):
@@ -217,7 +229,9 @@ class MyStreamer(oandapy.Streamer):
         topic = 'tester'
         self.socket.send("%s %s" % (topic, stri)) # only for PUB
         #self.socket.send(stri)
-    
+        #self.fp.write(msg+'\n')
+
+            
 # source: http://www.digi.com/wiki/developer/index.php/Handling_Socket_Error_and_Keepalive
 #@profile
 def do_work(mode, forever = True):
