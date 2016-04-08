@@ -312,7 +312,18 @@ try:
 except KeyboardInterrupt as e:
     print ''
 except Exception as e:
+    curses.nocbreak(); stdscr.keypad(0); curses.echo()
+    curses.endwin()
+    qd.logTraceBack(e)
     print 'usage: <host:port> <avg|spread>'
+    qd.on()
+    qd.printTraceBack()
+    sys.exit(0)
+
+curses.nocbreak(); 
+stdscr.keypad(0); 
+curses.echo()
+curses.endwin()
 
 #from pandas import read_csv as p_read_csv
 #instruments = p_read_csv('data/oanda/cache/instruments.csv').set_index('instrument')
