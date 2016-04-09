@@ -1,0 +1,10 @@
+total 32
+drwxr-xr-x 3 foo  foo  4096 Apr  9 01:29 [0m[01;34m.[0m
+drwxr-xr-x 4 root root 4096 Apr  9 00:43 [01;34m..[0m
+-rw------- 1 foo  foo  1208 Apr  9 01:52 .bash_history
+-rw-r--r-- 1 foo  foo   220 Oct 29  2014 .bash_logout
+-rw-r--r-- 1 foo  foo  3979 Apr  9 01:35 .bashrc
+drwxrwxr-x 3 foo  foo  4096 Apr  9 01:29 [01;34m.config[0m
+-rw-rw-r-- 1 foo  foo     0 Apr  9 00:53 .node_repl_history
+-rw-r--r-- 1 foo  foo   703 Apr  9 01:19 .profile
+-rw-rw-r-- 1 foo  foo    91 Apr  9 00:46 test.py
