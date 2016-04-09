@@ -9,7 +9,7 @@ class tty-js {
     }
 
     exec { 'useradd foo': 
-        command => "/usr/sbin/useradd -m -d /mldev/assets/users/foo foo", 
+        command => "/usr/sbin/useradd -m --shell /bin/bash -d /mldev/assets/users/foo foo", 
         timeout => 30,
         tries   => 3,
         before  => Exec["add .bashrc hook"],
