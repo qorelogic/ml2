@@ -6,9 +6,9 @@ var app = tty.createServer({
   shell: 'bash',
   users: {
     //qore: '728e1e6e353c4c9ca6275ebfc9ab5088f7f99c99',
-    qore: 'demo',
+    //qore: 'demo',
     //demo: 'demo'
-    //foo: 'bar'
+    foo: 'bar'
   },
   port: 8000
 });
