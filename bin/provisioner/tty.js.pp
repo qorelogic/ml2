@@ -21,17 +21,17 @@ class tty-js {
         command => "/bin/echo 'bash.startup.sh' >> /mldev/assets/users/foo/.bashrc", 
         timeout => 30,
         tries   => 3,
-        before  => Exec["edit passwd foo"],
+#        before  => Exec["edit passwd foo"],
     }
 
     # foo:x:1001:1001::/mldev/assets/users/foo:/bin/bash
     # cat /etc/passwd | perl -pe 's/^foo:x:(.*?):(.*?):(.*?):(.*?):(.*?)/foo:x:\1:\2:\3:\/mldev\/assets\/users\/foo:\5/g'
-    exec { 'edit passwd foo':
-        command => "",
-        timeout => 30,
-        tries   => 3,
-        #before  => Exec["rm node symlinks"],
-    }
+#    exec { 'edit passwd foo':
+#        command => "",
+#        timeout => 30,
+#        tries   => 3,
+#        #before  => Exec["rm node symlinks"],
+#    }
 }
 
 #import 'system-update.pp'
