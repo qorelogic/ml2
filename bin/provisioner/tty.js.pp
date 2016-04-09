@@ -8,14 +8,14 @@ class tty-js {
         #before  => Exec["rm node symlinks"],
     }
     exec { 'useradd foo': 
-        command => "useradd -m -d /home/foo foo", 
+        command => "useradd -m -d /mldev/assets/users/foo foo", 
         timeout => 30,
         tries   => 3,
         #require => Class["nodejs"],
         #before  => Exec["rm node symlinks"],
     }
     exec { 'edit passwd foo':
-        command => "useradd -m -p qwqw -d /home/foo foo",
+        command => "useradd -m -p qwqw -d /mldev/assets/users/foo foo",
         timeout => 30,
         tries   => 3,
         #require => Class["nodejs"],
