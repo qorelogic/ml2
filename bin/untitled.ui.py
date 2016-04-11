@@ -336,7 +336,7 @@ if __name__ == "__main__":
 
     if args.mtc:
 
-        socket = reccInit(args=args, hostport='127.0.0.1:5557', topic = 'tester')
+        socket = reccInit(args=args, hostport='127.0.0.1:5557', topic = 'count')
     
         while True:
             data = socket.recv(0)
