@@ -102,7 +102,7 @@ alias .wipe.pass7="wipe -rfqQ7 "
 alias .wipe.pass15="wipe -rfqQ15 "
 alias .wipe.pass32="wipe -rfqQ32 "
 alias .dubs="du -bscm  "
-alias g="git" # just a git alias
+#alias g="git" # just a git alias
 alias .gis="git status" # show status
 alias .gb="git branch -v | less -S" # list branches
 alias .gba="git branch -a -v | less -S" # list branches
@@ -303,3 +303,16 @@ qiptables() {
 	sudo iptables -vL -t raw
 	sudo iptables -vL -t security
 }
+
+# source: http://stackoverflow.com/questions/12399002/how-to-configure-git-bash-command-line-completion
+# In my Ubuntu 14.04 this file is /usr/share/bash-completion/completions/git . /etc/bash_completion.d/git-prompt is used for git prompt support, not for completion
+echo 'bash completions'
+#source /usr/share/bash-completion/completions/git 
+
+# alias git to g [with bash completion]
+# source: http://askubuntu.com/questions/62095/how-to-alias-git-to-g-so-that-bash-completion-rules-are-preserved
+echo 'alias git to g'
+complete -o bashdefault -o default -o nospace -F _git g 2>/dev/null || complete -o default -o nospace -F _git g
+#complete -o bashdefault -o default -o nospace -F git g 2>/dev/null || complete -o default -o nospace -F git g
+#alias g='git'
+#source /usr/share/bash-completion/completions/git
