@@ -426,6 +426,54 @@ class HPC:
                 except Exception as e:
                     print e
                 
+    def rebootAllNodes(self):
+        self.qd._getMethod()
+        
+        # destroy droplets
+        wait = 5
+        
+        print '=== DigitalOcean ====='
+        droplets = self.getNodes(quiet=True)
+        for id in droplets:
+            
+            droplet = droplets[id]
+            ans = raw_input('destroy droplet {0}[{1}:{2}]? y/n: '.format(droplet.id, droplet.name, droplet.ip_address))
+            #ans = 'y'
+            if ans == 'y':
+                while True:
+                    try:
+                        print 
+                        print 'events:'
+                        for i in droplet.get_events():
+                            print i
+                        print
+                        #droplet.destroy()
+                        time.sleep(5)
+                        clear_output()
+                    except Exception as e:
+                        print e
+                        break
+            else:
+                print 'nothing done'
+                
+        print '=== VULTR ====='
+        v = Vultr(self.key_vultr)
+        res = v.server_list()
+        #print p.DataFrame(res)
+        for i in res:
+            print '--------'
+            
+            #ans = raw_input('destroy droplet {0}[{1}:{2}]? y/n: '.format(droplet.id, droplet.name, droplet.ip_address))
+            #print res[i]
+            #print p.DataFrame([res[i]]).transpose()
+            #if quiet == False:
+            self.printNodeManifest(i, res[i]['main_ip'], res[i]['label'], res[i]['location'], res[i]['date_created'], passwd=res[i]['default_password'])
+            ans = raw_input('reboot vultr node {0}[{1}:{2}]? y/n: '.format(i, res[i]['label'], res[i]['main_ip']))
+            if ans == 'y':
+                try:
+                    v.server_reboot(i)
+                except Exception as e:
+                    print e
 
     def getLastImageName(self):
         self.qd._getMethod()
@@ -545,6 +593,7 @@ if __name__ == "__main__":
     #        if sys.argv[1] == 'on':
     #            c.createNode()
     parser.add_argument("-on", help="d=DigitalOcean, v=Vultr")
+    parser.add_argument("-rb", help="reboot nodes")
     parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
     parser.add_argument("-n", "-num", "--num", help="c.getNodes()")
     #        if sys.argv[1] == 'nodes':
@@ -596,6 +645,8 @@ if __name__ == "__main__":
 
     if args.on:
         c.createNode(args.on, region=args.region, num=args.num)
+    if args.rb:
+        c.rebootAllNodes()
     if args.connect:
         c.connect()
     if args.nodes:
