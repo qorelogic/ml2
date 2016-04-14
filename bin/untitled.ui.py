@@ -160,6 +160,7 @@ def renderNcurses():
     
     fp = open('/tmp/123.txt', 'a')
     
+    #"""
     stdc = curses.initscr()
     
     if not curses.has_colors():
@@ -197,11 +198,43 @@ def renderNcurses():
         s = ch * (x - 1)
         for line in xrange(y):
             window.addstr(line, 0, s)
+    #"""
     
     cur_x = 10
     cur_y = 10
     
     socket = reccInit(args=args, hostport='127.0.0.1:5557', topic = 'tester')
+
+    #@profile
+    def selectBars(currencies, pairs, delimiter=','):
+
+        li = []
+        for i in pairs.split(delimiter):
+            li.append(i.split('_')[0])
+            li.append(i.split('_')[1])
+        li = li
+
+        #print '-- currencies ---'
+        #print currencies
+        df = p.DataFrame(currencies, index=currencies)
+        #print '-- li ---'
+        #print li
+        li0 = list(df.ix[li, :].transpose().get_values()[0])
+        li0 = p.Series(li0).unique()
+        df = p.DataFrame(currencies)
+        df[1] = df.index
+        df = df.set_index(0)
+        df[0] = df.index
+        #print '-- li0 ---'
+        #print li0
+        #print df
+        #print '-- df.ix[li0, :] ---'
+        df = df.convert_objects(convert_numeric=True)
+        return df.ix[li0, :].sort(1)
+
+    #data0 = u.loads(socket.recv(0)[7:])
+    #print selectBars(data0[1], 'EUR_USD,AUD_USD,GBP_USD')#.ix[:, 1].get_values()
+    #return
 
     while True:
         try:
@@ -246,6 +279,9 @@ def renderNcurses():
         window.addstr(3, 1, "resize:%s" % (resize), curses.color_pair(GREEN_TEXT))
         
         for i in range(cn):
+        #sBars = selectBars(data[1], 'EUR_USD,AUD_USD,GBP_USD').ix[:, 1].get_values()
+        #for i in sBars:
+
             am = n.array(data[0], dtype=n.float)
             am = float(am[i]) / n.max(am) * 100
             #am = 10
@@ -272,6 +308,7 @@ def renderNcurses():
                 ''
             try:
                 stw[i] = curses.newwin(h, q1, t, i*(q1-1)+1)
+                #stw[i] = curses.newwin(h, q1, t, sBars.index(i)*(q1-1)+1)
                 stw[i].box()
                 try:
                     if am > 0:
@@ -281,6 +318,8 @@ def renderNcurses():
                     am = abs(float(am))
                     stw[i].addstr(1, 1, "%s" % (data[1][i]), curses.color_pair(col))
                     stw[i].addstr(2, 1, "%s:%.0f" % (i, am), curses.color_pair(col))
+                    stw[i].addstr(3, 1, "h:%s" % (h), curses.color_pair(col))
+                    stw[i].addstr(4, 1, "t:%s" % (t), curses.color_pair(col))
                 except Exception as e:
                     #fp.write("3 %s \n" % e)
                     ''
