@@ -203,7 +203,10 @@ def renderNcurses():
     socket = reccInit(args=args, hostport='127.0.0.1:5557', topic = 'tester')
 
     while True:
-        data = socket.recv(0)
+        try:
+            data = socket.recv(0)
+        except zmq.error.ZMQError as e:
+            continue
         data = data[7:]
         #print data
         data = u.loads(data)
@@ -345,12 +348,22 @@ if __name__ == "__main__":
         import curses
         try:
             renderNcurses()
-        except KeyboardInterrupt as e:
+        except zmq.error.ZMQError as e:
             curses.nocbreak(); 
             #stdscr.keypad(0); 
             curses.echo()
             #curses.endwin()
-            
+            curses.endwin()
+            #print e
+            from qore import QoreDebug
+            qd = QoreDebug()
+            qd.on()
+            qd.printTraceBack()
+        except KeyboardInterrupt as e:            
+            curses.nocbreak(); 
+            #stdscr.keypad(0); 
+            curses.echo()
+            #curses.endwin()
             curses.endwin()
             ''
             
