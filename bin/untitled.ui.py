@@ -215,10 +215,6 @@ def renderNcurses():
         except Exception as e:
             #fp.write("1 %s \n" % e)
             ''
-        li = n.random.randn(cn)*10
-        li = n.abs(li)
-        li = list(n.array(li, dtype=int))
-        #fp.write("%s\n" % j.dumps(li))
         #fill(window, ' ')
         dii = dict(zip(data[1], data[0]))
         #window.addstr(1, 1, "%s" % (dii), curses.color_pair(RED_TEXT))
@@ -227,8 +223,7 @@ def renderNcurses():
         #window.touchwin()
         #window.refresh()
         #for i in range(len(data[0])):
-        for i in range(len(li)):
-            #am = float(li[i]) / n.max(li) * 100
+        for i in range(cn):
             am = n.array(data[0], dtype=n.float)
             am = float(am[i]) / n.max(am) * 100
             #am = 10
