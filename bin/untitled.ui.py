@@ -180,8 +180,9 @@ def renderNcurses():
     curses.init_pair(BLUE_TEXT, curses.COLOR_BLUE, curses.COLOR_BLACK)
     GREEN_TEXT = 3
     curses.init_pair(GREEN_TEXT, curses.COLOR_GREEN, curses.COLOR_BLACK)
-
-    wh = 30
+    
+    y, x = stdc.getmaxyx()
+    wh = y
     window = curses.newwin(wh, 170, 0, 0)
     window.box()
     
@@ -226,6 +227,24 @@ def renderNcurses():
         #window.touchwin()
         #window.refresh()
         #for i in range(len(data[0])):
+        
+        #selectBars(data0[1], 'EUR_USD,AUD_USD,GBP_USD')
+
+        # Check if screen was re-sized (True or False)
+        resize = curses.is_term_resized(y, x)
+        # Action in loop if resize is True:
+        if resize is True:
+            y, x = stdc.getmaxyx()
+            wh = y
+            #window.resize(wh, 170, 0, 0)
+            window.resize(wh, x)
+            stdc.clear()
+            curses.resizeterm(y, x)
+            stdc.refresh()
+        window.addstr(1, 1, "y:%s" % (y), curses.color_pair(GREEN_TEXT))
+        window.addstr(2, 1, "x:%s" % (x), curses.color_pair(GREEN_TEXT))
+        window.addstr(3, 1, "resize:%s" % (resize), curses.color_pair(GREEN_TEXT))
+        
         for i in range(cn):
             am = n.array(data[0], dtype=n.float)
             am = float(am[i]) / n.max(am) * 100
