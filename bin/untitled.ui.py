@@ -278,9 +278,9 @@ def renderNcurses():
         window.addstr(2, 1, "x:%s" % (x), curses.color_pair(GREEN_TEXT))
         window.addstr(3, 1, "resize:%s" % (resize), curses.color_pair(GREEN_TEXT))
         
-        for i in range(cn):
-        #sBars = selectBars(data[1], 'EUR_USD,AUD_USD,GBP_USD').ix[:, 1].get_values()
-        #for i in sBars:
+        #for i in range(cn):
+        sBars = selectBars(data[1], args.nc).ix[:, 1].get_values()
+        for i in sBars:
 
             am = n.array(data[0], dtype=n.float)
             am = float(am[i]) / n.max(am) * 100
@@ -382,7 +382,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     
     parser.add_argument("-qt", help="PyQt Version", action="store_true")
-    parser.add_argument("-nc", help="ncurses Version", action="store_true")
+    parser.add_argument("-nc", help="ncurses ui arg eg. EUR_USD,AUD_USD,GBP_USD")
     parser.add_argument("-mtc", help="mongo ticks count", action="store_true")
     parser.add_argument("-v", '--verbose', help="ncurses Version", action="store_true")
     #parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
