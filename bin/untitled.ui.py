@@ -104,6 +104,7 @@ def reccInit(widget=None, args=None, hostport='127.0.0.1:5555', topic = 'tester'
 
     #hostport = '104.207.135.67:5555'
     #hostport = '127.0.0.1:5557'
+    print hostport
     
     try:
         res      = hostport.split(':')
@@ -203,7 +204,7 @@ def renderNcurses():
     cur_x = 10
     cur_y = 10
     
-    socket = reccInit(args=args, hostport='127.0.0.1:5557', topic = 'tester')
+    socket = reccInit(args=args, hostport='127.0.0.1:5558', topic = 'tester')
 
     #@profile
     def selectBars(currencies, pairs, delimiter=','):
@@ -391,13 +392,63 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.mtc:
-
-        socket = reccInit(args=args, hostport='127.0.0.1:5557', topic = 'count')
-    
-        while True:
-            data = socket.recv(0)
-            data = data[7:]
-            print data
+        
+        from collections import deque as d
+        from matplotlib.pylab import *
+        import time
+        
+        @profile
+        def mtc():
+            
+            de = d()
+            te = d()
+            
+            #topicfilter = 'avgs'
+            socket = reccInit(args=args, hostport='127.0.0.1:5555', topic = 'count')
+            while True:
+                data = socket.recv(0)
+                data = int(data[7:])
+                ts = (time.time())
+                #ts = str(ts)
+                de.append(data)
+                te.append(ts)
+                depth = 100
+                if len(de) > depth:
+                    te.popleft()
+                    de.popleft()
+                #print n.array(te)
+                #print n.array(de)
+                df = n.array([te, de], n.float96).T
+                #df[:, 2] = df[:,0]
+                df = p.DataFrame(df)
+                #try:
+                #    ndiff = list(df.ix[1:(depth-1),0].get_values() - df.ix[0:(depth-2),0].get_values())
+                #    df[3] = [0]*len(df.index)
+                #    df.ix[1:depth-1, 3] = ndiff
+                #except Exception as e:
+                #    print e
+                lni = len(df.index)
+                #print lni
+                if int(data) % depth == 0 and lni >= depth:
+                    ndiff = df.diff()
+                    #print ndiff.get_values()
+                    df[2] = ndiff.get_values()[:,0]
+                    df[3] = ndiff.get_values()[:,0].round(3)
+                    df[4] = ndiff.get_values()[:,0].round(2)
+                    dfg = df.groupby(4)
+                    print dfg.describe()
+                    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                        print df#.ix[:,:]
+                    #n.set_printoptions(precision=4)
+                    n.set_printoptions(formatter={'all':lambda x: str(x)})
+                    #print n.array(df, dtype=n.float96)#.ix[:,:]
+                    #plot(ndiff)
+                    #show()
+                    #break
+                    
+                
+                #print p.DataFrame([n.array(de), n.array(te)], index=[n.array(te)])
+        mtc()
         
         
     if args.nc:
