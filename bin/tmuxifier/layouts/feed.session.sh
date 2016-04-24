@@ -13,6 +13,8 @@ if initialize_session "feed"; then
   load_window "db"
   load_window "mongo"
   load_window "ml.dev"
+  load_window "zmq"
+  load_window "feed"
 
 
   # Select the default active window on session creation
