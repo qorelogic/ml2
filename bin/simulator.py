@@ -79,7 +79,8 @@ class Simulator:
         return df
        
     #@profile
-    def simulate(self, df=None, simulator=True, num=200, mode='csv'):
+    def simulate(self, df=None, simulator=True, num=200, mode='csv', port=5555, verbose=False):
+        #print 'simulator=%s, num=%s, mode=%s' % (simulator, num, mode)
         from pandas import DataFrame as p_DataFrame
         import time, zmq, sys
         import numpy as n
@@ -102,14 +103,20 @@ class Simulator:
             #socket = ctx.socket(zmq.PUSH)
             socket = ctx.socket(zmq.PUB);
             try:
-                port = sys.argv[1]
-                socket.bind('tcp://*:{0}'.format(port))
+                url = 'tcp://*:%s' % port
+                socket.bind(url)
             except:
                 # A+B feeds            
                 try:
-                    socket.bind('tcp://*:5555')
+                    port = 5555
+                    url = 'tcp://*:%s' % port
+                    socket.bind(url)
                 except:
-                    socket.bind('tcp://*:5556')
+                    port = 5556
+                    url = 'tcp://*:%s' % port
+                    socket.bind(url)
+
+            print 'bound to port: %s, sending %s ticks..' % (url, num)
     
             try:
                 dff['ts'] = OandaQ.oandaToTimestamp_S(dff.index)
@@ -125,7 +132,11 @@ class Simulator:
             dff['tsnowts'] = dff['ts'] + ndiff        
             dff['tsnow'] = OandaQ.timestampToDatetime_S(dff['ts'] + ndiff)
             cnt = 1
+            
+            time.sleep(2)
+            
             for i in dff.get_values():
+                #print 'i=%s' % (i)
                 while i[len(i)-2] >= time.time():
                     time.sleep(0.001)
                 v = n.array(list(i), dtype=str)
@@ -143,29 +154,53 @@ class Simulator:
                 # send to message queue
                 topic = 'tester'
                 
-                try:
-                    mode = sys.argv[2]
-                except:
-                    mode = 'csv'
-                
                 if mode == 'csv':
                     stri = '{0}'.format(csv)
                     socket.send("%s %s" % (topic, stri)) # only for PUB
-#                    print '{0}: {1}'.format(cnt, stri)
+                    if verbose:
+                        print '{0}: {1}'.format(cnt, stri)
                 #self.socket.send(stri)
                 
                 if mode == 'dict':                    
                     ddict = dfp.transpose()[0].to_dict()
                     ddict = j.dumps(ddict)
                     socket.send("%s %s" % (topic, ddict)) # only for PUB                
-#                    print '{0}: {1}'.format(cnt, ddict)
+                    if verbose:
+                        print '{0}: {1}'.format(cnt, ddict)
 
                 cnt +=1
 
 if __name__ == "__main__":
+
+    import argparse
+    # source: https://docs.python.org/2/howto/argparse.html
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("-n", '--num', help="number of ticks")
+    parser.add_argument("-m", '--mode', help="mode: csv | dict")
+    parser.add_argument("-p", '--port', help="port: 5555 | 5556 | 5557, etc.")
+    parser.add_argument("-v", '--verbose', help="Verbose printing", action="store_true")
+
+    args = parser.parse_args()
+
+    if args.num:
+        num = int(args.num)
+    else:
+        num = 400
+
+    if args.mode:
+        mode = args.mode
+    else:
+        mode = 'csv'
+
+    if args.port:
+        port = int(args.port)
+    else:
+        port = 5555
+
     s = Simulator()
     try:
-        s.simulate(num=400, mode='csv')
+        s.simulate(num=num, mode=mode, port=port, verbose=args.verbose)
     except KeyboardInterrupt as e:
         print ''
     #simulator(df=df, num=40)
