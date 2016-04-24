@@ -84,6 +84,7 @@ class MyStreamer(oandapy.Streamer):
         qd._getMethod()
         
         self.mode = mode        
+        self.ticksCount = 0
 
         self.zmq = ZMQ()
 
@@ -96,7 +97,9 @@ class MyStreamer(oandapy.Streamer):
                 except Exception as e:
                     print '%s: connection to mongodb failed' % e
                     sys.exit()
-                self.zmq.zmqInit()
+                self.ticksCount = int(self.mongo.ql.ticks.count())
+                print 'ticksCount: %s' % self.ticksCount
+                self.zmq.zmqInit(verbose=True)
                 break
             if case('csv'):
                 break
@@ -115,7 +118,7 @@ class MyStreamer(oandapy.Streamer):
                 self.trades = oq.oandaConnection().get_trades(oq.aid)['trades']
                 self.account = oq.oandaConnection().get_account(oq.aid)
                 #oq.gotoMarket()
-                self.zmq.zmqInit()
+                self.zmq.zmqInit(verbose=True)
                 break
 
             print usage()
@@ -134,9 +137,14 @@ class MyStreamer(oandapy.Streamer):
                     break
                 if case('feed'):
                     # insert to ql mongodb
-                    self.zmq.zmqSend(data)
                     if not args.nodbinsert:
                         self.mongo.ql.ticks.insert(data['tick'])
+                    self.ticksCount += 1
+                    #tc = self.mongo.ql.ticks.count()
+                    #diff = tc - self.ticksCount
+                    #print 'mongotickscount:%s, MyStreamer.ticksCount:%s, diff:%s' % (tc, self.ticksCount, diff)
+                    self.zmq.zmqSend(data, topic='tester')
+                    self.zmq.zmqSend(self.ticksCount, topic='count')
                     break
                 if case('csv'):
                     csv = ",".join(getCsvc(data))            
@@ -191,7 +199,7 @@ class ZMQ:
         print st        
 
 #    @profile
-    def zmqInit(self):
+    def zmqInit(self, verbose=False):
         #fname = '/tmp/zmq.log'
         #self.fp = open(fname, 'a')
         ctx = zmq.Context()
@@ -213,26 +221,34 @@ class ZMQ:
             self.mongo = mong.MongoClient()
         except:
             ''
-        #self.log('feeding on {0}[zmq]'.format(url))
-
-#    @profile
-    def zmqSend(self, data):
-        csvc = getCsvc(data)
-        csv = ",".join(csvc)
-        #print csvc
-        #if res == False:
-        #    print data
         
-        #self.socket.recv(0) # only for REP
-        #stri = 'world {0}'.format(int(n.random.rand()*10))
-        stri = '{0}'.format(csv)
-        #print stri
-        topic = 'tester'
-        self.socket.send("%s %s" % (topic, stri)) # only for PUB
-        #self.socket.send(stri)
-        #self.fp.write(msg+'\n')
+        if verbose:
+            msg = 'feeding on {0}[zmq]'.format(url)
+            print msg
+            #self.log(msg)
 
+    #@profile
+    def zmqSend(self, data, topic='tester'):
+        
+        if topic == 'tester':
+            csvc = getCsvc(data)
+            csv = ",".join(csvc)
+            #print csvc
+            #if res == False:
+            #    print data
             
+            #self.socket.recv(0) # only for REP
+            #data = 'world {0}'.format(int(n.random.rand()*10))
+            data = '{0}'.format(csv)
+            
+        #if topic == 'count':
+        #    #data = data
+        #    ''
+
+        #print data
+        self.socket.send("%s %s" % (topic, data)) # only for PUB
+        #self.socket.send(data)
+    
 # source: http://www.digi.com/wiki/developer/index.php/Handling_Socket_Error_and_Keepalive
 #@profile
 def do_work(mode, forever = True):
