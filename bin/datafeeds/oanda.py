@@ -134,8 +134,9 @@ class MyStreamer(oandapy.Streamer):
                     break
                 if case('feed'):
                     # insert to ql mongodb
-                    self.mongo.ql.ticks.insert(data['tick'])
                     self.zmq.zmqSend(data)
+                    if not args.nodbinsert:
+                        self.mongo.ql.ticks.insert(data['tick'])
                     break
                 if case('csv'):
                     csv = ",".join(getCsvc(data))            
@@ -335,10 +336,19 @@ def do_work(mode, forever = True):
 if __name__ == '__main__':
     qd._getMethod()
     
+    import argparse
+    # source: https://docs.python.org/2/howto/argparse.html
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument('-m', "--mode", help="mode")
+    parser.add_argument('-ni', "--nodbinsert", help="No  insert into mongodb.ticks", action="store_true")
+
+    args = parser.parse_args()
+
     try:
-        if sys.argv[1] not in modes:
+        if args.mode not in modes:
             raise
-        do_work(sys.argv[1], True)
+        do_work(args.mode, True)
     except Exception as e:
         qd.printTraceBack()
         print e
