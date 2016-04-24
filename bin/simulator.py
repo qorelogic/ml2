@@ -52,7 +52,8 @@ class Simulator:
             #db.ticks.createIndex( { 'time': 1 } )
             #ticks = db.ticks.find().sort({time:-1}).limit(num)
             # http://stackoverflow.com/questions/4421207/mongodb-how-to-get-the-last-n-records
-            ticks = db.ticks.find().sort([('time',-1)]).limit(num)
+            #ticks = db.ticks.find().sort([('time',-1)]).limit(num) # sorting is too costly
+            ticks = db.ticks.find().limit(num) 
             #print dir(ticks)
             
             # https://docs.mongodb.org/v3.0/reference/method/cursor.count/
