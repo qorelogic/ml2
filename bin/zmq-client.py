@@ -39,6 +39,8 @@ class ZMQClient:
         self.qd = QoreDebug()
         self.qd._getMethod()
 
+        self.marginDebug = 135
+
         # option to change the port number from default 5555
         try:
             hostport = sys.argv[1]
@@ -48,13 +50,14 @@ class ZMQClient:
         res      = hostport.split(':')
         host     = res[len(res)-2]
         if host == '': host = 'localhost'
-        port     = res[len(res)-1]
-        hostport = '{0}:{1}'.format(host, port)
+        self.zmqPort     = res[len(res)-1]
+        hostport = '{0}:{1}'.format(host, self.zmqPort)
         connect  = 'tcp://{0}'.format(hostport)
 
         ctx = zmq.Context()
         #self.socket = ctx.socket(zmq.REQ)
         self.socket = ctx.socket(zmq.SUB)
+        self.zmqMethod = 'SUB'
         self.socket.connect(connect)
         
         # Subscribe to tester
@@ -161,6 +164,9 @@ class ZMQClient:
         te0 = [list(te0[0]), list(te0.index)]
         te0 = u.dumps(te0)
         self.zmq.zmqSend(te0)
+
+        stdscr.addstr(2, self.marginDebug, '%s:port:%s' % (self.zmqMethod, self.zmqPort), curses.color_pair(1))
+        stdscr.addstr(3, self.marginDebug, '%s:port:%s:%s' % (self.zmq.zmqMethod, self.zmq.zmqPort, self.zmq.zmqTopic), curses.color_pair(1))
 
         for j in xrange(len(columns)):
             stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(columns[j]), curses.color_pair(1))
@@ -532,7 +538,6 @@ class ZMQClient:
 
     def getMouse(self):
         #stdscr.addstr("This is a Sample Curses Script\n\n") 
-        marginDebug = 135
         self.risk   = 1
         stop        = 20
         while True: 
@@ -543,41 +548,41 @@ class ZMQClient:
                break 
            if event == ord('1'):
                    self.risk = 1
-                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+                   stdscr.addstr(7,self.marginDebug,'risk: {0}'.format(self.risk))
            if event == ord('2'):
                    self.risk = 2
-                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+                   stdscr.addstr(7,self.marginDebug,'risk: {0}'.format(self.risk))
            if event == ord('3'):
                    self.risk = 3
-                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+                   stdscr.addstr(7,self.marginDebug,'risk: {0}'.format(self.risk))
            if event == ord('4'):
                    self.risk = 4
-                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+                   stdscr.addstr(7,self.marginDebug,'risk: {0}'.format(self.risk))
            if event == ord('5'):
                    self.risk = 5
-                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+                   stdscr.addstr(7,self.marginDebug,'risk: {0}'.format(self.risk))
            if event == ord('6'):
                    self.risk = 6
-                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+                   stdscr.addstr(7,self.marginDebug,'risk: {0}'.format(self.risk))
            if event == ord('7'):
                    self.risk = 7
-                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+                   stdscr.addstr(7,self.marginDebug,'risk: {0}'.format(self.risk))
            if event == ord('8'):
                    self.risk = 8
-                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+                   stdscr.addstr(7,self.marginDebug,'risk: {0}'.format(self.risk))
            if event == ord('9'): 
                    self.risk = 9
-                   stdscr.addstr(7,marginDebug,'risk: {0}'.format(self.risk))
+                   stdscr.addstr(7,self.marginDebug,'risk: {0}'.format(self.risk))
            if event == ord("b") or event == ord("w"):  # w alias for buy
                    self.activated = 1
                    self.side = 'b'
-                   stdscr.addstr(4,marginDebug,'activated: {0}'.format(self.activated)) # for debugging
-                   stdscr.addstr(5,marginDebug,'side: {0}'.format(self.side))
+                   stdscr.addstr(4,self.marginDebug,'activated: {0}'.format(self.activated)) # for debugging
+                   stdscr.addstr(5,self.marginDebug,'side: {0}'.format(self.side))
            if event == ord("s"): 
                    self.activated = 1
                    self.side = 's'
-                   stdscr.addstr(4,marginDebug,'activated: {0}'.format(self.activated))
-                   stdscr.addstr(5,marginDebug,'side: {0}'.format(self.side))
+                   stdscr.addstr(4,self.marginDebug,'activated: {0}'.format(self.activated))
+                   stdscr.addstr(5,self.marginDebug,'side: {0}'.format(self.side))
                    stdscr.refresh()
            if event == curses.KEY_MOUSE:
                mm = curses.getmouse()               
@@ -587,15 +592,15 @@ class ZMQClient:
                    #self.oq.buy(risk, stop, instrument='EUR_USD', tp=None, nostoploss=False)
                    if self.activated == 1 and self.side == 'b':
                        self.oq.buy(self.risk, stop, instrument=pair, verbose=False)
-                       stdscr.addstr(6,marginDebug,'message: buy {0} {1} {2}'.format(self.risk, stop, pair))
+                       stdscr.addstr(6,self.marginDebug,'message: buy {0} {1} {2}'.format(self.risk, stop, pair))
                    if self.activated == 1 and self.side == 's':
                        self.oq.sell(self.risk, stop, instrument=pair, verbose=False)
-                       stdscr.addstr(6,marginDebug,'message: sell {0} {1} {2}'.format(self.risk, stop, pair))
+                       stdscr.addstr(6,self.marginDebug,'message: sell {0} {1} {2}'.format(self.risk, stop, pair))
                    #stdscr.getstr()
                    #stdscr.addstr(mm[2],mm[1],'{2}_{3}'.format(mm[1], mm[2], mip[0], mip[1]))
                    stdscr.addstr(mm[2],mm[1],'{0}_{1}'.format(mm[1], mm[2])) # for debugging
-                   stdscr.addstr(3,marginDebug,'buy or sell {2}? (b/s): '.format(mm[1], mm[2], pair)) # for debugging
-                   #stdscr.addstr(6,marginDebug,'message: {0}'.format(msg)) # for debugging
+                   stdscr.addstr(3,self.marginDebug,'buy or sell {2}? (b/s): '.format(mm[1], mm[2], pair)) # for debugging
+                   #stdscr.addstr(6,self.marginDebug,'message: {0}'.format(msg)) # for debugging
                except Exception as e:
                    #print e
                    self.qd.logTraceBack(e)
@@ -626,6 +631,10 @@ class ZMQClient:
 import pymongo as mong
 class ZMQ:
 
+    def __init__(self):
+        
+        self.port = 0
+        
     def log(st):
         print st        
 
@@ -637,16 +646,21 @@ class ZMQ:
         #socket = ctx.socket(zmq.REP)
         #socket = ctx.socket(zmq.PUSH)
         self.socket = ctx.socket(zmq.PUB);
+        self.zmqMethod = 'PUB'
         
         # A+B feeds
         try:
-            port = 5557
-            url  = 'tcp://*:{0}'.format(port)
+            self.zmqPort = 5557
+            url  = 'tcp://*:{0}'.format(self.zmqPort)
             self.socket.bind(url)
         except:
-            port = 5558
-            url  = 'tcp://*:{0}'.format(port)
-            self.socket.bind(url)
+            self.zmqPort = 5558
+            url  = 'tcp://*:{0}'.format(self.zmqPort)
+            try:
+                self.socket.bind(url)
+            except Exception as e:
+                print 'zmq: Not feeding, all ports used.'
+                #print e
         
         try:
             self.mongo = mong.MongoClient()
@@ -655,7 +669,8 @@ class ZMQ:
         #self.log('feeding on {0}[zmq]'.format(url))
 
 #    @profile
-    def zmqSend(self, data):
+    def zmqSend(self, data, topic='tester'):
+        self.zmqTopic = topic
         #csvc = getCsvc(data)
         csv = data
         #csv = ",".join(csvc)
