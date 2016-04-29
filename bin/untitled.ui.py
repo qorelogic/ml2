@@ -157,7 +157,7 @@ def recc(widget=None, args=None):
 import curses
 import numpy as n
 #@profile
-def renderNcurses():
+def renderNcurses(port=5557):
     
     fp = open('/tmp/123.txt', 'a')
     
@@ -204,7 +204,8 @@ def renderNcurses():
     cur_x = 10
     cur_y = 10
     
-    socket = reccInit(args=args, hostport='127.0.0.1:5558', topic = 'tester')
+    hostport = '127.0.0.1:%s' % port
+    socket = reccInit(args=args, hostport=hostport, topic = 'tester')
 
     #@profile
     def selectBars(currencies, pairs, delimiter=','):
@@ -287,11 +288,14 @@ def renderNcurses():
             am = float(am[i]) / n.max(am) * 100
             #am = 10
             
-            h  = int(float(wh-3) * abs(am) / 100 - 2)
-            #fp.write("h:%s am:%s\n" % (h, am))
-            #h = 5
-            t = wh-(h+1)
-            
+            try:
+                h  = int(float(wh-3) * abs(am) / 100 - 2)
+                #fp.write("h:%s am:%s\n" % (h, am))
+                #h = 5
+                t = wh-(h+1)
+            except Exception as e:
+                ''
+
             try:
                 #del stw[i]
                 #stw[i] = None
@@ -386,6 +390,7 @@ if __name__ == "__main__":
     parser.add_argument("-nc", help="ncurses ui arg eg. EUR_USD,AUD_USD,GBP_USD")
     parser.add_argument("-mtc", help="mongo ticks count", action="store_true")
     parser.add_argument("-v", '--verbose', help="ncurses Version", action="store_true")
+    parser.add_argument("-p", '--port', help="port = 5555, 5556, 5557, etc.")
     #parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
     #parser.add_argument("-n", "-num", "--num", help="c.getNodes()")
 
@@ -452,11 +457,15 @@ if __name__ == "__main__":
         
         
     if args.nc:
-
+        
+        try:
+            port = args.port
+        except:
+            port = 5557
 
         import curses
         try:
-            renderNcurses()
+            renderNcurses(port=port)
         except zmq.error.ZMQError as e:
             curses.nocbreak(); 
             #stdscr.keypad(0); 
