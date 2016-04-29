@@ -117,6 +117,15 @@ alias .gx="git checkout -m " # switch merge to given branch
 
 alias sc='scrapy'
 
+# source: http://stackoverflow.com/questions/2255416/how-to-determine-when-a-git-branch-was-created
+.gmerge-base-gitk-all() {
+	if [ "$1" == "" ] || [ "$2" == "" ]; then
+		echo "usage: <branch-ref> <branch-base>"
+	else
+		gitk --all --select-commit=`git merge-base $1 $2` & 
+	fi
+}
+
 .gpush() {
 	currentBranch="`git branch | grep '\*' | cut -d':' -f3 | cut -c 3-`"                                                       
 	echo "Pushing to branch $currentBranch.."
