@@ -10,13 +10,16 @@ if initialize_session "feed"; then
   #new_window "misc"
 
   # Load a defined window layout.
-  load_window "db"
-  load_window "mongo"
-  load_window "ml.dev"
+  #load_window "db"
+  #load_window "mongo"
+  #load_window "ml.dev"
+  #load_window "zmq"
+  load_window "zmq-simulator"
+  load_window "feed"
 
 
   # Select the default active window on session creation
-  select_window 1
+  #select_window 1
 
 fi
 
