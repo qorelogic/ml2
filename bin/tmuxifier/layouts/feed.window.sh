@@ -14,7 +14,7 @@ split_h 50 0
 
 # Run commands.
 run_cmd "cd datafeeds/" 0
-run_cmd "kernprof -lv oanda.py feed" 0
+run_cmd "kernprof -lv oanda.py -m feed" 0
 run_cmd ". /mldev/bin/functions.sh; _mongod" 1
 #run_cmd "tail -f /var/log/mongodb/mongod.log" 1
 run_cmd "watch -n3 \"mongo --quiet --eval 'db.ticks.stats()[\\\"count\\\"]' ql\"" 2
