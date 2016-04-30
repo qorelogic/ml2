@@ -27,7 +27,7 @@ run_cmd "p && qp" 0
 #run_cmd "python zmq-client.py 104.207.135.67:5555 avg" 0
 run_cmd "python zmq-client.py 127.0.0.1:5555 avg" 0
 #run_cmd "python simulator.py" 1
-run_cmd "kernprof -lv untitled.ui.py -nc 'EUR_USD,GBP_USD,USD_JPY,AUD_USD' -p 5557" 1
+run_cmd "python untitled.ui.py -nc 'EUR_USD,GBP_USD,USD_JPY,AUD_USD' -p 5557" 1
 
 #send_keys "" 0
 
