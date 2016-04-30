@@ -19,7 +19,7 @@ run_cmd ". /mldev/bin/functions.sh; _mongod" 1
 #run_cmd "tail -f /var/log/mongodb/mongod.log" 1
 run_cmd "watch -n3 \"mongo --quiet --eval 'db.ticks.stats()[\\\"count\\\"]' ql\"" 2
 run_cmd ". /mldev/bin/functions.sh; _mongodlog" 3
-send_keys "sleep 5; python simulator.py -n 40000 -v" 4
+send_keys "sleep 5; python simulator.py -n 40000 -mp 27017 -v" 4
 
 # Paste text
 

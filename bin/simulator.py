@@ -50,7 +50,8 @@ class Simulator:
             #db.ticks.createIndex( { 'time': 1 } )
             #ticks = db.ticks.find().sort({time:-1}).limit(num)
             # http://stackoverflow.com/questions/4421207/mongodb-how-to-get-the-last-n-records
-            ticks = db.ticks.find().sort([('time',-1)]).limit(num)
+            #ticks = db.ticks.find().sort([('time',-1)]).limit(num)
+            ticks = db.ticks.find().limit(num)
             #print dir(ticks)
             
             # https://docs.mongodb.org/v3.0/reference/method/cursor.count/
@@ -136,7 +137,7 @@ class Simulator:
             for i in dff.get_values():
                 #print 'i=%s' % (i)
                 while i[len(i)-2] >= time.time():
-                    time.sleep(0.001)
+                    time.sleep(0.0001)
                 v = n.array(list(i), dtype=str)
                 #csv = ','.join(v)
                 k = list(dff.columns)
