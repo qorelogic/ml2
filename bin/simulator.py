@@ -1,25 +1,23 @@
 
 class Simulator:
     
-    def getTicks(self, num=2000, verbose=True):
+    def getTicks(self, num=2000, verbose=True, mongoPortA=3310, mongoPortB=27017):
         import pymongo
         #import pandas as p
         from pandas import DataFrame as p_DataFrame
     
         # Connection to Mongo DB
         host = '127.0.0.1'
-        portA = 3310
-        portB = 27017
         try:
             try:
-                port = portA
+                port = mongoPortA
                 if verbose:
                     print ''
                     print 'Attempting connect:'
                     print "                     MongoDB[%s:%s]" % (host, port)
                 conn = pymongo.MongoClient(host=host, port=port)
             except Exception as e:
-                port = portB
+                port = mongoPortB
                 if verbose:
                     print "Could not connect to MongoDB[%s:%s]: %s" % (host, port, e)
                     print 'Attempting failover connect:'
@@ -79,7 +77,7 @@ class Simulator:
         return df
        
     #@profile
-    def simulate(self, df=None, simulator=True, num=200, mode='csv', port=5555, verbose=False):
+    def simulate(self, df=None, simulator=True, num=200, mode='csv', port=5555, verbose=False, mongoPortA=3310, mongoPortB=27017):
         #print 'simulator=%s, num=%s, mode=%s' % (simulator, num, mode)
         from pandas import DataFrame as p_DataFrame
         import time, zmq, sys
@@ -88,7 +86,7 @@ class Simulator:
         import ujson as j
         
         if type(df) == type(None):
-            df = self.getTicks(num=num)
+            df = self.getTicks(num=num, mongoPortA=mongoPortA, mongoPortB=mongoPortB)
         dfn = df.get_values()
         if simulator == True:
             dff = p_DataFrame(dfn, index=df.index, columns=df.columns)
@@ -179,6 +177,8 @@ if __name__ == "__main__":
     parser.add_argument("-n", '--num', help="number of ticks")
     parser.add_argument("-m", '--mode', help="mode: csv | dict")
     parser.add_argument("-p", '--port', help="port: 5555 | 5556 | 5557, etc.")
+    parser.add_argument('-mp', "-mpa", '--mongoPortA', help="port: 27017 | 3310 | 3311, etc.")
+    parser.add_argument("-mpb",        '--mongoPortB', help="port: 27017 | 3310 | 3311, etc.")
     parser.add_argument("-v", '--verbose', help="Verbose printing", action="store_true")
 
     args = parser.parse_args()
@@ -198,9 +198,21 @@ if __name__ == "__main__":
     else:
         port = 5555
 
+    # primary mongo port (A)
+    if args.mongoPortA:
+        mongoPortA = int(args.mongoPortA)
+    else:
+        mongoPortA = 3310
+
+    # secondary mongo port (B)
+    if args.mongoPortB:
+        mongoPortB = int(args.mongoPortB)
+    else:
+        mongoPortB = 27017
+
     s = Simulator()
     try:
-        s.simulate(num=num, mode=mode, port=port, verbose=args.verbose)
+        s.simulate(num=num, mode=mode, port=port, verbose=args.verbose, mongoPortA=mongoPortA, mongoPortB=mongoPortB)
     except KeyboardInterrupt as e:
         print ''
     #simulator(df=df, num=40)
