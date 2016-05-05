@@ -1659,27 +1659,27 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     #print df.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
     #print pnda
     return df
-def getcc(df, dfh, mode, instrument='USD_JPY', update=False):
+def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
     
-    df = getc(df, dfh, instrument=instrument, granularity='M1', mode=mode, update=update)
-    df = getc(df, dfh, instrument=instrument, granularity='M5', mode=mode, update=update)
-    df = getc(df, dfh, instrument=instrument, granularity='M15', mode=mode, update=update)
-    df = getc(df, dfh, instrument=instrument, granularity='M30', mode=mode, update=update)
-    df = getc(df, dfh, instrument=instrument, granularity='H1', mode=mode, update=update)
-    df = getc(df, dfh, instrument=instrument, granularity='H4', mode=mode, update=update)
-    df = getc(df, dfh, instrument=instrument, granularity='D', mode=mode, update=update)
-    df = getc(df, dfh, instrument=instrument, granularity='W', mode=mode, update=update)
-    df = getc(df, dfh, instrument=instrument, granularity='M', mode=mode, update=update)
+    df = getc(df, dfh, oanda2, instrument=instrument, granularity='M1', mode=mode, update=update)
+    df = getc(df, dfh, oanda2, instrument=instrument, granularity='M5', mode=mode, update=update)
+    df = getc(df, dfh, oanda2, instrument=instrument, granularity='M15', mode=mode, update=update)
+    df = getc(df, dfh, oanda2, instrument=instrument, granularity='M30', mode=mode, update=update)
+    df = getc(df, dfh, oanda2, instrument=instrument, granularity='H1', mode=mode, update=update)
+    df = getc(df, dfh, oanda2, instrument=instrument, granularity='H4', mode=mode, update=update)
+    df = getc(df, dfh, oanda2, instrument=instrument, granularity='D', mode=mode, update=update)
+    df = getc(df, dfh, oanda2, instrument=instrument, granularity='W', mode=mode, update=update)
+    df = getc(df, dfh, oanda2, instrument=instrument, granularity='M', mode=mode, update=update)
     return df#.set_index('mode')
     #df['mode'] = mode
     
-def getccc(df, dfh, mode, instrument='USD_JPY', update=False):    
-    df = getcc(df, dfh, mode, instrument=instrument, update=update)
+def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
+    df = getcc(df, dfh, oanda2, mode, instrument=instrument, update=update)
     dfm = df.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
     dfm[mode] = dfm.ix[:, df.index[len(df)-1]]
     return dfm.ix[:, [mode]]
 
-def getc4(df, dfh, instrument='USD_JPY', verbose=False, update=False):
+def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     dfm = p.DataFrame()
     patterns = ['CDL2CROWS',
      'CDL3BLACKCROWS',
@@ -1744,7 +1744,7 @@ def getc4(df, dfh, instrument='USD_JPY', verbose=False, update=False):
      'CDLLONGLEGGEDDOJI',
      'CDLMORNINGDOJISTAR'
     """
-    for i in patterns: dfm = dfm.combine_first(getccc(df, dfh, i, instrument=instrument, update=update))
+    for i in patterns: dfm = dfm.combine_first(getccc(df, dfh, oanda2, i, instrument=instrument, update=update))
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         dfm = dfm.transpose()
         dfmg = dfm > 0

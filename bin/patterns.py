@@ -3,6 +3,7 @@ import argparse
 # source: https://docs.python.org/2/howto/argparse.html
 parser = argparse.ArgumentParser()
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-a", '--analyze', help="go live and turn off dryrun", action="store_true")
 #parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
 args = parser.parse_args()
 
@@ -69,10 +70,10 @@ def main():
     fname = os.popen(cmd).read().strip().split('\n')[0]
     dfh = {}
     df = p.DataFrame()
-    if 0:
+    if args.analyze:
         dfu = p.DataFrame()
         for i in 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD,EUR_AUD,USD_JPY,AUD_USD,AUD_JPY,CAD_JPY,EUR_CAD,EUR_CHF,EUR_GBP,NZD_JPY,NZD_USD,USD_CHF,CHF_JPY,USD_MXN'.split(','):
-            dfu = dfu.combine_first(getc4(df, dfh, instrument=i))
+            dfu = dfu.combine_first(getc4(df, dfh, oanda2, instrument=i))
         fname = '/tmp/patterns.dfu.%s.csv' % time.time()
         dfu.to_csv(fname)
     else:
