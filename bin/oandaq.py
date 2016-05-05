@@ -1184,6 +1184,7 @@ class OandaQ:
         # source: http://www.python-course.eu/lambda.php
         ret = {'quote':map(lambda x: x[0:3], currs), 'base':map(lambda x: x[4:7], currs)}
         ret['pairedCurrency'] = []
+        ret['quotedCurrency'] = []
         
         df = p_read_csv('/mldev/bin/data/oanda/cache/instruments.csv')
         #dfp = p.DataFrame(self.oanda2.get_prices(instruments=','.join(list(currs)))['prices'])
@@ -1197,6 +1198,16 @@ class OandaQ:
                 ret['pairedCurrency'].append(df.ix[dft, 'instrument'].get_values()[0])
             except Exception as e:
                 ret['pairedCurrency'].append('na')
+                #print e
+        for i in ret['quote']:
+            try:
+                #print i
+                dft = map(lambda x: (x[0:3] == homeCurrency and x[4:7] == i) or (x[0:3] == i and x[4:7] == homeCurrency), list(df['instrument']))
+                #print dft
+                #print df.ix[dft, 'instrument'].get_values()[0]
+                ret['quotedCurrency'].append(df.ix[dft, 'instrument'].get_values()[0])
+            except Exception as e:
+                ret['quotedCurrency'].append('na')
                 #print e
         poles      = [1, -1]
         po         = map(lambda x: x[0:3] == homeCurrency, ret['pairedCurrency'])

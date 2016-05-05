@@ -1798,7 +1798,8 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True):
     dfu3['amount'] = n.ceil(dfu3['diffp'] * marginAvail * 50 / prdf.ix[:,'bid'])
     try:
         currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument').ix[:,'side units'.split(' ')]
-        print currentPositions
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        print currentPositions.sort('units', ascending=False)
         print
 
         # get rebalance amount
@@ -1807,9 +1808,9 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True):
         #cu = currentPositions.ix[dfu3.index, :]
         cu = currentPositions.combine_first(dfu3)
         cu['bool'] = map(lambda x: 1 if x == 'buy' else -1, cu['side'])
-        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            cu = cu.fillna(0)
-            print cu
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        cu = cu.fillna(0)
+        print cu.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sideBool unit amountSideBool positions rebalance'.split(' ')]
         #print
     except:
         ''
@@ -1822,28 +1823,119 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True):
         ''
     dfu3 = dfu3.fillna(0)
     
-    dfu3['rebalance'] = dfu3.ix[:, 'amountSideBool'] - dfu3.ix[:, 'positions']
+    dfu3 = cw(dfu3)
+
+    #dfu3['rebalance'] = dfu3.ix[:, 'amountSideBool'] - dfu3.ix[:, 'positions']
+    dfu3['rebalance'] = (dfu3.ix[:, 'sideBool']       * dfu3.ix[:, 'amount2']) - dfu3.ix[:, 'positions']
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print dfu3
-    print
+        print dfu3.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sideBool unit amountSideBool positions rebalance'.split(' ')]
+        print
 
     for i in range(len(dfu3.index)):
         #print dfu3.ix[[dfu3.index[i]], :].transpose()
-        print 
-        units = int(abs(dfu3.ix[dfu3.index[i], 'rebalance']))-1
+        units = int(abs(dfu3.ix[dfu3.index[i], 'rebalance']))#-1
+        side  = 'buy' if int(dfu3.ix[dfu3.index[i], 'rebalance']) > 0 else 'sell'
+        #dfu3.ix[dfu3.index[i], 'side']
+        #dfu3.ix[dfu3.index[i], 'side']
         if units > 0:
             if dryrun == False:
                 try:
                     oanda2.create_order(accid, type='market', 
                                         instrument=dfu3.index[i], 
-                                        side=dfu3.ix[dfu3.index[i], 'side'], 
+                                        side=side,
                                         units=units)
                 except Exception as e:
                     print e
-            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s)" % (accid, dfu3.index[i], dfu3.ix[dfu3.index[i], 'side'], units)
+            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s)" % (accid, dfu3.index[i], side, units)
         
     return dfu3
+    
+def cw(dfu33):
+    print '#--- cw(start)'
+    li = list(dfu33.sort('diffp', ascending=False).index)
+    #print 'li'
+    #print li
+
+    import oandapy
+    
+    co = p.read_csv('datafeeds/config.csv', header=None)
+    
+    env1=co.ix[0,1]
+    access_token1=co.ix[0,2]
+    oanda1 = oandapy.API(environment=env1, access_token=access_token1)
+    
+    env2=co.ix[1,1]
+    access_token2=co.ix[1,2]
+    oanda2 = oandapy.API(environment=env2, access_token=access_token2)
+    
+    acc = oanda2.get_accounts()['accounts']
+    accid = acc[0]['accountId']
+    #print 'using account: {0}'.format(accid)
+
+    pdf = li
+    print li
+    oq = OandaQ()
+    df = oq.syntheticCurrencyTable(pdf, homeCurrency='USD')
+    df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
+    pcdf = df.ix[:,'pairedCurrency'].get_values()
+    print pcdf
+    pcdf = oq.wew(pcdf)
+    print pcdf
+    print
+    #pdf = n.c_[pdf,pcdf]#[0]
+    pdf = list(pdf)+list(pcdf)
+    print pdf
+    #fdf = fdf.combine_first(df)
+    pairs = ','.join(list(pdf))
+    print pairs
+
+    sdf = p.DataFrame(oq.syntheticCurrencyTable(li, homeCurrency='USD'))
+    #print list(sdf['quotedCurrency'])
+    res = oanda1.get_prices(instruments=','.join(oq.wew(sdf['quotedCurrency'])))
+    res = p.DataFrame(res['prices'])
+    #print 'res'
+    #print res
+    res = res.set_index('instrument')
+    #print res.ix[oq.wew(list(sdf['quotedCurrency'])), :]
+    ldf = p.DataFrame(li)
+    #sdf['pc'] = ma 
+    sdf = sdf.set_index('instrument')
+    print 'sdf'
+    #print sdf
+    quotedCurrency = sdf.ix[dfu33.index, ['quotedCurrency','pow']]
+    print 'quotedCurrency'
+    print quotedCurrency
+    print '===='
+    #---
+    quotedCurrencyPrice = res.ix[quotedCurrency['quotedCurrency'],['bid']].fillna(1)
+    #quotedCurrencyPrice['pow'] = 
+    quotedCurrencyPrice['instrument'] = quotedCurrency.index
+    quotedCurrencyPrice['quotedCurrency'] = quotedCurrencyPrice.index
+    quotedCurrencyPrice = quotedCurrencyPrice.set_index('instrument')
+    quotedCurrencyPrice['diffp'] = dfu33['diffp']
+    #---
+    #.sort('diffp', ascending=False)
+    print 'quotedCurrencyPrice'
+    print quotedCurrencyPrice#.sort('diffp', ascending=False)
+    #print res
+    #print sdf['quotedCurrency']
+    #print sdf.ix[quotedCurrencyPrice.index,:]
+    print '===='
+
+    marginAvail = oanda1.get_account(558788)['marginAvail']
+    dfu33['pow2'] = sdf.ix[quotedCurrencyPrice.index,'pow'].get_values()
+    dfu33['quotedCurrencyPriceBid'] = quotedCurrencyPrice['bid'].get_values()
+    dfu33['unitsAvailable'] = marginAvail * 50 / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
+    dfu33['amount2'] = dfu33['unitsAvailable'] * dfu33['diffp']
+    #print quotedCurrencyPrice['bid']
+    #print p.DataFrame(marginAvail * 50 * quotedCurrencyPrice['bid'].get_values())
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        print 'dfu33'    
+        print dfu33.ix[:, 'quotedCurrencyPriceBid unitsAvailable diffp pow2 units amount2 amount rebalance'.split(' ')]
+    print '#--- cw(end)'
+    
+    return dfu33
 
 class CryptoCoinBaseClass:
     
