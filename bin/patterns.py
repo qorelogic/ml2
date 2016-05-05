@@ -123,14 +123,16 @@ def main():
     psdf = psdf.set_index(0)
     # list only 1broker pairs in the orderbook
     oneBrokerOrderbook = psdf.ix[list(orders.index), :]
-    oneBrokerOrderbook[oneBrokerOrderbook['1'] == 1]
+    #print oneBrokerOrderbook[oneBrokerOrderbook['1'] == 1]
+    #print oneBrokerOrderbook
+    #print
     dfu3 = orders.ix[oneBrokerOrderbook[oneBrokerOrderbook['1'] == 1].index, :]
     
     # recalculate percentages [diffp]
     dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
     print '1broker orders:'
     print dfu3
-
+    
     fu33 = rebalanceTrades(dfu2, oanda2, accid, dryrun=dryrun)
     dfu33 = rebalanceTrades(dfu2, oanda1, 558788, dryrun=dryrun)
 
