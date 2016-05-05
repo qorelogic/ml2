@@ -131,8 +131,8 @@ class OandaQ:
         self.ctime = 0
         self.ptime = 0
 
-        import pymongo as mong
         try:
+            import pymongo as mong
             self.mongo = mong.MongoClient()
         except:
             ''
