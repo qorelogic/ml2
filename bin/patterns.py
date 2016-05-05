@@ -66,8 +66,8 @@ asddf.ix[:, 'time timeu timeage targetSalaryPerSecond'.split(' ')]
 import os
 cmd = 'ls -t /tmp/patterns*'
 fname = os.popen(cmd).read().strip().split('\n')[0]
-#dfh = {}
-#df = p.DataFrame()
+dfh = {}
+df = p.DataFrame()
 if 0:
     dfu = p.DataFrame()
     for i in 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD,EUR_AUD,USD_JPY,AUD_USD,AUD_JPY,CAD_JPY,EUR_CAD,EUR_CHF,EUR_GBP,NZD_JPY,NZD_USD,USD_CHF,CHF_JPY,USD_MXN'.split(','):
