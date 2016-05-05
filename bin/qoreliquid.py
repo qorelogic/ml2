@@ -1105,6 +1105,9 @@ def sigmoidmePinv(sigdfr):
     #/ n.log(n.e)
     return -n.divide(n.log10((n.divide(1.0, sigdfr))-1), n.log10(n.e))
 
+def tanhme(dfr):
+    return n.tanh(dfr)
+
 def sharpe(dfr):
     ''
 
@@ -1369,6 +1372,7 @@ def getDataFromQuandlBNP(pa, curr, authtoken=None, noUpdate=False): # curr = EUR
             print 'update'
         #return        
         if days > 0:
+            from qorequant import QoreQuant
             qq = QoreQuant()            
             print 'fetching from {0} to {1}'.format(a, b)
             print 'greater than 0 days'
@@ -1613,6 +1617,233 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
         d[toCol] = d.ix[:,[fromCol]]
     print '----'
     return d
+    
+    
+def getc(df, dfh, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
+    import hashlib as hl
+    import talib
+    co = p.read_csv('config.csv', header=None)
+    
+    env1=co.ix[0,1]
+    access_token1=co.ix[0,2]
+    oanda1 = oandapy.API(environment=env1, access_token=access_token1)
+    
+    env2=co.ix[1,1]
+    access_token2=co.ix[1,2]
+    oanda2 = oandapy.API(environment=env2, access_token=access_token2)
+
+    if update:
+        try: dfh[instrument][granularity] = None
+        except: ''
+    
+    try:
+        csvIndex = ','.join(list(dfh[instrument][granularity].index))
+        if verbose: print 'caching history %s.. ' % granularity
+        res = dfh[instrument][granularity]
+        if verbose: print hl.md5(csvIndex).hexdigest()
+    except:
+        if verbose: print 'getting history %s.. ' % granularity
+        res = oanda2.get_history(instrument=instrument, granularity=granularity, count=15)
+        try:
+            dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
+        except:
+            dfh[instrument] = {}
+            dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
+    csvIndex = ','.join(list(dfh[instrument][granularity].index))
+    #print csvIndex
+    if verbose: print hl.md5(csvIndex).hexdigest()
+    if verbose: print
+    exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
+    #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
+    field = '%s' % (granularity)
+    #df[field] = pnda
+    dfh[instrument][granularity][field] = pnda
+    #print dfh[instrument][granularity].ix[:,field]
+    #df = normalizeme(df)
+    #df = sigmoidme(df)
+    #df = tanhme(df)
+    df = df.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]])
+    #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
+    #print df.columns
+    #print df.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
+    #print pnda
+    return df
+def getcc(df, dfh, mode, instrument='USD_JPY', update=False):
+    
+    df = getc(df, dfh, instrument=instrument, granularity='M1', mode=mode, update=update)
+    df = getc(df, dfh, instrument=instrument, granularity='M5', mode=mode, update=update)
+    df = getc(df, dfh, instrument=instrument, granularity='M15', mode=mode, update=update)
+    df = getc(df, dfh, instrument=instrument, granularity='M30', mode=mode, update=update)
+    df = getc(df, dfh, instrument=instrument, granularity='H1', mode=mode, update=update)
+    df = getc(df, dfh, instrument=instrument, granularity='H4', mode=mode, update=update)
+    df = getc(df, dfh, instrument=instrument, granularity='D', mode=mode, update=update)
+    df = getc(df, dfh, instrument=instrument, granularity='W', mode=mode, update=update)
+    df = getc(df, dfh, instrument=instrument, granularity='M', mode=mode, update=update)
+    return df#.set_index('mode')
+    #df['mode'] = mode
+    
+def getccc(df, dfh, mode, instrument='USD_JPY', update=False):    
+    df = getcc(df, dfh, mode, instrument=instrument, update=update)
+    dfm = df.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
+    dfm[mode] = dfm.ix[:, df.index[len(df)-1]]
+    return dfm.ix[:, [mode]]
+
+def getc4(df, dfh, instrument='USD_JPY', verbose=False, update=False):
+    dfm = p.DataFrame()
+    patterns = ['CDL2CROWS',
+     'CDL3BLACKCROWS',
+     'CDL3INSIDE',
+     'CDL3LINESTRIKE',
+     'CDL3OUTSIDE',
+     'CDL3STARSINSOUTH',
+     'CDL3WHITESOLDIERS',
+     'CDLABANDONEDBABY',
+     'CDLADVANCEBLOCK',
+     'CDLBELTHOLD',
+     'CDLBREAKAWAY',
+     'CDLCLOSINGMARUBOZU',
+     'CDLCONCEALBABYSWALL',
+     'CDLCOUNTERATTACK',
+     'CDLDARKCLOUDCOVER',
+     'CDLENGULFING',
+     'CDLEVENINGSTAR',
+     'CDLGAPSIDESIDEWHITE',
+     'CDLHAMMER',
+     'CDLHANGINGMAN',
+     'CDLHARAMI',
+     'CDLHARAMICROSS',
+     'CDLHIGHWAVE',
+     'CDLHIKKAKE',
+     'CDLHIKKAKEMOD',
+     'CDLHOMINGPIGEON',
+     'CDLIDENTICAL3CROWS',
+     'CDLINNECK',
+     'CDLINVERTEDHAMMER',
+     'CDLKICKING',
+     'CDLKICKINGBYLENGTH',
+     'CDLLADDERBOTTOM',
+     'CDLLONGLINE',
+     'CDLMARUBOZU',
+     'CDLMATCHINGLOW',
+     'CDLMATHOLD',
+     'CDLMORNINGSTAR',
+     'CDLONNECK',
+     'CDLPIERCING',
+     'CDLRICKSHAWMAN',
+     'CDLRISEFALL3METHODS',
+     'CDLSEPARATINGLINES',
+     'CDLSHOOTINGSTAR',
+     'CDLSHORTLINE',
+     'CDLSPINNINGTOP',
+     'CDLSTALLEDPATTERN',
+     'CDLSTICKSANDWICH',
+     'CDLTAKURI',
+     'CDLTASUKIGAP',
+     'CDLTHRUSTING',
+     'CDLTRISTAR',
+     'CDLUNIQUE3RIVER',
+     'CDLUPSIDEGAP2CROWS',
+     'CDLXSIDEGAP3METHODS']
+    """
+    'CDLDOJI',
+     'CDLDOJISTAR',
+     'CDLDRAGONFLYDOJI',
+     'CDLEVENINGDOJISTAR',
+     'CDLGRAVESTONEDOJI',
+     'CDLLONGLEGGEDDOJI',
+     'CDLMORNINGDOJISTAR'
+    """
+    for i in patterns: dfm = dfm.combine_first(getccc(df, dfh, i, instrument=instrument, update=update))
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        dfm = dfm.transpose()
+        dfmg = dfm > 0
+        dfml = dfm < 0
+        dfm['buy']  = n.sum(n.array(dfmg.get_values(), dtype=int), 1)
+        dfm['sell'] = n.sum(n.array(dfml.get_values(), dtype=int), 1)
+        dfm = dfm.transpose()
+        dfm.ix[:, instrument] = n.sum(dfm.get_values(), 1)
+        #print n.sum(n.array(dfmk.transpose().get_values(), dtype=int), 0)
+        if verbose: print dfm.transpose()
+        res = dfm.transpose().ix[[instrument],:]
+        print res
+        print instrument
+        return res
+
+def rebalanceTrades(dfu3, oanda2, accid, dryrun=True):
+    oq = OandaQ()
+    
+    print '----------'
+
+    #co = p.read_csv('config.csv', header=None)
+    
+    #env1=co.ix[0,1]
+    #access_token1=co.ix[0,2]
+    #oanda1 = oandapy.API(environment=env1, access_token=access_token1)
+    
+    #env2=co.ix[1,1]
+    #access_token2=co.ix[1,2]
+    #oanda2 = oandapy.API(environment=env2, access_token=access_token2)
+
+    acc = oanda2.get_accounts()['accounts']
+    #accid = acc[0]['accountId']
+    
+    # recalculate percentages [diffp]
+    dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
+
+    #balance = oanda2.get_account(accid)['balance']
+    marginAvail = oanda2.get_account(accid)['marginAvail']
+    prdf = p.DataFrame(oanda2.get_prices(instruments=','.join(list(dfu3.index)))['prices']).set_index('instrument')
+    #prdf.ix[:,['instrument','bid']]
+    #prdf.ix['EUR_USD','bid']
+    dfu3['amount'] = n.ceil(dfu3['diffp'] * marginAvail * 50 / prdf.ix[:,'bid'])
+    try:
+        currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument').ix[:,'side units'.split(' ')]
+        print currentPositions
+        print
+
+        # get rebalance amount
+        #print currentPositions
+        #print dfu3.ix[currentPositions.index, :]
+        #cu = currentPositions.ix[dfu3.index, :]
+        cu = currentPositions.combine_first(dfu3)
+        cu['bool'] = map(lambda x: 1 if x == 'buy' else -1, cu['side'])
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            cu = cu.fillna(0)
+            print cu
+        #print
+    except:
+        ''
+    dfu3 = dfu3.combine_first(cu)
+    try:
+        dfu3['amountSideBool'] = dfu3['sideBool'] * dfu3['amount']
+        dfu3['positions'] = cu.ix[:, 'units'] * cu.ix[:, 'bool']
+    except:
+        #dfu3['positions'] = 0
+        ''
+    dfu3 = dfu3.fillna(0)
+    
+    dfu3['rebalance'] = dfu3.ix[:, 'amountSideBool'] - dfu3.ix[:, 'positions']
+
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        print dfu3
+    print
+
+    for i in range(len(dfu3.index)):
+        #print dfu3.ix[[dfu3.index[i]], :].transpose()
+        print 
+        units = int(abs(dfu3.ix[dfu3.index[i], 'rebalance']))-1
+        if units > 0:
+            if dryrun == False:
+                try:
+                    oanda2.create_order(accid, type='market', 
+                                        instrument=dfu3.index[i], 
+                                        side=dfu3.ix[dfu3.index[i], 'side'], 
+                                        units=units)
+                except Exception as e:
+                    print e
+            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s)" % (accid, dfu3.index[i], dfu3.ix[dfu3.index[i], 'side'], units)
+        
+    return dfu3
 
 class CryptoCoinBaseClass:
     
