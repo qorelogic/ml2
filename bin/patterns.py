@@ -126,13 +126,17 @@ def main():
     #print oneBrokerOrderbook[oneBrokerOrderbook['1'] == 1]
     #print oneBrokerOrderbook
     #print
-    dfu3 = orders.ix[oneBrokerOrderbook[oneBrokerOrderbook['1'] == 1].index, :]
-    
-    # recalculate percentages [diffp]
-    dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
-    print '1broker orders:'
-    print dfu3
-    
+    try:
+        dfu3 = orders.ix[oneBrokerOrderbook[oneBrokerOrderbook['1'] == 1].index, :]
+        
+        # recalculate percentages [diffp]
+        dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
+        print '1broker orders:'
+        print dfu3
+    except Exception as e:
+        print e
+        print 'No'
+        print 
     fu33 = rebalanceTrades(dfu2, oanda2, accid, dryrun=dryrun)
     dfu33 = rebalanceTrades(dfu2, oanda1, 558788, dryrun=dryrun)
 
