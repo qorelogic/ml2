@@ -1814,7 +1814,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True):
         ''
     dfu3 = dfu3.fillna(0)
     
-    dfu3 = cw(dfu3)
+    dfu3 = cw(dfu3, oanda2, accid)
 
     #dfu3['rebalance'] = dfu3.ix[:, 'amountSideBool'] - dfu3.ix[:, 'positions']
     dfu3['rebalance'] = (dfu3.ix[:, 'sideBool']       * dfu3.ix[:, 'amount2']) - dfu3.ix[:, 'positions']
@@ -1842,27 +1842,11 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True):
         
     return dfu3
     
-def cw(dfu33):
+def cw(dfu33, oanda2, accid):
     print '#--- cw(start)'
     li = list(dfu33.sort('diffp', ascending=False).index)
     #print 'li'
     #print li
-
-    import oandapy
-    
-    co = p.read_csv('datafeeds/config.csv', header=None)
-    
-    env1=co.ix[0,1]
-    access_token1=co.ix[0,2]
-    oanda1 = oandapy.API(environment=env1, access_token=access_token1)
-    
-    env2=co.ix[1,1]
-    access_token2=co.ix[1,2]
-    oanda2 = oandapy.API(environment=env2, access_token=access_token2)
-    
-    acc = oanda2.get_accounts()['accounts']
-    accid = acc[0]['accountId']
-    #print 'using account: {0}'.format(accid)
 
     pdf = li
     print li
@@ -1883,7 +1867,7 @@ def cw(dfu33):
 
     sdf = p.DataFrame(oq.syntheticCurrencyTable(li, homeCurrency='USD'))
     #print list(sdf['quotedCurrency'])
-    res = oanda1.get_prices(instruments=','.join(oq.wew(sdf['quotedCurrency'])))
+    res = oanda2.get_prices(instruments=','.join(oq.wew(sdf['quotedCurrency'])))
     res = p.DataFrame(res['prices'])
     #print 'res'
     #print res
@@ -1914,7 +1898,7 @@ def cw(dfu33):
     #print sdf.ix[quotedCurrencyPrice.index,:]
     print '===='
 
-    marginAvail = oanda1.get_account(558788)['marginAvail']
+    marginAvail = oanda2.get_account(accid)['marginAvail']
     dfu33['pow2'] = sdf.ix[quotedCurrencyPrice.index,'pow'].get_values()
     dfu33['quotedCurrencyPriceBid'] = quotedCurrencyPrice['bid'].get_values()
     dfu33['unitsAvailable'] = marginAvail * 50 / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])

@@ -138,4 +138,4 @@ dfu3
 
 dryrun=True
 fu33 = rebalanceTrades(dfu2, oanda2, accid, dryrun=dryrun)
-#dfu33 = rebalanceTrades(dfu2, oanda1, 558788, dryrun=dryrun)
+dfu33 = rebalanceTrades(dfu2, oanda1, 558788, dryrun=dryrun)
