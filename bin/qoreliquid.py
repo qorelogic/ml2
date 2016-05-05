@@ -1619,18 +1619,9 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
     return d
     
     
-def getc(df, dfh, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
+def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
     import hashlib as hl
     import talib
-    co = p.read_csv('config.csv', header=None)
-    
-    env1=co.ix[0,1]
-    access_token1=co.ix[0,2]
-    oanda1 = oandapy.API(environment=env1, access_token=access_token1)
-    
-    env2=co.ix[1,1]
-    access_token2=co.ix[1,2]
-    oanda2 = oandapy.API(environment=env2, access_token=access_token2)
 
     if update:
         try: dfh[instrument][granularity] = None
