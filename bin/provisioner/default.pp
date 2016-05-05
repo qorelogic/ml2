@@ -434,6 +434,8 @@ include tensorflow
 #include crontab
 #import 'nodejs.pp'
 #include nodejs
+#import 'talib.pp'
+#include talib
 include xrdp
 #include keys
 #include openflights
