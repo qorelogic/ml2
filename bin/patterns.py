@@ -4,6 +4,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-a", '--analyze', help="go live and turn off dryrun", action="store_true")
+parser.add_argument('-g', "-gearing", '--leverage', help="gearing or leverage, default=50")
 #parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
 args = parser.parse_args()
 
@@ -45,7 +46,7 @@ accid = acc[0]['accountId']
 #print 'using account: {0}'.format(accid)
 
 
-def main():
+def main(leverage=10, dryrun=True):
     # In[ ]:
     
     """
@@ -136,9 +137,10 @@ def main():
     except Exception as e:
         print e
         print 'No'
-        print 
-    fu33 = rebalanceTrades(dfu2, oanda2, accid, dryrun=dryrun)
-    dfu33 = rebalanceTrades(dfu2, oanda1, 558788, dryrun=dryrun)
+        print
+        
+    fu33 = rebalanceTrades(dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage)
+    dfu33 = rebalanceTrades(dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage)
 
 if __name__ == "__main__":
     
@@ -146,5 +148,10 @@ if __name__ == "__main__":
         dryrun=False
     else:
         dryrun=True
+
+    if args.leverage:
+        leverage=int(args.leverage)
+    else:
+        leverage=50
         
-    main()
+    main(leverage=leverage, dryrun=dryrun)

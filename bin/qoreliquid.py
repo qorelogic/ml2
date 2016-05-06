@@ -1760,7 +1760,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         print instrument
         return res
 
-def rebalanceTrades(dfu3, oanda2, accid, dryrun=True):
+def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
     oq = OandaQ()
     
     print '----------'
@@ -1786,7 +1786,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True):
     prdf = p.DataFrame(oanda2.get_prices(instruments=','.join(list(dfu3.index)))['prices']).set_index('instrument')
     #prdf.ix[:,['instrument','bid']]
     #prdf.ix['EUR_USD','bid']
-    dfu3['amount'] = n.ceil(dfu3['diffp'] * marginAvail * 50 / prdf.ix[:,'bid'])
+    dfu3['amount'] = n.ceil(dfu3['diffp'] * marginAvail * leverage / prdf.ix[:,'bid'])
     try:
         currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument').ix[:,'side units'.split(' ')]
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1814,7 +1814,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True):
         ''
     dfu3 = dfu3.fillna(0)
     
-    dfu3 = cw(dfu3, oanda2, accid)
+    dfu3 = cw(dfu3, oanda2, accid, leverage=leverage)
 
     #dfu3['rebalance'] = dfu3.ix[:, 'amountSideBool'] - dfu3.ix[:, 'positions']
     dfu3['rebalance'] = (dfu3.ix[:, 'sideBool']       * dfu3.ix[:, 'amount2']) - dfu3.ix[:, 'positions']
@@ -1842,7 +1842,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True):
         
     return dfu3
     
-def cw(dfu33, oanda2, accid):
+def cw(dfu33, oanda2, accid, leverage=50):
     print '#--- cw(start)'
     li = list(dfu33.sort('diffp', ascending=False).index)
     #print 'li'
@@ -1901,7 +1901,7 @@ def cw(dfu33, oanda2, accid):
     marginAvail = oanda2.get_account(accid)['marginAvail']
     dfu33['pow2'] = sdf.ix[quotedCurrencyPrice.index,'pow'].get_values()
     dfu33['quotedCurrencyPriceBid'] = quotedCurrencyPrice['bid'].get_values()
-    dfu33['unitsAvailable'] = marginAvail * 50 / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
+    dfu33['unitsAvailable'] = marginAvail * leverage / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
     dfu33['amount2'] = dfu33['unitsAvailable'] * dfu33['diffp']
     #print quotedCurrencyPrice['bid']
     #print p.DataFrame(marginAvail * 50 * quotedCurrencyPrice['bid'].get_values())
