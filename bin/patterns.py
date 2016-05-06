@@ -66,8 +66,6 @@ def main(args, leverage=10, dryrun=True):
     
     
     
-    # In[ ]:
-    
     import os
     cmd = 'ls -t /tmp/patterns*'
     fname = os.popen(cmd).read().strip().split('\n')[0]
@@ -81,8 +79,11 @@ def main(args, leverage=10, dryrun=True):
         dfu.to_csv(fname)
     else:
         dfu = p.read_csv(fname, index_col=0)
-    print dfu
+    dfu['diff'] = n.abs(dfu['buy'] - dfu['sell'])
+    print dfu.sort('diff', ascending=False)
     
+    # In[ calculate period weights ]:
+    @profile
     def periodWeightsTable():
         p0 = [1, 5, 15, 30, 60, 240, 1440, 1440*5, 1440*20]
         p1 = n.array(range(1, len(p0)+1))
@@ -90,18 +91,32 @@ def main(args, leverage=10, dryrun=True):
         #pp(:,3) = pp(:,2)./power(pp(:,1), 3)
         pp['period'] = p0
         pp['weight'] = pp.ix[:,1] / n.power(pp.ix[:,0], 3)
+        pp['percent'] = pp['weight'] / n.sum(pp['weight'])
         #pp.ix[:,[0,'weight']].plot()
         #pp
         return pp.set_index(0)
     pw = periodWeightsTable()
     
-    print
-    print 'pw'
-    print pw#['weight']
-    print
-    print 'element-wise *'
-    print dfu * pw['weight']
-    print
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        print
+        print 'pw'
+        print pw#['weight']
+        print
+        print 'element-wise *'
+        cli = [0,1,2,3,4,5,6,7,8]
+        mdfu = p.DataFrame(dfu.ix[:,cli].get_values() * pw['percent'].get_values(), index=dfu.index, columns=dfu.columns[cli])
+        dfu  = mdfu.combine_first(dfu)
+        posdf = dfu.ix[:,cli][dfu.ix[:,cli] > 0].fillna(0)
+        negdf = dfu.ix[:,cli][dfu.ix[:,cli] < 0].fillna(0)
+        print posdf
+        print negdf
+        print 
+        dfu['buy'] = n.sum(posdf.get_values(), 1)
+        dfu['sell'] = n.sum(negdf.get_values(), 1)
+        dfu['diff'] = n.abs(dfu['buy'] - dfu['sell'])
+        print dfu.sort('diff', ascending=False)
+    
+    #sys.exit()
     
     if args.diffpThreshold: diffpThreshold=int(args.diffpThreshold)
     else:                   diffpThreshold=5
