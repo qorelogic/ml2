@@ -1790,9 +1790,9 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
         cu = cu.fillna(0)
         print cu.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sideBool unit amountSideBool positions rebalance'.split(' ')]
         #print
+        dfu3 = dfu3.combine_first(cu)
     except:
         ''
-    dfu3 = dfu3.combine_first(cu)
     try:
         dfu3['amountSideBool'] = dfu3['sideBool'] * dfu3['amount']
         dfu3['positions'] = cu.ix[:, 'units'] * cu.ix[:, 'bool']
