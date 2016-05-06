@@ -111,7 +111,7 @@ def main(args, leverage=10, dryrun=True):
         print negdf
         print 
         dfu['buy'] = n.sum(posdf.get_values(), 1)
-        dfu['sell'] = n.sum(negdf.get_values(), 1)
+        dfu['sell'] = n.abs(n.sum(negdf.get_values(), 1))
         dfu['diff'] = n.abs(dfu['buy'] - dfu['sell'])
         print dfu.sort('diff', ascending=False)
     
