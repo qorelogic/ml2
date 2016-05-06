@@ -5,6 +5,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-a", '--analyze', help="go live and turn off dryrun", action="store_true")
 parser.add_argument('-g', "-gearing", '--leverage', help="gearing or leverage, default=50")
+parser.add_argument('-n', '--num', help="number of trades default=None")
+parser.add_argument('-dp', '--diffpThreshold', help="trade only signals above a given threshold default=5")
 #parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
 args = parser.parse_args()
 
@@ -46,7 +48,7 @@ accid = acc[0]['accountId']
 #print 'using account: {0}'.format(accid)
 
 
-def main(leverage=10, dryrun=True):
+def main(args, leverage=10, dryrun=True):
     # In[ ]:
     
     """
@@ -83,12 +85,15 @@ def main(leverage=10, dryrun=True):
     
     # In[ ]:
     
+    if args.diffpThreshold: diffpThreshold=int(args.diffpThreshold)
+    else:                   diffpThreshold=5
+
     dfu['diff'] = n.abs(dfu['buy'].get_values() - dfu['sell'].get_values())
     dfu['diffp'] = (dfu['diff'].get_values())/n.sum(dfu['diff'].get_values())
     dfu['side'] = map(lambda x: 'buy' if x == 1 else 'sell', (n.array((dfu['buy'].get_values() - dfu['sell'].get_values()) > 0, dtype=int)))
     dfu['sideBool'] = map(lambda x: 1 if x == 1 else -1, (n.array((dfu['buy'].get_values() - dfu['sell'].get_values()) > 0, dtype=int)))
     
-    dfu2 = dfu[dfu['diffp'] > (5.0/100)].sort('diff', ascending=False)
+    dfu2 = dfu[dfu['diffp'] > (float(diffpThreshold)/100)].sort('diff', ascending=False)
     # recalculate percentages [diffp]
     dfu2['diffp'] = (dfu2['diff'].get_values())/n.sum(dfu2['diff'].get_values())
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -154,4 +159,4 @@ if __name__ == "__main__":
     else:
         leverage=50
         
-    main(leverage=leverage, dryrun=dryrun)
+    main(args, leverage=leverage, dryrun=dryrun)
