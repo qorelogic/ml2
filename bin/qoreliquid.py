@@ -1838,7 +1838,8 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
                                         units=units)
                 except Exception as e:
                     print e
-            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s)" % (accid, dfu3.index[i], side, units)
+            status = 'LIVE' if dryrun == False else 'dryrun'
+            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) [%s]" % (accid, dfu3.index[i], side, units, status)
         
     return dfu3
     
