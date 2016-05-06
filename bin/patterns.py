@@ -83,7 +83,6 @@ def main(args, leverage=10, dryrun=True):
     print dfu.sort('diff', ascending=False)
     
     # In[ calculate period weights ]:
-    @profile
     def periodWeightsTable():
         p0 = [1, 5, 15, 30, 60, 240, 1440, 1440*5, 1440*20]
         p1 = n.array(range(1, len(p0)+1))
