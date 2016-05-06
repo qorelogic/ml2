@@ -1804,7 +1804,9 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
     dfu3 = cw(dfu3, oanda2, oq, accid, leverage=leverage)
 
     #dfu3['rebalance'] = dfu3.ix[:, 'amountSideBool'] - dfu3.ix[:, 'positions']
-    dfu3['rebalance'] = (dfu3.ix[:, 'sideBool']       * dfu3.ix[:, 'amount2']) - dfu3.ix[:, 'positions']
+    try:    positions = dfu3.ix[:, 'positions']
+    except: positions = n.array([0]*len(dfu3.index))
+    dfu3['rebalance'] = (dfu3.ix[:, 'sideBool']       * dfu3.ix[:, 'amount2']) - positions
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         print dfu3.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sideBool unit amountSideBool positions rebalance'.split(' ')]
