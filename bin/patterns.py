@@ -83,7 +83,25 @@ def main(args, leverage=10, dryrun=True):
         dfu = p.read_csv(fname, index_col=0)
     print dfu
     
-    # In[ ]:
+    def periodWeightsTable():
+        p0 = [1, 5, 15, 30, 60, 240, 1440, 1440*5, 1440*20]
+        p1 = n.array(range(1, len(p0)+1))
+        pp = p.DataFrame(p1, columns=[0])
+        #pp(:,3) = pp(:,2)./power(pp(:,1), 3)
+        pp['period'] = p0
+        pp['weight'] = pp.ix[:,1] / n.power(pp.ix[:,0], 3)
+        pp.ix[:,[0,'weight']].plot()
+        pp
+        return pp.set_index(0)
+    pw = periodWeightsTable()
+    
+    print
+    print 'pw'
+    print pw#['weight']
+    print
+    print 'element-wise *'
+    print dfu * pw['weight']
+    print
     
     if args.diffpThreshold: diffpThreshold=int(args.diffpThreshold)
     else:                   diffpThreshold=5
@@ -93,6 +111,7 @@ def main(args, leverage=10, dryrun=True):
     dfu['side'] = map(lambda x: 'buy' if x == 1 else 'sell', (n.array((dfu['buy'].get_values() - dfu['sell'].get_values()) > 0, dtype=int)))
     dfu['sideBool'] = map(lambda x: 1 if x == 1 else -1, (n.array((dfu['buy'].get_values() - dfu['sell'].get_values()) > 0, dtype=int)))
     
+    # set the percentage threshold
     dfu2 = dfu[dfu['diffp'] > (float(diffpThreshold)/100)].sort('diff', ascending=False)
     # recalculate percentages [diffp]
     dfu2['diffp'] = (dfu2['diff'].get_values())/n.sum(dfu2['diff'].get_values())
