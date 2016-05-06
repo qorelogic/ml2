@@ -90,8 +90,8 @@ def main(args, leverage=10, dryrun=True):
         #pp(:,3) = pp(:,2)./power(pp(:,1), 3)
         pp['period'] = p0
         pp['weight'] = pp.ix[:,1] / n.power(pp.ix[:,0], 3)
-        pp.ix[:,[0,'weight']].plot()
-        pp
+        #pp.ix[:,[0,'weight']].plot()
+        #pp
         return pp.set_index(0)
     pw = periodWeightsTable()
     

@@ -1764,19 +1764,6 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
     oq = OandaQ()
     
     print '----------'
-
-    #co = p.read_csv('config.csv', header=None)
-    
-    #env1=co.ix[0,1]
-    #access_token1=co.ix[0,2]
-    #oanda1 = oandapy.API(environment=env1, access_token=access_token1)
-    
-    #env2=co.ix[1,1]
-    #access_token2=co.ix[1,2]
-    #oanda2 = oandapy.API(environment=env2, access_token=access_token2)
-
-    acc = oanda2.get_accounts()['accounts']
-    #accid = acc[0]['accountId']
     
     # recalculate percentages [diffp]
     dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
@@ -1814,7 +1801,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
         ''
     dfu3 = dfu3.fillna(0)
     
-    dfu3 = cw(dfu3, oanda2, accid, leverage=leverage)
+    dfu3 = cw(dfu3, oanda2, oq, accid, leverage=leverage)
 
     #dfu3['rebalance'] = dfu3.ix[:, 'amountSideBool'] - dfu3.ix[:, 'positions']
     dfu3['rebalance'] = (dfu3.ix[:, 'sideBool']       * dfu3.ix[:, 'amount2']) - dfu3.ix[:, 'positions']
@@ -1843,7 +1830,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
         
     return dfu3
     
-def cw(dfu33, oanda2, accid, leverage=50):
+def cw(dfu33, oanda2, oq, accid, leverage=50):
     print '#--- cw(start)'
     li = list(dfu33.sort('diffp', ascending=False).index)
     #print 'li'
@@ -1851,7 +1838,7 @@ def cw(dfu33, oanda2, accid, leverage=50):
 
     pdf = li
     print li
-    oq = OandaQ()
+    
     df = oq.syntheticCurrencyTable(pdf, homeCurrency='USD')
     df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
     pcdf = df.ix[:,'pairedCurrency'].get_values()
