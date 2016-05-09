@@ -1819,16 +1819,19 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
         #dfu3.ix[dfu3.index[i], 'side']
         #dfu3.ix[dfu3.index[i], 'side']
         if units > 0:
+            status = 'LIVE' if dryrun == False else 'dryrun'
+            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) [%s]" % (accid, dfu3.index[i], side, units, status)
             if dryrun == False:
                 try:
+                    ans = raw_input('Sure you want to create order? (y/N): ')
+                    if ans != 'y':
+                        raise(Exception('User intervened: order not created'))
                     oanda2.create_order(accid, type='market', 
                                         instrument=dfu3.index[i], 
                                         side=side,
                                         units=units)
                 except Exception as e:
                     print e
-            status = 'LIVE' if dryrun == False else 'dryrun'
-            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) [%s]" % (accid, dfu3.index[i], side, units, status)
         
     return dfu3
     
