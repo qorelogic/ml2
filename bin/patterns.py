@@ -73,7 +73,13 @@ def main(args, leverage=10, dryrun=True):
     df = p.DataFrame()
     if args.analyze:
         dfu = p.DataFrame()
-        for i in 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD,EUR_AUD,USD_JPY,AUD_USD,AUD_JPY,CAD_JPY,EUR_CAD,EUR_CHF,EUR_GBP,NZD_JPY,NZD_USD,USD_CHF,CHF_JPY,USD_MXN'.split(','):
+        oq = OandaQ(selectOandaAccount=1)
+        pairs = ",".join(list(n.array(p.DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
+        #pairs = 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD,EUR_AUD,USD_JPY,AUD_USD,AUD_JPY,CAD_JPY,EUR_CAD,EUR_CHF,EUR_GBP,NZD_JPY,NZD_USD,USD_CHF,CHF_JPY,USD_MXN'
+        print '--- Pairs ---'
+        print pairs
+        print '-------------'
+        for i in pairs.split(','):
             dfu = dfu.combine_first(getc4(df, dfh, oanda2, instrument=i))
         fname = '/tmp/patterns.dfu.%s.csv' % time.time()
         dfu.to_csv(fname)
