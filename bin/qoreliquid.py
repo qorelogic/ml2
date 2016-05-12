@@ -1807,9 +1807,11 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
     try:    positions = dfu3.ix[:, 'positions']
     except: positions = n.array([0]*len(dfu3.index))
     dfu3['rebalance'] = (dfu3.ix[:, 'sideBool']       * dfu3.ix[:, 'amount2']) - positions
+    dfu3['rebalanceBool'] = n.int16(dfu3.ix[:, 'rebalance'] > 0)
+    dfu3['deleverageBool'] = n.int16(dfu3.ix[:, 'sideBool'] != dfu3.ix[:, 'rebalanceBool'])
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print dfu3.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sideBool unit amountSideBool positions rebalance'.split(' ')]
+        print dfu3.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sideBool unit amountSideBool amount2 positions rebalance rebalanceBool deleverageBool'.split(' ')]
         print
 
     for i in range(len(dfu3.index)):
@@ -1819,8 +1821,10 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
         #dfu3.ix[dfu3.index[i], 'side']
         #dfu3.ix[dfu3.index[i], 'side']
         if units > 0:
-            status = 'LIVE' if dryrun == False else 'dryrun'
-            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) [%s]" % (accid, dfu3.index[i], side, units, status)
+            status = '[LIVE]' if dryrun == False else '[dryrun]'
+            deleverageStatus = '[deleverage]' if dfu3.ix[dfu3.index[i], 'deleverageBool'] == 1 else ''
+            closePositionStatus = '[closePosition]' if dfu3.ix[dfu3.index[i], 'amount2'] == 0 else ''
+            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, dfu3.index[i], side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
             if dryrun == False:
                 try:
                     ans = raw_input('Sure you want to create order? (y/N): ')
