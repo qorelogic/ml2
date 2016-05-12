@@ -1760,7 +1760,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         print instrument
         return res
 
-def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
+def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False):
     oq = OandaQ()
     
     print '----------'
@@ -1777,8 +1777,9 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
     try:
         currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument').ix[:,'side units'.split(' ')]
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print currentPositions.sort('units', ascending=False)
-        print
+        if verbose:
+            print currentPositions.sort('units', ascending=False)
+            print
 
         # get rebalance amount
         #print currentPositions
@@ -1788,7 +1789,8 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
         cu['bool'] = map(lambda x: 1 if x == 'buy' else -1, cu['side'])
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         cu = cu.fillna(0)
-        print cu.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sideBool unit amountSideBool positions rebalance'.split(' ')]
+        if verbose:
+            print cu.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sideBool unit units amountSideBool positions rebalance'.split(' ')]
         #print
         dfu3 = dfu3.combine_first(cu)
     except:
@@ -1801,7 +1803,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
         ''
     dfu3 = dfu3.fillna(0)
     
-    dfu3 = cw(dfu3, oanda2, oq, accid, leverage=leverage)
+    dfu3 = cw(dfu3, oanda2, oq, accid, leverage=leverage, verbose=verbose)
 
     #dfu3['rebalance'] = dfu3.ix[:, 'amountSideBool'] - dfu3.ix[:, 'positions']
     try:    positions = dfu3.ix[:, 'positions']
@@ -1811,7 +1813,10 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
     dfu3['deleverageBool'] = n.int16(dfu3.ix[:, 'sideBool'] != dfu3.ix[:, 'rebalanceBool'])
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print dfu3.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sideBool unit amountSideBool amount2 positions rebalance rebalanceBool deleverageBool'.split(' ')]
+        f1Base         = 'amount bool buy diff diffp sell side sideBool unit units amountSideBool amount2 positions'
+        if verbose: f1 = ' rebalance rebalanceBool deleverageBool'
+        else:       f1 = f1Base
+        print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]
         print
 
     for i in range(len(dfu3.index)):
@@ -1839,28 +1844,29 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50):
         
     return dfu3
     
-def cw(dfu33, oanda2, oq, accid, leverage=50):
-    print '#--- cw(start)'
+def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
+    if verbose: print '#--- cw(start)'
     li = list(dfu33.sort('diffp', ascending=False).index)
-    #print 'li'
-    #print li
+    if verbose:
+        print 'li'
+        print li
 
     pdf = li
-    print li
     
     df = oq.syntheticCurrencyTable(pdf, homeCurrency='USD')
     df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
     pcdf = df.ix[:,'pairedCurrency'].get_values()
-    print pcdf
+    if verbose: print pcdf
     pcdf = oq.wew(pcdf)
-    print pcdf
-    print
+    if verbose:
+        print pcdf
+        print
     #pdf = n.c_[pdf,pcdf]#[0]
     pdf = list(pdf)+list(pcdf)
-    print pdf
+    if verbose: print pdf
     #fdf = fdf.combine_first(df)
     pairs = ','.join(list(pdf))
-    print pairs
+    if verbose: print pairs
 
     sdf = p.DataFrame(oq.syntheticCurrencyTable(li, homeCurrency='USD'))
     #print list(sdf['quotedCurrency'])
@@ -1873,12 +1879,14 @@ def cw(dfu33, oanda2, oq, accid, leverage=50):
     ldf = p.DataFrame(li)
     #sdf['pc'] = ma 
     sdf = sdf.set_index('instrument')
-    print 'sdf'
-    #print sdf
+    if verbose:
+        print 'sdf'
+        print sdf
     quotedCurrency = sdf.ix[dfu33.index, ['quotedCurrency','pow']]
-    print 'quotedCurrency'
-    print quotedCurrency
-    print '===='
+    if verbose:
+        print 'quotedCurrency'
+        print quotedCurrency
+        print '===='
     #---
     quotedCurrencyPrice = res.ix[quotedCurrency['quotedCurrency'],['bid']].fillna(1)
     #quotedCurrencyPrice['pow'] = 
@@ -1888,12 +1896,13 @@ def cw(dfu33, oanda2, oq, accid, leverage=50):
     quotedCurrencyPrice['diffp'] = dfu33['diffp']
     #---
     #.sort('diffp', ascending=False)
-    print 'quotedCurrencyPrice'
-    print quotedCurrencyPrice#.sort('diffp', ascending=False)
+    if verbose:
+        print 'quotedCurrencyPrice'
+        print quotedCurrencyPrice#.sort('diffp', ascending=False)
     #print res
     #print sdf['quotedCurrency']
     #print sdf.ix[quotedCurrencyPrice.index,:]
-    print '===='
+    if verbose: print '===='
 
     marginAvail = oanda2.get_account(accid)['marginAvail']
     dfu33['pow2'] = sdf.ix[quotedCurrencyPrice.index,'pow'].get_values()
@@ -1902,10 +1911,11 @@ def cw(dfu33, oanda2, oq, accid, leverage=50):
     dfu33['amount2'] = dfu33['unitsAvailable'] * dfu33['diffp']
     #print quotedCurrencyPrice['bid']
     #print p.DataFrame(marginAvail * 50 * quotedCurrencyPrice['bid'].get_values())
-    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print 'dfu33'    
-        print dfu33.ix[:, 'quotedCurrencyPriceBid unitsAvailable diffp pow2 units amount2 amount rebalance'.split(' ')]
-    print '#--- cw(end)'
+    if verbose:
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print 'dfu33'    
+            print dfu33.ix[:, 'quotedCurrencyPriceBid unitsAvailable diffp pow2 units amount2 amount rebalance'.split(' ')]
+    if verbose: print '#--- cw(end)'
     
     return dfu33
 

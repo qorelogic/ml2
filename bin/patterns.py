@@ -177,8 +177,9 @@ def main(args, leverage=10, dryrun=True):
         print 'No'
         print
         
-    fu33 = rebalanceTrades(dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage)
-    dfu33 = rebalanceTrades(dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage)
+    verbose=False
+    fu33 = rebalanceTrades(dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage, verbose=verbose)
+    dfu33 = rebalanceTrades(dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage, verbose=verbose)
 
 if __name__ == "__main__":
     
