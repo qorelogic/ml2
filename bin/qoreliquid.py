@@ -1869,11 +1869,14 @@ def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     if verbose: print pairs
 
     sdf = p.DataFrame(oq.syntheticCurrencyTable(li, homeCurrency='USD'))
-    #print list(sdf['quotedCurrency'])
     res = oanda2.get_prices(instruments=','.join(oq.wew(sdf['quotedCurrency'])))
     res = p.DataFrame(res['prices'])
-    #print 'res'
-    #print res
+    if verbose:
+        print list(sdf['quotedCurrency'])
+        print 'sdf'
+        print sdf
+        print 'res'
+        print res
     res = res.set_index('instrument')
     #print res.ix[oq.wew(list(sdf['quotedCurrency'])), :]
     ldf = p.DataFrame(li)
