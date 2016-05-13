@@ -1819,24 +1819,24 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]
         print
 
-    for i in range(len(dfu3.index)):
-        #print dfu3.ix[[dfu3.index[i]], :].transpose()
-        units = int(abs(dfu3.ix[dfu3.index[i], 'rebalance']))#-1
-        side  = 'buy' if int(dfu3.ix[dfu3.index[i], 'rebalance']) > 0 else 'sell'
-        #dfu3.ix[dfu3.index[i], 'side']
-        #dfu3.ix[dfu3.index[i], 'side']
+    for i in dfu3.sort('diffp', ascending=False).index:
+        #print dfu3.ix[[i], :].transpose()
+        units = int(abs(dfu3.ix[i, 'rebalance']))#-1
+        side  = 'buy' if int(dfu3.ix[i, 'rebalance']) > 0 else 'sell'
+        #dfu3.ix[i, 'side']
+        #dfu3.ix[i, 'side']
         if units > 0:
             status = '[LIVE]' if dryrun == False else '[dryrun]'
-            deleverageStatus = '[deleverage]' if dfu3.ix[dfu3.index[i], 'deleverageBool'] == 1 else ''
-            closePositionStatus = '[closePosition]' if dfu3.ix[dfu3.index[i], 'amount2'] == 0 else ''
-            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, dfu3.index[i], side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
+            deleverageStatus = '[deleverage]' if dfu3.ix[i, 'deleverageBool'] == 1 else ''
+            closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
+            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
             if dryrun == False:
                 try:
                     ans = raw_input('Sure you want to create order? (y/N): ')
                     if ans != 'y':
                         raise(Exception('User intervened: order not created'))
                     oanda2.create_order(accid, type='market', 
-                                        instrument=dfu3.index[i], 
+                                        instrument=i, 
                                         side=side,
                                         units=units)
                 except Exception as e:
