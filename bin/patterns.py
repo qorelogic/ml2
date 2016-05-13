@@ -49,7 +49,7 @@ accid = acc[0]['accountId']
 #print 'using account: {0}'.format(accid)
 
 
-def main(args, leverage=10, dryrun=True):
+def main(args, leverage=10, dryrun=True, verbose=False):
     # In[ ]:
     
     """
@@ -81,7 +81,7 @@ def main(args, leverage=10, dryrun=True):
     else:
         dfu = p.read_csv(fname, index_col=0)
     dfu['diff'] = n.abs(dfu['buy'] - dfu['sell'])
-    print dfu.sort('diff', ascending=False)
+    if verbose: print dfu.sort('diff', ascending=False)
     
     # In[ calculate period weights ]:
     def periodWeightsTable():
@@ -96,25 +96,27 @@ def main(args, leverage=10, dryrun=True):
         #pp
         return pp.set_index(0)
     pw = periodWeightsTable()
+    if verbose: print pw
     
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print
-        print 'pw'
-        print pw#['weight']
-        print
-        print 'element-wise *'
         cli = [0,1,2,3,4,5,6,7,8]
         mdfu = p.DataFrame(dfu.ix[:,cli].get_values() * pw['percent'].get_values(), index=dfu.index, columns=dfu.columns[cli])
         dfu  = mdfu.combine_first(dfu)
         posdf = dfu.ix[:,cli][dfu.ix[:,cli] > 0].fillna(0)
         negdf = dfu.ix[:,cli][dfu.ix[:,cli] < 0].fillna(0)
-        print posdf
-        print negdf
-        print 
         dfu['buy'] = n.sum(posdf.get_values(), 1)
         dfu['sell'] = n.abs(n.sum(negdf.get_values(), 1))
         dfu['diff'] = n.abs(dfu['buy'] - dfu['sell'])
-        print dfu.sort('diff', ascending=False)
+        if verbose:
+            print
+            print 'pw'
+            print pw#['weight']
+            print
+            print 'element-wise *'
+            print posdf
+            print negdf
+            print 
+            print dfu.sort('diff', ascending=False)
     
     #sys.exit()
     
@@ -131,15 +133,16 @@ def main(args, leverage=10, dryrun=True):
     # recalculate percentages [diffp]
     dfu2['diffp'] = (dfu2['diff'].get_values())/n.sum(dfu2['diff'].get_values())
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print dfu2
+        if verbose: print dfu2
     
     
     # In[ ]:
     
     orders = dfu2.ix[:, 'diff side diffp sidePolarity'.split(' ')]
-    print 'Oanda orders:'
-    print orders
-    print
+    if verbose: 
+        print 'Oanda orders:'
+        print orders
+        print
     
     ps = """AUD/NZD
     AUD/USD
@@ -171,8 +174,9 @@ def main(args, leverage=10, dryrun=True):
         
         # recalculate percentages [diffp]
         dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
-        print '1broker orders:'
-        print dfu3
+        if verbose: 
+            print '1broker orders:'
+            print dfu3
     except Exception as e:
         print e
         print 'No'

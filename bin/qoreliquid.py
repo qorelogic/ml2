@@ -1763,7 +1763,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
 def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False):
     oq = OandaQ(verbose=False)
     
-    print '----------'
+    if verbose: print '----------'
     
     # recalculate percentages [diffp]
     dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
@@ -1819,8 +1819,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         f1Base         = 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity amount2 positions rebalance'
-        if verbose: f1 = '%s rebalanceBool deleverageBool deleverageBoola' % f1Base
-        #if verbose: f1 = '%s rebalance rebalanceBool deleverageBool' % f1Base
+        if verbose: f1 = '%s rebalanceBool deleverageBool' % f1Base
         else:       f1 = f1Base
         print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]
         print
