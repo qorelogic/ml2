@@ -1827,7 +1827,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         #dfu3.ix[i, 'side']
         if units > 0:
             status = '[LIVE]' if dryrun == False else '[dryrun]'
-            deleverageStatus = '[deleverage]' if dfu3.ix[i, 'deleverageBool'] == 1 else ''
+            deleverageStatus = '[v deleverage]' if dfu3.ix[i, 'deleverageBool'] == 1 else '[^ leverage]'
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
             print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
             if dryrun == False:
