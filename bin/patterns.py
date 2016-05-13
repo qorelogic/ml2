@@ -5,6 +5,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-v", '--verbose', help="turn on verbosity", action="store_true")
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-a", '--analyze', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-acc", '--account', help="account number")
 parser.add_argument('-g', "-gearing", '--leverage', help="gearing or leverage, default=50")
 parser.add_argument('-n', '--num', help="number of trades default=None")
 parser.add_argument('-dp', '--diffpThreshold', help="trade only signals above a given threshold default=5")
@@ -183,10 +184,18 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         print
         
     verbose=args.verbose
-    fu33 = rebalanceTrades(dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage, verbose=verbose)
-    fu33 = rebalanceTrades(dfu2, oanda1, 801996, dryrun=dryrun, leverage=leverage, verbose=verbose)
-    fu33 = rebalanceTrades(dfu2, oanda1, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose)
-    dfu33 = rebalanceTrades(dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage, verbose=verbose)
+    
+    if args.account:
+        try:
+            dfu33 = rebalanceTrades(dfu2, oanda1, int(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose)
+        except oandapy.OandaError as e:
+            print e
+            print 'Try a different account number'
+    else:
+        fu33 = rebalanceTrades(dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage, verbose=verbose)
+        fu33 = rebalanceTrades(dfu2, oanda1, 801996, dryrun=dryrun, leverage=leverage, verbose=verbose)
+        fu33 = rebalanceTrades(dfu2, oanda1, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose)
+        dfu33 = rebalanceTrades(dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage, verbose=verbose)
 
 if __name__ == "__main__":
     
