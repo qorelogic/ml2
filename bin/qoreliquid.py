@@ -1760,6 +1760,9 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         print instrument
         return res
 
+def differentPolarity(a, b):
+    return n.logical_or(n.logical_and(a < 0, b > 0), n.logical_and(a > 0, b < 0))
+
 def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False):
     oq = OandaQ(verbose=False)
     
@@ -1810,11 +1813,6 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     except: positions = n.array([0]*len(dfu3.index))
     dfu3['rebalance'] = (dfu3.ix[:, 'sidePolarity']       * dfu3.ix[:, 'amount2']) - positions
     dfu3['rebalanceBool'] = n.int16(dfu3.ix[:, 'rebalance'] <> 0)
-
-    def differentPolarity(a, b):
-        return n.logical_or(n.logical_and(a < 0, b > 0), n.logical_and(a > 0, b < 0))
-        
-    #dfu3['deleverageBool'] = n.int16(dfu3.ix[:, 'sidePolarity'] != dfu3.ix[:, 'rebalanceBool'])
     dfu3['deleverageBool'] = n.logical_and(differentPolarity(positions, dfu3.ix[:, 'rebalance']), positions <> 0)
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
