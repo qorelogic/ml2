@@ -1818,8 +1818,8 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     dfu3['deleverageBool'] = n.logical_and(differentPolarity(positions, dfu3.ix[:, 'rebalance']), positions <> 0)
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity amount2 positions'
-        if verbose: f1 = '%s rebalance rebalanceBool deleverageBool deleverageBoola' % f1Base
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity amount2 positions rebalance'
+        if verbose: f1 = '%s rebalanceBool deleverageBool deleverageBoola' % f1Base
         #if verbose: f1 = '%s rebalance rebalanceBool deleverageBool' % f1Base
         else:       f1 = f1Base
         print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]
@@ -1833,7 +1833,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         #dfu3.ix[i, 'side']
         if units > 0:
             status = '[LIVE]' if dryrun == False else '[dryrun]'
-            deleverageStatus = '[v deleverage]' if dfu3.ix[i, 'deleverageBool'] == 1 else '[^ leverage]'
+            deleverageStatus = '[v deleverage]' if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
             print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
             if dryrun == False:
