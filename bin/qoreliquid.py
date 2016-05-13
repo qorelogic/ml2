@@ -1809,7 +1809,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     try:    positions = dfu3.ix[:, 'positions']
     except: positions = n.array([0]*len(dfu3.index))
     dfu3['rebalance'] = (dfu3.ix[:, 'sideBool']       * dfu3.ix[:, 'amount2']) - positions
-    dfu3['rebalanceBool'] = n.int16(dfu3.ix[:, 'rebalance'] > 0)
+    dfu3['rebalanceBool'] = n.int16(dfu3.ix[:, 'rebalance'] <> 0)
     dfu3['deleverageBool'] = n.int16(dfu3.ix[:, 'sideBool'] != dfu3.ix[:, 'rebalanceBool'])
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
