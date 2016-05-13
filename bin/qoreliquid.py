@@ -1822,7 +1822,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]
         print
 
-    for i in dfu3.sort('diffp', ascending=False).index:
+    for i in dfu3.sort_values('diffp', ascending=False).index:
         #print dfu3.ix[[i], :].transpose()
         units = int(abs(dfu3.ix[i, 'rebalance']))#-1
         side  = 'buy' if int(dfu3.ix[i, 'rebalance']) > 0 else 'sell'
