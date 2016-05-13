@@ -51,7 +51,7 @@ class OandaQ:
     oanda2 = None
     oandapys = {}
     
-    def __init__(self, verbose=False, selectOandaAccount=2):
+    def __init__(self, verbose=False, selectOandaAccount=2, selectOandaSubAccount=0):
 
         #imports()
         from qore import QoreDebug
@@ -66,6 +66,8 @@ class OandaQ:
         
         # get current quotes
         co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            if verbose: print co
         self.oandaUsername = co.ix[selectOandaAccount,0]
         self.env2          = co.ix[selectOandaAccount,1]
         self.access_token2 = co.ix[selectOandaAccount,2]
@@ -75,18 +77,23 @@ class OandaQ:
         self.oanda2 = oc #oandapy.API(environment=self.env2, access_token=self.access_token2)
     
         try:
-            self.aid = self.oandaConnection().get_accounts()['accounts'][0]['accountId']
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                if verbose: print p.DataFrame(self.oandaConnection().get_accounts()['accounts'])
+            self.aid = self.oandaConnection().get_accounts()['accounts'][selectOandaSubAccount]['accountId']
         except:
             self.aid = 1
+        if verbose: print 'oanda aid: %s' % self.aid
         #self.oandaConnection().create_order(aid, type='market', instrument='EUR_USD', side='sell', units=10)
-        """
+        #"""
         if verbose == True:
             res = self.oandaConnection().get_trades(self.aid)
             for i in res:
-                print p.DataFrame(res[i])
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    print p.DataFrame(res[i])
         
-            print p.DataFrame(self.oandaConnection().get_account(self.aid), index=[0])
-        """
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                print p.DataFrame(self.oandaConnection().get_account(self.aid), index=[0])
+        #"""
 
         self.dfa = {}
         
@@ -870,11 +877,14 @@ class OandaQ:
         self.qd._getMethod()
         
         from pandas import DataFrame as p_DataFrame
+        from pandas import option_context as p_option_context
+        
         from numpy import array as n_array
                 
         df = self.oandaConnection().get_trades(self.aid)['trades']
         pairdf = p_DataFrame(df)
-        print pairdf
+        with p_option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print pairdf
         try:
             pdf = pairdf.ix[:,'instrument'].get_values()
             pdf = n_array(pdf)            
@@ -1021,7 +1031,8 @@ class OandaQ:
             
             #print fdf.ix[:,'instrument units plpcnt pips'.split(' ')].transpose()
             if verbose == True:
-                print fdf.ix[:,'units side plpcnt pl pips age'.split(' ')]
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    print fdf.ix[:,'units side plpcnt pl pips age'.split(' ')]
             #print fdf.ix[:,:]#.to_dict()
             #os.system('clear')
             #tspm = float(time.time())*100

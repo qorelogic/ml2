@@ -1761,7 +1761,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         return res
 
 def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False):
-    oq = OandaQ()
+    oq = OandaQ(verbose=False)
     
     print '----------'
     

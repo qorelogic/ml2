@@ -47,7 +47,7 @@ except IOError, e:
     print e
     sys.exit()
     
-oq = OandaQ()
+oq = OandaQ(selectOandaAccount=0, selectOandaSubAccount=6)
 
 modes = 'demo,feed,plotly,csv,babysit,zmq'.split(',')
 
@@ -237,8 +237,6 @@ class ZMQ:
 def do_work(mode, forever = True):
     qd._getMethod()
 
-    oq = OandaQ(selectOandaAccount=1)
-    
     while True:
         print 'receiving feed..'
         try:
