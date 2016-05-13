@@ -1790,13 +1790,13 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         cu = cu.fillna(0)
         if verbose:
-            print cu.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sideBool unit units amountSideBool positions rebalance'.split(' ')]
+            print cu.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')]
         #print
         dfu3 = dfu3.combine_first(cu)
     except:
         ''
     try:
-        dfu3['amountSideBool'] = dfu3['sideBool'] * dfu3['amount']
+        dfu3['amountSidePolarity'] = dfu3['sidePolarity'] * dfu3['amount']
         dfu3['positions'] = cu.ix[:, 'units'] * cu.ix[:, 'bool']
     except:
         #dfu3['positions'] = 0
@@ -1805,15 +1805,15 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     
     dfu3 = cw(dfu3, oanda2, oq, accid, leverage=leverage, verbose=verbose)
 
-    #dfu3['rebalance'] = dfu3.ix[:, 'amountSideBool'] - dfu3.ix[:, 'positions']
+    #dfu3['rebalance'] = dfu3.ix[:, 'amountSidePolarity'] - dfu3.ix[:, 'positions']
     try:    positions = dfu3.ix[:, 'positions']
     except: positions = n.array([0]*len(dfu3.index))
-    dfu3['rebalance'] = (dfu3.ix[:, 'sideBool']       * dfu3.ix[:, 'amount2']) - positions
+    dfu3['rebalance'] = (dfu3.ix[:, 'sidePolarity']       * dfu3.ix[:, 'amount2']) - positions
     dfu3['rebalanceBool'] = n.int16(dfu3.ix[:, 'rebalance'] <> 0)
-    dfu3['deleverageBool'] = n.int16(dfu3.ix[:, 'sideBool'] != dfu3.ix[:, 'rebalanceBool'])
+    dfu3['deleverageBool'] = n.int16(dfu3.ix[:, 'sidePolarity'] != dfu3.ix[:, 'rebalanceBool'])
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sideBool unit units amountSideBool amount2 positions'
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity amount2 positions'
         if verbose: f1 = '%s rebalance rebalanceBool deleverageBool' % f1Base
         else:       f1 = f1Base
         print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]

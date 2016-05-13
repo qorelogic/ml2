@@ -123,7 +123,7 @@ def main(args, leverage=10, dryrun=True):
     dfu['diff'] = n.abs(dfu['buy'].get_values() - dfu['sell'].get_values())
     dfu['diffp'] = (dfu['diff'].get_values())/n.sum(dfu['diff'].get_values())
     dfu['side'] = map(lambda x: 'buy' if x == 1 else 'sell', (n.array((dfu['buy'].get_values() - dfu['sell'].get_values()) > 0, dtype=int)))
-    dfu['sideBool'] = map(lambda x: 1 if x == 1 else -1, (n.array((dfu['buy'].get_values() - dfu['sell'].get_values()) > 0, dtype=int)))
+    dfu['sidePolarity'] = map(lambda x: 1 if x == 1 else -1, (n.array((dfu['buy'].get_values() - dfu['sell'].get_values()) > 0, dtype=int)))
     
     # set the percentage threshold
     dfu2 = dfu[dfu['diffp'] > (float(diffpThreshold)/100)].sort('diff', ascending=False)
@@ -135,7 +135,7 @@ def main(args, leverage=10, dryrun=True):
     
     # In[ ]:
     
-    orders = dfu2.ix[:, 'diff side diffp sideBool'.split(' ')]
+    orders = dfu2.ix[:, 'diff side diffp sidePolarity'.split(' ')]
     print 'Oanda orders:'
     print orders
     print
