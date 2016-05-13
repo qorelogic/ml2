@@ -2,6 +2,7 @@
 import argparse
 # source: https://docs.python.org/2/howto/argparse.html
 parser = argparse.ArgumentParser()
+parser.add_argument("-v", '--verbose', help="turn on verbosity", action="store_true")
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-a", '--analyze', help="go live and turn off dryrun", action="store_true")
 parser.add_argument('-g', "-gearing", '--leverage', help="gearing or leverage, default=50")
@@ -177,7 +178,7 @@ def main(args, leverage=10, dryrun=True):
         print 'No'
         print
         
-    verbose=True
+    verbose=args.verbose
     fu33 = rebalanceTrades(dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage, verbose=verbose)
     fu33 = rebalanceTrades(dfu2, oanda1, 801996, dryrun=dryrun, leverage=leverage, verbose=verbose)
     fu33 = rebalanceTrades(dfu2, oanda1, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose)
