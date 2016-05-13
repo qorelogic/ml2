@@ -1810,11 +1810,17 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     except: positions = n.array([0]*len(dfu3.index))
     dfu3['rebalance'] = (dfu3.ix[:, 'sidePolarity']       * dfu3.ix[:, 'amount2']) - positions
     dfu3['rebalanceBool'] = n.int16(dfu3.ix[:, 'rebalance'] <> 0)
-    dfu3['deleverageBool'] = n.int16(dfu3.ix[:, 'sidePolarity'] != dfu3.ix[:, 'rebalanceBool'])
+
+    def differentPolarity(a, b):
+        return n.logical_or(n.logical_and(a < 0, b > 0), n.logical_and(a > 0, b < 0))
+        
+    #dfu3['deleverageBool'] = n.int16(dfu3.ix[:, 'sidePolarity'] != dfu3.ix[:, 'rebalanceBool'])
+    dfu3['deleverageBool'] = n.logical_and(differentPolarity(positions, dfu3.ix[:, 'rebalance']), positions <> 0)
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         f1Base         = 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity amount2 positions'
-        if verbose: f1 = '%s rebalance rebalanceBool deleverageBool' % f1Base
+        if verbose: f1 = '%s rebalance rebalanceBool deleverageBool deleverageBoola' % f1Base
+        #if verbose: f1 = '%s rebalance rebalanceBool deleverageBool' % f1Base
         else:       f1 = f1Base
         print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]
         print
