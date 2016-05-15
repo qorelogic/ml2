@@ -1619,27 +1619,57 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
     return d
     
     
+@profile
 def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
     import hashlib as hl
     import talib
 
+    print 'getc(%s, %s, %s)' % (instrument, granularity, mode)
     if update:
         try: dfh[instrument][granularity] = None
         except: ''
     
     try:
+        # inmemory caching
         csvIndex = ','.join(list(dfh[instrument][granularity].index))
         if verbose: print 'caching history %s.. ' % granularity
         res = dfh[instrument][granularity]
         if verbose: print hl.md5(csvIndex).hexdigest()
     except:
-        if verbose: print 'getting history %s.. ' % granularity
-        res = oanda2.get_history(instrument=instrument, granularity=granularity, count=15)
+        ohhdir = '/mldev/bin/data/oanda/bars/%s' % instrument
+        fname = '%s/%s-%s.csv' % (ohhdir, instrument, granularity)
+        print fname
+
         try:
-            dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
+            dfc = p.read_csv(fname, index_col='time')
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                print dfc
+            ts  = dfc.tail(1).index[0]
+            
+            uts = int(OandaQ.oandaToTimestamp_S(ts))
+            utshex = hl.md5(str(uts)).hexdigest()
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                print 'cached %s : %s : %s' % (uts, utshex, ts)
+        except Exception as e:
+            """
+            if verbose: print 'getting history %s.. ' % granularity
+            res = oanda2.get_history(instrument=instrument, granularity=granularity, count=15)
+            print res
+            dfc = p.DataFrame(res['candles']).set_index('time')
+            ts  = dfc.tail(1).index[0]
+            uts = int(OandaQ.oandaToTimestamp_S(ts))
+            utshex = hl.md5(str(uts)).hexdigest()
+            # save to disk
+            mkdir_p(ohhdir)
+            dfc.to_csv(fname)
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                print 'fetched %s : %s : %s' % (uts, utshex, ts)
+            """
+        try:
+            dfh[instrument][granularity] = dfc
         except:
             dfh[instrument] = {}
-            dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
+            dfh[instrument][granularity] = dfc
     csvIndex = ','.join(list(dfh[instrument][granularity].index))
     #print csvIndex
     if verbose: print hl.md5(csvIndex).hexdigest()
@@ -1659,6 +1689,7 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     #print df.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
     #print pnda
     return df
+@profile
 def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
     
     df = getc(df, dfh, oanda2, instrument=instrument, granularity='M1', mode=mode, update=update)
@@ -1673,12 +1704,14 @@ def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
     return df#.set_index('mode')
     #df['mode'] = mode
     
+@profile
 def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
     df = getcc(df, dfh, oanda2, mode, instrument=instrument, update=update)
     dfm = df.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
     dfm[mode] = dfm.ix[:, df.index[len(df)-1]]
     return dfm.ix[:, [mode]]
 
+@profile
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     dfm = p.DataFrame()
     patterns = ['CDL2CROWS',

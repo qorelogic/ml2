@@ -50,6 +50,7 @@ accid = acc[0]['accountId']
 #print 'using account: {0}'.format(accid)
 
 
+@profile
 def main(args, leverage=10, dryrun=True, verbose=False):
     # In[ ]:
     
