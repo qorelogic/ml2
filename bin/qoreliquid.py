@@ -1817,7 +1817,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     dfu3['deleverageBool'] = n.logical_and(differentPolarity(positions, dfu3.ix[:, 'rebalance']), positions <> 0)
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity amount2 positions rebalance rebalancep'
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity amount2 positions rebalance rebalancep diffp'
         if verbose: f1 = '%s rebalanceBool deleverageBool' % f1Base
         else:       f1 = f1Base
         #print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]
@@ -1913,9 +1913,13 @@ def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     if verbose: print '===='
 
     marginAvail = oanda2.get_account(accid)['marginAvail']
+    netAssetValue = float(oanda2.get_account(accid)['balance']) - float(oanda2.get_account(accid)['unrealizedPl'])
+    print '####### --- test ------'
+    print p.DataFrame(oanda2.get_account(accid), index=[0]).transpose()
+    print '####### --- test ----- -'
     dfu33['pow2'] = sdf.ix[quotedCurrencyPrice.index,'pow'].get_values()
     dfu33['quotedCurrencyPriceBid'] = quotedCurrencyPrice['bid'].get_values()
-    dfu33['unitsAvailable'] = marginAvail * leverage / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
+    dfu33['unitsAvailable'] = netAssetValue * leverage / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
     dfu33['amount2'] = dfu33['unitsAvailable'] * dfu33['diffp']
     #print quotedCurrencyPrice['bid']
     #print p.DataFrame(marginAvail * 50 * quotedCurrencyPrice['bid'].get_values())
