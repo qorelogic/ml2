@@ -1774,6 +1774,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     #balance = oanda2.get_account(accid)['balance']
     marginAvail = oanda2.get_account(accid)['marginAvail']
     netAssetValue = float(oanda2.get_account(accid)['balance']) - float(oanda2.get_account(accid)['unrealizedPl'])
+    balance       = float(oanda2.get_account(accid)['balance'])
     prdf = p.DataFrame(oanda2.get_prices(instruments=','.join(list(dfu3.index)))['prices']).set_index('instrument')
     #prdf.ix[:,['instrument','bid']]
     #prdf.ix['EUR_USD','bid']
@@ -1816,12 +1817,13 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     dfu3['rebalancep'] = n.abs(dfu3.ix[:, 'rebalance'].get_values()) / n.abs(positions)
     dfu3['rebalanceBool'] = n.int16(dfu3.ix[:, 'rebalance'] <> 0)
     dfu3['deleverageBool'] = n.logical_and(differentPolarity(positions, dfu3.ix[:, 'rebalance']), positions <> 0)
-    dfu3['diffpRebalancep'] = dfu3.ix[:, 'diffp'].get_values() * dfu3.ix[:, 'rebalancep'].get_values()
+    dfu3['diffpRebalancep'] = dfu3.ix[:, 'diffp'].get_values() * dfu3.ix[:, 'rebalancep'].get_values() * dfu3.ix[:, 'deleverageBool'].get_values()
+    dfu3['diffpRebalancepBalance'] = dfu3.ix[:, 'diffpRebalancep'].get_values() * balance
 
     sortby = 'diffpRebalancep'
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity amount2 positions rebalance rebalancep diffp diffpRebalancep'
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance'
         if verbose: f1 = '%s rebalanceBool deleverageBool' % f1Base
         else:       f1 = f1Base
         #print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]
