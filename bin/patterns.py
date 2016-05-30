@@ -4,6 +4,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", '--verbose', help="turn on verbosity", action="store_true")
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-hh", '--history', help="history", action="store_true")
 parser.add_argument("-a", '--analyze', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-acc", '--account', help="account number")
 parser.add_argument('-g', "-gearing", '--leverage', help="gearing or leverage, default=50")
@@ -31,7 +32,7 @@ import talib as talib
 from matplotlib import pyplot as plt
 from pylab import rcParams
 #get_ipython().magic(u'pylab inline')
-rcParams['figure.figsize'] = 20, 5
+#rcParams['figure.figsize'] = 20, 5
 
 import oandapy
 
@@ -208,5 +209,32 @@ if __name__ == "__main__":
         leverage=int(args.leverage)
     else:
         leverage=50
+
+    if args.account:
+        account=int(args.account)
+    else:
+        account=558788
+    
+    def plotTransactionHistory(acc, oaoa):
+        th = oaoa.get_transaction_history(acc)
+        df = p.DataFrame()
+        for i in th['transactions']:
+            df = df.combine_first(p.DataFrame(i, index=[i['id']]).transpose())           
+        df = df.transpose()
+        #print df
+        plot(df.ix[:,'accountBalance'].ffill()); show()
         
-    main(args, leverage=leverage, dryrun=dryrun)
+    if args.history:
+        #plotTransactionHistory(account, oanda1)
+        df = p.read_csv('/home/qore2/Desktop/f566016f51bde41a6c6fd2b4ec74cd82.csv')
+        dfi = df.sort('Transaction ID', ascending=True)
+        oq = OandaQ()
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print dfi#.columns
+            dfii = dfi.ix[:,'Transaction ID;Balance;Time (UTC)'.split(';')]#.tail(5)#.transpose()
+            #dfii['time'] = oq.oandaToTimestamp(dfii['Time (UTC)'])
+            dfp = dfii.ix[:,['Balance','Time (UTC)']].set_index('Time (UTC)')
+            dfp.plot()
+            show()
+    else:
+        main(args, leverage=leverage, dryrun=dryrun)
