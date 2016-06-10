@@ -1763,7 +1763,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
 def differentPolarity(a, b):
     return n.logical_or(n.logical_and(a < 0, b > 0), n.logical_and(a > 0, b < 0))
 
-def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False):
+def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractiveLeverage=False):
     oq = OandaQ(verbose=False)
     
     if verbose: print '----------'

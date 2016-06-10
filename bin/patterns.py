@@ -11,6 +11,8 @@ parser.add_argument('-g', "-gearing", '--leverage', help="gearing or leverage, d
 parser.add_argument('-n', '--num', help="number of trades default=None")
 parser.add_argument('-dp', '--diffpThreshold', help="trade only signals above a given threshold default=5")
 #parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
+parser.add_argument("-nid", '--noInteractiveDeleverage', help="No interactive Q&A for the deleverage option", action="store_true")
+parser.add_argument("-nil", '--noInteractiveLeverage', help="No interactive Q&A for the deleverage option", action="store_true")
 args = parser.parse_args()
 
 import sys
