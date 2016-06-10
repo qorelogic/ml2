@@ -38,7 +38,7 @@ from pylab import rcParams
 
 import oandapy
 
-co = p.read_csv('datafeeds/config.csv', header=None)
+co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
 
 env1=co.ix[0,1]
 access_token1=co.ix[0,2]
