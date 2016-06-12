@@ -1747,10 +1747,14 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
      'CDLLONGLEGGEDDOJI',
      'CDLMORNINGDOJISTAR'
     """
+    from multiprocessing.pool import ThreadPool
+    pool = ThreadPool(processes=27)
     for i in patterns:
-        dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
+        async_result = pool.apply_async(getccc, (df, dfh, oanda2, i, instrument=instrument, update=update))
+        dfm0 = async_result.get()
+        #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
         #dfm  = dfm.combine_first(dfm0)
-	dfm = p.concat([dfm, dfm0], axis=1)
+        dfm = p.concat([dfm, dfm0], axis=1)
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         dfm = dfm.transpose()
         dfmg = dfm > 0
