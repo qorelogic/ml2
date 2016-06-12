@@ -1769,7 +1769,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
 def differentPolarity(a, b):
     return n.logical_or(n.logical_and(a < 0, b > 0), n.logical_and(a > 0, b < 0))
 
-def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractiveLeverage=False):
+def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False):
     oq = OandaQ(verbose=False)
     
     if verbose: print '----------'
@@ -1849,9 +1849,19 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
             print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
             if dryrun == False:
                 try:
-                    ans = raw_input('Sure you want to create order? (y/N): ')
-                    if ans != 'y':
-                        raise(Exception('User intervened: order not created'))
+                    def interactiveMode():
+                        ans = raw_input('Sure you want to create order? (y/N): ')
+                        if ans != 'y':
+                            raise(Exception('User intervened: order not created'))
+                    if dfu3.ix[i, 'deleverageBool'] == True and noInteractiveDeleverage == False and noInteractive == False:
+                        print 'nid---'
+                        interactiveMode()
+                    if dfu3.ix[i, 'deleverageBool'] == False and noInteractiveLeverage == False and noInteractive == False:
+                        print 'nil---'
+                        interactiveMode()
+                    if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
+                        print 'ni---'
+                        interactiveMode()
                     oanda2.create_order(accid, type='market', 
                                         instrument=i, 
                                         side=side,
