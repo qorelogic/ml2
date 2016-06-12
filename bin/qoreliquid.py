@@ -1653,7 +1653,11 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     #df = normalizeme(df)
     #df = sigmoidme(df)
     #df = tanhme(df)
-    df = df.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]])
+    # original
+    #df = df.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]])
+    # cythonized
+    # df = p.concat([df, df2], axis=1)
+    df = p.concat([df, dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]], axis=1)
     #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
     #print df.columns
     #print df.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
@@ -1744,7 +1748,10 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
      'CDLLONGLEGGEDDOJI',
      'CDLMORNINGDOJISTAR'
     """
-    for i in patterns: dfm = dfm.combine_first(getccc(df, dfh, oanda2, i, instrument=instrument, update=update))
+    for i in patterns:
+        dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
+        #dfm  = dfm.combine_first(dfm0)
+	dfm = p.concat([dfm, dfm0], axis=1)
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         dfm = dfm.transpose()
         dfmg = dfm > 0
@@ -1756,8 +1763,8 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         #print n.sum(n.array(dfmk.transpose().get_values(), dtype=int), 0)
         if verbose: print dfm.transpose()
         res = dfm.transpose().ix[[instrument],:]
-        print res
-        print instrument
+        #print res
+        #print instrument
         return res
 
 def differentPolarity(a, b):
