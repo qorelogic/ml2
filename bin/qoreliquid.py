@@ -1631,8 +1631,8 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
         csvIndex = ','.join(list(dfh[instrument][granularity].index))
         if verbose: print 'caching history %s.. ' % granularity
         res = dfh[instrument][granularity]
-        if verbose: print hl.md5(csvIndex).hexdigest()
-    except:
+    except Exception as e:
+        if verbose: print e
         if verbose: print 'getting history %s.. ' % granularity
         res = oanda2.get_history(instrument=instrument, granularity=granularity, count=15)
         try:
@@ -1657,23 +1657,22 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     #df = df.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]])
     # cythonized
     # df = p.concat([df, df2], axis=1)
-    df = p.concat([df, dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]], axis=1)
+    #print dfh
+    dfh0 = dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
+    df = p.concat([df, dfh0], axis=1)
+    #print '%s %s' % (instrument, granularity)
     #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
     #print df.columns
     #print df.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
     #print pnda
     return df
+    #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
+
+@profile
 def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
-    
-    df = getc(df, dfh, oanda2, instrument=instrument, granularity='M1', mode=mode, update=update)
-    df = getc(df, dfh, oanda2, instrument=instrument, granularity='M5', mode=mode, update=update)
-    df = getc(df, dfh, oanda2, instrument=instrument, granularity='M15', mode=mode, update=update)
-    df = getc(df, dfh, oanda2, instrument=instrument, granularity='M30', mode=mode, update=update)
-    df = getc(df, dfh, oanda2, instrument=instrument, granularity='H1', mode=mode, update=update)
-    df = getc(df, dfh, oanda2, instrument=instrument, granularity='H4', mode=mode, update=update)
-    df = getc(df, dfh, oanda2, instrument=instrument, granularity='D', mode=mode, update=update)
-    df = getc(df, dfh, oanda2, instrument=instrument, granularity='W', mode=mode, update=update)
-    df = getc(df, dfh, oanda2, instrument=instrument, granularity='M', mode=mode, update=update)
+    verbose=False
+    for i in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
+        df = getc(df, dfh, oanda2, instrument=instrument, granularity=i, mode=mode, update=update, verbose=verbose)
     return df#.set_index('mode')
     #df['mode'] = mode
     
