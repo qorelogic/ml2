@@ -1668,20 +1668,22 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     return df
     #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
 
-@profile
-def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
-    verbose=False
-    for i in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
-        df = getc(df, dfh, oanda2, instrument=instrument, granularity=i, mode=mode, update=update, verbose=verbose)
-    return df#.set_index('mode')
-    #df['mode'] = mode
-    
-def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
-    df = getcc(df, dfh, oanda2, mode, instrument=instrument, update=update)
-    dfm = df.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
-    dfm[mode] = dfm.ix[:, df.index[len(df)-1]]
-    return dfm.ix[:, [mode]]
+#@profile
+def getccc(df1, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
+#def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
+        #mode=i
+        verbose=False
+        for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
+            df1 = getc(df1, dfh, oanda2, instrument=instrument, granularity=j, mode=mode, update=update, verbose=verbose)
+        #return df1#.set_index('mode')
+        #df1['mode'] = mode
+        #df1 = getcc(df1, dfh, oanda2, mode, instrument=instrument, update=update)
+        dfm1 = df1.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
+        dfm1[mode] = dfm1.ix[:, df1.index[len(df1)-1]]
+        return dfm1.ix[:, [mode]]
+        #dfm0 = dfm1.ix[:, [mode]]
 
+#@profile
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     dfm = p.DataFrame()
     patterns = ['CDL2CROWS',
