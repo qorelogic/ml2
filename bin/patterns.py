@@ -233,18 +233,33 @@ if __name__ == "__main__":
         df = df.transpose()
         #print df
         plot(df.ix[:,'accountBalance'].ffill()); show()
+
         
-    if args.history:
-        #plotTransactionHistory(account, oanda1)
-        df = p.read_csv('/home/qore2/Desktop/f566016f51bde41a6c6fd2b4ec74cd82.csv')
-        dfi = df.sort('Transaction ID', ascending=True)
-        oq = OandaQ()
-        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print dfi#.columns
-            dfii = dfi.ix[:,'Transaction ID;Balance;Time (UTC)'.split(';')]#.tail(5)#.transpose()
-            #dfii['time'] = oq.oandaToTimestamp(dfii['Time (UTC)'])
-            dfp = dfii.ix[:,['Balance','Time (UTC)']].set_index('Time (UTC)')
-            dfp.plot()
-            show()
-    else:
+    """
+    try:
         main(args, leverage=leverage, dryrun=dryrun)
+    except Exception as e:
+        qd.printTraceBack()
+        print e
+    """
+
+    
+    while True:
+        print 'receiving feed..'
+        try:
+            if args.history:
+                #plotTransactionHistory(account, oanda1)
+                df = p.read_csv('/home/qore2/Desktop/f566016f51bde41a6c6fd2b4ec74cd82.csv')
+                dfi = df.sort('Transaction ID', ascending=True)
+                oq = OandaQ()
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    print dfi#.columns
+                    dfii = dfi.ix[:,'Transaction ID;Balance;Time (UTC)'.split(';')]#.tail(5)#.transpose()
+                    #dfii['time'] = oq.oandaToTimestamp(dfii['Time (UTC)'])
+                    dfp = dfii.ix[:,['Balance','Time (UTC)']].set_index('Time (UTC)')
+                    dfp.plot()
+                    show()
+            else:
+                main(args, leverage=leverage, dryrun=dryrun)
+        except Exception as e:
+            print e
