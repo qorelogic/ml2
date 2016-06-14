@@ -356,7 +356,7 @@ if __name__ == '__main__':
     # source: https://docs.python.org/2/howto/argparse.html
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('-m', "--mode", help="mode")
+    parser.add_argument('-m', "--mode", help="mode: demo | feed | plotly | csv | babysit | zmq")
     parser.add_argument('-ni', "--nodbinsert", help="No  insert into mongodb.ticks", action="store_true")
 
     args = parser.parse_args()
