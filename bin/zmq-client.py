@@ -165,8 +165,11 @@ class ZMQClient:
         te0 = u.dumps(te0)
         self.zmq.zmqSend(te0)
 
-        stdscr.addstr(2, self.marginDebug, '%s:port:%s' % (self.zmqMethod, self.zmqPort), curses.color_pair(1))
-        stdscr.addstr(3, self.marginDebug, '%s:port:%s:%s' % (self.zmq.zmqMethod, self.zmq.zmqPort, self.zmq.zmqTopic), curses.color_pair(1))
+        try: stdscr.addstr(2, self.marginDebug, '%s:port:%s' % (self.zmqMethod, self.zmqPort), curses.color_pair(1))
+        except: ''
+        try: stdscr.addstr(3, self.marginDebug, '%s:port:%s:%s' % (self.zmq.zmqMethod, self.zmq.zmqPort, self.zmq.zmqTopic), curses.color_pair(1))
+        except: ''
+        
 
         for j in xrange(len(columns)):
             stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(columns[j]), curses.color_pair(1))
