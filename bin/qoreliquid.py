@@ -1834,9 +1834,10 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         f1Base         = 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance'
         if verbose: f1 = '%s rebalanceBool deleverageBool' % f1Base
         else:       f1 = f1Base
-        #print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]
-        print dfu3.sort(sortby, ascending=False).ix[:, f1.split(' ')]
-        print
+        if verbose:
+            #print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]
+            print dfu3.sort(sortby, ascending=False).ix[:, f1.split(' ')]
+            print
 
     for i in dfu3.sort(sortby, ascending=False).index:
         #print dfu3.ix[[i], :].transpose()
