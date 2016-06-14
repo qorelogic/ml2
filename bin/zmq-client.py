@@ -103,6 +103,13 @@ class ZMQClient:
                 df=df.ix[depth-1, :]
             except:
                 df=df.ix[depth-2, :]
+
+        if mode == 'pos':
+            df = p_DataFrame(mong['pos'])
+            try:
+                df=df.ix[depth-1, :]
+            except:
+                df=df.ix[depth-2, :]
         
         # transforn from currency pairs (EUR_USD, GBP_USD) to currencies (EUR, GBP, USD)
         ps = []
@@ -155,16 +162,28 @@ class ZMQClient:
         asks = {}
         avgs = {}
         spreads = {}
+        poss = {}
         from pandas import read_csv as p_read_csv
 	
         from oandaq import OandaQ
-        oq = OandaQ()
+        oq = OandaQ(selectOandaAccount=0)
         oq.generateInstruments()
         instruments = p_read_csv('data/oanda/cache/instruments.csv').set_index('instrument')
+        
+        maccid = 947325
+        from pandas import DataFrame as p_DataFrame
+        positions = oq.oanda2.get_positions(maccid)['positions']
+        dfp = p_DataFrame(positions).set_index('instrument')#.ix[:, 'instrument price side time units'.split(' ')]
+        dfp['i1'] = map(lambda x: x[0:3], dfp.index)
+        dfp['i2'] = map(lambda x: x[4:7], dfp.index)
+        #print
+        trades = oq.oanda2.get_trades(maccid)['trades']
+        dft = p_DataFrame(trades).set_index('id').ix[:, 'instrument price side time units'.split(' ')]
     
         depth = 20
         c = 0
         while True:
+            #print dft.sort('instrument')
             #self.socket.send('test client') # only for REQ
             data = self.socket.recv(0)
             data = data.split(' ')
@@ -192,8 +211,9 @@ class ZMQClient:
             pairs = _uwe('asks', pairs, pair, data)
             pairs = _uwe('avgs', pairs, pair, data)
             pairs = _uwe('spreads', pairs, pair, data)
+            pairs = _uwe('pos', pairs, pair, data)
             
-            mong = {'bids':bids, 'asks':asks, 'avgs':avgs, 'spreads':spreads}
+            mong = {'bids':bids, 'asks':asks, 'avgs':avgs, 'spreads':spreads, 'pos':poss}
             ########
             # bids
             try:
@@ -255,10 +275,11 @@ class ZMQClient:
                 #print 'len avg pair:{0} depth:{1}'.format(len(avgs[pair]), depth)
                 avgs[pair].popleft()
                 #print len(avgs[pair])
+
             df = p_DataFrame(avgs)
-    
             if mode == 'avg':
                 self.currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
+
             ########
             # spreads
             try: # catch exceptions from commodity instruments
@@ -280,6 +301,28 @@ class ZMQClient:
                 self.currencyMatrix(list(df.ix[depth-1, :].index), df=df.ix[depth-1, :], mode=mode, mong=mong, depth=depth)
             ########
             
+            ########
+            # pos
+            try: # catch exceptions from commodity instruments
+                cprice = float((float(data[1]) + float(data[2])) / 2)
+                avgPrice = float(dfp.ix[data[0], 'avgPrice'])
+                units = (cprice - avgPrice)  * float(dfp.ix[data[0], 'units']) * instruments.ix[pair, 'pip']
+                pos = units
+            except Exception as e:
+                units = 0
+                pos = units
+                continue
+            try:
+                poss[pair].append(pos)
+            except:
+                poss[pair] = deque([0]*depth)
+                poss[pair].append(pos)
+            
+            if len(poss[pair]) >= depth: poss[pair].popleft()
+            df = p_DataFrame(poss)
+            if mode == 'pos':
+                self.currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
+
             #print de
             #print list(de)
             de.append(data)
@@ -321,7 +364,7 @@ except KeyboardInterrupt as e:
     print ''
 except Exception as e:
     qd.logTraceBack(e)
-    print 'usage: <host:port> <avg|spread>'
+    print 'usage: <host:port> <avg|spread|pos>'
     qd.on()
     qd.printTraceBack()
     sys.exit(0)
