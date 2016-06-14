@@ -172,8 +172,10 @@ class ZMQClient:
         
 
         for j in xrange(len(columns)):
-            stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(columns[j]), curses.color_pair(1))
-            stdscr.addstr(2, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(c3[j]), curses.color_pair(self.get_color_pair(c3[j])))
+            try: stdscr.addstr(1, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(columns[j]), curses.color_pair(1))
+            except: ''
+            try: stdscr.addstr(2, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(c3[j]), curses.color_pair(self.get_color_pair(c3[j])))
+            except: ''
             #stdscr.addstr(2, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(c1[j]), curses.color_pair(1))
             #stdscr.addstr(3, (j*lsnlenmax)+(j*8)+20, '{:^25}'.format(c2[j]), curses.color_pair(1))
         #self.qd.log(a.shape)
@@ -720,9 +722,9 @@ except Exception as e:
     curses.nocbreak(); stdscr.keypad(0); curses.echo()
     curses.endwin()
     qd.logTraceBack(e)
-    print 'usage: <host:port> <avg|spread>'
-    #qd.on()
-    #qd.printTraceBack()
+    print 'usage: <host:port> <avg|spread|pos>'
+    qd.on()
+    qd.printTraceBack()
     sys.exit(0)
 
 curses.nocbreak(); 
