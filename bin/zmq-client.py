@@ -104,6 +104,7 @@ class ZMQClient:
             except:
                 df=df.ix[depth-2, :]
         
+        # transforn from currency pairs (EUR_USD, GBP_USD) to currencies (EUR, GBP, USD)
         ps = []
         for i in pairs:#.split(','):
             pr = i.split('_')
@@ -122,20 +123,23 @@ class ZMQClient:
             #print '{0} {1} {2}'.format(di[i], i, isp)
             dfm.ix[isp[1], isp[0]] = di[i]
         
-        try: dfm.ix['total', 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] = n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
+        cpairs = 'AUD CAD CHF EUR USD GBP JPY NZD MXN'.split(' ')
+        
+        try: dfm.ix['total', cpairs] = n.sum(dfm.ix[:, cpairs])
         except: ''
         try:
             dfm = dfm.convert_objects(convert_numeric=True)
-            dfu = dfm.ix[:, 'EUR USD GBP AUD CHF CAD'.split(' ')]
+            dfu = dfm.ix[:, cpairs]
             #print dfu[(dfu.values) > 0]
-            print dfu.sort()
-            #print dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
+            with p_option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                print dfu.sort()
+            #print dfm.ix[:, cpairs]
             #print dfm[(dfm.values < 5)] #.any(1)
-            #print dfm[(dfm.values < 1.5).any(1)].ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')]
-            #print dfm.ix[:,(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')] < 10)]
-        except:
-            ''
-        #print n.sum(dfm.ix[:, 'AUD CAD NZD CHF EUR GBP USD'.split(' ')])
+            #print dfm[(dfm.values < 1.5).any(1)].ix[:, cpairs]
+            #print dfm.ix[:,(dfm.ix[:, cpairs] < 10)]
+        except Exception as e:
+            print e
+        #print n.sum(dfm.ix[:, cpairs])
         #print dfm.ix[:, ['USD']]
         dfu = dfm.ix[['USD'], :].transpose()
         dfu = dfu.convert_objects(convert_numeric=True)
