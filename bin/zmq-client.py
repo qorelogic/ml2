@@ -202,10 +202,11 @@ class ZMQClient:
         while True:
             # update positions
             tts = time.time()
+            print tts
             if int(tts) % 10 == 0:
                 print tts
                 print 'getting positions:'
-                dfp = getDfp(oq, maccid)
+                #dfp = getDfp(oq, maccid)
                 #print dfp
             #print dft.sort('instrument')
             #self.socket.send('test client') # only for REQ
