@@ -24,7 +24,7 @@ from IPython.display import display, clear_output
 import ujson as j
 
 from qore import *
-from qore_qstk import *
+#from qore_qstk import *
 from matplotlib.pylab import *
 
 import numpy as n
