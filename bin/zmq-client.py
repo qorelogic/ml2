@@ -190,6 +190,11 @@ class ZMQClient:
         depth = 20
         c = 0
         while True:
+            # update positions
+            if int(time.time()) % 10 == 0:
+                print 'getting positions:'
+                dfp = getDfp(oq, maccid)
+                print dfp
             #print dft.sort('instrument')
             #self.socket.send('test client') # only for REQ
             data = self.socket.recv(0)
