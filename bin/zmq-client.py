@@ -191,7 +191,9 @@ class ZMQClient:
         c = 0
         while True:
             # update positions
-            if int(time.time()) % 10 == 0:
+            tts = time.time()
+            if int(tts) % 10 == 0:
+                print tts
                 print 'getting positions:'
                 dfp = getDfp(oq, maccid)
                 #print dfp
