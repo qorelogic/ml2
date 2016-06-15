@@ -321,7 +321,9 @@ class ZMQClient:
             if len(poss[pair]) >= depth: poss[pair].popleft()
             df = p_DataFrame(poss)
             if mode == 'pos':
-                self.currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
+                with p_option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    print df.tail(1).transpose()
+                #self.currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
 
             #print de
             #print list(de)
