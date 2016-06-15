@@ -194,7 +194,7 @@ class ZMQClient:
             if int(time.time()) % 10 == 0:
                 print 'getting positions:'
                 dfp = getDfp(oq, maccid)
-                print dfp
+                #print dfp
             #print dft.sort('instrument')
             #self.socket.send('test client') # only for REQ
             data = self.socket.recv(0)
@@ -354,7 +354,7 @@ class ZMQClient:
                     dftt = dfp.combine_first(dftt)
                     #dftt = dftt[dftt['pl'] > 0]
                     dfw = dftt.sort('pl', ascending=False)
-                    print dfw
+                    #print dfw
                     for i in dfw.index:
                         pl         = dfw.ix[i, 'pl']
                         isClosable = dfw.ix[i, 'isClosable']
