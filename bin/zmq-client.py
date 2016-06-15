@@ -10,6 +10,15 @@ from collections import deque
 from qore import QoreDebug
 qd = QoreDebug()
 
+import argparse
+# source: https://docs.python.org/2/howto/argparse.html
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", '--verbose', help="verbose", action="store_true")
+parser.add_argument("-hp", '--hostport', help="<host>:<port>")
+parser.add_argument("-m", '--mode', help="avg | spread | pos")
+
+args = parser.parse_args()
+
 def normalizeme(dfr, pinv=False):
     
     nmean = n.mean(dfr, axis=0)
@@ -37,7 +46,7 @@ class ZMQClient:
 
         # option to change the port number from default 5555
         try:
-            hostport = sys.argv[1]
+            hostport = args.hostport
         except:
             hostport = 5555    
         
@@ -154,7 +163,8 @@ class ZMQClient:
         #print (dfu['USD'] != int(0))
     
     #@profile
-    def client(self, mode='avg'):
+    def client(self, args):
+        mode = args.mode
         de = deque()
         #bids = deque()
         pairs = {}
@@ -356,7 +366,8 @@ class ZMQClient:
                     dftt = dfp.combine_first(dftt)
                     #dftt = dftt[dftt['pl'] > 0]
                     dfw = dftt.sort('pl', ascending=False)
-                    print dfw
+                    if args.verbose:
+                        print dfw
                     for i in dfw.index:
                         pl         = dfw.ix[i, 'pl']
                         isClosable = dfw.ix[i, 'isClosable']
@@ -402,9 +413,8 @@ class ZMQClient:
 
 
 try:
-    mode = sys.argv[2]
     zc = ZMQClient()
-    zc.client(mode=mode)
+    zc.client(args)
 except KeyboardInterrupt as e:
     print ''
 except Exception as e:
