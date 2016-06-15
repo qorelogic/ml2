@@ -356,7 +356,7 @@ class ZMQClient:
                     dftt = dfp.combine_first(dftt)
                     #dftt = dftt[dftt['pl'] > 0]
                     dfw = dftt.sort('pl', ascending=False)
-                    #print dfw
+                    print dfw
                     for i in dfw.index:
                         pl         = dfw.ix[i, 'pl']
                         isClosable = dfw.ix[i, 'isClosable']
