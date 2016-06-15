@@ -1783,6 +1783,8 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     marginAvail = oanda2.get_account(accid)['marginAvail']
     netAssetValue = float(oanda2.get_account(accid)['balance']) - float(oanda2.get_account(accid)['unrealizedPl'])
     balance       = float(oanda2.get_account(accid)['balance'])
+    oinsts = ','.join(list(dfu3.index))
+    print 'oinsts: %s' % oinsts
     prdf = p.DataFrame(oanda2.get_prices(instruments=','.join(list(dfu3.index)))['prices']).set_index('instrument')
     #prdf.ix[:,['instrument','bid']]
     #prdf.ix['EUR_USD','bid']
