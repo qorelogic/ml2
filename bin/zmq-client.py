@@ -172,13 +172,20 @@ class ZMQClient:
         
         maccid = 947325
         from pandas import DataFrame as p_DataFrame
-        positions = oq.oanda2.get_positions(maccid)['positions']
-        dfp = p_DataFrame(positions).set_index('instrument')#.ix[:, 'instrument price side time units'.split(' ')]
-        dfp['i1'] = map(lambda x: x[0:3], dfp.index)
-        dfp['i2'] = map(lambda x: x[4:7], dfp.index)
+        def getDfp(oq, maccid):
+            positions = oq.oanda2.get_positions(maccid)['positions']
+            dfp = p_DataFrame(positions).set_index('instrument')#.ix[:, 'instrument price side time units'.split(' ')]
+            dfp['i1'] = map(lambda x: x[0:3], dfp.index)
+            dfp['i2'] = map(lambda x: x[4:7], dfp.index)
+            dfp['sideBool'] = map(lambda x: 1 if x == 'buy' else -1, dfp['side'])
+            return dfp
+        dfp = getDfp(oq, maccid)
         #print
         trades = oq.oanda2.get_trades(maccid)['trades']
         dft = p_DataFrame(trades).set_index('id').ix[:, 'instrument price side time units'.split(' ')]
+        
+        #accounts = oq.oanda2.get_accounts()
+        account = p_DataFrame(oq.oanda2.get_account(maccid), index=[0])
     
         depth = 20
         c = 0
@@ -304,11 +311,14 @@ class ZMQClient:
             ########
             # pos
             try: # catch exceptions from commodity instruments
-                cprice = float((float(data[1]) + float(data[2])) / 2)
+                #cprice = float((float(data[1]) + float(data[2])) / 2) # avg price
+                #cprice = float(data[1]) if dfp.ix[data[0], 'sideBool'] == 1 else float(data[2]) # ask price if long position, bid price if short
+                cprice = float(data[2]) if dfp.ix[data[0], 'sideBool'] == 1 else float(data[1]) # bid price if long position, ask price if short
                 avgPrice = float(dfp.ix[data[0], 'avgPrice'])
-                units = (cprice - avgPrice)  * float(dfp.ix[data[0], 'units']) * instruments.ix[pair, 'pip']
+                units = dfp.ix[data[0], 'sideBool'] * (cprice - avgPrice)  * float(dfp.ix[data[0], 'units']) * instruments.ix[data[0], 'pip'] * (10000 if instruments.ix[data[0], 'pip'] == 0.0001 else 1)
                 pos = units
             except Exception as e:
+                #print e
                 units = 0
                 pos = units
                 continue
@@ -320,9 +330,36 @@ class ZMQClient:
             
             if len(poss[pair]) >= depth: poss[pair].popleft()
             df = p_DataFrame(poss)
+            #df = p_DataFrame(dfp)
             if mode == 'pos':
+                balance = account.ix[0,'balance']
                 with p_option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                    print df.tail(1).transpose()
+                    dftt = df.tail(1).transpose()
+                    dftt['pl'] = dftt[19]
+                    try:
+                        dftt['plpcnt'] = 100 * n.divide(dftt['pl'].get_values(), float(balance))
+                        dftt['plpcnt'] = 100 * n.divide(dftt['pl'], float(balance))
+                        dftt['plpcnt'] = 100 * dftt['pl'].get_values() / float(balance)
+                        dftt['plpcnt'] = 100 * dftt['pl'] / float(balance)
+                        dftt['plpcnt'] = 100 * n.divide(dftt['pl'].get_values(), float(balance))
+                        dftt['pl'].get_values() / n.array(balance)
+                        dftt['isClosable'] = dftt['plpcnt'] > ((2.0/n.pi)/20)
+                    except Exception as e:
+                        print e
+                    dftt = dfp.combine_first(dftt)
+                    #dftt = dftt[dftt['pl'] > 0]
+                    dfw = dftt.sort('pl', ascending=False)
+                    print dfw
+                    print '==='
+                    for i in dfw.index:
+                        pl         = dfw.ix[i, 'pl']
+                        isClosable = dfw.ix[i, 'isClosable']
+                        if isClosable == 1:
+                            print 'closing %s' % i
+                            print "oq.oanda2.close_position(%s, '%s')" % (maccid, i)
+                            oq.oanda2.close_position(maccid, i)
+                            dfp = getDfp(oq, maccid)
+                        
                 #self.currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
 
             #print de
