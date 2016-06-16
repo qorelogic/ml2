@@ -1830,7 +1830,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     dfu3['diffpRebalancep'] = dfu3.ix[:, 'diffp'].get_values() * dfu3.ix[:, 'rebalancep'].get_values() * dfu3.ix[:, 'deleverageBool'].get_values()
     dfu3['diffpRebalancepBalance'] = dfu3.ix[:, 'diffpRebalancep'].get_values() * balance
 
-    sortby = 'diffpRebalancep'
+    sortby = ['deleverageBool', 'diffpRebalancep']
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         f1Base         = 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance'
@@ -1841,7 +1841,9 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
             print dfu3.sort(sortby, ascending=False).ix[:, f1.split(' ')]
             print
 
-    for i in dfu3.sort(sortby, ascending=False).index:
+    sortAscending = [False, False]
+    if noInteractiveLeverage: sortAscending[0] = True
+    for i in dfu3.sort(sortby, ascending=sortAscending).index:
         #print dfu3.ix[[i], :].transpose()
         units = int(abs(dfu3.ix[i, 'rebalance']))#-1
         side  = 'buy' if int(dfu3.ix[i, 'rebalance']) > 0 else 'sell'
@@ -1859,24 +1861,24 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                         if ans != 'y':
                             raise(Exception('User intervened: order not created'))
                     if noInteractiveLeverage == True or noInteractiveDeleverage == True:
-                        print 'setting noInteractive to true'
-                        noInteractive = True
+                        #noInteractive = True
+                        ''
+                    print 'deleverageBool:          %s' % dfu3.ix[i, 'deleverageBool']
                     print 'noInteractive:           %s' % noInteractive
                     print 'noInteractiveLeverage:   %s' % noInteractiveLeverage
                     print 'noInteractiveDeleverage: %s' % noInteractiveDeleverage
-                    if dfu3.ix[i, 'deleverageBool'] == True and noInteractive == False and noInteractiveDeleverage == False:
+                    if dfu3.ix[i, 'deleverageBool'] == True and (not noInteractive and not noInteractiveDeleverage):
                         print 'nid---'
+                        if noInteractiveLeverage: raise(Exception('nil --> nid conflict'))
                         interactiveMode()
-                    if dfu3.ix[i, 'deleverageBool'] == False and noInteractive == False and noInteractiveLeverage == False:
+                    if dfu3.ix[i, 'deleverageBool'] == False and (not noInteractive and not noInteractiveLeverage):
                         print 'nil---'
+                        if noInteractiveDeleverage: raise(Exception('nid --> nil conflict'))
                         interactiveMode()
-                    if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
-                        print 'ni---'
-                        interactiveMode()
-                    #oanda2.create_order(accid, type='market', 
-                    #                    instrument=i, 
-                    #                    side=side,
-                    #                    units=units)
+                    #if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
+                    #    print 'ni---'
+                    #    interactiveMode()
+                    oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
                 except Exception as e:
                     print e
         
