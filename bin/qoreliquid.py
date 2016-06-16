@@ -1858,10 +1858,10 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                         ans = raw_input('Sure you want to create order? (y/N): ')
                         if ans != 'y':
                             raise(Exception('User intervened: order not created'))
-                    if dfu3.ix[i, 'deleverageBool'] == True and noInteractiveDeleverage == False and noInteractive == False:
+                    if dfu3.ix[i, 'deleverageBool'] == True and (noInteractiveLeverage == True and noInteractiveDeleverage == False) and noInteractive == False:
                         print 'nid---'
                         interactiveMode()
-                    if dfu3.ix[i, 'deleverageBool'] == False and noInteractiveLeverage == False and noInteractive == False:
+                    if dfu3.ix[i, 'deleverageBool'] == False and (noInteractiveLeverage == False and noInteractiveDeleverage == True) and noInteractiveLeverage == False and noInteractive == False:
                         print 'nil---'
                         interactiveMode()
                     if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
