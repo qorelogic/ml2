@@ -362,7 +362,7 @@ class ZMQClient:
                         dftt['plpcnt'] = 100 * dftt['pl'] / float(balance)
                         dftt['plpcnt'] = 100 * n.divide(dftt['pl'].get_values(), float(balance))
                         dftt['pl'].get_values() / n.array(balance)
-                        dftt['isClosable'] = dftt['plpcnt'] > ((2.0/n.pi)/20)
+                        dftt['isClosable'] = dftt['plpcnt'] > ((2.0/n.pi)/10)
                     except Exception as e:
                         print e
                     dftt = dfp.combine_first(dftt)
