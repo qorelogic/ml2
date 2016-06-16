@@ -1864,19 +1864,19 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                     print 'noInteractive:           %s' % noInteractive
                     print 'noInteractiveLeverage:   %s' % noInteractiveLeverage
                     print 'noInteractiveDeleverage: %s' % noInteractiveDeleverage
-                    if dfu3.ix[i, 'deleverageBool'] == True and (noInteractiveLeverage == True and noInteractiveDeleverage == False) and noInteractive == False:
+                    if dfu3.ix[i, 'deleverageBool'] == True and noInteractiveDeleverage == False and noInteractive == False:
                         print 'nid---'
                         interactiveMode()
-                    if dfu3.ix[i, 'deleverageBool'] == False and (noInteractiveLeverage == False and noInteractiveDeleverage == True) and noInteractiveLeverage == False and noInteractive == False:
+                    if dfu3.ix[i, 'deleverageBool'] == False and noInteractiveLeverage == False and noInteractive == False:
                         print 'nil---'
                         interactiveMode()
                     if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
                         print 'ni---'
                         interactiveMode()
-                    oanda2.create_order(accid, type='market', 
-                                        instrument=i, 
-                                        side=side,
-                                        units=units)
+                    #oanda2.create_order(accid, type='market', 
+                    #                    instrument=i, 
+                    #                    side=side,
+                    #                    units=units)
                 except Exception as e:
                     print e
         
