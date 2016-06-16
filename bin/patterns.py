@@ -266,3 +266,4 @@ if __name__ == "__main__":
                 main(args, leverage=leverage, dryrun=dryrun)
         except Exception as e:
             print e
+        break
