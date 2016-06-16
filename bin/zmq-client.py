@@ -374,10 +374,10 @@ class ZMQClient:
                         pl         = dfw.ix[i, 'pl']
                         isClosable = dfw.ix[i, 'isClosable']
                         if isClosable == 1:
+                            dfp = getDfp(oq, maccid)
                             print 'closing %s' % i
                             print "oq.oanda2.close_position(%s, '%s')" % (maccid, i)
                             oq.oanda2.close_position(maccid, i)
-                            dfp = getDfp(oq, maccid)
                         
                 #self.currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
 
