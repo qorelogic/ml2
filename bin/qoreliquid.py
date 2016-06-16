@@ -1864,10 +1864,10 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                     print 'noInteractive:           %s' % noInteractive
                     print 'noInteractiveLeverage:   %s' % noInteractiveLeverage
                     print 'noInteractiveDeleverage: %s' % noInteractiveDeleverage
-                    if dfu3.ix[i, 'deleverageBool'] == True and noInteractiveDeleverage == False and noInteractive == False:
+                    if dfu3.ix[i, 'deleverageBool'] == True and noInteractive == False and noInteractiveDeleverage == False:
                         print 'nid---'
                         interactiveMode()
-                    if dfu3.ix[i, 'deleverageBool'] == False and noInteractiveLeverage == False and noInteractive == False:
+                    if dfu3.ix[i, 'deleverageBool'] == False and noInteractive == False and noInteractiveLeverage == False:
                         print 'nil---'
                         interactiveMode()
                     if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
