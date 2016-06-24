@@ -16,6 +16,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-v", '--verbose', help="verbose", action="store_true")
 parser.add_argument("-hp", '--hostport', help="<host>:<port>")
 parser.add_argument("-m", '--mode', help="avg | spread | pos")
+parser.add_argument("-ni", '--nointeractive', help="nointeractive", action="store_true")
 
 args = parser.parse_args()
 
@@ -377,7 +378,13 @@ class ZMQClient:
                             dfp = getDfp(oq, maccid)
                             print 'closing %s' % i
                             print "oq.oanda2.close_position(%s, '%s')" % (maccid, i)
-                            oq.oanda2.close_position(maccid, i)
+                            if args.nointeractive:
+                                oq.oanda2.close_position(maccid, i)
+                            else:
+                                print 'y/N: '
+                                read ans
+                                if ans == 'y':
+                                    oq.oanda2.close_position(maccid, i)
                         
                 #self.currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
 
