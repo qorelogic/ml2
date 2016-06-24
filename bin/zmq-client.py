@@ -371,20 +371,22 @@ class ZMQClient:
                     dfw = dftt.sort('pl', ascending=False)
                     if args.verbose:
                         print dfw
+                    def closePosition(oq, maccid, i):
+                        print 'closing %s' % i
+                        print "oq.oanda2.close_position(%s, '%s')" % (maccid, i)
+                        oq.oanda2.close_position(maccid, i)
                     for i in dfw.index:
                         pl         = dfw.ix[i, 'pl']
                         isClosable = dfw.ix[i, 'isClosable']
                         if isClosable == 1:
                             dfp = getDfp(oq, maccid)
-                            print 'closing %s' % i
-                            print "oq.oanda2.close_position(%s, '%s')" % (maccid, i)
                             if args.nointeractive:
-                                oq.oanda2.close_position(maccid, i)
+                                closePosition(oq, maccid, i)
                             else:
-                                print 'y/N: '
+                                print 'close %s? y/N: ' % i
                                 ans = raw_input()
                                 if ans == 'y':
-                                    oq.oanda2.close_position(maccid, i)
+                                    closePosition(oq, maccid, i)
                         
                 #self.currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
 
