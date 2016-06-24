@@ -382,7 +382,7 @@ class ZMQClient:
                                 oq.oanda2.close_position(maccid, i)
                             else:
                                 print 'y/N: '
-                                read ans
+                                ans = raw_input()
                                 if ans == 'y':
                                     oq.oanda2.close_position(maccid, i)
                         
