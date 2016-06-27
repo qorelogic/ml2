@@ -241,7 +241,7 @@ class ZMQClient:
     def closePosition(self, oq, maccid, i):
         print 'closing %s' % i
         print "oq.oanda2.close_position(%s, '%s')" % (maccid, i)
-        #oq.oanda2.close_position(maccid, i)
+        oq.oanda2.close_position(maccid, i)
     #@profile
     def client(self, args):
         mode = args.mode
