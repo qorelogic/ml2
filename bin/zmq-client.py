@@ -69,6 +69,8 @@ class ZMQClient:
         self.socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
         
         #df = p_DataFrame()
+        from collections import deque
+        self.lastGetPositions = deque()
         
     #@profile
     def currencyMatrix(self, pairs, df=None, mode=None, mong=None, depth=None):
@@ -164,7 +166,7 @@ class ZMQClient:
         #print (dfu['USD'] != int(0))
     
     def getDfwPos(self, oq, maccid, depth, pair, account):
-        print 'getDfwPos()'
+        #print 'getDfwPos()'
         dfp = self.getDfp(oq, maccid)
         try: # catch exceptions from commodity instruments
             #cprice = float((float(data[1]) + float(data[2])) / 2) # avg price
@@ -208,17 +210,38 @@ class ZMQClient:
         return dfw
         
     def getDfp(self, oq, maccid):
-        positions = oq.oanda2.get_positions(maccid)['positions']
-        dfp = p_DataFrame(positions).set_index('instrument')#.ix[:, 'instrument price side time units'.split(' ')]
-        dfp['i1'] = map(lambda x: x[0:3], dfp.index)
-        dfp['i2'] = map(lambda x: x[4:7], dfp.index)
-        dfp['sideBool'] = map(lambda x: 1 if x == 'buy' else -1, dfp['side'])
+
+        #print 'getDfp()'
+        
+        try: 
+            lenLastGetPositions = len(self.lastGetPositions)
+            isFirstTick1sec = self.lastGetPositions[lenLastGetPositions-1] > self.lastGetPositions[lenLastGetPositions-2]
+            lastGetPositionsMod5 = self.lastGetPositions[len(self.lastGetPositions)-1] % 5 == 0
+            #print 'lastGetPositions  %s' % self.lastGetPositions[len(self.lastGetPositions)-1]
+            #print 'lastGetPositions %s %s' % (self.lastGetPositions[lenLastGetPositions-1], self.lastGetPositions[lenLastGetPositions-2])
+            if isFirstTick1sec and lastGetPositionsMod5:
+                #print 'get_positions()'
+                self.positions = oq.oanda2.get_positions(maccid)['positions']
+            print p_DataFrame(self.positions)
+        except: ''
+        #self.lastGetPositions = int(time.time())
+        ddff = p_DataFrame([self.lastGetPositions]).transpose()
+        ddff['2'] = len(self.lastGetPositions)
+        #print ddff
+        self.lastGetPositions.append(int(time.time()))
+        try:
+            dfp = p_DataFrame(self.positions).set_index('instrument')#.ix[:, 'instrument price side time units'.split(' ')]
+            dfp['i1'] = map(lambda x: x[0:3], dfp.index)
+            dfp['i2'] = map(lambda x: x[4:7], dfp.index)
+            dfp['sideBool'] = map(lambda x: 1 if x == 'buy' else -1, dfp['side'])
+        except:
+            dfp = p_DataFrame([])
         return dfp
 
     def closePosition(self, oq, maccid, i):
         print 'closing %s' % i
         print "oq.oanda2.close_position(%s, '%s')" % (maccid, i)
-        oq.oanda2.close_position(maccid, i)
+        #oq.oanda2.close_position(maccid, i)
     #@profile
     def client(self, args):
         mode = args.mode
