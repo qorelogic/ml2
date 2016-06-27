@@ -163,6 +163,62 @@ class ZMQClient:
         #print dfu
         #print (dfu['USD'] != int(0))
     
+    def getDfwPos(self, oq, maccid, depth, pair, account):
+        print 'getDfwPos()'
+        dfp = self.getDfp(oq, maccid)
+        try: # catch exceptions from commodity instruments
+            #cprice = float((float(data[1]) + float(data[2])) / 2) # avg price
+            #cprice = float(data[1]) if dfp.ix[data[0], 'sideBool'] == 1 else float(data[2]) # ask price if long position, bid price if short
+            cprice = float(data[2]) if dfp.ix[data[0], 'sideBool'] == 1 else float(data[1]) # bid price if long position, ask price if short
+            avgPrice = float(dfp.ix[data[0], 'avgPrice'])
+            units = dfp.ix[data[0], 'sideBool'] * (cprice - avgPrice)  * float(dfp.ix[data[0], 'units']) * instruments.ix[data[0], 'pip'] * (10000 if instruments.ix[data[0], 'pip'] == 0.0001 else 1)
+            pos = units
+        except Exception as e:
+            #print e
+            units = 0
+            pos = units
+            #continue
+        try:
+            self.poss[pair].append(pos)
+        except:
+            self.poss[pair] = deque([0]*depth)
+            self.poss[pair].append(pos)
+        
+        if len(self.poss[pair]) >= depth: self.poss[pair].popleft()
+        df = p_DataFrame(self.poss)
+        #df = p_DataFrame(dfp)
+
+        balance = account.ix[0,'balance']
+        dftt = df.tail(1).transpose()
+        dftt['pl'] = dftt[19]
+        try:
+            dftt['plpcnt'] = 100 * n.divide(dftt['pl'].get_values(), float(balance))
+            dftt['plpcnt'] = 100 * n.divide(dftt['pl'], float(balance))
+            dftt['plpcnt'] = 100 * dftt['pl'].get_values() / float(balance)
+            dftt['plpcnt'] = 100 * dftt['pl'] / float(balance)
+            dftt['plpcnt'] = 100 * n.divide(dftt['pl'].get_values(), float(balance))
+            dftt['pl'].get_values() / n.array(balance)
+            dftt['isClosable'] = dftt['plpcnt'] > ((2.0/n.pi)/10)
+        except Exception as e:
+            print e
+        dftt = dfp.combine_first(dftt)
+        #dftt = dftt[dftt['pl'] > 0]
+        dfw = dftt.sort('pl', ascending=False)
+        
+        return dfw
+        
+    def getDfp(self, oq, maccid):
+        positions = oq.oanda2.get_positions(maccid)['positions']
+        dfp = p_DataFrame(positions).set_index('instrument')#.ix[:, 'instrument price side time units'.split(' ')]
+        dfp['i1'] = map(lambda x: x[0:3], dfp.index)
+        dfp['i2'] = map(lambda x: x[4:7], dfp.index)
+        dfp['sideBool'] = map(lambda x: 1 if x == 'buy' else -1, dfp['side'])
+        return dfp
+
+    def closePosition(self, oq, maccid, i):
+        print 'closing %s' % i
+        print "oq.oanda2.close_position(%s, '%s')" % (maccid, i)
+        oq.oanda2.close_position(maccid, i)
     #@profile
     def client(self, args):
         mode = args.mode
@@ -173,7 +229,7 @@ class ZMQClient:
         asks = {}
         avgs = {}
         spreads = {}
-        poss = {}
+        self.poss = {}
         from pandas import read_csv as p_read_csv
 	
         from oandaq import OandaQ
@@ -183,14 +239,7 @@ class ZMQClient:
         
         maccid = 947325
         from pandas import DataFrame as p_DataFrame
-        def getDfp(oq, maccid):
-            positions = oq.oanda2.get_positions(maccid)['positions']
-            dfp = p_DataFrame(positions).set_index('instrument')#.ix[:, 'instrument price side time units'.split(' ')]
-            dfp['i1'] = map(lambda x: x[0:3], dfp.index)
-            dfp['i2'] = map(lambda x: x[4:7], dfp.index)
-            dfp['sideBool'] = map(lambda x: 1 if x == 'buy' else -1, dfp['side'])
-            return dfp
-        dfp = getDfp(oq, maccid)
+        dfp = self.getDfp(oq, maccid)
         #print
         trades = oq.oanda2.get_trades(maccid)['trades']
         dft = p_DataFrame(trades).set_index('id').ix[:, 'instrument price side time units'.split(' ')]
@@ -207,7 +256,7 @@ class ZMQClient:
             #if int(tts) % 10 == 0:
             #    print tts
             #    print 'getting positions:'
-            #    #dfp = getDfp(oq, maccid)
+            #    #dfp = self.getDfp(oq, maccid)
             #    #print dfp
                 
             #print dft.sort('instrument')
@@ -240,7 +289,7 @@ class ZMQClient:
             pairs = _uwe('spreads', pairs, pair, data)
             pairs = _uwe('pos', pairs, pair, data)
             
-            mong = {'bids':bids, 'asks':asks, 'avgs':avgs, 'spreads':spreads, 'pos':poss}
+            mong = {'bids':bids, 'asks':asks, 'avgs':avgs, 'spreads':spreads, 'pos':self.poss}
             ########
             # bids
             try:
@@ -330,63 +379,24 @@ class ZMQClient:
             
             ########
             # pos
-            try: # catch exceptions from commodity instruments
-                #cprice = float((float(data[1]) + float(data[2])) / 2) # avg price
-                #cprice = float(data[1]) if dfp.ix[data[0], 'sideBool'] == 1 else float(data[2]) # ask price if long position, bid price if short
-                cprice = float(data[2]) if dfp.ix[data[0], 'sideBool'] == 1 else float(data[1]) # bid price if long position, ask price if short
-                avgPrice = float(dfp.ix[data[0], 'avgPrice'])
-                units = dfp.ix[data[0], 'sideBool'] * (cprice - avgPrice)  * float(dfp.ix[data[0], 'units']) * instruments.ix[data[0], 'pip'] * (10000 if instruments.ix[data[0], 'pip'] == 0.0001 else 1)
-                pos = units
-            except Exception as e:
-                #print e
-                units = 0
-                pos = units
-                continue
-            try:
-                poss[pair].append(pos)
-            except:
-                poss[pair] = deque([0]*depth)
-                poss[pair].append(pos)
-            
-            if len(poss[pair]) >= depth: poss[pair].popleft()
-            df = p_DataFrame(poss)
-            #df = p_DataFrame(dfp)
             if mode == 'pos':
-                balance = account.ix[0,'balance']
+                dfw = self.getDfwPos(oq, maccid, depth, pair, account)
                 with p_option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                    dftt = df.tail(1).transpose()
-                    dftt['pl'] = dftt[19]
-                    try:
-                        dftt['plpcnt'] = 100 * n.divide(dftt['pl'].get_values(), float(balance))
-                        dftt['plpcnt'] = 100 * n.divide(dftt['pl'], float(balance))
-                        dftt['plpcnt'] = 100 * dftt['pl'].get_values() / float(balance)
-                        dftt['plpcnt'] = 100 * dftt['pl'] / float(balance)
-                        dftt['plpcnt'] = 100 * n.divide(dftt['pl'].get_values(), float(balance))
-                        dftt['pl'].get_values() / n.array(balance)
-                        dftt['isClosable'] = dftt['plpcnt'] > ((2.0/n.pi)/10)
-                    except Exception as e:
-                        print e
-                    dftt = dfp.combine_first(dftt)
-                    #dftt = dftt[dftt['pl'] > 0]
-                    dfw = dftt.sort('pl', ascending=False)
                     if args.verbose:
+                        print dfp
                         print dfw
-                    def closePosition(oq, maccid, i):
-                        print 'closing %s' % i
-                        print "oq.oanda2.close_position(%s, '%s')" % (maccid, i)
-                        oq.oanda2.close_position(maccid, i)
+                    #dfw = self.getDfwPos(oq, maccid, depth, pair, account)
                     for i in dfw.index:
                         pl         = dfw.ix[i, 'pl']
                         isClosable = dfw.ix[i, 'isClosable']
                         if isClosable == 1:
-                            dfp = getDfp(oq, maccid)
                             if args.nointeractive:
-                                closePosition(oq, maccid, i)
+                                self.closePosition(oq, maccid, i)
                             else:
                                 print 'close %s? y/N: ' % i
                                 ans = raw_input()
                                 if ans == 'y':
-                                    closePosition(oq, maccid, i)
+                                    self.closePosition(oq, maccid, i)
                         
                 #self.currencyMatrix(list(df.ix[depth-1, :].index), mode=mode, mong=mong, depth=depth)
 
