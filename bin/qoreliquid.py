@@ -1771,8 +1771,14 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
 def differentPolarity(a, b):
     return n.logical_or(n.logical_and(a < 0, b > 0), n.logical_and(a > 0, b < 0))
 
+def getSideBool(ser):
+    return map(lambda x: 1 if x == 'buy' else -1, ser)
+
+@profile
 def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False):
     oq = OandaQ(verbose=False)
+    
+    from numpy import zeros as n_zeros
     
     if verbose: print '----------'
     
@@ -1795,36 +1801,46 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         currentTrades = p.DataFrame(currentTrades)
         currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument')#.ix[:,'side units'.split(' ')]
         
-        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument').convert_objects(convert_numeric=True)
+        currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
+        currentPrices = p.DataFrame(currentPrices).set_index('instrument')
+        currentTrades = currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('instrument')
+        currentTrades = currentTrades.combine_first(currentPrices)
+        #currentTrades = currentTrades.combine_first(instruments)
+        #currentTrades = p.concat([currentTrades, instruments], axis=0, join='outer')
+        currentTrades = currentTrades.join(instruments, how='inner')
+        currentTrades['instrument'] = currentTrades.index
+        currentTrades['sideBool'] = getSideBool(currentTrades['side'])
+        currentTrades['sideS'] = n_zeros(len(currentTrades))
+        for i in xrange(len(currentTrades)):
+            currentTrades.ix[i, 'sideS'] = currentTrades.ix[i, 'bid'] if currentTrades.ix[i, 'sideBool']  > 0 else currentTrades.ix[i, 'ask']
+        currentTrades['plpips'] = (currentTrades['sideS'] - currentTrades['price']) / currentTrades['pip']
+        currentTrades['pl'] = (currentTrades['sideS'] - currentTrades['price']) * currentTrades['units'] #*  currentTrades['pip']
+        for i in xrange(len(currentTrades)):
+            currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
+
         if verbose:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
-                currentPrices = p.DataFrame(currentPrices).set_index('instrument')
-                currentTrades = currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('instrument')
-                currentTrades = currentTrades.combine_first(currentPrices)
-                currentTrades['instrument'] = currentTrades.index
+                #print 'instruments:'
+                #print instruments 
                 #print currentPrices
                 print 'currentTrades:'
                 print len(currentTrades)
                 #print currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('id').ix[:,'instrument price side time units'.split(' ')]
-                print currentTrades.set_index('id').ix[:,'instrument price side units ask bid status time'.split(' ')]
-                print currentPositions.sort('units', ascending=False)
-                print
-                print '*/*/*/*/'
+                print currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
                 print 'currentPositions:'
-                print currentPositions
-                print '*/*/*/*/'
+                print currentPositions.sort('units', ascending=False)
 
         # get rebalance amount
         #print currentPositions
         #print dfu3.ix[currentPositions.index, :]
         #cu = currentPositions.ix[dfu3.index, :]
         cu = currentPositions.combine_first(dfu3)
-        cu['bool'] = map(lambda x: 1 if x == 'buy' else -1, cu['side'])
-        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        cu['bool'] = getSideBool(cu['side'])
         cu = cu.fillna(0)
         if verbose:
-            print cu.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')]
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                print cu.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')]
         #print
         dfu3 = dfu3.combine_first(cu)
     except Exception as e:
