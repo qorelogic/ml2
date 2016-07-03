@@ -1775,6 +1775,7 @@ def getSideBool(ser):
     return map(lambda x: 1 if x == 'buy' else -1, ser)
 
 def getCurrentTrades(oanda2, accid, currentPositions):
+    from numpy import zeros as n_zeros
     currentTrades = oanda2.get_trades(accid, count=500)['trades']
     currentTrades = p.DataFrame(currentTrades)
     
@@ -1800,8 +1801,6 @@ def getCurrentTrades(oanda2, accid, currentPositions):
 @profile
 def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False):
     oq = OandaQ(verbose=False)
-    
-    from numpy import zeros as n_zeros
     
     if verbose: print '----------'
     
