@@ -1774,6 +1774,29 @@ def differentPolarity(a, b):
 def getSideBool(ser):
     return map(lambda x: 1 if x == 'buy' else -1, ser)
 
+def getCurrentTrades():
+    currentTrades = oanda2.get_trades(accid, count=500)['trades']
+    currentTrades = p.DataFrame(currentTrades)
+    
+    instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument').convert_objects(convert_numeric=True)
+    currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
+    currentPrices = p.DataFrame(currentPrices).set_index('instrument')
+    currentTrades = currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('instrument')
+    currentTrades = currentTrades.combine_first(currentPrices)
+    #currentTrades = currentTrades.combine_first(instruments)
+    #currentTrades = p.concat([currentTrades, instruments], axis=0, join='outer')
+    currentTrades = currentTrades.join(instruments, how='inner')
+    currentTrades['instrument'] = currentTrades.index
+    currentTrades['sideBool'] = getSideBool(currentTrades['side'])
+    currentTrades['sideS'] = n_zeros(len(currentTrades))
+    for i in xrange(len(currentTrades)):
+        currentTrades.ix[i, 'sideS'] = currentTrades.ix[i, 'bid'] if currentTrades.ix[i, 'sideBool']  > 0 else currentTrades.ix[i, 'ask']
+    currentTrades['plpips'] = (currentTrades['sideS'] - currentTrades['price']) / currentTrades['pip'] * currentTrades['sideBool']
+    currentTrades['pl'] = (currentTrades['sideS'] - currentTrades['price']) * currentTrades['units'] * currentTrades['sideBool'] #*  currentTrades['pip']
+    for i in xrange(len(currentTrades)):
+        currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
+    return currentTrades
+
 @profile
 def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False):
     oq = OandaQ(verbose=False)
@@ -1797,27 +1820,8 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     #prdf.ix['EUR_USD','bid']
     dfu3['amount'] = n.ceil(dfu3['diffp'] * netAssetValue * leverage / prdf.ix[:,'bid'])
     try:
-        currentTrades = oanda2.get_trades(accid, count=500)['trades']
-        currentTrades = p.DataFrame(currentTrades)
         currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument')#.ix[:,'side units'.split(' ')]
-        
-        instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument').convert_objects(convert_numeric=True)
-        currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
-        currentPrices = p.DataFrame(currentPrices).set_index('instrument')
-        currentTrades = currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('instrument')
-        currentTrades = currentTrades.combine_first(currentPrices)
-        #currentTrades = currentTrades.combine_first(instruments)
-        #currentTrades = p.concat([currentTrades, instruments], axis=0, join='outer')
-        currentTrades = currentTrades.join(instruments, how='inner')
-        currentTrades['instrument'] = currentTrades.index
-        currentTrades['sideBool'] = getSideBool(currentTrades['side'])
-        currentTrades['sideS'] = n_zeros(len(currentTrades))
-        for i in xrange(len(currentTrades)):
-            currentTrades.ix[i, 'sideS'] = currentTrades.ix[i, 'bid'] if currentTrades.ix[i, 'sideBool']  > 0 else currentTrades.ix[i, 'ask']
-        currentTrades['plpips'] = (currentTrades['sideS'] - currentTrades['price']) / currentTrades['pip'] * currentTrades['sideBool']
-        currentTrades['pl'] = (currentTrades['sideS'] - currentTrades['price']) * currentTrades['units'] * currentTrades['sideBool'] #*  currentTrades['pip']
-        for i in xrange(len(currentTrades)):
-            currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
+        currentTrades = getCurrentTrades()
 
         if verbose:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
