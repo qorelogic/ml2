@@ -1815,7 +1815,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         for i in xrange(len(currentTrades)):
             currentTrades.ix[i, 'sideS'] = currentTrades.ix[i, 'bid'] if currentTrades.ix[i, 'sideBool']  > 0 else currentTrades.ix[i, 'ask']
         currentTrades['plpips'] = (currentTrades['sideS'] - currentTrades['price']) / currentTrades['pip']
-        currentTrades['pl'] = (currentTrades['sideS'] - currentTrades['price']) * currentTrades['units'] #*  currentTrades['pip']
+        currentTrades['pl'] = (currentTrades['sideS'] - currentTrades['price']) * currentTrades['units'] * currentTrades['sideBool'] #*  currentTrades['pip']
         for i in xrange(len(currentTrades)):
             currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
 
