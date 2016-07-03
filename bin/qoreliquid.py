@@ -1774,7 +1774,7 @@ def differentPolarity(a, b):
 def getSideBool(ser):
     return map(lambda x: 1 if x == 'buy' else -1, ser)
 
-def getCurrentTrades():
+def getCurrentTrades(oanda2):
     currentTrades = oanda2.get_trades(accid, count=500)['trades']
     currentTrades = p.DataFrame(currentTrades)
     
@@ -1821,7 +1821,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     dfu3['amount'] = n.ceil(dfu3['diffp'] * netAssetValue * leverage / prdf.ix[:,'bid'])
     try:
         currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument')#.ix[:,'side units'.split(' ')]
-        currentTrades = getCurrentTrades()
+        currentTrades = getCurrentTrades(oanda2)
 
         if verbose:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1833,6 +1833,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 #print currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('id').ix[:,'instrument price side time units'.split(' ')]
                 ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
                 ct = ct.sort('pl', ascending=False)
+                print ct[ct['pl'] > 0]
                 print ct[ct['pl'] > 0]
                 print 'currentPositions:'
                 print currentPositions.sort('units', ascending=False)
