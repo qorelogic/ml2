@@ -138,7 +138,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     dfu['sidePolarity'] = map(lambda x: 1 if x == 1 else -1, (n.array((dfu['buy'].get_values() - dfu['sell'].get_values()) > 0, dtype=int)))
     
     # set the percentage threshold
-    dfu2 = dfu[dfu['diffp'] > (float(diffpThreshold)/100)].sort('diff', ascending=False)
+    dfu2 = dfu[dfu['diffp'] > (float(diffpThreshold)/100)].sort_values(by='diff', ascending=False)
     # recalculate percentages [diffp]
     dfu2['diffp'] = (dfu2['diff'].get_values())/n.sum(dfu2['diff'].get_values())
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
