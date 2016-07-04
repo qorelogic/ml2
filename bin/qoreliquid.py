@@ -1853,7 +1853,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 print pln.ix[:, ffsds]
 
                 print 'currentPositions:'
-                print currentPositions.sort('units', ascending=False)
+                print currentPositions.sort_values(by='units', ascending=False)
 
         # get rebalance amount
         #print currentPositions
@@ -1864,7 +1864,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         cu = cu.fillna(0)
         if verbose:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                print cu.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')]
+                print cu.sort_values(by='diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')]
         #print
         dfu3 = dfu3.combine_first(cu)
         dfu3 = dfu3.combine_first(gct)
@@ -1913,7 +1913,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
 
     sortAscending = [False, True]
     if noInteractiveLeverage: sortAscending[0] = True
-    for i in dfu3.sort(sortby, ascending=sortAscending).index:
+    for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
         #print dfu3.ix[[i], :].transpose()
         units = int(abs(dfu3.ix[i, 'rebalance']))#-1
         side  = 'buy' if int(dfu3.ix[i, 'rebalance']) > 0 else 'sell'
