@@ -1955,7 +1955,8 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     
 def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     if verbose: print '#--- cw(start)'
-    li = list(dfu33.sort('diffp', ascending=False).index)
+    #li = list(dfu33.sort('diffp', ascending=False).index)
+    li = list(dfu33.sort_values(by='diffp', ascending=False).index)
     if verbose:
         print 'li'
         print li
