@@ -1874,13 +1874,17 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     dfu3['deleverageBool'] = n.logical_and(differentPolarity(positions, dfu3.ix[:, 'rebalance']), positions <> 0)
     dfu3['diffpRebalancep'] = dfu3.ix[:, 'diffp'].get_values() * dfu3.ix[:, 'rebalancep'].get_values() * dfu3.ix[:, 'deleverageBool'].get_values()
     #dfu3['diffpRebalancepBalance'] = dfu3.ix[:, 'diffpRebalancep'].get_values() * balance
-    dfu3['diffpRebalancepBalance'] = dfu3.ix[:, 'diffpRebalancep'] * dfu3.ix[:, 'pl']
+    #dfu3['diffpRebalancepBalance'] = dfu3.ix[:, 'diffpRebalancep'] * dfu3.ix[:, 'pl']
+    dfu3['diffpRebalancep2'] = abs((dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'positions'])
+    dfu3['diffpRebalancepBalance'] = map(lambda x: 1 if x > 1 else x, abs((dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'positions'])) * dfu3.ix[:, 'pl']
+    #dfu3['diffpRebalancepBalance'] = map(lambda x: 1 if x > 1 else x, abs((dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'positions']))
+    dfu3['diffpRebalancep'] = dfu3.ix[:, 'diffpRebalancepBalance'] / balance
     #dfu3['diffpRebalancepBalance'] = netAssetValue
 
     sortby = ['deleverageBool', 'diffpRebalancep']
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity quotedCurrencyPriceBid unit units amountSidePolarity amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl'
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity quotedCurrencyPriceBid unit units amountSidePolarity amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl diffpRebalancep2'
         if verbose: f1 = '%s rebalanceBool deleverageBool' % f1Base
         else:       f1 = f1Base
         if verbose:            
@@ -1891,7 +1895,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
             print dfu3.sort(sortby, ascending=False).ix[:, f1.split(' ')]
             print
 
-    sortAscending = [False, False]
+    sortAscending = [False, True]
     if noInteractiveLeverage: sortAscending[0] = True
     for i in dfu3.sort(sortby, ascending=sortAscending).index:
         #print dfu3.ix[[i], :].transpose()
