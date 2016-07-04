@@ -1841,7 +1841,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 pll = p.DataFrame([plp.sum(), pln.sum()], index=['plp', 'pln'], columns=['pls'])
                 for i in list(plp.index):
                     print i
-                    print "oanda2.close_trade(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
+                    print "oanda2.close_trade(%s, type='market', instrument='%s')" % (accid, i)
                     #oanda2.close_trade(accid, type='market', instrument=i, side=side, units=units)
                     
                 print pll
