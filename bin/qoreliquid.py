@@ -1836,17 +1836,17 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 #print gct
                 ffsds = 'instrument side units plpips pl time'.split(' ')
                 
-                plp = ct.sort('pl', ascending=False)[ct['pl'] > 0].ix[:, 'pl']
-                pln = ct.sort('pl', ascending=False)[ct['pl'] < 0].ix[:, 'pl']
-                pll = p.DataFrame([plp.sum(), pln.sum()], index=['plp', 'pln'], columns=['pls'])
+                plp = ct.sort('pl', ascending=False)[ct['pl'] > 0]
+                pln = ct.sort('pl', ascending=False)[ct['pl'] < 0]
+                pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
 
                 print pll
                 for i in list(plp.index):
                     print "oanda2.close_trade(%s, %s)" % (accid, i)
                     #oanda2.close_trade(accid, i)
                     
-                print ct.sort('pl', ascending=False)[ct['pl'] > 0].ix[:, ffsds]
-                print ct.sort('pl', ascending=True)[ct['pl'] < 0].ix[:, ffsds]
+                print plp.ix[:, ffsds]
+                print pln.ix[:, ffsds]
 
                 print 'currentPositions:'
                 print currentPositions.sort('units', ascending=False)
