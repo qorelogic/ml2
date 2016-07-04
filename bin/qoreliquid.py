@@ -1779,13 +1779,10 @@ def getCurrentTrades(oanda2, accid, currentPositions):
     currentTrades = oanda2.get_trades(accid, count=500)['trades']
     currentTrades = p.DataFrame(currentTrades)
     
+    # source: http://stackoverflow.com/questions/33126477/pandas-convert-objectsconvert-numeric-true-deprecated
     #instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument').convert_objects(convert_numeric=True)
     instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument')
-    print instruments.dtypes
-    print instruments
     instruments['pip'] = p.to_numeric(instruments['pip'])
-    print instruments.dtypes
-    print instruments
     currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
     currentPrices = p.DataFrame(currentPrices).set_index('instrument')
     currentTrades = currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('instrument')
