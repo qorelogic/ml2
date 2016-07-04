@@ -1842,8 +1842,9 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
 
                 print pll
                 for i in list(plp.index):
-                    print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
-                    #oanda2.close_trade(accid, i)
+                    if dryrun == False:
+                        print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
+                        oanda2.close_trade(accid, i)
                     
                 print plp.ix[:, ffsds]
                 print pln.ix[:, ffsds]
