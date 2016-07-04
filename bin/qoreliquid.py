@@ -1836,9 +1836,10 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 #print gct
                 ffsds = 'instrument side units plpips pl time'.split(' ')
                 
-                pl1 = ct.sort('pl', ascending=False)[ct['pl'] > 0].ix[:, 'pl'].sum()
-                pl2 = ct.sort('pl', ascending=False)[ct['pl'] < 0].ix[:, 'pl'].sum()
-                pll = p.DataFrame([pl1, pl2], index=['plp', 'pln'], columns=['pls'])
+                plp = ct.sort('pl', ascending=False)[ct['pl'] > 0].ix[:, 'pl']
+                pln = ct.sort('pl', ascending=False)[ct['pl'] < 0].ix[:, 'pl']
+                pll = p.DataFrame([plp.sum(), pln.sum()], index=['plp', 'pln'], columns=['pls'])
+                print plp.index
                 print pll
                 print ct.sort('pl', ascending=False)[ct['pl'] > 0].ix[:, 'pl'].sum()
                 print ct.sort('pl', ascending=False)[ct['pl'] > 0].ix[:, ffsds]
