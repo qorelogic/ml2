@@ -1833,7 +1833,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 print 'currentTrades:'
                 print len(currentTrades)
                 #print currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('id').ix[:,'instrument price side time units'.split(' ')]
-                print gct
+                #print gct
                 print ct.sort('pl', ascending=False)[ct['pl'] > 0]
                 print ct.sort('pl', ascending=True)[ct['pl'] < 0]
                 print 'currentPositions:'
