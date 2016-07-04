@@ -1821,6 +1821,9 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     try:
         currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument')#.ix[:,'side units'.split(' ')]
         currentTrades = getCurrentTrades(oanda2, accid, currentPositions)
+        ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
+        gct = ct.groupby('instrument') #.sort('pl', ascending=False)[ct['pl'] > 0]
+        gct = gct.aggregate(sum).ix[:, 'units pl'.split(' ')].sort('pl', ascending=False)#[ct['pl'] > 0]                                 
 
         if verbose:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1830,9 +1833,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 print 'currentTrades:'
                 print len(currentTrades)
                 #print currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('id').ix[:,'instrument price side time units'.split(' ')]
-                ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
-                gct = ct.groupby('instrument') #.sort('pl', ascending=False)[ct['pl'] > 0]
-                print gct.describe()
+                print gct
                 print ct.sort('pl', ascending=False)[ct['pl'] > 0]
                 print ct.sort('pl', ascending=True)[ct['pl'] < 0]
                 print 'currentPositions:'
