@@ -1839,7 +1839,8 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 plp = ct.sort('pl', ascending=False)[ct['pl'] > 0].ix[:, 'pl']
                 pln = ct.sort('pl', ascending=False)[ct['pl'] < 0].ix[:, 'pl']
                 pll = p.DataFrame([plp.sum(), pln.sum()], index=['plp', 'pln'], columns=['pls'])
-                print plp.index
+                for i in list(plp.index):
+                    print i
                 print pll
                 print ct.sort('pl', ascending=False)[ct['pl'] > 0].ix[:, 'pl'].sum()
                 print ct.sort('pl', ascending=False)[ct['pl'] > 0].ix[:, ffsds]
