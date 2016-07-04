@@ -1785,7 +1785,7 @@ def getCurrentTrades(oanda2, accid, currentPositions):
     instruments['pip'] = p.to_numeric(instruments['pip'])
     currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
     currentPrices = p.DataFrame(currentPrices).set_index('instrument')
-    currentTrades = currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('instrument')
+    currentTrades = currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('instrument')
     currentTrades = currentTrades.combine_first(currentPrices)
     #currentTrades = currentTrades.combine_first(instruments)
     #currentTrades = p.concat([currentTrades, instruments], axis=0, join='outer')
@@ -1826,7 +1826,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         currentTrades = getCurrentTrades(oanda2, accid, currentPositions)
         ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
         gct = ct.groupby('instrument') #.sort('pl', ascending=False)[ct['pl'] > 0]
-        gct = gct.aggregate(sum).ix[:, 'units pl'.split(' ')].sort('pl', ascending=False)#[ct['pl'] > 0]                                 
+        gct = gct.aggregate(sum).ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]                                 
 
         if verbose:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1839,8 +1839,8 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 #print gct
                 ffsds = 'instrument side units plpips pl time'.split(' ')
                 
-                plp = ct.sort('pl', ascending=False)[ct['pl'] > 0]
-                pln = ct.sort('pl', ascending=False)[ct['pl'] < 0]
+                plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
+                pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
                 pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
 
                 print pll
