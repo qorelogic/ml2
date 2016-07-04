@@ -1819,6 +1819,9 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     try:
         currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument')#.ix[:,'side units'.split(' ')]
         currentTrades = getCurrentTrades(oanda2, accid, currentPositions)
+        ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
+        gct = ct.groupby('instrument') #.sort('pl', ascending=False)[ct['pl'] > 0]
+        gct = gct.aggregate(sum).ix[:, 'units pl'.split(' ')].sort('pl', ascending=False)#[ct['pl'] > 0]                                 
 
         if verbose:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1828,9 +1831,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 print 'currentTrades:'
                 print len(currentTrades)
                 #print currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('id').ix[:,'instrument price side time units'.split(' ')]
-                ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
-                gct = ct.groupby('instrument') #.sort('pl', ascending=False)[ct['pl'] > 0]
-                print gct.describe()
+                print gct
                 print ct.sort('pl', ascending=False)[ct['pl'] > 0]
                 print ct.sort('pl', ascending=True)[ct['pl'] < 0]
                 print 'currentPositions:'
@@ -1848,6 +1849,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 print cu.sort('diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')]
         #print
         dfu3 = dfu3.combine_first(cu)
+        dfu3 = dfu3.combine_first(gct)
     except Exception as e:
         print e
     try:
@@ -1869,13 +1871,14 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     dfu3['rebalanceBool'] = n.int16(dfu3.ix[:, 'rebalance'] <> 0)
     dfu3['deleverageBool'] = n.logical_and(differentPolarity(positions, dfu3.ix[:, 'rebalance']), positions <> 0)
     dfu3['diffpRebalancep'] = dfu3.ix[:, 'diffp'].get_values() * dfu3.ix[:, 'rebalancep'].get_values() * dfu3.ix[:, 'deleverageBool'].get_values()
-    dfu3['diffpRebalancepBalance'] = dfu3.ix[:, 'diffpRebalancep'].get_values() * balance
+    #dfu3['diffpRebalancepBalance'] = dfu3.ix[:, 'diffpRebalancep'].get_values() * balance
+    dfu3['diffpRebalancepBalance'] = dfu3.ix[:, 'diffpRebalancep'] * dfu3.ix[:, 'pl']
     #dfu3['diffpRebalancepBalance'] = netAssetValue
 
     sortby = ['deleverageBool', 'diffpRebalancep']
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity quotedCurrencyPriceBid unit units amountSidePolarity amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance'
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity quotedCurrencyPriceBid unit units amountSidePolarity amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl'
         if verbose: f1 = '%s rebalanceBool deleverageBool' % f1Base
         else:       f1 = f1Base
         if verbose:            
