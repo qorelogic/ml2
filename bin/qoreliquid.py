@@ -1801,8 +1801,13 @@ def getCurrentTrades(oanda2, accid, currentPositions):
         currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
     return currentTrades
 
+def interactiveMode():
+    ans = raw_input('Sure you want to create order? (y/N): ')
+    if ans != 'y':
+        raise(Exception('User intervened: order not created'))
+
 @profile
-def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False):
+def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False):
     oq = OandaQ(verbose=False)
     
     if verbose: print '----------'
@@ -1834,9 +1839,15 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
             print pll
         for i in list(plp.index):
             if dryrun == False:
-                if verbose: 
+                try:
                     print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
-                #oanda2.close_trade(accid, i)
+                    if not noInteractiveFleetingProfits:
+                        if noInteractiveLeverage: raise(Exception('nil --> nif conflict'))
+                        if noInteractiveDeleverage: raise(Exception('nid --> nif conflict'))
+                        interactiveMode()
+                    oanda2.close_trade(accid, i)
+                except Exception as e:
+                    print e
         if verbose:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                 #print 'instruments:'
@@ -1935,10 +1946,6 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
             print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
             if dryrun == False:
                 try:
-                    def interactiveMode():
-                        ans = raw_input('Sure you want to create order? (y/N): ')
-                        if ans != 'y':
-                            raise(Exception('User intervened: order not created'))
                     if noInteractiveLeverage == True or noInteractiveDeleverage == True:
                         #noInteractive = True
                         ''
@@ -1947,13 +1954,16 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                         print 'noInteractive:           %s' % noInteractive
                         print 'noInteractiveLeverage:   %s' % noInteractiveLeverage
                         print 'noInteractiveDeleverage: %s' % noInteractiveDeleverage
+                        print 'noInteractiveFleetingProfits: %s' % noInteractiveFleetingProfits
                     if dfu3.ix[i, 'deleverageBool'] == True and (not noInteractive and not noInteractiveDeleverage):
                         if verbose: print 'nid---'
                         if noInteractiveLeverage: raise(Exception('nil --> nid conflict'))
+                        if noInteractiveFleetingProfits: raise(Exception('nif --> nid conflict'))
                         interactiveMode()
                     if dfu3.ix[i, 'deleverageBool'] == False and (not noInteractive and not noInteractiveLeverage):
                         if verbose: print 'nil---'
                         if noInteractiveDeleverage: raise(Exception('nid --> nil conflict'))
+                        if noInteractiveFleetingProfits: raise(Exception('nif --> nil conflict'))
                         interactiveMode()
                     #if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
                     #    print 'ni---'
