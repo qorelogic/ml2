@@ -1828,6 +1828,17 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         gct = ct.groupby('instrument') #.sort('pl', ascending=False)[ct['pl'] > 0]
         gct = gct.aggregate(sum).ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]                                 
 
+        ffsds = 'instrument side units plpips pl time'.split(' ')
+        plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
+        pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
+        pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
+        if verbose:
+            print pll
+        for i in list(plp.index):
+            if dryrun == False:
+                if verbose: 
+                    print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
+                #oanda2.close_trade(accid, i)
         if verbose:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                 #print 'instruments:'
@@ -1837,17 +1848,6 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 print len(currentTrades)
                 #print currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('id').ix[:,'instrument price side time units'.split(' ')]
                 #print gct
-                ffsds = 'instrument side units plpips pl time'.split(' ')
-                
-                plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
-                pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
-                pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
-
-                print pll
-                for i in list(plp.index):
-                    if dryrun == False:
-                        print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
-                        #oanda2.close_trade(accid, i)
                     
                 print plp.ix[:, ffsds]
                 print pln.ix[:, ffsds]
