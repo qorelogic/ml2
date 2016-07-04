@@ -1825,7 +1825,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument')#.ix[:,'side units'.split(' ')]
         currentTrades = getCurrentTrades(oanda2, accid, currentPositions)
         ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
-        gct = ct.groupby('instrument') #.sort('pl', ascending=False)[ct['pl'] > 0]
+        gct = ct.groupby('instrument') #.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
         gct = gct.aggregate(sum).ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]                                 
 
         ffsds = 'instrument side units plpips pl time'.split(' ')
@@ -1846,7 +1846,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 #print currentPrices
                 print 'currentTrades:'
                 print len(currentTrades)
-                #print currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('id').ix[:,'instrument price side time units'.split(' ')]
+                #print currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('id').ix[:,'instrument price side time units'.split(' ')]
                 #print gct
                     
                 print plp.ix[:, ffsds]
@@ -1907,8 +1907,8 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
             print '-=-=-=-=-'
             print dfu3.ix[:, 'amount2']
             print '-=-=-=-=-'
-            #print dfu3.sort('diffp', ascending=False).ix[:, f1.split(' ')]
-            print dfu3.sort(sortby, ascending=False).ix[:, f1.split(' ')]
+            #print dfu3.sort_values(by='diffp', ascending=False).ix[:, f1.split(' ')]
+            print dfu3.sort_values(by=sortby, ascending=False).ix[:, f1.split(' ')]
             print
 
     sortAscending = [False, True]
@@ -2010,10 +2010,10 @@ def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     quotedCurrencyPrice = quotedCurrencyPrice.set_index('instrument')
     quotedCurrencyPrice['diffp'] = dfu33['diffp']
     #---
-    #.sort('diffp', ascending=False)
+    #.sort_values(by='diffp', ascending=False)
     if verbose:
         print 'quotedCurrencyPrice'
-        print quotedCurrencyPrice#.sort('diffp', ascending=False)
+        print quotedCurrencyPrice#.sort_values(by='diffp', ascending=False)
     #print res
     #print sdf['quotedCurrency']
     #print sdf.ix[quotedCurrencyPrice.index,:]
