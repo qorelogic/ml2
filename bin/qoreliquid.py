@@ -1836,8 +1836,6 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
         pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
         pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
-        if verbose:
-            print pll
         for i in list(plp.index):
             if dryrun == False:
                 try:
@@ -1961,6 +1959,20 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                     oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
                 except Exception as e:
                     if verbose: print e
+        
+    if verbose:
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print maccount
+            pll[0] = pll['pls']
+            #maccount = oanda2.get_account(accid)
+            dfa = p.DataFrame(maccount, index=[0])
+            dfa = dfa.combine_first(pll.ix[:,[0]].transpose())
+            dfa['netAssetValue'] = dfa['balance'] + dfa['unrealizedPl']
+            dfa['plpcnt'] = dfa['plp'] / dfa['balance'] * 100
+            dfa['plncnt'] = dfa['pln'] / dfa['balance'] * 100
+            print
+            print dfa.ix[:, 'accountCurrency accountId accountName balance unrealizedPl netAssetValue realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')]
+            print
         
     return dfu3
 
