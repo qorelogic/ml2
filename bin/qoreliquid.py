@@ -1783,7 +1783,7 @@ def getCurrentTrades(oanda2, accid, currentPositions):
     instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument')
     print instruments.dtypes
     print instruments
-    instruments = p.to_numeric(instruments)
+    instruments['pip'] = p.to_numeric(instruments['pip'])
     print instruments.dtypes
     print instruments
     currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
