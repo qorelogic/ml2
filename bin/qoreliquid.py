@@ -1798,7 +1798,7 @@ def getCurrentTrades(oanda2, accid, currentPositions):
         currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
     return currentTrades
 
-@profile
+#@profile
 def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False):
     oq = OandaQ(verbose=False)
     
