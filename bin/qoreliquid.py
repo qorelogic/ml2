@@ -1780,7 +1780,8 @@ def getCurrentTrades(oanda2, accid, currentPositions):
     currentTrades = p.DataFrame(currentTrades)
     
     #instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument').convert_objects(convert_numeric=True)
-    instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument').to_numeric()
+    instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument')
+    instruments = p.to_numeric(instruments)
     currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
     currentPrices = p.DataFrame(currentPrices).set_index('instrument')
     currentTrades = currentTrades.sort(['instrument', 'id'], ascending=[True, True]).set_index('instrument')
@@ -1955,7 +1956,6 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     
 def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     if verbose: print '#--- cw(start)'
-    #li = list(dfu33.sort('diffp', ascending=False).index)
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
     if verbose:
         print 'li'
