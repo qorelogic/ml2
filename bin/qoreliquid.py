@@ -1815,11 +1815,11 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
     # recalculate percentages [diffp]
     dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
 
-    #balance = oanda2.get_account(accid)['balance']
-    marginAvail = oanda2.get_account(accid)['marginAvail']
-    unrealizedPl = float(oanda2.get_account(accid)['unrealizedPl'])
-    netAssetValue = float(oanda2.get_account(accid)['balance']) + unrealizedPl
-    balance       = float(oanda2.get_account(accid)['balance'])
+    maccount = oanda2.get_account(accid)
+    marginAvail = maccount['marginAvail']
+    unrealizedPl = float(maccount['unrealizedPl'])
+    netAssetValue = float(maccount['balance']) + unrealizedPl
+    balance       = float(maccount['balance'])
     oinsts = ','.join(list(dfu3.index))
     prdf = p.DataFrame(oanda2.get_prices(instruments=','.join(list(dfu3.index)))['prices']).set_index('instrument')
     #prdf.ix[:,['instrument','bid']]
