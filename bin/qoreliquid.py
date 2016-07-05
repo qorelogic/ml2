@@ -1806,7 +1806,7 @@ def interactiveMode():
     if ans != 'y':
         raise(Exception('User intervened: order not created'))
 
-#@profile
+@profile
 def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False):
     oq = OandaQ(verbose=False)
     
@@ -1963,7 +1963,8 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                     if verbose: print e
         
     return dfu3
-    
+
+@profile
 def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     if verbose: print '#--- cw(start)'
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
