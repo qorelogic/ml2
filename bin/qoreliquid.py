@@ -1978,10 +1978,26 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
             dfa = p.DataFrame(maccount, index=[0])
             dfa = dfa.combine_first(pll.ix[:,[0]].transpose())
             dfa['netAssetValue'] = dfa['balance'] + dfa['unrealizedPl']
+            dfa['unrealizedPlPcnt'] = dfa['unrealizedPl'] / dfa['balance'] * 100
             dfa['plpcnt'] = dfa['plp'] / dfa['balance'] * 100
             dfa['plncnt'] = dfa['pln'] / dfa['balance'] * 100
+            # aliases
+            dfa['nav'] = dfa['netAssetValue']
+            dfa['uPl'] = dfa['unrealizedPl']
+            dfa['uPlPcnt'] = dfa['unrealizedPlPcnt']
+
+            #print dfu3[:, ['diffpRebalancepBalance', 'diffpRebalancep']].sum()
+            print '%s %s' % (dfu3['diffpRebalancepBalance'].sum(), dfu3['diffpRebalancep'].sum())
             print
-            print dfa.ix[:, 'accountCurrency accountId accountName balance unrealizedPl netAssetValue realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')]
+            print plp.ix[:, ffsds]                        
+            #li = list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
+            #li = li.append('%')
+            #print '%s %s%s' % li            
+            #print '%s %s' % list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
+            print list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
+            #print pln.ix[:, ffsds]
+            print
+            print dfa.ix[:, 'accountCurrency accountId accountName balance uPl uPlPcnt nav realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')]
             print
         
     return dfu3
