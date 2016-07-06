@@ -1968,10 +1968,11 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
             dfa = p.DataFrame(maccount, index=[0])
             dfa = dfa.combine_first(pll.ix[:,[0]].transpose())
             dfa['netAssetValue'] = dfa['balance'] + dfa['unrealizedPl']
+            dfa['unrealizedPlPcnt'] = dfa['unrealizedPl'] / dfa['balance'] * 100
             dfa['plpcnt'] = dfa['plp'] / dfa['balance'] * 100
             dfa['plncnt'] = dfa['pln'] / dfa['balance'] * 100
             print
-            print dfa.ix[:, 'accountCurrency accountId accountName balance unrealizedPl netAssetValue realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')]
+            print dfa.ix[:, 'accountCurrency accountId accountName balance unrealizedPl unrealizedPlPcnt netAssetValue realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')]
             print
         
     return dfu3
