@@ -1964,7 +1964,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             #print maccount
             pll[0] = pll['pls']
-            maccount = oanda2.get_account(accid)
+            #maccount = oanda2.get_account(accid)
             dfa = p.DataFrame(maccount, index=[0])
             dfa = dfa.combine_first(pll.ix[:,[0]].transpose())
             dfa['netAssetValue'] = dfa['balance'] + dfa['unrealizedPl']
