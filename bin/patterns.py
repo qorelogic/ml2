@@ -5,6 +5,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-v", '--verbose', help="turn on verbosity", action="store_true")
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-hh", '--history', help="history", action="store_true")
+parser.add_argument("-hf", '--historyFilename', help="history file name")
 parser.add_argument("-a", '--analyze', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-acc", '--account', help="account number")
 parser.add_argument('-g', "-gearing", '--leverage', help="gearing or leverage, default=50")
@@ -252,7 +253,11 @@ if __name__ == "__main__":
             if args.history:
                 #plotTransactionHistory(account, oanda1)
                 try:
-                    df = p.read_csv('/home/qore2/Desktop/f566016f51bde41a6c6fd2b4ec74cd82.csv')
+                    try:
+                        historyFilename = args.historyFilename
+                    except:
+                        historyFilename = '/home/qore2/Desktop/f566016f51bde41a6c6fd2b4ec74cd82.csv'
+                    df = p.read_csv(historyFilename)
                     dfi = df.sort('Transaction ID', ascending=True)
                 except:
                     dfi = p.DataFrame([])
