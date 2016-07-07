@@ -12,6 +12,7 @@ parser.add_argument('-g', "-gearing", '--leverage', help="gearing or leverage, d
 parser.add_argument('-n', '--num', help="number of trades default=None")
 parser.add_argument('-dp', '--diffpThreshold', help="trade only signals above a given threshold default=5")
 #parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
+parser.add_argument("-i", '--interactive', help="Interactive Loop", action="store_true")
 parser.add_argument("-ni", '--noInteractive', help="No interactive Q&A", action="store_true")
 parser.add_argument("-nid", '--noInteractiveDeleverage', help="No interactive Q&A for the deleverage option", action="store_true")
 parser.add_argument("-nil", '--noInteractiveLeverage', help="No interactive Q&A for the deleverage option", action="store_true")
@@ -249,6 +250,9 @@ if __name__ == "__main__":
     
     while True:
         print 'receiving feed..'
+        if args.interactive:
+            print 'mode: '
+            mode = raw_input()
         try:
             if args.history:
                 #plotTransactionHistory(account, oanda1)
@@ -273,4 +277,5 @@ if __name__ == "__main__":
                 main(args, leverage=leverage, dryrun=dryrun)
         except Exception as e:
             print e
-        break
+        if not args.interactive:
+            break
