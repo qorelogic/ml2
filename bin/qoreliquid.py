@@ -1978,6 +1978,11 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
 
             #print dfu3[:, ['diffpRebalancepBalance', 'diffpRebalancep']].sum()
             print '%s %s' % (dfu3['diffpRebalancepBalance'].sum(), dfu3['diffpRebalancep'].sum())
+            balanceDeleveraged    = dfa.ix[0, 'balance'] + dfu3['diffpRebalancepBalance'].sum()
+            balanceDeleveragedPlp = dfa.ix[0, 'balance'] + dfa.ix[0, 'plp'] + dfu3['diffpRebalancepBalance'].sum()
+            print 'DeleveragedBalance: %s' % (balanceDeleveraged)
+            print 'DeleveragedBalance+plp: %s' % (balanceDeleveragedPlp)
+            print 'diffDeleveragedBalance+plp2Balance: %s' % (balanceDeleveragedPlp - dfa.ix[0, 'balance'])
             print
             print plp.ix[:, ffsds]                        
             #li = list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
