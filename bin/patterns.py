@@ -220,11 +220,6 @@ def main(args, leverage=10, dryrun=True, verbose=False):
 
 if __name__ == "__main__":
     
-    if args.live:
-        dryrun=False
-    else:
-        dryrun=True
-
     if args.leverage:
         leverage=int(args.leverage)
     else:
@@ -234,7 +229,7 @@ if __name__ == "__main__":
         account=int(args.account)
     else:
         account=558788
-    
+
     def plotTransactionHistory(acc, oaoa):
         th = oaoa.get_transaction_history(acc)
         df = p.DataFrame()
@@ -244,7 +239,6 @@ if __name__ == "__main__":
         #print df
         plot(df.ix[:,'accountBalance'].ffill()); show()
 
-        
     """
     try:
         main(args, leverage=leverage, dryrun=dryrun)
@@ -252,13 +246,35 @@ if __name__ == "__main__":
         qd.printTraceBack()
         print e
     """
-
     
     while True:
         print 'receiving feed..'
         if args.interactive:
-            print 'mode: '
-            mode = raw_input()
+            args = parser.parse_args()
+            mode = raw_input('mode: ')
+            if mode == 'd':
+                args.live = True
+                args.noInteractiveDeleverage = True
+            if mode == 'l':
+                args.live = True
+                args.noInteractiveLeverage = True
+            if mode == 'f':
+                args.live = True
+                args.noInteractiveFleetingProfits = True
+            if int(verbose) >= 5:
+                print 'mode: %s' % mode
+                print 'live: %s' % args.live
+                print 'noInteractiveLeverage: %s' % args.noInteractiveLeverage
+                print 'noInteractiveDeleverage: %s' % args.noInteractiveDeleverage
+                print 'noInteractiveFleetingProfits: %s' % args.noInteractiveFleetingProfits
+
+        if args.live:
+            dryrun=False
+        else:
+            dryrun=True
+        if int(verbose) >= 5:
+            print 'dryrun: %s' % dryrun
+        
         try:
             if args.history:
                 #plotTransactionHistory(account, oanda1)
