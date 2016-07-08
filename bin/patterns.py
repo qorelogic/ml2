@@ -2,7 +2,7 @@
 import argparse
 # source: https://docs.python.org/2/howto/argparse.html
 parser = argparse.ArgumentParser()
-parser.add_argument("-v", '--verbose', help="turn on verbosity", action="store_true")
+parser.add_argument("-v", '--verbose', help="turn on verbosity")
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-hh", '--history', help="history", action="store_true")
 parser.add_argument("-hf", '--historyFilename', help="history file name")
@@ -86,15 +86,17 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         for i in 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD,EUR_AUD,USD_JPY,AUD_USD,AUD_JPY,CAD_JPY,EUR_CAD,EUR_CHF,EUR_GBP,NZD_JPY,NZD_USD,USD_CHF,CHF_JPY'.split(','):
             dfu0 = getc4(df, dfh, oanda2, instrument=i)
             dfu  = dfu.combine_first(dfu0)
-            print
-            print dfu
+            if int(verbose) >= 3:
+                print
+                print dfu
 	    #break
         fname = '/tmp/patterns.dfu.%s.csv' % time.time()
         dfu.to_csv(fname)
     else:
         dfu = p.read_csv(fname, index_col=0)
     dfu['diff'] = n.abs(dfu['buy'] - dfu['sell'])
-    if verbose: print dfu.sort('diff', ascending=False)
+    if int(verbose) > 5:
+        print dfu.sort('diff', ascending=False)
     
     # In[ calculate period weights ]:
     @profile
@@ -110,7 +112,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         #pp
         return pp.set_index(0)
     pw = periodWeightsTable()
-    if verbose: print pw
+    if int(verbose) > 5: print pw
     
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         cli = [0,1,2,3,4,5,6,7,8]
@@ -121,7 +123,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         dfu['buy'] = n.sum(posdf.get_values(), 1)
         dfu['sell'] = n.abs(n.sum(negdf.get_values(), 1))
         dfu['diff'] = n.abs(dfu['buy'] - dfu['sell'])
-        if verbose:
+        if int(verbose) > 5:
             print
             print 'pw'
             print pw#['weight']
@@ -153,7 +155,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     # In[ ]:
     
     orders = dfu2.ix[:, 'diff side diffp sidePolarity'.split(' ')]
-    if verbose: 
+    if int(verbose) > 5: 
         print 'Oanda orders:'
         print orders
         print
@@ -188,7 +190,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         
         # recalculate percentages [diffp]
         dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
-        if verbose: 
+        if int(verbose) > 5:
             print '1broker orders:'
             print dfu3
     except Exception as e:
@@ -267,7 +269,6 @@ if __name__ == "__main__":
                     dfi = df.sort('Transaction ID', ascending=True)
                 except:
                     dfi = p.DataFrame([])
-                oq = OandaQ()
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     print dfi#.columns
                     dfii = dfi.ix[:,'Transaction ID;Balance;Time (UTC)'.split(';')]#.tail(5)#.transpose()
