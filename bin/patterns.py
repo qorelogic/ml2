@@ -204,17 +204,19 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     noInteractiveDeleverage = args.noInteractiveDeleverage
     noInteractiveFleetingProfits = args.noInteractiveFleetingProfits
     
+    oq = OandaQ(verbose=False)
+
     if args.account:
         try:
-            dfu33 = rebalanceTrades(dfu2, oanda1, int(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
+            dfu33 = rebalanceTrades(oq, dfu2, oanda1, int(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
         except oandapy.OandaError as e:
             print e
             print 'Try a different account number'
     else:
-        fu33 = rebalanceTrades(dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
-        fu33 = rebalanceTrades(dfu2, oanda1, 801996, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
-        fu33 = rebalanceTrades(dfu2, oanda1, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
-        dfu33 = rebalanceTrades(dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
+        fu33 = rebalanceTrades(oq, dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
+        fu33 = rebalanceTrades(oq, dfu2, oanda1, 801996, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
+        fu33 = rebalanceTrades(oq, dfu2, oanda1, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
+        dfu33 = rebalanceTrades(oq, dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
 
 if __name__ == "__main__":
     

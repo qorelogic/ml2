@@ -1807,8 +1807,7 @@ def interactiveMode():
         raise(Exception('User intervened: order not created'))
 
 @profile
-def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False):
-    oq = OandaQ(verbose=False)
+def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False):
     
     if verbose: print '----------'
     
