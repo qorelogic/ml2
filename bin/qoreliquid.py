@@ -1847,7 +1847,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                     oanda2.close_trade(accid, i)
                 except Exception as e:
                     print e
-        if verbose:
+        if int(verbose) > 5:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                 #print 'instruments:'
                 #print instruments 
@@ -1870,7 +1870,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         cu = currentPositions.combine_first(dfu3)
         cu['bool'] = getSideBool(cu['side'])
         cu = cu.fillna(0)
-        if verbose:
+        if int(verbose) > 5:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                 print cu.sort_values(by='diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')]
         #print
@@ -1911,7 +1911,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
         f1Base         = 'amount bool buy diff diffp sell side sidePolarity quotedCurrencyPriceBid unit units amountSidePolarity amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl diffpRebalancep2'
         if verbose: f1 = '%s rebalanceBool deleverageBool' % f1Base
         else:       f1 = f1Base
-        if verbose:            
+        if int(verbose) > 5:            
             print '-=-=-=-=-'
             print dfu3.ix[:, 'amount2']
             print '-=-=-=-=-'
@@ -1937,7 +1937,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                     if noInteractiveLeverage == True or noInteractiveDeleverage == True:
                         #noInteractive = True
                         ''
-                    if verbose:
+                    if int(verbose) > 5:
                         print 'deleverageBool:          %s' % dfu3.ix[i, 'deleverageBool']
                         print 'noInteractive:           %s' % noInteractive
                         print 'noInteractiveLeverage:   %s' % noInteractiveLeverage
@@ -1960,7 +1960,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
                 except Exception as e:
                     if verbose: print e
         
-    if verbose:
+    if int(verbose) > 2:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             #print maccount
             pll[0] = pll['pls']
@@ -1994,6 +1994,9 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
             print
             print dfa.ix[:, 'accountCurrency accountId accountName balance uPl uPlPcnt nav realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')]
             print
+    
+    print type(verbose)
+    print verbose
         
     return dfu3
 
@@ -2001,7 +2004,7 @@ def rebalanceTrades(dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False
 def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     if verbose: print '#--- cw(start)'
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
-    if verbose:
+    if int(verbose) > 5:
         print 'li'
         print li
 
@@ -2010,22 +2013,22 @@ def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     df = oq.syntheticCurrencyTable(pdf, homeCurrency='USD')
     df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
     pcdf = df.ix[:,'pairedCurrency'].get_values()
-    if verbose: print pcdf
+    if int(verbose) > 5: print pcdf
     pcdf = oq.wew(pcdf)
-    if verbose:
+    if int(verbose) > 5:
         print pcdf
         print
     #pdf = n.c_[pdf,pcdf]#[0]
     pdf = list(pdf)+list(pcdf)
-    if verbose: print pdf
+    if int(verbose) > 5: print pdf
     #fdf = fdf.combine_first(df)
     pairs = ','.join(list(pdf))
-    if verbose: print pairs
+    if int(verbose) > 5: print pairs
 
     sdf = p.DataFrame(oq.syntheticCurrencyTable(li, homeCurrency='USD'))
     res = oanda2.get_prices(instruments=','.join(oq.wew(sdf['quotedCurrency'])))
     res = p.DataFrame(res['prices'])
-    if verbose:
+    if int(verbose) > 5:
         print list(sdf['quotedCurrency'])
         print 'sdf'
         print sdf
@@ -2036,11 +2039,11 @@ def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     ldf = p.DataFrame(li)
     #sdf['pc'] = ma 
     sdf = sdf.set_index('instrument')
-    if verbose:
+    if int(verbose) > 5:
         print 'sdf'
         print sdf
     quotedCurrency = sdf.ix[dfu33.index, ['quotedCurrency','pow']]
-    if verbose:
+    if int(verbose) > 5:
         print 'quotedCurrency'
         print quotedCurrency
         print '===='
@@ -2054,7 +2057,7 @@ def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     quotedCurrencyPrice['diffp'] = dfu33['diffp']
     #---
     #.sort_values(by='diffp', ascending=False)
-    if verbose:
+    if int(verbose) > 5:
         print 'quotedCurrencyPrice'
         print quotedCurrencyPrice#.sort_values(by='diffp', ascending=False)
     #print res
@@ -2071,7 +2074,7 @@ def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     dfu33['amount2'] = dfu33['unitsAvailable'] * dfu33['diffp']
     #print quotedCurrencyPrice['bid']
     #print p.DataFrame(netAssetValue * 50 * quotedCurrencyPrice['bid'].get_values())
-    if verbose:
+    if int(verbose) > 5:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print 'dfu33'
             print dfu33.ix[:, 'quotedCurrencyPriceBid quotedCurrencyPriceAsk unitsAvailable diffp pow2 units amount2 amount rebalance'.split(' ')]
