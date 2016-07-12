@@ -250,7 +250,9 @@ if __name__ == "__main__":
     while True:
         print 'receiving feed..'
         if args.interactive:
+            usage = 'usage: a=analyze, d=deleverage, l=leverage, f=fleetingProfits, ?=help'
             args = parser.parse_args()
+            print usage
             mode = raw_input('mode ?: ')
             if mode == 'a': # analyze mode
                 args.analyze = True
@@ -265,7 +267,7 @@ if __name__ == "__main__":
                 args.live = True
                 args.noInteractiveFleetingProfits = True
             if mode == '?' or mode == 'help': # help
-                print 'a=analyze, d=deleverage, l=leverage, f=fleetingProfits, ?=help'
+                print usage
                 break
             if int(args.verbose) >= 5:
                 print 'mode: %s' % mode
