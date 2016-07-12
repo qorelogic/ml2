@@ -86,9 +86,9 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         for i in 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD,EUR_AUD,USD_JPY,AUD_USD,AUD_JPY,CAD_JPY,EUR_CAD,EUR_CHF,EUR_GBP,NZD_JPY,NZD_USD,USD_CHF,CHF_JPY'.split(','):
             dfu0 = getc4(df, dfh, oanda2, instrument=i)
             dfu  = dfu.combine_first(dfu0)
-            if int(verbose) >= 3:
-                print
-                print dfu
+            #if int(verbose) >= 3:
+            print
+            print dfu
 	    #break
         fname = '/tmp/patterns.dfu.%s.csv' % time.time()
         dfu.to_csv(fname)
@@ -250,18 +250,26 @@ if __name__ == "__main__":
     while True:
         print 'receiving feed..'
         if args.interactive:
+            usage = 'usage: a=analyze, d=deleverage, l=leverage, f=fleetingProfits, ?=help'
             args = parser.parse_args()
-            mode = raw_input('mode: ')
-            if mode == 'd':
+            print usage
+            mode = raw_input('mode ?: ')
+            if mode == 'a': # analyze mode
+                args.analyze = True
+                args.live = False
+            if mode == 'd': # deleverage mode (risk-off / remove from positions)
                 args.live = True
                 args.noInteractiveDeleverage = True
-            if mode == 'l':
+            if mode == 'l': # leverage mode (risk-on / add to positions)
                 args.live = True
                 args.noInteractiveLeverage = True
-            if mode == 'f':
+            if mode == 'f': # fleetingProfits mode (tp / take profits)
                 args.live = True
                 args.noInteractiveFleetingProfits = True
-            if int(verbose) >= 5:
+            if mode == '?' or mode == 'help': # help
+                print usage
+                break
+            if int(args.verbose) >= 5:
                 print 'mode: %s' % mode
                 print 'live: %s' % args.live
                 print 'noInteractiveLeverage: %s' % args.noInteractiveLeverage
@@ -272,7 +280,7 @@ if __name__ == "__main__":
             dryrun=False
         else:
             dryrun=True
-        if int(verbose) >= 5:
+        if int(args.verbose) >= 5:
             print 'dryrun: %s' % dryrun
         
         try:
