@@ -86,9 +86,9 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         for i in 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD,EUR_AUD,USD_JPY,AUD_USD,AUD_JPY,CAD_JPY,EUR_CAD,EUR_CHF,EUR_GBP,NZD_JPY,NZD_USD,USD_CHF,CHF_JPY'.split(','):
             dfu0 = getc4(df, dfh, oanda2, instrument=i)
             dfu  = dfu.combine_first(dfu0)
-            if int(verbose) >= 3:
-                print
-                print dfu
+            #if int(verbose) >= 3:
+            print
+            print dfu
 	    #break
         fname = '/tmp/patterns.dfu.%s.csv' % time.time()
         dfu.to_csv(fname)
