@@ -251,7 +251,7 @@ if __name__ == "__main__":
         print 'receiving feed..'
         if args.interactive:
             args = parser.parse_args()
-            mode = raw_input('mode: ')
+            mode = raw_input('mode ?: ')
             if mode == 'a': # analyze mode
                 args.analyze = True
                 args.live = False
@@ -264,6 +264,9 @@ if __name__ == "__main__":
             if mode == 'f': # fleetingProfits mode (tp / take profits)
                 args.live = True
                 args.noInteractiveFleetingProfits = True
+            if mode == '?' or mode == 'help': # help
+                print 'a=analyze, d=deleverage, l=leverage, f=fleetingProfits, ?=help'
+                break
             if int(args.verbose) >= 5:
                 print 'mode: %s' % mode
                 print 'live: %s' % args.live
