@@ -252,13 +252,16 @@ if __name__ == "__main__":
         if args.interactive:
             args = parser.parse_args()
             mode = raw_input('mode: ')
-            if mode == 'd':
+            if mode == 'a': # analyze mode
+                args.analyze = True
+                args.live = False
+            if mode == 'd': # deleverage mode (risk-off / remove from positions)
                 args.live = True
                 args.noInteractiveDeleverage = True
-            if mode == 'l':
+            if mode == 'l': # leverage mode (risk-on / add to positions)
                 args.live = True
                 args.noInteractiveLeverage = True
-            if mode == 'f':
+            if mode == 'f': # fleetingProfits mode (tp / take profits)
                 args.live = True
                 args.noInteractiveFleetingProfits = True
             if int(args.verbose) >= 5:
