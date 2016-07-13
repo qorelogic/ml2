@@ -1806,6 +1806,7 @@ def interactiveMode():
     if ans != 'y':
         raise(Exception('User intervened: order not created'))
 
+@profile
 def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage):
     if dryrun == False:
         try:
@@ -1817,6 +1818,36 @@ def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleeti
             oanda2.close_trade(accid, i)
         except Exception as e:
             print e
+
+@profile
+def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive):
+    if dryrun == False:
+        try:
+            if noInteractiveLeverage == True or noInteractiveDeleverage == True:
+                #noInteractive = True
+                ''
+            if int(verbose) > 5:
+                print 'deleverageBool:          %s' % dfu3.ix[i, 'deleverageBool']
+                print 'noInteractive:           %s' % noInteractive
+                print 'noInteractiveLeverage:   %s' % noInteractiveLeverage
+                print 'noInteractiveDeleverage: %s' % noInteractiveDeleverage
+                print 'noInteractiveFleetingProfits: %s' % noInteractiveFleetingProfits
+            if dfu3.ix[i, 'deleverageBool'] == True and (not noInteractive and not noInteractiveDeleverage):
+                if verbose: print 'nid---'
+                if noInteractiveLeverage: raise(Exception('nil --> nid conflict'))
+                if noInteractiveFleetingProfits: raise(Exception('nif --> nid conflict'))
+                interactiveMode()
+            if dfu3.ix[i, 'deleverageBool'] == False and (not noInteractive and not noInteractiveLeverage):
+                if verbose: print 'nil---'
+                if noInteractiveDeleverage: raise(Exception('nid --> nil conflict'))
+                if noInteractiveFleetingProfits: raise(Exception('nif --> nil conflict'))
+                interactiveMode()
+            #if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
+            #    print 'ni---'
+            #    interactiveMode()
+            oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
+        except Exception as e:
+            if verbose: print e
 
 @profile
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False):
@@ -1849,11 +1880,12 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
         pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
         pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
-        pool = ThreadPool(processes=27)
+        pool = ThreadPool(processes=270)
         for i in list(plp.index):
             async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
             return_val   = async_result.get()
-            print return_val
+            #print return_val
+        pool.close()
             
         if int(verbose) > 5:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1940,6 +1972,8 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
 
     sortAscending = [False, True]
     if noInteractiveLeverage: sortAscending[0] = True
+    poolFleetingProfits = ThreadPool(processes=270)
+    poolLeverage        = ThreadPool(processes=270)
     for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
         #print dfu3.ix[[i], :].transpose()
         units = int(abs(dfu3.ix[i, 'rebalance']))#-1
@@ -1951,33 +1985,18 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             deleverageStatus = '[v deleverage %.3f(%.3f%s)]' % (dfu3.ix[i, 'diffpRebalancepBalance'], dfu3.ix[i, 'diffpRebalancep']*100, '%')  if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
             print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
-            if dryrun == False:
-                try:
-                    if noInteractiveLeverage == True or noInteractiveDeleverage == True:
-                        #noInteractive = True
-                        ''
-                    if int(verbose) > 5:
-                        print 'deleverageBool:          %s' % dfu3.ix[i, 'deleverageBool']
-                        print 'noInteractive:           %s' % noInteractive
-                        print 'noInteractiveLeverage:   %s' % noInteractiveLeverage
-                        print 'noInteractiveDeleverage: %s' % noInteractiveDeleverage
-                        print 'noInteractiveFleetingProfits: %s' % noInteractiveFleetingProfits
-                    if dfu3.ix[i, 'deleverageBool'] == True and (not noInteractive and not noInteractiveDeleverage):
-                        if verbose: print 'nid---'
-                        if noInteractiveLeverage: raise(Exception('nil --> nid conflict'))
-                        if noInteractiveFleetingProfits: raise(Exception('nif --> nid conflict'))
-                        interactiveMode()
-                    if dfu3.ix[i, 'deleverageBool'] == False and (not noInteractive and not noInteractiveLeverage):
-                        if verbose: print 'nil---'
-                        if noInteractiveDeleverage: raise(Exception('nid --> nil conflict'))
-                        if noInteractiveFleetingProfits: raise(Exception('nif --> nil conflict'))
-                        interactiveMode()
-                    #if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
-                    #    print 'ni---'
-                    #    interactiveMode()
-                    oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
-                except Exception as e:
-                    if verbose: print e
+
+            #for i in list(plp.index):
+            async_result = poolFleetingProfits.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
+            return_val   = async_result.get()
+            #print return_val
+
+            async_result = poolLeverage.apply_async(leverageTrades, [dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive])
+            return_val   = async_result.get()
+            #print return_val
+            #leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive)
+    poolFleetingProfits.close()
+    poolLeverage.close()
         
     if int(verbose) > 2:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
