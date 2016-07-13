@@ -1878,11 +1878,12 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
         pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
         pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
-        pool = ThreadPool(processes=27)
+        pool = ThreadPool(processes=270)
         for i in list(plp.index):
             async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
             return_val   = async_result.get()
-            print return_val
+            #print return_val
+        pool.close()
             
         if int(verbose) > 5:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1970,12 +1971,12 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
             print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
 
-            from multiprocessing.pool import ThreadPool
-            pool = ThreadPool(processes=27)
+            pool = ThreadPool(processes=270)
             for i in list(plp.index):
                 async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
                 return_val   = async_result.get()
-                print return_val
+                #print return_val
+            pool.close()
             leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive)
         
     if int(verbose) > 2:
