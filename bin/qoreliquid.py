@@ -1806,9 +1806,23 @@ def interactiveMode():
     if ans != 'y':
         raise(Exception('User intervened: order not created'))
 
+def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage):
+    if dryrun == False:
+        try:
+            print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
+            if not noInteractiveFleetingProfits:
+                if noInteractiveLeverage: raise(Exception('nil --> nif conflict'))
+                if noInteractiveDeleverage: raise(Exception('nid --> nif conflict'))
+                interactiveMode()
+            oanda2.close_trade(accid, i)
+        except Exception as e:
+            print e
+
 @profile
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False):
     
+    from multiprocessing.pool import ThreadPool
+
     if verbose: print '----------'
     
     # recalculate percentages [diffp]
@@ -1835,17 +1849,12 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
         pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
         pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
+        pool = ThreadPool(processes=27)
         for i in list(plp.index):
-            if dryrun == False:
-                try:
-                    print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
-                    if not noInteractiveFleetingProfits:
-                        if noInteractiveLeverage: raise(Exception('nil --> nif conflict'))
-                        if noInteractiveDeleverage: raise(Exception('nid --> nif conflict'))
-                        interactiveMode()
-                    oanda2.close_trade(accid, i)
-                except Exception as e:
-                    print e
+            async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
+            return_val   = async_result.get()
+            print return_val
+            
         if int(verbose) > 5:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                 #print 'instruments:'
