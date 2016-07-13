@@ -1806,7 +1806,7 @@ def interactiveMode():
     if ans != 'y':
         raise(Exception('User intervened: order not created'))
 
-def fleetingProfitsCloseTrade():
+def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage):
     if dryrun == False:
         try:
             print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
@@ -1851,7 +1851,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
         pool = ThreadPool(processes=27)
         for i in list(plp.index):
-            async_result = pool.apply_async(fleetingProfitsCloseTrade, [])
+            async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
             return_val   = async_result.get()
             print return_val
             
