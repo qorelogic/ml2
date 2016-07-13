@@ -1846,7 +1846,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                             if noInteractiveLeverage: raise(Exception('nil --> nif conflict'))
                             if noInteractiveDeleverage: raise(Exception('nid --> nif conflict'))
                             interactiveMode()
-                        #oanda2.close_trade(accid, i)
+                        oanda2.close_trade(accid, i)
                     except Exception as e:
                         print e
             async_result = pool.apply_async(fleetingProfitsCloseTrade, [])
