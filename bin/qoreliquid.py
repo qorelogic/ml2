@@ -1806,6 +1806,7 @@ def interactiveMode():
     if ans != 'y':
         raise(Exception('User intervened: order not created'))
 
+@profile
 def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage):
     if dryrun == False:
         try:
@@ -1818,6 +1819,7 @@ def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleeti
         except Exception as e:
             print e
 
+@profile
 def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive):
     if dryrun == False:
         try:
