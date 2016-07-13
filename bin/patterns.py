@@ -84,8 +84,12 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     if args.analyze:
         dfu = p.DataFrame()
         from multiprocessing.pool import ThreadPool
-        pool = ThreadPool(processes=27)
-        for i in 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD,EUR_AUD,USD_JPY,AUD_USD,AUD_JPY,CAD_JPY,EUR_CAD,EUR_CHF,EUR_GBP,NZD_JPY,NZD_USD,USD_CHF,CHF_JPY'.split(','):
+        pool = ThreadPool(processes=270)
+        instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument')
+        symbols = instruments.index
+        #symbols = 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD,EUR_AUD,USD_JPY,AUD_USD,AUD_JPY,CAD_JPY,EUR_CAD,EUR_CHF,EUR_GBP,NZD_JPY,NZD_USD,USD_CHF,CHF_JPY'.split(',')
+        print ','.join(symbols)
+        for i in symbols:
             #dfu0 = getc4(df, dfh, oanda2, instrument=i)
             async_result = pool.apply_async(getc4, [df, dfh, oanda2, i])
             dfu0   = async_result.get()
