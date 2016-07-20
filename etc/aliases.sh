@@ -247,6 +247,17 @@ alias .ga="git add -i "
 alias .grh="git reset --hard "
 alias .gri="git rebase -i "
 # quick git rebase -i HEAD~n method
+.gfb() {
+	if [ "$1" == "" ] || [ "$2" == "" ]; then
+	echo "usage: <remote> <branch>"
+	else
+	git stash
+	git checkout -m -
+	git fetch $1 $2:$2
+	git checkout -m -
+	git stash pop stash@{0}
+	fi
+}
 grin() {
 	if [ "$1" == "" ]; then
 	echo "usage: <number of commuits>"
