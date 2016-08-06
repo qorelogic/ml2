@@ -1683,7 +1683,7 @@ def getccc(df1, dfh, oanda2, mode, instrument='USD_JPY', update=False):
         return dfm1.ix[:, [mode]]
         #dfm0 = dfm1.ix[:, [mode]]
 
-#@profile
+@profile
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     dfm = p.DataFrame()
     patterns = ['CDL2CROWS',
