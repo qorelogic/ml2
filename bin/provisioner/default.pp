@@ -13,6 +13,9 @@ $h2oHdir     = "$installHdir/h2o"
 $sparkHdir   = "$installHdir/spark"
 $sparklingWaterHdir   = "$installHdir/spark"
 
+$pipbin = "/usr/bin/pip"
+#$pipbin = "/usr/local/bin/pip"
+
 ### H2O #######################################################################
 $version_h2o      = "3.0.1.7"
 $codename_h2o     = "simons"
@@ -112,18 +115,18 @@ class portmap {
 class tensorflow {
 	#sudo pip install sklearn
 	exec { "pip install sklearn":
-		command => "/usr/local/bin/pip install sklearn",
+		command => "$pipbin install sklearn",
 		timeout => 60,
 		tries   => 3,
 	}
 	#sudo pip install jupyter
 	exec { "pip install jupyter":
-		command => "/usr/local/bin/pip install jupyter",
+		command => "$pipbin install jupyter",
 		timeout => 60,
 		tries   => 3,
 	}
 	exec { "pip install tensorflow":
-		command => "/usr/local/bin/pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.5.0-cp27-none-linux_x86_64.whl",
+		command => "$pipbin install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.5.0-cp27-none-linux_x86_64.whl",
 		timeout => 60,
 		tries   => 3,
 	}
@@ -203,7 +206,7 @@ class datafeeds {
 	#	git clone https://github.com/digithink/py-localbitcoins.git $mldir/lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git
 	#	echo 'cloned py-localbitcoins.'
 	#fi
-	exec { "pip install drest": command => "/usr/local/bin/pip install drest==0.9.12", timeout => 60, tries => 3 }
+	exec { "pip install drest": command => "$pipbin install drest==0.9.12", timeout => 60, tries => 3 }
 	#if [ ! -f $mldir/lib/bitcoin/1broker/aol1306_1broker-trading-API.github.py.git ]; then
 	#	mkdir -p $mldir/lib/bitcoin/1broker/
 	#	echo 'API1brokerlib'
@@ -213,53 +216,44 @@ class datafeeds {
 
 	#sudo pip install --upgrade pip
 	#exec { "pip install ipython":
-	#	command => "if [ "`python -c 'import ipython' 2>&1`" != "" ]; then /usr/local/bin/pip install ipython; fi",
+	#	command => "if [ "`python -c 'import ipython' 2>&1`" != "" ]; then $pipbin install ipython; fi",
 	#	timeout => 60,
 	#	tries   => 3,
 	#}
-	exec { "pip install ipython": command => "/usr/local/bin/pip install ipython==4.0.3", timeout => 60, tries => 3 }
-	exec { "pip install notebook": command => "/usr/local/bin/pip install notebook==4.1.0", timeout => 60, tries => 3 }
-	exec { "pip install numpy": command => "/usr/local/bin/pip install numpy==1.9.2", timeout => 60, tries => 3 }
-	exec { "pip install pandas": command => "/usr/local/bin/pip install pandas==0.15.2", timeout => 60, tries => 3 }
-	exec { "pip install plotly": command => "/usr/local/bin/pip install plotly==1.6.10", timeout => 60, tries => 3 }
-	exec { "pip install ujson": command => "/usr/local/bin/pip install ujson==1.33", timeout => 60, tries => 3 }
+	exec { "pip install ipython": command => "$pipbin install ipython==4.0.3", timeout => 60, tries => 3 }
+	exec { "pip install notebook": command => "$pipbin install notebook==4.1.0", timeout => 60, tries => 3 }
+	exec { "pip install numpy": command => "$pipbin install numpy==1.9.2", timeout => 60, tries => 3 }
+	exec { "pip install pandas": command => "$pipbin install pandas==0.15.2", timeout => 60, tries => 3 }
+	exec { "pip install plotly": command => "$pipbin install plotly==1.6.10", timeout => 60, tries => 3 }
+	exec { "pip install ujson": command => "$pipbin install ujson==1.33", timeout => 60, tries => 3 }
 	#if [ "`python -c 'import digitalocean' 2>&1`" != "" ]; then
      #       sudo pip install python-digitalocean
 	#fi
-	exec { "pip install python-digitalocean": command => "/usr/local/bin/pip install python-digitalocean==1.6", timeout => 60, tries => 3 }
-	exec { "pip install vultr": command => "/usr/local/bin/pip install vultr==0.1.2", timeout => 60, tries => 3 }
-	exec { "pip install QSTK": command => "/usr/local/bin/pip install QSTK==0.2.8", timeout => 60, tries => 3 }
-	exec { "pip install Quandl": command => "/usr/local/bin/pip install Quandl==1.5", timeout => 60, tries => 3 }
-	exec { "pip install html2text": command => "/usr/local/bin/pip install html2text==2014.12.29", timeout => 60, tries => 3 }
-	exec { "pip install selenium": command => "/usr/local/bin/pip install selenium==2.45.0", timeout => 60, tries => 3 }
+	exec { "pip install python-digitalocean": command => "$pipbin install python-digitalocean==1.6", timeout => 60, tries => 3 }
+	exec { "pip install vultr": command => "$pipbin install vultr==0.1.2", timeout => 60, tries => 3 }
+	exec { "pip install QSTK": command => "$pipbin install QSTK==0.2.8", timeout => 60, tries => 3 }
+	exec { "pip install Quandl": command => "$pipbin install Quandl==1.5", timeout => 60, tries => 3 }
+	exec { "pip install html2text": command => "$pipbin install html2text==2014.12.29", timeout => 60, tries => 3 }
+	exec { "pip install selenium": command => "$pipbin install selenium==2.45.0", timeout => 60, tries => 3 }
 
 	# Mongo
-	exec { "pip install pymongo": command => "/usr/local/bin/pip install pymongo", timeout => 60, tries => 3 }
-
-	# Mongo
-	exec { "pip install pymongo": command => "/usr/local/bin/pip install pymongo", timeout => 60, tries => 3 }
-
-	# Mongo
-	exec { "pip install pymongo": command => "/usr/local/bin/pip install pymongo", timeout => 60, tries => 3 }
-
-	# Mongo
-	exec { "pip install pymongo": command => "/usr/local/bin/pip install pymongo", timeout => 60, tries => 3 }
+	exec { "pip install pymongo": command => "$pipbin install pymongo", timeout => 60, tries => 3 }
 
 	# MQ
 	#if [ "`python -c 'import zmq' 2>&1`" != "" ]; then
      #       sudo pip install pyzmq
 	#fi
-	exec { "pip install pyzmq": command => "/usr/local/bin/pip install pyzmq==14.0.1", timeout => 60, tries => 3 }
+	exec { "pip install pyzmq": command => "$pipbin install pyzmq==14.0.1", timeout => 60, tries => 3 }
 	#if [ "`python -c 'import tailf' 2>&1`" != "" ]; then
      #       sudo pip install pytailf
 	#fi
-	exec { "pip install pytailf": command => "/usr/local/bin/pip install pytailf==1.1", timeout => 60, tries => 3 }
-	exec { "pip install flask": command => "/usr/local/bin/pip install flask==0.10.1", timeout => 60, tries => 3 }
-	exec { "pip install celery": command => "/usr/local/bin/pip install celery==3.1.17", timeout => 60, tries => 3 }
+	exec { "pip install pytailf": command => "$pipbin install pytailf==1.1", timeout => 60, tries => 3 }
+	exec { "pip install flask": command => "$pipbin install flask==0.10.1", timeout => 60, tries => 3 }
+	exec { "pip install celery": command => "$pipbin install celery==3.1.17", timeout => 60, tries => 3 }
 
 	# still testing on ipython notebook
-	exec { "pip install bitstampy": command => "/usr/local/bin/pip install bitstampy==0.0.8", timeout => 60, tries => 3 }
-	exec { "pip install krakenex": command => "/usr/local/bin/pip install krakenex", timeout => 60, tries => 3 }
+	exec { "pip install bitstampy": command => "$pipbin install bitstampy==0.0.8", timeout => 60, tries => 3 }
+	exec { "pip install krakenex": command => "$pipbin install krakenex", timeout => 60, tries => 3 }
 
 	#echo ''
 	#echo 'install complete.'
@@ -279,13 +273,13 @@ class datafeeds {
 class h2o {
 	#sudo pip install h2o
 	exec { "pip uninstall h2o":
-		command => "/usr/local/bin/pip uninstall h2o",
+		command => "$pipbin uninstall h2o",
 		timeout => 60,
 		tries   => 3,
 		before  => Exec["pip install h2o"],
 	}
 	exec { "pip install h2o":
-		command => "/usr/local/bin/pip install http://h2o-release.s3.amazonaws.com/h2o/rel-$codename_h2o/$minor_h2o/Python/h2o-$version_h2o-py2.py3-none-any.whl",
+		command => "$pipbin install http://h2o-release.s3.amazonaws.com/h2o/rel-$codename_h2o/$minor_h2o/Python/h2o-$version_h2o-py2.py3-none-any.whl",
 		timeout => 60,
 		tries   => 3,
 	}
