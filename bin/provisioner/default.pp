@@ -371,6 +371,15 @@ class spark {
 	#exec { 'run spark':      command => "$sparkHdir/spark-$version_spark/bin/spark-shell",        timeout => 60, tries   => 3 }
 }
 
+class numba {
+     exec { "llvm-3.6":    command => "apt-get install llvm-3.6",        timeout => 60, tries   => 3, before  => Exec["enum34"] }
+     exec { "enum34":      command => "pip     install enum34==1.1.6",   timeout => 60, tries   => 3, before  => Exec["zlib1g-dev"] }
+     exec { "zlib1g-dev":  command => "apt-get install zlib1g-dev",      timeout => 60, tries   => 3, before  => Exec["libedit-dev"] }
+     exec { "libedit-dev": command => "apt-get install libedit-dev",     timeout => 60, tries   => 3, before  => Exec["llvmlite"] }
+     exec { "llvmlite":    command => "pip     install llvmlite==0.8.0", timeout => 60, tries   => 3, before  => Exec["numba"] }
+     exec { "numba":       command => "pip     install numba==0.23.0",   timeout => 60, tries   => 3, before  => Exec[""] }
+}
+
 class keys {
 	exec { 'run node':      command => "cat /home/qore/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys",        timeout => 60, tries   => 3 }
 }
@@ -407,6 +416,7 @@ import 'mongodb.pp'
 #include trac
 
 include datafeeds
+#include numba
 
 #include cassandra
 import 'nfs-server.pp'
