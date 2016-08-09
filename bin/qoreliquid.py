@@ -1851,9 +1851,10 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
             if verbose: print e
 
 @profile
-def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False):
+def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True):
     
-    from multiprocessing.pool import ThreadPool
+    if threading:
+        from multiprocessing.pool import ThreadPool
 
     if verbose: print '----------'
     
@@ -1881,12 +1882,15 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
         pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
         pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
-        pool = ThreadPool(processes=270)
-        for i in list(plp.index):
-            async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
-            return_val   = async_result.get()
-            #print return_val
-        pool.close()
+        if threading:
+            pool = ThreadPool(processes=270)
+            for i in list(plp.index):
+                async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
+                return_val   = async_result.get()
+                #print return_val
+            pool.close()
+        else:
+            fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage)
             
         if int(verbose) > 5:
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1973,8 +1977,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
 
     sortAscending = [False, True]
     if noInteractiveLeverage: sortAscending[0] = True
-    poolFleetingProfits = ThreadPool(processes=270)
-    poolLeverage        = ThreadPool(processes=270)
+    if threading:
+        poolFleetingProfits = ThreadPool(processes=270)
+        poolLeverage        = ThreadPool(processes=270)
     for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
         #print dfu3.ix[[i], :].transpose()
         units = int(abs(dfu3.ix[i, 'rebalance']))#-1
@@ -1988,16 +1993,23 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
 
             #for i in list(plp.index):
-            async_result = poolFleetingProfits.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
-            return_val   = async_result.get()
-            #print return_val
-
-            async_result = poolLeverage.apply_async(leverageTrades, [dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive])
-            return_val   = async_result.get()
+            if threading:
+                async_result = poolFleetingProfits.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
+                return_val   = async_result.get()
+                #print return_val
+    
+                async_result = poolLeverage.apply_async(leverageTrades, [dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive])
+                return_val   = async_result.get()
+            else:
+                fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage)
+                leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive)
+                
             #print return_val
             #leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive)
-    poolFleetingProfits.close()
-    poolLeverage.close()
+    
+    if threading:
+        poolFleetingProfits.close()
+        poolLeverage.close()
         
     if int(verbose) > 2:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
