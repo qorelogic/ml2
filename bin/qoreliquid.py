@@ -1660,14 +1660,8 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     # cythonized
     # df = p.concat([df, df2], axis=1)
     #print dfh
-    #test_cython()
     dfh0 = dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
-
     df = p.concat([df, dfh0], axis=1)
-    from numba import double
-    from numba.decorators import jit, autojit
-    concat_numba = autojit(p.concat)
-    df = concat_numba([df, dfh0], axis=1)
     
     #print '%s %s' % (instrument, granularity)
     #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
@@ -1784,10 +1778,18 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
      'CDLLONGLEGGEDDOJI',
      'CDLMORNINGDOJISTAR'
     """
-    for i in patterns:
-        dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
+    def goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument='USD_JPY', update=False):
+        for i in patterns:
+            dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
         #dfm  = dfm.combine_first(dfm0)
-	dfm = p.concat([dfm, dfm0], axis=1)
+        dfm = p.concat([dfm, dfm0], axis=1)
+        return dfm
+    
+    from numba import double
+    from numba.decorators import jit, autojit
+    goThruPatterns_numba = autojit(goThruPatterns)
+    dfm = goThruPatterns_numba(df, dfm, dfh, oanda2, patterns, instrument=instrument, update=update)
+    dfm = goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument=instrument, update=update)
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         dfm = dfm.transpose()
         dfmg = dfm > 0
