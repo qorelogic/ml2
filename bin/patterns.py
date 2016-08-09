@@ -17,6 +17,8 @@ parser.add_argument("-ni", '--noInteractive', help="No interactive Q&A", action=
 parser.add_argument("-nid", '--noInteractiveDeleverage', help="No interactive Q&A for the deleverage option", action="store_true")
 parser.add_argument("-nil", '--noInteractiveLeverage', help="No interactive Q&A for the deleverage option", action="store_true")
 parser.add_argument("-nif", '--noInteractiveFleetingProfits', help="No interactive Q&A for the fleeting profits routine", action="store_true")
+
+parser.add_argument('-not', '-noth', '-nothreads', '--nothreading', help="No threading", action="store_true")
 args = parser.parse_args()
 
 import sys
@@ -60,6 +62,8 @@ accid = acc[0]['accountId']
 @profile
 def main(args, leverage=10, dryrun=True, verbose=False):
     # In[ ]:
+
+    threading = not args.nothreading
     
     """
     #oanda1.get_accounts()
@@ -83,21 +87,25 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     df = p.DataFrame()
     if args.analyze:
         dfu = p.DataFrame()
-        from multiprocessing.pool import ThreadPool
-        pool = ThreadPool(processes=270)
+        if threading:
+            from multiprocessing.pool import ThreadPool
+            pool = ThreadPool(processes=270)
         instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument')
         symbols = instruments.index
         #symbols = 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD,EUR_AUD,USD_JPY,AUD_USD,AUD_JPY,CAD_JPY,EUR_CAD,EUR_CHF,EUR_GBP,NZD_JPY,NZD_USD,USD_CHF,CHF_JPY'.split(',')
         print ','.join(symbols)
         for i in symbols:
-            #dfu0 = getc4(df, dfh, oanda2, instrument=i)
-            async_result = pool.apply_async(getc4, [df, dfh, oanda2, i])
-            dfu0   = async_result.get()
+            if threading:
+                async_result = pool.apply_async(getc4, [df, dfh, oanda2, i])
+                dfu0   = async_result.get()
+            else:
+                dfu0 = getc4(df, dfh, oanda2, instrument=i)
             dfu  = dfu.combine_first(dfu0)
             #if int(verbose) >= 3:
             print
             print dfu
-        pool.close()
+        if threading:
+            pool.close()
 	    #break
         fname = '/tmp/patterns.dfu.%s.csv' % time.time()
         dfu.to_csv(fname)
@@ -222,10 +230,10 @@ def main(args, leverage=10, dryrun=True, verbose=False):
             print e
             print 'Try a different account number'
     else:
-        fu33 = rebalanceTrades(oq, dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
-        fu33 = rebalanceTrades(oq, dfu2, oanda1, 801996, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
-        fu33 = rebalanceTrades(oq, dfu2, oanda1, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
-        dfu33 = rebalanceTrades(oq, dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
+        fu33 = rebalanceTrades(oq, dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading)
+        fu33 = rebalanceTrades(oq, dfu2, oanda1, 801996, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading)
+        fu33 = rebalanceTrades(oq, dfu2, oanda1, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading)
+        dfu33 = rebalanceTrades(oq, dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading)
 
 if __name__ == "__main__":
     
