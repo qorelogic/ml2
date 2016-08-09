@@ -1619,6 +1619,7 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
     return d
     
     
+
 @profile
 def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
     import hashlib as hl
@@ -1659,10 +1660,15 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     # cythonized
     # df = p.concat([df, df2], axis=1)
     #print dfh
-    test_numba()
     #test_cython()
     dfh0 = dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
+
     df = p.concat([df, dfh0], axis=1)
+    from numba import double
+    from numba.decorators import jit, autojit
+    concat_numba = autojit(p.concat)
+    df = concat_numba([df, dfh0], axis=1)
+    
     #print '%s %s' % (instrument, granularity)
     #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
     #print df.columns
