@@ -101,9 +101,15 @@ def main(args, leverage=10, dryrun=True, verbose=False):
                 dfu0   = async_result.get()
             else:
                 dfu0 = getc4(df, dfh, oanda2, instrument=i)
+            print 'test3'
+            print dfu#.dtypes
+            print dfu0#.dtypes
             dfu  = dfu.combine_first(dfu0)
+            print 'test4'
             #if int(verbose) >= 3:
             print
+            print dfu0
+            print '----***---'
             print dfu
         if threading:
             pool.close()
