@@ -1659,6 +1659,7 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     # cythonized
     # df = p.concat([df, df2], axis=1)
     #print dfh
+    test_cython()
     dfh0 = dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
     df = p.concat([df, dfh0], axis=1)
     #print '%s %s' % (instrument, granularity)
@@ -1668,6 +1669,9 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     #print pnda
     return df
     #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
+
+def test_cython():
+    print 'test'
 
 @profile
 def getccc(df1, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
