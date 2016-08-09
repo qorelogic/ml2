@@ -1659,7 +1659,8 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     # cythonized
     # df = p.concat([df, df2], axis=1)
     #print dfh
-    test_cython()
+    test_numba()
+    #test_cython()
     dfh0 = dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
     df = p.concat([df, dfh0], axis=1)
     #print '%s %s' % (instrument, granularity)
@@ -1669,6 +1670,29 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     #print pnda
     return df
     #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
+
+def pairwise_python(X):
+    M = X.shape[0]
+    N = X.shape[1]
+    D = np.empty((M, M), dtype=np.float)
+    for i in range(M):
+        for j in range(M):
+            d = 0.0
+            for k in range(N):
+                tmp = X[i, k] - X[j, k]
+                d += tmp * tmp
+            D[i, j] = np.sqrt(d)
+    print D
+    return D
+#%timeit pairwise_python(X)
+
+def test_numba():
+    from numba import double
+    from numba.decorators import jit, autojit
+    pairwise_numba = autojit(pairwise_python)
+    X = n.random.random((1000, 3))
+    pairwise_numba(X)
+#    %timeit pairwise_numba(X)
 
 def test_cython():
     print 'test'
