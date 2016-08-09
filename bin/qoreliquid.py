@@ -1619,6 +1619,7 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
     return d
     
     
+@profile
 def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
     import hashlib as hl
     import talib
@@ -1668,7 +1669,7 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     return df
     #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
 
-#@profile
+@profile
 def getccc(df1, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
 #def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
         #mode=i
