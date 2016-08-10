@@ -1698,21 +1698,6 @@ def test_cython():
     print 'test'
 
 @profile
-def getccc(df1, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
-#def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
-        #mode=i
-        verbose=False
-        for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
-            df1 = getc(df1, dfh, oanda2, instrument=instrument, granularity=j, mode=mode, update=update, verbose=verbose)
-        #return df1#.set_index('mode')
-        #df1['mode'] = mode
-        #df1 = getcc(df1, dfh, oanda2, mode, instrument=instrument, update=update)
-        dfm1 = df1.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
-        dfm1[mode] = dfm1.ix[:, df1.index[len(df1)-1]]
-        return dfm1.ix[:, [mode]]
-        #dfm0 = dfm1.ix[:, [mode]]
-
-@profile
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     dfm = p.DataFrame()
     patterns = ['CDL2CROWS',
@@ -1780,15 +1765,33 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     """
     def goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument='USD_JPY', update=False):
         for i in patterns:
-            dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
+            print 'goThruPatterns(%s): %s' % (instrument, i)
+            #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
+            #@profile
+            #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
+            ##def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
+            mode=i
+            verbose=False
+            for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
+                df = getc(df, dfh, oanda2, instrument=instrument, granularity=j, mode=mode, update=update, verbose=verbose)
+            #return df#.set_index('mode')
+            #df['mode'] = mode
+            #df = getcc(df, dfh, oanda2, mode, instrument=instrument, update=update)
+            dfm1 = df.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
+            dfm1[mode] = dfm1.ix[:, df.index[len(df)-1]]
+            #return dfm1.ix[:, [mode]]
+            dfm0 = dfm1.ix[:, [mode]]
         #dfm  = dfm.combine_first(dfm0)
+        print 'test'
+        print dfm
         dfm = p.concat([dfm, dfm0], axis=1)
+        print 'test2'
         return dfm
     
-    from numba import double
-    from numba.decorators import jit, autojit
-    goThruPatterns_numba = autojit(goThruPatterns)
-    dfm = goThruPatterns_numba(df, dfm, dfh, oanda2, patterns, instrument=instrument, update=update)
+    #from numba import double
+    #from numba.decorators import jit, autojit
+    #goThruPatterns_numba = autojit(goThruPatterns)
+    #dfm = goThruPatterns_numba(df, dfm, dfh, oanda2, patterns, instrument=instrument, update=update)
     dfm = goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument=instrument, update=update)
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         dfm = dfm.transpose()
