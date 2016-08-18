@@ -2043,14 +2043,18 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['bc_hc']       = map(lambda x: dfu3.ix[x, 'quotedCurrencyPriceBid'] if dfu3.ix[x, 'powQuoted'] > 0 else (1 / dfu3.ix[x, 'quotedCurrencyPriceBid']), dfu3.index)
     dfu3['marginRatio'] = 50
     dfu3['marginUsed']  = (dfu3.ix[:, 'bc_hc'] * dfu3.ix[:, 'units']) / dfu3['marginRatio']
+    
+    # the rebalance units as percentage of all units
+    dfu3['rebalanceOverUnits']  = (n.abs(dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'units'])
+    dfu3['marginUsedP']  = dfu3['rebalanceOverUnits'] * dfu3['marginUsed']
 
-    sortby                    = ['marginUsed', 'deleverageBool', 'diffpRebalancep']
+    sortby                    = ['deleverageBool', 'marginUsedP', 'diffpRebalancep']
     sortAscending             = [False, False, True]
     if noInteractiveLeverage: 
         sortAscending[0]      = True
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity quotedCurrencyPriceBid bc_hc marginRatio powQuoted pow2 unit units marginUsed amountSidePolarity amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl diffpRebalancep2'
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity marginUsed marginUsedP amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl diffpRebalancep2 quotedCurrencyPriceBid bc_hc powQuoted pow2 units rebalanceOverUnits'
         if verbose: f1 = '%s rebalanceBool deleverageBool' % f1Base
         else:       f1 = f1Base
         if int(verbose) > 5:            
@@ -2075,7 +2079,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             status = '[LIVE]' if dryrun == False else '[dryrun]'
             deleverageStatus = '[v deleverage %.3f(%.3f%s)]' % (dfu3.ix[i, 'diffpRebalancepBalance'], dfu3.ix[i, 'diffpRebalancep']*100, '%')  if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
-            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus)
+            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s marginUsed:%s, marginUsedP:%s" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, str(dfu3.ix[i, 'marginUsed']).rjust(15), n.abs(dfu3.ix[i, 'marginUsedP'])) 
 
             #for i in list(plp.index):
             if threading:
