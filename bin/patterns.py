@@ -81,7 +81,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     
     
     import os
-    cmd = 'ls -t /tmp/patterns* 2> /dev/null'
+    cmd = 'ls -t /ml.dev/bin/data/oanda/cache/patterns/patterns* 2> /dev/null'
     fname = os.popen(cmd).read().strip().split('\n')[0]
     dfh = {}
     df = p.DataFrame()
@@ -114,7 +114,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         if threading:
             pool.close()
 	    #break
-        fname = '/tmp/patterns.dfu.%s.csv' % time.time()
+        fname = '/ml.dev/bin/data/oanda/cache/patterns/patterns.dfu.%s.csv' % time.time()
         dfu.to_csv(fname)
     else:
         dfu = p.read_csv(fname, index_col=0)
