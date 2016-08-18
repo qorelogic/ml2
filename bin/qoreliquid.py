@@ -2044,8 +2044,8 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['marginRatio'] = 50
     dfu3['marginUsed']  = (dfu3.ix[:, 'bc_hc'] * dfu3.ix[:, 'units']) / dfu3['marginRatio']
 
-    sortby                    = ['deleverageBool', 'diffpRebalancep']
-    sortAscending             = [False, True]
+    sortby                    = ['marginUsed', 'deleverageBool', 'diffpRebalancep']
+    sortAscending             = [False, False, True]
     if noInteractiveLeverage: 
         sortAscending[0]      = True
 
@@ -2057,6 +2057,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             print '-=-=-=-=-'
             print dfu3.ix[:, 'amount2']
             print '-=-=-=-=-'
+            print 'sumMarginUsed: %s' % n.sum(dfu3['marginUsed'])
             #print dfu3.sort_values(by='diffp', ascending=False).ix[:, f1.split(' ')]
             print dfu3.sort_values(by=sortby, ascending=sortAscending).ix[:, f1.split(' ')]
             print
