@@ -282,8 +282,10 @@ if __name__ == "__main__":
                 args.analyze = True
                 args.live = False
             if mode == 'd': # deleverage mode (risk-off / remove from positions)
-                args.live = True
-                args.noInteractiveDeleverage = True
+                ans = raw_input('Sure you want to deleverage? y/N: ')
+                if ans == 'y':
+                    args.live = True
+                    args.noInteractiveDeleverage = True
             if mode == 'l': # leverage mode (risk-on / add to positions)
                 args.live = True
                 args.noInteractiveLeverage = True
