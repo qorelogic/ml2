@@ -2039,7 +2039,10 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['diffpRebalancep'] = dfu3.ix[:, 'diffpRebalancepBalance'] / balance
     #dfu3['diffpRebalancepBalance'] = netAssetValue
 
-    sortby = ['deleverageBool', 'diffpRebalancep']
+    sortby                    = ['deleverageBool', 'diffpRebalancep']
+    sortAscending             = [False, True]
+    if noInteractiveLeverage: 
+        sortAscending[0]      = True
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         f1Base         = 'amount bool buy diff diffp sell side sidePolarity quotedCurrencyPriceBid unit units amountSidePolarity amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl diffpRebalancep2'
@@ -2050,11 +2053,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             print dfu3.ix[:, 'amount2']
             print '-=-=-=-=-'
             #print dfu3.sort_values(by='diffp', ascending=False).ix[:, f1.split(' ')]
-            print dfu3.sort_values(by=sortby, ascending=False).ix[:, f1.split(' ')]
+            print dfu3.sort_values(by=sortby, ascending=sortAscending).ix[:, f1.split(' ')]
             print
 
-    sortAscending = [False, True]
-    if noInteractiveLeverage: sortAscending[0] = True
     if threading:
         poolFleetingProfits = ThreadPool(processes=270)
         poolLeverage        = ThreadPool(processes=270)
