@@ -1224,7 +1224,9 @@ class OandaQ:
         po         = map(lambda x: x[0:3] == homeCurrency, ret['pairedCurrency'])
         po         = n_array(po, dtype=n_int0)    
         ret['instrument'] = list(currs)
-        ret['pow'] = map(lambda x: poles[x], po)
+        ret['pow']       = map(lambda x: poles[x], po) # deprecated
+        ret['powPaired'] = map(lambda x: poles[x], n_array(map(lambda x: x[0:3] == homeCurrency, ret['pairedCurrency']), dtype=n_int0))
+        ret['powQuoted'] = map(lambda x: poles[x], n_array(map(lambda x: x[0:3] == homeCurrency, ret['quotedCurrency']), dtype=n_int0))
         #ret['ask'] = list(dfp['ask'])
         #ret['bid'] = list(dfp['bid'])
         ini = ','.join(list(ret['pairedCurrency'])).replace(',na', '')
