@@ -2043,20 +2043,32 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['bc_hc']       = map(lambda x: dfu3.ix[x, 'quotedCurrencyPriceBid'] if dfu3.ix[x, 'powQuoted'] > 0 else (1 / dfu3.ix[x, 'quotedCurrencyPriceBid']), dfu3.index)
     dfu3['marginRatio'] = 50
     dfu3['marginUsed']  = (dfu3.ix[:, 'bc_hc'] * dfu3.ix[:, 'units']) / dfu3['marginRatio']
-    dfu3['rebalanceMarginUsed'] = (dfu3.ix[:, 'bc_hc'] * n.abs(dfu3.ix[:, 'rebalance'])) / dfu3['marginRatio']    
+    dfu3['rebalanceMarginUsed'] = (dfu3.ix[:, 'bc_hc'] * n.abs(dfu3.ix[:, 'rebalance'])) / dfu3['marginRatio']
+    
+    # indicates if this is:
+    #   a deleverage
+    #     - (+ve.) 
+    #   a leverage
+    #     - (-e.) 
+    #     - if rebalance consumes the marginUsed and changes the sidePolarity
+    dfu3['diffRebalanceMarginUsed']     = dfu3['marginUsed'] - dfu3['rebalanceMarginUsed']
+    dfu3['diffRebalanceMarginUsedBool'] = dfu3['diffRebalanceMarginUsed'] > 0
     
     # the rebalance units as percentage of all units
-    dfu3['rebalanceOverUnits']  = (n.abs(dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'units'])
-    dfu3['marginUsedP']  = dfu3['rebalanceOverUnits'] * dfu3['marginUsed']
+    dfu3['rebalanceOverUnits']  = (n.abs(dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'units'])  # deprecated
+    dfu3['marginUsedP']  = dfu3['rebalanceOverUnits'] * dfu3['marginUsed']                # deprecated
     
-    sortby                    = ['deleverageBool', 'rebalanceMarginUsed', 'diffpRebalancep']
-    sortAscending             = [False, False, True]
+    sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'diffpRebalancep']
+    sortAscending             = [False, False, False, True]
     if noInteractiveLeverage: 
         sortAscending[0]      = True
+    
+    for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
+        dfu3.ix[i, 'pl098'] = ct[ct['instrument'] == i].ix[:,'pl'].sum()
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity rebalanceMarginUsed marginUsed marginUsedP units amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl diffpRebalancep2 quotedCurrencyPriceBid bc_hc powQuoted pow2 rebalanceOverUnits'
-        if verbose: f1 = '%s rebalanceBool deleverageBool' % f1Base
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP units amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 diffpRebalancep2 quotedCurrencyPriceBid bc_hc powQuoted pow2 rebalanceOverUnits'
+        if verbose: f1 = '%s rebalanceBool deleverageBool diffRebalanceMarginUsedBool' % f1Base
         else:       f1 = f1Base
         if int(verbose) > 5:            
             print '-=-=-=-=-'
@@ -2066,6 +2078,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             #print dfu3.sort_values(by='diffp', ascending=False).ix[:, f1.split(' ')]
             print dfu3.sort_values(by=sortby, ascending=sortAscending).ix[:, f1.split(' ')]
             print
+            
+            #print ct.sort_values(by=['pl'], ascending=[False])
+            #print
 
     if threading:
         poolFleetingProfits = ThreadPool(processes=270)
@@ -2078,9 +2093,16 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         #dfu3.ix[i, 'side']
         if units > 0:
             status = '[LIVE]' if dryrun == False else '[dryrun]'
-            deleverageStatus = '[v deleverage %.3f(%.3f%s)]' % (dfu3.ix[i, 'diffpRebalancepBalance'], dfu3.ix[i, 'diffpRebalancep']*100, '%')  if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
+            deleverageStatus = '[v deleverage %.3f %.3f(%.3f%s)]' % (dfu3.ix[i, 'pl'], dfu3.ix[i, 'diffpRebalancepBalance'], dfu3.ix[i, 'diffpRebalancep']*100, '%')  if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
-            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s marginUsed:(%s/%s)" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, str(dfu3.ix[i, 'rebalanceMarginUsed']).rjust(15), str(dfu3.ix[i, 'marginUsed']).rjust(15)) 
+            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s marginUsed:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']) 
+            
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                if int(verbose) >= 7:
+                    #print ct.sort_values(by=['pl'], ascending=[False])
+                    print ct[ct['instrument'] == i]
+                    print 'pl: %s' % ct[ct['instrument'] == i].ix[:,'pl'].sum()
+                    print
 
             #for i in list(plp.index):
             if threading:
