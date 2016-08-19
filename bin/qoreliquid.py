@@ -2049,7 +2049,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['rebalanceOverUnits']  = (n.abs(dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'units'])
     dfu3['marginUsedP']  = dfu3['rebalanceOverUnits'] * dfu3['marginUsed']
     
-    sortby                    = ['deleverageBool', 'marginUsedP', 'diffpRebalancep']
+    sortby                    = ['deleverageBool', 'rebalanceMarginUsed', 'diffpRebalancep']
     sortAscending             = [False, False, True]
     if noInteractiveLeverage: 
         sortAscending[0]      = True
