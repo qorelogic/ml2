@@ -2059,8 +2059,8 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['rebalanceOverUnits']  = (n.abs(dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'units'])  # deprecated
     dfu3['marginUsedP']  = dfu3['rebalanceOverUnits'] * dfu3['marginUsed']                # deprecated
     
-    sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'diffpRebalancep']
-    sortAscending             = [False, False, False, True]
+    sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'rebalanceMarginUsed', 'diffpRebalancep']
+    sortAscending             = [False, False, False, False, True]
     if noInteractiveLeverage: 
         sortAscending[0]      = True
     
@@ -2071,7 +2071,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP units amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 diffpRebalancep2 quotedCurrencyPriceBid bc_hc powQuoted pow2 rebalanceOverUnits'
         if verbose: f1 = '%s rebalanceBool deleverageBool diffRebalanceMarginUsedBool' % f1Base
         else:       f1 = f1Base
-        if int(verbose) > 5:            
+        if int(verbose) > 5:
             print '-=-=-=-=-'
             print dfu3.ix[:, 'amount2']
             print '-=-=-=-=-'
@@ -2086,6 +2086,12 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     if threading:
         poolFleetingProfits = ThreadPool(processes=270)
         poolLeverage        = ThreadPool(processes=270)
+    print '                                                                 MU=MarginUsed'
+    print '                                                                  R=Rebalance'
+    print '                                                                  r=rebalanceMarginUsed'
+    print '                                                                dMU=diffRebalanceMarginUsed'
+    print '                                                                drb=diffpRpBalance'
+    print '                                                               drbp=diffpRebalancep'
     for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
         #print dfu3.ix[[i], :].transpose()
         units = int(abs(dfu3.ix[i, 'rebalance']))#-1
@@ -2094,9 +2100,12 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         #dfu3.ix[i, 'side']
         if units > 0:
             status = '[LIVE]' if dryrun == False else '[dryrun]'
-            deleverageStatus = '[v deleverage %.3f %.3f(%.3f%s)]' % (dfu3.ix[i, 'pl'], dfu3.ix[i, 'diffpRebalancepBalance'], dfu3.ix[i, 'diffpRebalancep']*100, '%')  if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
+            deleverageStatus = '[v deleverage pl/drb(drbp):%.3f/%.3f(%.3f%s)]' % (dfu3.ix[i, 'pl'], dfu3.ix[i, 'diffpRebalancepBalance'], dfu3.ix[i, 'diffpRebalancep']*100, '%')  if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
-            print "<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s rebalanceMarginUsed/marginUsed/diffRebalanceMarginUsed:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']) 
+            if int(verbose) >= 8:
+                print "<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s rebalanceMU/MU/diffRebalanceMU:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']) 
+            else:
+                print "<broker>.create_order(instrument='%s', side='%s', units=%s) %s %s %s r/MU/dMU:(%.3f/%.3f/%.3f)" % (i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed'])
             
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                 if int(verbose) >= 7:
