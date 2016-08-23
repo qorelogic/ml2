@@ -54,10 +54,12 @@ env2=co.ix[1,1]
 access_token2=co.ix[1,2]
 oanda2 = oandapy.API(environment=env2, access_token=access_token2)
 
-acc = oanda2.get_accounts()['accounts']
-accid = acc[0]['accountId']
-#print 'using account: {0}'.format(accid)
-
+try:
+    acc = oanda2.get_accounts()['accounts']
+    accid = acc[0]['accountId']
+    #print 'using account: {0}'.format(accid)
+except:
+    ''
 
 @profile
 def main(args, leverage=10, dryrun=True, verbose=False):
