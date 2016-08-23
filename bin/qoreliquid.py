@@ -2096,7 +2096,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             status = '[LIVE]' if dryrun == False else '[dryrun]'
             deleverageStatus = '[v deleverage %.3f %.3f(%.3f%s)]' % (dfu3.ix[i, 'pl'], dfu3.ix[i, 'diffpRebalancepBalance'], dfu3.ix[i, 'diffpRebalancep']*100, '%')  if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
-            print "oanda2.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s marginUsed:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']) 
+            print "<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s rebalanceMarginUsed/marginUsed/diffRebalanceMarginUsed:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']) 
             
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                 if int(verbose) >= 7:
