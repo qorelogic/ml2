@@ -1881,6 +1881,7 @@ def getCurrentTrades(oanda2, accid, currentPositions):
     return currentTrades
 
 def interactiveMode():
+    print 'interactiveMode()'
     ans = raw_input('Sure you want to create order? (y/N): ')
     if ans != 'y':
         raise(Exception('User intervened: order not created'))
