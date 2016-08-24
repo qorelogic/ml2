@@ -1963,10 +1963,13 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
         if threading:
             pool = ThreadPool(processes=270)
+            fleetingProfitsPL = (netAssetValue * (1.0/40)/100)
+            print 'fleetingProfitsPL:%s' % fleetingProfitsPL
             for i in list(plp.index):
-                async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
-                return_val   = async_result.get()
-                #print return_val
+                if plp.ix[i, 'pl'] >= fleetingProfitsPL:
+                    async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage])
+                    return_val   = async_result.get()
+                    #print return_val
             pool.close()
         else:
             fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage)
