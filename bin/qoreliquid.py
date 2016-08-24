@@ -1880,9 +1880,9 @@ def getCurrentTrades(oanda2, accid, currentPositions):
         currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
     return currentTrades
 
-def interactiveMode():
+def interactiveMode(defaultMsg='Sure you want to create order? (y/N): '):
     print 'interactiveMode()'
-    ans = raw_input('Sure you want to create order? (y/N): ')
+    ans = raw_input(defaultMsg)
     if ans != 'y':
         raise(Exception('User intervened: order not created'))
 
@@ -1900,7 +1900,7 @@ def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleeti
             print e
 
 @profile
-def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive):
+def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, currentTrades):
     if dryrun == False:
         try:
             if noInteractiveLeverage == True or noInteractiveDeleverage == True:
@@ -1916,6 +1916,37 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                 if verbose: print 'nid---'
                 if noInteractiveLeverage: raise(Exception('nil --> nid conflict'))
                 if noInteractiveFleetingProfits: raise(Exception('nif --> nid conflict'))
+                #print ct.sort_values(by=['pl'], ascending=[False])
+                dfu = currentTrades[currentTrades['instrument'] == i].sort_values(by=['units', 'pl'], ascending=[True, False])
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    if int(verbose) >= 7:
+                        print dfu
+                print 'pl: %s' % currentTrades[currentTrades['instrument'] == i].ix[:,'pl'].sum()
+                print
+                print '# selective deleverage'                        
+                unitsLeft = units
+                for j in dfu.index:
+                    
+                    prevUnitsLeft = unitsLeft
+                    unitsLeft -= dfu.ix[j, 'units']
+                    closeBool = True if unitsLeft >= 0 else False
+                    if int(verbose) >= 8:
+                        print 'ticket:%s units:%s units:%s unitsLeft:%s closeBool:%s' % (j, dfu.ix[j, 'units'], units, unitsLeft, closeBool)
+                    
+                    try:
+                        if closeBool:
+                            interactiveMode(defaultMsg='Sure you want to partialClose[%s] ticket %s %s %s? unitsLeft:%s prevUnitsLeft:%s (y/N): ' % (i, j, dfu.ix[j, 'side'], dfu.ix[j, 'units'], unitsLeft, prevUnitsLeft))
+                            print 'oanda2.close_trade(%s, %s)' % (accid, j)
+                            oanda2.close_trade(accid, j)
+                        else:
+                            if prevUnitsLeft > 0:
+                                interactiveMode(defaultMsg='Sure you want to deleverage %s? side=%s, units=%s (y/N): ' % (j, side, prevUnitsLeft))
+                                if int(verbose) >= 5: print 'oanda2.create_order(%s, type=%s, instrument=%s, side=%s, units=%s)' % (accid, 'market', i, side, prevUnitsLeft)
+                                oanda2.create_order(accid, type='market', instrument=i, side=side, units=prevUnitsLeft)
+                    except Exception as e:
+                        if verbose: print e
+                raise(Exception(''))
+                            
                 interactiveMode()
             if dfu3.ix[i, 'deleverageBool'] == False and (not noInteractive and not noInteractiveLeverage):
                 if verbose: print 'nil---'
@@ -2109,13 +2140,6 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                 print "<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s rebalanceMU/MU/diffRebalanceMU:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']) 
             else:
                 print "<broker>.create_order(instrument='%s', side='%s', units=%s) %s %s %s r/MU/dMU:(%.3f/%.3f/%.3f)" % (i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed'])
-            
-            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                if int(verbose) >= 7:
-                    #print ct.sort_values(by=['pl'], ascending=[False])
-                    print ct[ct['instrument'] == i]
-                    print 'pl: %s' % ct[ct['instrument'] == i].ix[:,'pl'].sum()
-                    print
 
             #for i in list(plp.index):
             if threading:
@@ -2123,11 +2147,11 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                 return_val   = async_result.get()
                 #print return_val
     
-                async_result = poolLeverage.apply_async(leverageTrades, [dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive])
+                async_result = poolLeverage.apply_async(leverageTrades, [dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct])
                 return_val   = async_result.get()
             else:
                 fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage)
-                leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive)
+                leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct)
                 
             #print return_val
             #leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive)
