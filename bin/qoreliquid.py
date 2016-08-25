@@ -2131,6 +2131,10 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         print '                                                                dMU=diffRebalanceMarginUsed'
         print '                                                                drb=diffpRpBalance'
         print '                                                               drbp=diffpRebalancep'
+    print '===1==1==1=1=1=1===='
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        print ct.sort_values(by='plpips', ascending=False)
+    print '===1==1==1=1=1=1===='
     for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
         #print dfu3.ix[[i], :].transpose()
         units = int(abs(dfu3.ix[i, 'rebalance']))#-1
