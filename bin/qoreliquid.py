@@ -2133,7 +2133,51 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         print '                                                               drbp=diffpRebalancep'
     print '===1==1==1=1=1=1===='
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print ct.sort_values(by='plpips', ascending=False)
+        ctsdfli = list(ct['instrument'])
+        #print p_read_csv('/mldev/bin/data/oanda/cache/instruments.csv')
+        print ctsdfli
+        ctsdf   = p.DataFrame(oq.syntheticCurrencyTable(ctsdfli, homeCurrency='USD'))
+        qres = oanda2.get_prices(instruments=','.join(oq.wew(ctsdf['quotedCurrency'])))
+        qres = p.DataFrame(qres['prices']).set_index('instrument')
+        pres = oanda2.get_prices(instruments=','.join(oq.wew(ctsdf['pairedCurrency'])))
+        pres = p.DataFrame(pres['prices']).set_index('instrument')
+        res = p.DataFrame([])
+        res = res.combine_first(qres)
+        res = res.combine_first(pres)
+        
+        #print qres
+        #print pres
+        #print res
+        for x in range(len(ctsdf.index)):
+            try:    ctsdf.ix[x, 'quotedCurrencyAsk'] = res.ix[ctsdf.ix[x, 'quotedCurrency'], 'ask']
+            except: ''
+            try:    ctsdf.ix[x, 'quotedCurrencyBid'] = res.ix[ctsdf.ix[x, 'quotedCurrency'], 'bid']
+            except: ''
+            try:    ctsdf.ix[x, 'pairedCurrencyAsk'] = res.ix[ctsdf.ix[x, 'pairedCurrency'], 'ask']
+            except: ''
+            try:    ctsdf.ix[x, 'pairedCurrencyBid'] = res.ix[ctsdf.ix[x, 'pairedCurrency'], 'bid']
+            except: ''
+        #print ctsdf
+        
+        #res = oanda2.get_prices(instruments=','.join(oq.wew(ctsdf['quotedCurrency'])))
+        ct['indx'] = ct.index
+        ct['rg'] = range(0, len(ct.index))
+        ct = ct.set_index('rg')
+        ct = ct.combine_first(ctsdf)
+        ct = ct.set_index('indx')
+        ct['tradeValue'] = ct['units'] * ct['quotedCurrencyAsk']
+        ct['tradeValue2'] = ct['units'] * ct['pairedCurrencyAsk']
+        ct['tradeValue3'] = 1.0 / ct['pairedCurrencyAsk']
+        ct['tradeValue4'] = ct['sideS'] - ct['price']
+        ct['tradeValue5'] = ct['units'] * ct['tradeValue3'] * ct['tradeValue4']
+        
+        gct = ct.groupby('instrument')
+        gct = gct.aggregate(sum)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
+        if int(verbose) >= 8:
+            print ct.sort_values(by='tradeValue5', ascending=False)
+            print gct
+        
+        #print ct.sort_values(by='plpips', ascending=False)
     print '===1==1==1=1=1=1===='
     for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
         #print dfu3.ix[[i], :].transpose()
