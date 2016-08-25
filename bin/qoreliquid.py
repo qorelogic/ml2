@@ -1891,7 +1891,7 @@ def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleeti
     if dryrun == False:
         try:
             if int(verbose) > 7: plp.ix[i,:]
-            print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
+            if int(verbose) >= 2: print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
             if not noInteractiveFleetingProfits:
                 if noInteractiveLeverage: raise(Exception('nil --> nif conflict'))
                 if noInteractiveDeleverage: raise(Exception('nid --> nif conflict'))
@@ -1907,14 +1907,14 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
             if noInteractiveLeverage == True or noInteractiveDeleverage == True:
                 #noInteractive = True
                 ''
-            if int(verbose) > 5:
+            if int(verbose) >= 5:
                 print 'deleverageBool:          %s' % dfu3.ix[i, 'deleverageBool']
                 print 'noInteractive:           %s' % noInteractive
                 print 'noInteractiveLeverage:   %s' % noInteractiveLeverage
                 print 'noInteractiveDeleverage: %s' % noInteractiveDeleverage
                 print 'noInteractiveFleetingProfits: %s' % noInteractiveFleetingProfits
             if dfu3.ix[i, 'deleverageBool'] == True and (not noInteractive and not noInteractiveDeleverage):
-                if verbose: print 'nid---'
+                if int(verbose) >= 5: print 'nid---'
                 if noInteractiveLeverage: raise(Exception('nil --> nid conflict'))
                 if noInteractiveFleetingProfits: raise(Exception('nif --> nid conflict'))
                 #print ct.sort_values(by=['pl'], ascending=[False])
@@ -1924,9 +1924,10 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     if int(verbose) >= 7:
                         print dfu
-                print 'pl: %s' % currentTrades[currentTrades['instrument'] == i].ix[:,'pl'].sum()
-                print
-                print '# selective deleverage'                        
+                if int(verbose) >= 5: 
+                    print 'pl: %s' % currentTrades[currentTrades['instrument'] == i].ix[:,'pl'].sum()
+                    print
+                    print '# selective deleverage'                        
                 unitsLeft = units
                 for j in dfu.index:
                     
@@ -1939,7 +1940,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                     try:
                         if closeBool:
                             interactiveMode(defaultMsg='Sure you want to partialClose[%s] ticket %s %s %s? unitsLeft:%s prevUnitsLeft:%s (y/N): ' % (i, j, dfu.ix[j, 'side'], dfu.ix[j, 'units'], unitsLeft, prevUnitsLeft))
-                            print 'oanda2.close_trade(%s, %s)' % (accid, j)
+                            if int(verbose) >= 5: print 'oanda2.close_trade(%s, %s)' % (accid, j)
                             oanda2.close_trade(accid, j)
                         else:
                             if prevUnitsLeft > 0:
@@ -1952,7 +1953,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                             
                 interactiveMode()
             if dfu3.ix[i, 'deleverageBool'] == False and (not noInteractive and not noInteractiveLeverage):
-                if verbose: print 'nil---'
+                if int(verbose) >= 5: print 'nil---'
                 if noInteractiveDeleverage: raise(Exception('nid --> nil conflict'))
                 if noInteractiveFleetingProfits: raise(Exception('nif --> nil conflict'))
                 interactiveMode()
@@ -1961,7 +1962,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
             #    interactiveMode()
             oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
         except Exception as e:
-            if verbose: print e
+            if int(verbose) >= 8: print e
 
 #@profile
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True):
@@ -2123,12 +2124,13 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     if threading:
         poolFleetingProfits = ThreadPool(processes=270)
         poolLeverage        = ThreadPool(processes=270)
-    print '                                                                 MU=MarginUsed'
-    print '                                                                  R=Rebalance'
-    print '                                                                  r=rebalanceMarginUsed'
-    print '                                                                dMU=diffRebalanceMarginUsed'
-    print '                                                                drb=diffpRpBalance'
-    print '                                                               drbp=diffpRebalancep'
+    if int(verbose) >= 5:
+        print '                                                                 MU=MarginUsed'
+        print '                                                                  R=Rebalance'
+        print '                                                                  r=rebalanceMarginUsed'
+        print '                                                                dMU=diffRebalanceMarginUsed'
+        print '                                                                drb=diffpRpBalance'
+        print '                                                               drbp=diffpRebalancep'
     for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
         #print dfu3.ix[[i], :].transpose()
         units = int(abs(dfu3.ix[i, 'rebalance']))#-1
@@ -2163,7 +2165,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         poolFleetingProfits.close()
         poolLeverage.close()
         
-    if int(verbose) > 2:
+    if int(verbose) >= 2:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             #print maccount
             pll[0] = pll['pls']
