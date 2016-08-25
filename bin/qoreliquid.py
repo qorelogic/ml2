@@ -1918,7 +1918,9 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                 if noInteractiveLeverage: raise(Exception('nil --> nid conflict'))
                 if noInteractiveFleetingProfits: raise(Exception('nif --> nid conflict'))
                 #print ct.sort_values(by=['pl'], ascending=[False])
-                dfu = currentTrades[currentTrades['instrument'] == i].sort_values(by=['units', 'pl'], ascending=[True, False])
+                dfu = currentTrades[currentTrades['instrument'] == i]
+                dfu['plPerUnit'] = dfu['pl'] / dfu['units']
+                dfu = dfu.sort_values(by=['plPerUnit', 'units'], ascending=[False, True])
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     if int(verbose) >= 7:
                         print dfu
