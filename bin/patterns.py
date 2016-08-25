@@ -282,10 +282,28 @@ if __name__ == "__main__":
         print e
     """
     
+    def modeLeverage(args, runMain=False):
+        # fleetingProfits mode
+        args.live = True
+        args.noInteractiveLeverage = True
+        dryrun = getDryRun(args)
+        if runMain:
+            main(args, leverage=leverage, dryrun=dryrun)
+        return dryrun
+
+    def modeFleetingProfits(args, runMain=False):
+        # fleetingProfits mode
+        args.live = True
+        args.noInteractiveFleetingProfits = True
+        dryrun = getDryRun(args)
+        if runMain:
+            main(args, leverage=leverage, dryrun=dryrun)
+        return dryrun
+
     while True:
         print 'receiving feed..'
         if args.interactive:
-            usage = 'usage: a=analyze, d=deleverage, l=leverage, f=fleetingProfits, ?=help'
+            usage = 'usage: a=analyze, d=deleverage, l=leverage, f=fleetingProfits, il=infinite-loop, ?=help'
             args = parser.parse_args()
             print usage
             mode = raw_input('mode ?: ')
@@ -297,12 +315,23 @@ if __name__ == "__main__":
                 if ans == 'y':
                     args.live = True
                     args.noInteractiveDeleverage = True
+                
             if mode == 'l': # leverage mode (risk-on / add to positions)
-                args.live = True
-                args.noInteractiveLeverage = True
+                #args.live = True
+                #args.noInteractiveLeverage = True
+                dryrun = modeLeverage(args, runMain=False)
             if mode == 'f': # fleetingProfits mode (tp / take profits)
-                args.live = True
-                args.noInteractiveFleetingProfits = True
+                #args.live = True
+                #args.noInteractiveFleetingProfits = True
+                dryrun = modeFleetingProfits(args, runMain=False)
+            if mode == 'il': # infinite-loop
+                ilWait = 15
+                while True:
+                    dryrun = modeFleetingProfits(args, runMain=True)
+                    time.sleep(ilWait)
+                    dryrun = modeLeverage(args, runMain=True)
+                    time.sleep(ilWait)
+
             if mode == '?' or mode == 'help': # help
                 print usage
                 break
