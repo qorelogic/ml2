@@ -244,6 +244,15 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         fu33 = rebalanceTrades(oq, dfu2, oanda1, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading)
         dfu33 = rebalanceTrades(oq, dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading)
 
+def getDryRun(args):
+    if args.live:
+        dryrun=False
+    else:
+        dryrun=True
+    if int(args.verbose) >= 5:
+        print 'dryrun: %s' % dryrun
+    return dryrun
+
 if __name__ == "__main__":
     
     if args.leverage:
@@ -304,13 +313,14 @@ if __name__ == "__main__":
                 print 'noInteractiveDeleverage: %s' % args.noInteractiveDeleverage
                 print 'noInteractiveFleetingProfits: %s' % args.noInteractiveFleetingProfits
 
-        if args.live:
-            dryrun=False
-        else:
-            dryrun=True
-        if int(args.verbose) >= 5:
-            print 'dryrun: %s' % dryrun
-        
+        #if args.live:
+        #    dryrun=False
+        #else:
+        #    dryrun=True
+        #if int(args.verbose) >= 5:
+        #    print 'dryrun: %s' % dryrun
+        dryrun = getDryRun(args)
+
         try:
             if args.history:
                 #plotTransactionHistory(account, oanda1)
