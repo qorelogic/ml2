@@ -2106,7 +2106,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         dfu3.ix[i, 'pl098'] = ct[ct['instrument'] == i].ix[:,'pl'].sum()
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP units amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 diffpRebalancep2 quotedCurrencyPriceBid bc_hc powQuoted pow2 rebalanceOverUnits'
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity quotedCurrencyPriceBid quotedCurrencyPriceAsk diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP unitsAvailable units exposure exposureSum allMargin amount2 amount2Sum amount4 amount4Sum diffamount4amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 diffpRebalancep2 quotedCurrencyPriceBid bc_hc powQuoted pow2 rebalanceOverUnits'
         if verbose: f1 = '%s rebalanceBool deleverageBool diffRebalanceMarginUsedBool' % f1Base
         else:       f1 = f1Base
         if int(verbose) > 5:
@@ -2309,8 +2309,8 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     #print sdf.ix[quotedCurrencyPrice.index,:]
     if verbose: print '===='
 
-    #maccount = oanda2.get_account(accid)
-    marginAvail = maccount['marginAvail']
+    balance       = float(maccount['balance'])
+    marginAvail   = maccount['marginAvail']
     netAssetValue = float(maccount['balance']) - float(maccount['unrealizedPl'])
     dfu33['pow2'] = sdf.ix[quotedCurrencyPrice.index,'pow'].get_values()
     dfu33['powPaired'] = sdf.ix[quotedCurrencyPrice.index,'powPaired'].get_values()
@@ -2318,13 +2318,22 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['quotedCurrencyPriceBid'] = quotedCurrencyPrice['bid'].get_values()
     dfu33['quotedCurrencyPriceAsk'] = quotedCurrencyPrice['ask'].get_values()
     dfu33['unitsAvailable'] = netAssetValue * leverage / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
-    dfu33['amount2'] = dfu33['unitsAvailable'] * dfu33['diffp']
+    dfu33['exposure'] = dfu33['units'] * dfu33['quotedCurrencyPriceAsk']
+    dfu33['exposureSum'] = n.sum(dfu33['exposure'])
+    dfu33['allMargin'] = balance * leverage
+
+    dfu33['amount4'] = dfu33['unitsAvailable'] * dfu33['diffp']
+    dfu33['amount4Sum'] = n.sum(dfu33['amount4'])
+
+    dfu33['amount2'] = dfu33['allMargin'] * dfu33['diffp']
+    dfu33['amount2Sum'] = n.sum(dfu33['amount2'])
+    dfu33['diffamount4amount2'] = dfu33['amount2'] - dfu33['amount4']
     #print quotedCurrencyPrice['bid']
     #print p.DataFrame(netAssetValue * 50 * quotedCurrencyPrice['bid'].get_values())
     if int(verbose) > 5:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print 'dfu33'
-            print dfu33.ix[:, 'quotedCurrencyPriceBid quotedCurrencyPriceAsk unitsAvailable diffp pow2 units amount2 amount rebalance'.split(' ')]
+            print dfu33.ix[:, 'quotedCurrencyPriceBid quotedCurrencyPriceAsk unitsAvailable diffp pow2 units exposure exposureSum allMargin amount2 amount4 amount rebalance'.split(' ')]
     if verbose: print '#--- cw(end)'
     
     return dfu33
