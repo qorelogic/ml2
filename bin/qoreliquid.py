@@ -1665,7 +1665,7 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     
     #print '%s %s' % (instrument, granularity)
     #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
-    #print df.columns
+    if verbose: print df.columns
     #print df.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
     #print pnda
     return df
@@ -1699,6 +1699,7 @@ def test_cython():
 
 @profile
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
+    if verbose: print 'df.shape 1: %s' % str(df.shape)
     dfm = p.DataFrame()
     patterns = ['CDL2CROWS',
      'CDL3BLACKCROWS',
@@ -1763,37 +1764,59 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
      'CDLLONGLEGGEDDOJI',
      'CDLMORNINGDOJISTAR'
     """
-    @profile
-    def goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument='USD_JPY', update=False):
-        for i in patterns:
-            print 'goThruPatterns(%s): %s' % (instrument, i)
-            #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
-            #@profile
-            #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
-            ##def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
-            mode=i
-            verbose=False
-            for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
-                df = getc(df, dfh, oanda2, instrument=instrument, granularity=j, mode=mode, update=update, verbose=verbose)
-            #return df#.set_index('mode')
-            #df['mode'] = mode
-            #df = getcc(df, dfh, oanda2, mode, instrument=instrument, update=update)
-            dfm1 = df.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
-            dfm1[mode] = dfm1.ix[:, df.index[len(df)-1]]
-            #return dfm1.ix[:, [mode]]
-            dfm0 = dfm1.ix[:, [mode]]
+    #@profile
+    #def goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument='USD_JPY', update=False):
+    for i in patterns:
+        if verbose: print 'goThruPatterns(%s): %s' % (instrument, i)
+        df1 = df
+        #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
+        #@profile
+        #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
+        ##def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
+        mode=i
+        verbose=False
+        for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
+            #print 'goThruPatterns(%s): %s' % (instrument, j)
+            #print 'df1.shape 2: %s' % str(df1.shape)
+            df1 = getc(df1, dfh, oanda2, instrument=instrument, granularity=j, mode=mode, update=update, verbose=verbose)
+            #print 'df1.shape 3: %s' % str(df1.shape)
+        #return df1#.set_index('mode')
+        #df1['mode'] = mode
+        #df1 = getcc(df1, dfh, oanda2, mode, instrument=instrument, update=update)
+        dfm1 = df1
+        #print dfm1
+        dfm1 = dfm1.ffill()
+        #print dfm1
+        dfm1 = dfm1.bfill()
+        if verbose: print dfm1
+        dfm1 = dfm1.tail(1)
+        if verbose: print dfm1
+        dfm1 = dfm1.ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')]
+        if verbose: print dfm1
+        dfm1 = dfm1.transpose()
+        if verbose: print dfm1
+        #dfm1 = df1.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
+        sed = df1.index[len(df1)-1]
+        #print sed
+        dfm1[mode] = dfm1.ix[:, sed]
+        #return dfm1.ix[:, [mode]]
+        dfm0 = dfm1.ix[:, [mode]]
+        if verbose: print dfm0
         #dfm  = dfm.combine_first(dfm0)
-        print 'test'
-        print dfm
+        #print 'test12312399'
         dfm = p.concat([dfm, dfm0], axis=1)
-        print 'test2'
-        return dfm
-    
+        if verbose:
+            print 'dfm1.shape: %s' % str(dfm1.shape)
+            print 'dfm.shape: %s' % str(dfm.shape)
+            print 'dfm0.shape: %s' % str(dfm0.shape)
+            print 'df.shape: %s' % str(df.shape)
+            print 'dfh.shape: %s' % len(dfh)
+
     #from numba import double
     #from numba.decorators import jit, autojit
     #goThruPatterns_numba = autojit(goThruPatterns)
     #dfm = goThruPatterns_numba(df, dfm, dfh, oanda2, patterns, instrument=instrument, update=update)
-    dfm = goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument=instrument, update=update)
+    #dfm = goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument=instrument, update=update)
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         dfm = dfm.transpose()
         dfmg = dfm > 0
@@ -1803,7 +1826,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         dfm = dfm.transpose()
         dfm.ix[:, instrument] = n.sum(dfm.get_values(), 1)
         #print n.sum(n.array(dfmk.transpose().get_values(), dtype=int), 0)
-        if verbose: print dfm.transpose()
+        #if verbose: print dfm.transpose()
         res = dfm.transpose().ix[[instrument],:]
         #print res
         #print instrument
