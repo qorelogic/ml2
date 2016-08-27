@@ -1763,6 +1763,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
      'CDLLONGLEGGEDDOJI',
      'CDLMORNINGDOJISTAR'
     """
+    @profile
     def goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument='USD_JPY', update=False):
         for i in patterns:
             print 'goThruPatterns(%s): %s' % (instrument, i)
@@ -1889,7 +1890,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
         except Exception as e:
             if verbose: print e
 
-@profile
+#@profile
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True):
     
     if threading:

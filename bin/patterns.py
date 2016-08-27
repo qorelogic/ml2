@@ -59,7 +59,7 @@ accid = acc[0]['accountId']
 #print 'using account: {0}'.format(accid)
 
 
-@profile
+#@profile
 def main(args, leverage=10, dryrun=True, verbose=False):
     # In[ ]:
 
@@ -123,7 +123,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         print dfu.sort('diff', ascending=False)
     
     # In[ calculate period weights ]:
-    @profile
+    #@profile
     def periodWeightsTable():
         p0 = [1, 5, 15, 30, 60, 240, 1440, 1440*5, 1440*20]
         p1 = n.array(range(1, len(p0)+1))
