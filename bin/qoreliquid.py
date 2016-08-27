@@ -1818,7 +1818,6 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         dfm0 = dfm1.ix[:, [mode]]
         if verbose: print dfm0
         #dfm  = dfm.combine_first(dfm0)
-        #print 'test12312399'
         dfm = p.concat([dfm, dfm0], axis=1)
         if verbose:
             print 'dfm1.shape: %s' % str(dfm1.shape)
