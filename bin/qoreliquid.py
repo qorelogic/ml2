@@ -2170,7 +2170,12 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         ct['tradeValue3'] = 1.0 / ct['pairedCurrencyAsk']
         ct['tradeValue4'] = ct['sideS'] - ct['price']
         ct['tradeValue5'] = ct['units'] * ct['tradeValue3'] * ct['tradeValue4']
+        
+        gct = ct.groupby('instrument')
+        gct = gct.aggregate(sum)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
         print ct.sort_values(by='tradeValue5', ascending=False)
+        print gct
+        
         #print ct.sort_values(by='plpips', ascending=False)
     print '===1==1==1=1=1=1===='
     for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
