@@ -1763,6 +1763,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
      'CDLLONGLEGGEDDOJI',
      'CDLMORNINGDOJISTAR'
     """
+    @profile
     def goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument='USD_JPY', update=False):
         for i in patterns:
             print 'goThruPatterns(%s): %s' % (instrument, i)
