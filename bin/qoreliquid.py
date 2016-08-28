@@ -1625,59 +1625,6 @@ def combineDF(df1, df2):
     df = p.concat([df1, df2], axis=1)
     return df
 
-@profile
-def getc(df1, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
-    import hashlib as hl
-    import talib
-
-    if update:
-        try: dfh[instrument][granularity] = None
-        except: ''
-    
-    try:
-        csvIndex = ','.join(list(dfh[instrument][granularity].index))
-        if verbose: print 'caching history %s.. ' % granularity
-        res = dfh[instrument][granularity]
-    except Exception as e:
-        if verbose: print e
-        if verbose: print 'getting history %s.. ' % granularity
-        res = oanda2.get_history(instrument=instrument, granularity=granularity, count=15)
-        try:
-            dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
-        except:
-            dfh[instrument] = {}
-            dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
-    csvIndex = ','.join(list(dfh[instrument][granularity].index))
-    #print csvIndex
-    if verbose: print hl.md5(csvIndex).hexdigest()
-    if verbose: print
-    exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
-    #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
-    field = '%s' % (granularity)
-    #df1[field] = pnda
-    dfh[instrument][granularity][field] = pnda
-    #print dfh[instrument][granularity].ix[:,field]
-    #df1 = normalizeme(df1)
-    #df1 = sigmoidme(df1)
-    #df1 = tanhme(df1)
-    # original
-    #df1 = df1.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]])
-    # cythonized
-    # df1 = p.concat([df1, df2], axis=1)
-    #print dfh
-    nsrch = dfh[instrument][granularity].ix[:,'complete']
-    dfh0 = dfh[instrument][granularity].ix[nsrch,[field]]
-    df1 = combineDF(df1, dfh0)
-    #df1 = p.concat([df1, dfh0], axis=1)
-    
-    #print '%s %s' % (instrument, granularity)
-    #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
-    if verbose: print df1.columns
-    #print df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
-    #print pnda
-    return df1
-    #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
-
 def pairwise_python(X):
     M = X.shape[0]
     N = X.shape[1]
@@ -1785,7 +1732,63 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
             #print 'goThruPatterns(%s): %s' % (instrument, j)
             #print 'df1.shape 2: %s' % str(df1.shape)
-            df1 = getc(df1, dfh, oanda2, instrument=instrument, granularity=j, mode=mode, update=update, verbose=verbose)
+            #df1 = getc(df1, dfh, oanda2, instrument=instrument, granularity=j, mode=mode, update=update, verbose=verbose)
+            
+            #@profile
+            #def getc(df1, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
+            granularity=j
+            import hashlib as hl
+            import talib
+        
+            if update:
+                try: dfh[instrument][granularity] = None
+                except: ''
+            
+            try:
+                csvIndex = ','.join(list(dfh[instrument][granularity].index))
+                if verbose: print 'caching history %s.. ' % granularity
+                res = dfh[instrument][granularity]
+            except Exception as e:
+                if verbose: print e
+                if verbose: print 'getting history %s.. ' % granularity
+                res = oanda2.get_history(instrument=instrument, granularity=granularity, count=15)
+                try:
+                    dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
+                except:
+                    dfh[instrument] = {}
+                    dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
+            csvIndex = ','.join(list(dfh[instrument][granularity].index))
+            #print csvIndex
+            if verbose: print hl.md5(csvIndex).hexdigest()
+            if verbose: print
+            exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
+            #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
+            field = '%s' % (granularity)
+            #df1[field] = pnda
+            dfh[instrument][granularity][field] = pnda
+            #print dfh[instrument][granularity].ix[:,field]
+            #df1 = normalizeme(df1)
+            #df1 = sigmoidme(df1)
+            #df1 = tanhme(df1)
+            # original
+            #df1 = df1.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]])
+            # cythonized
+            # df1 = p.concat([df1, df2], axis=1)
+            #print dfh
+            nsrch = dfh[instrument][granularity].ix[:,'complete']
+            dfh0 = dfh[instrument][granularity].ix[nsrch,[field]]
+            df1 = combineDF(df1, dfh0)
+            #df1 = p.concat([df1, dfh0], axis=1)
+            
+            #print '%s %s' % (instrument, granularity)
+            #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
+            if verbose: print df1.columns
+            #print df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
+            #print pnda
+            #return df1
+            #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
+
+
             #print 'df1.shape 3: %s' % str(df1.shape)
         #return df1#.set_index('mode')
         #df1['mode'] = mode
