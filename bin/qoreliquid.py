@@ -1660,7 +1660,8 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     # cythonized
     # df = p.concat([df, df2], axis=1)
     #print dfh
-    dfh0 = dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
+    nsrch = dfh[instrument][granularity].ix[:,'complete']
+    dfh0 = dfh[instrument][granularity].ix[nsrch,[field]]
     df = p.concat([df, dfh0], axis=1)
     
     #print '%s %s' % (instrument, granularity)
@@ -2006,7 +2007,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         ''
     dfu3 = dfu3.fillna(0)
     
-    dfu3 = cw(dfu3, oanda2, oq, accid, leverage=leverage, verbose=verbose)
+    dfu3 = cw(dfu3, oanda2, oq, accid, maccount, leverage=leverage, verbose=verbose)
 
     #dfu3['rebalance'] = dfu3.ix[:, 'amountSidePolarity'] - dfu3.ix[:, 'positions']
     try:    positions = dfu3.ix[:, 'positions']
@@ -2112,7 +2113,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     return dfu3
 
 @profile
-def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
+def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     if verbose: print '#--- cw(start)'
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
     if int(verbose) > 5:
@@ -2176,8 +2177,9 @@ def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     #print sdf.ix[quotedCurrencyPrice.index,:]
     if verbose: print '===='
 
-    marginAvail = oanda2.get_account(accid)['marginAvail']
-    netAssetValue = float(oanda2.get_account(accid)['balance']) - float(oanda2.get_account(accid)['unrealizedPl'])
+    #maccount = oanda2.get_account(accid)
+    marginAvail = maccount['marginAvail']
+    netAssetValue = float(maccount['balance']) - float(maccount['unrealizedPl'])
     dfu33['pow2'] = sdf.ix[quotedCurrencyPrice.index,'pow'].get_values()
     dfu33['quotedCurrencyPriceBid'] = quotedCurrencyPrice['bid'].get_values()
     dfu33['quotedCurrencyPriceAsk'] = quotedCurrencyPrice['ask'].get_values()
