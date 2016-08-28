@@ -271,6 +271,8 @@ alias .gra="git commit --amend"
 alias .grc="git rebase --continue"
 alias .gstl="git stash list "
 alias .gc="git commit "
+alias .gca="git commit --amend"
+alias .gcp="git cherry-pick "
 
 # source: http://stackoverflow.com/questions/21168846/cant-remove-file-from-git-commit
 #alias .g-remove-from-commit="git filter-branch -f --index-filter "git rm -rf --cached --ignore-unmatch FOLDERNAME" -- --all "
