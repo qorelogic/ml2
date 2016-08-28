@@ -1621,6 +1621,11 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
     
 
 @profile
+def combineDF(df1, df2):
+    df = p.concat([df1, df2], axis=1)
+    return df
+
+@profile
 def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
     import hashlib as hl
     import talib
@@ -1662,8 +1667,8 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     #print dfh
     nsrch = dfh[instrument][granularity].ix[:,'complete']
     dfh0 = dfh[instrument][granularity].ix[nsrch,[field]]
-    df = p.concat([df, dfh0], axis=1)  
-    print dfh0
+    df = combineDF(df, dfh0)
+    #df = p.concat([df, dfh0], axis=1)
     
     #print '%s %s' % (instrument, granularity)
     #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
