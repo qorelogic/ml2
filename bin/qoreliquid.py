@@ -1621,55 +1621,14 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
     
 
 @profile
-def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
-    import hashlib as hl
-    import talib
+def combineDF(df1, df2):
+    df = p.concat([df1, df2], axis=1)
 
-    if update:
-        try: dfh[instrument][granularity] = None
-        except: ''
-    
-    try:
-        csvIndex = ','.join(list(dfh[instrument][granularity].index))
-        if verbose: print 'caching history %s.. ' % granularity
-        res = dfh[instrument][granularity]
-    except Exception as e:
-        if verbose: print e
-        if verbose: print 'getting history %s.. ' % granularity
-        res = oanda2.get_history(instrument=instrument, granularity=granularity, count=15)
-        try:
-            dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
-        except:
-            dfh[instrument] = {}
-            dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
-    csvIndex = ','.join(list(dfh[instrument][granularity].index))
-    #print csvIndex
-    if verbose: print hl.md5(csvIndex).hexdigest()
-    if verbose: print
-    exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
-    #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
-    field = '%s' % (granularity)
-    #df[field] = pnda
-    dfh[instrument][granularity][field] = pnda
-    #print dfh[instrument][granularity].ix[:,field]
-    #df = normalizeme(df)
-    #df = sigmoidme(df)
-    #df = tanhme(df)
-    # original
-    #df = df.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]])
-    # cythonized
-    # df = p.concat([df, df2], axis=1)
-    #print dfh
-    dfh0 = dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
-    df = p.concat([df, dfh0], axis=1)
-    
-    #print '%s %s' % (instrument, granularity)
-    #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
-    if verbose: print df.columns
-    #print df.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
-    #print pnda
+    #print '------'
+    #print df1
+    #print df2
+    #print '------'
     return df
-    #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
 
 def pairwise_python(X):
     M = X.shape[0]
@@ -1778,7 +1737,63 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
             #print 'goThruPatterns(%s): %s' % (instrument, j)
             #print 'df1.shape 2: %s' % str(df1.shape)
-            df1 = getc(df1, dfh, oanda2, instrument=instrument, granularity=j, mode=mode, update=update, verbose=verbose)
+            #df1 = getc(df1, dfh, oanda2, instrument=instrument, granularity=j, mode=mode, update=update, verbose=verbose)
+            
+            #@profile
+            #def getc(df1, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
+            granularity=j
+            import hashlib as hl
+            import talib
+        
+            if update:
+                try: dfh[instrument][granularity] = None
+                except: ''
+            
+            try:
+                csvIndex = ','.join(list(dfh[instrument][granularity].index))
+                if verbose: print 'caching history %s.. ' % granularity
+                res = dfh[instrument][granularity]
+            except Exception as e:
+                if verbose: print e
+                if verbose: print 'getting history %s.. ' % granularity
+                res = oanda2.get_history(instrument=instrument, granularity=granularity, count=15)
+                try:
+                    dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
+                except:
+                    dfh[instrument] = {}
+                    dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
+            csvIndex = ','.join(list(dfh[instrument][granularity].index))
+            #print csvIndex
+            if verbose: print hl.md5(csvIndex).hexdigest()
+            if verbose: print
+            exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
+            #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
+            field = '%s' % (granularity)
+            #df1[field] = pnda
+            dfh[instrument][granularity][field] = pnda
+            #print dfh[instrument][granularity].ix[:,field]
+            #df1 = normalizeme(df1)
+            #df1 = sigmoidme(df1)
+            #df1 = tanhme(df1)
+            # original
+            #df1 = df1.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]])
+            # cythonized
+            # df1 = p.concat([df1, df2], axis=1)
+            #print dfh
+            nsrch = dfh[instrument][granularity].ix[:,'complete']
+            dfh0 = dfh[instrument][granularity].ix[nsrch,[field]]
+            df1 = combineDF(df1, dfh0)
+            #df1 = p.concat([df1, dfh0], axis=1)
+            
+            #print '%s %s' % (instrument, granularity)
+            #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
+            if verbose: print df1.columns
+            #print df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
+            #print pnda
+            #return df1
+            #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
+
+
             #print 'df1.shape 3: %s' % str(df1.shape)
         #return df1#.set_index('mode')
         #df1['mode'] = mode
@@ -2006,7 +2021,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         ''
     dfu3 = dfu3.fillna(0)
     
-    dfu3 = cw(dfu3, oanda2, oq, accid, leverage=leverage, verbose=verbose)
+    dfu3 = cw(dfu3, oanda2, oq, accid, maccount, leverage=leverage, verbose=verbose)
 
     #dfu3['rebalance'] = dfu3.ix[:, 'amountSidePolarity'] - dfu3.ix[:, 'positions']
     try:    positions = dfu3.ix[:, 'positions']
@@ -2112,7 +2127,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     return dfu3
 
 @profile
-def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
+def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     if verbose: print '#--- cw(start)'
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
     if int(verbose) > 5:
@@ -2176,8 +2191,9 @@ def cw(dfu33, oanda2, oq, accid, leverage=50, verbose=False):
     #print sdf.ix[quotedCurrencyPrice.index,:]
     if verbose: print '===='
 
-    marginAvail = oanda2.get_account(accid)['marginAvail']
-    netAssetValue = float(oanda2.get_account(accid)['balance']) - float(oanda2.get_account(accid)['unrealizedPl'])
+    #maccount = oanda2.get_account(accid)
+    marginAvail = maccount['marginAvail']
+    netAssetValue = float(maccount['balance']) - float(maccount['unrealizedPl'])
     dfu33['pow2'] = sdf.ix[quotedCurrencyPrice.index,'pow'].get_values()
     dfu33['quotedCurrencyPriceBid'] = quotedCurrencyPrice['bid'].get_values()
     dfu33['quotedCurrencyPriceAsk'] = quotedCurrencyPrice['ask'].get_values()
