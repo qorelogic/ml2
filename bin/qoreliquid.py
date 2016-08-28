@@ -1662,7 +1662,8 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     #print dfh
     nsrch = dfh[instrument][granularity].ix[:,'complete']
     dfh0 = dfh[instrument][granularity].ix[nsrch,[field]]
-    df = p.concat([df, dfh0], axis=1)
+    df = p.concat([df, dfh0], axis=1)  
+    print dfh0
     
     #print '%s %s' % (instrument, granularity)
     #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
