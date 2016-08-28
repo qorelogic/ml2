@@ -1623,6 +1623,11 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
 @profile
 def combineDF(df1, df2):
     df = p.concat([df1, df2], axis=1)
+
+    print '------'
+    print df1
+    print df2
+    print '------'
     return df
 
 def pairwise_python(X):
