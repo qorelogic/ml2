@@ -1626,7 +1626,7 @@ def combineDF(df1, df2):
     return df
 
 @profile
-def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
+def getc(df1, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
     import hashlib as hl
     import talib
 
@@ -1654,28 +1654,28 @@ def getc(df, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTH
     exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
     #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
     field = '%s' % (granularity)
-    #df[field] = pnda
+    #df1[field] = pnda
     dfh[instrument][granularity][field] = pnda
     #print dfh[instrument][granularity].ix[:,field]
-    #df = normalizeme(df)
-    #df = sigmoidme(df)
-    #df = tanhme(df)
+    #df1 = normalizeme(df1)
+    #df1 = sigmoidme(df1)
+    #df1 = tanhme(df1)
     # original
-    #df = df.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]])
+    #df1 = df1.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]])
     # cythonized
-    # df = p.concat([df, df2], axis=1)
+    # df1 = p.concat([df1, df2], axis=1)
     #print dfh
     nsrch = dfh[instrument][granularity].ix[:,'complete']
     dfh0 = dfh[instrument][granularity].ix[nsrch,[field]]
-    df = combineDF(df, dfh0)
-    #df = p.concat([df, dfh0], axis=1)
+    df1 = combineDF(df1, dfh0)
+    #df1 = p.concat([df1, dfh0], axis=1)
     
     #print '%s %s' % (instrument, granularity)
     #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
-    if verbose: print df.columns
-    #print df.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
+    if verbose: print df1.columns
+    #print df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
     #print pnda
-    return df
+    return df1
     #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
 
 def pairwise_python(X):
