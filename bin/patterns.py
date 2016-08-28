@@ -109,7 +109,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
             #if int(verbose) >= 3:
             print
             #print dfu0
-            print '----***---'
+            print '---'
             print dfu
         if threading:
             pool.close()
