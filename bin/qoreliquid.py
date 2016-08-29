@@ -1939,11 +1939,13 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                     try:
                         if closeBool:
                             interactiveMode(defaultMsg='Sure you want to partialClose[%s] ticket %s %s %s? unitsLeft:%s prevUnitsLeft:%s (y/N): ' % (i, j, dfu.ix[j, 'side'], dfu.ix[j, 'units'], unitsLeft, prevUnitsLeft))
+                            logApplicationUsage('d', description='deleverage[partialClose]', data=dfu.ix[j, :].to_dict())
                             if int(verbose) >= 5: print 'oanda2.close_trade(%s, %s)' % (accid, j)
                             oanda2.close_trade(accid, j)
                         else:
                             if prevUnitsLeft > 0:
                                 interactiveMode(defaultMsg='Sure you want to deleverage %s? side=%s, units=%s (y/N): ' % (j, side, prevUnitsLeft))
+                                logApplicationUsage('d', description='deleverage[standardClose]', data=dfu.ix[j, :].to_dict())
                                 if int(verbose) >= 5: print 'oanda2.create_order(%s, type=%s, instrument=%s, side=%s, units=%s)' % (accid, 'market', i, side, prevUnitsLeft)
                                 oanda2.create_order(accid, type='market', instrument=i, side=side, units=prevUnitsLeft)
                     except Exception as e:
@@ -1963,9 +1965,26 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
         except Exception as e:
             if int(verbose) >= 8: print e
 
+def logApplicationUsage(mode, description=None, data=None):
+    import pymongo as mong
+    import datetime, calendar
+    ds = datetime.datetime.utcnow()
+    ts = calendar.timegm(ds.utctimetuple())
+    ts = ts + float(ds.microsecond) / 1000000
+    di = {}
+    di.update({'utctime':ts})
+    di.update({'mode':mode})
+    if description: di.update({'description':description})
+    if data:        di.update({'data':data})
+    mongo = mong.MongoClient()
+    mongo.ql.application_usage_patterns.insert(di)
+    mongo.close()
+
 #@profile
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True):
     
+    import pymongo as mong
+    import calendar
     if threading:
         from multiprocessing.pool import ThreadPool
 
@@ -2227,6 +2246,11 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             dfa['uPl'] = dfa['unrealizedPl']
             dfa['uPlPcnt'] = dfa['unrealizedPlPcnt']
 
+            ds = datetime.datetime.utcnow()
+            ts = calendar.timegm(ds.utctimetuple())
+            ts = ts + float(ds.microsecond)/1000000
+            dfa.ix[0, 'utctime'] = ts
+
             #print dfu3[:, ['diffpRebalancepBalance', 'diffpRebalancep']].sum()
             print '%s %s' % (dfu3['diffpRebalancepBalance'].sum(), dfu3['diffpRebalancep'].sum())
             balanceDeleveraged    = dfa.ix[0, 'balance'] + dfu3['diffpRebalancepBalance'].sum()
@@ -2243,7 +2267,19 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             print list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
             #print pln.ix[:, ffsds]
             print
+            dfa = dfa.transpose()
+            accountId = str(dfa.ix['accountId', 0])
+            dfa[accountId] = dfa[0]
+            
+            dfa = dfa.transpose()
+            
             print dfa.ix[:, 'accountCurrency accountId accountName balance uPl uPlPcnt nav realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')]
+            print 
+            
+            di = dfa.ix[int(accountId), :].transpose().to_dict()
+            mongo = mong.MongoClient()
+            mongo.ql.broker_oanda_account.insert(di)
+            
             print
     
     return dfu3
