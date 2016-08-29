@@ -88,6 +88,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     dfh = {}
     df = p.DataFrame()
     if args.analyze:
+        logApplicationUsage('analyze', description='analyze')
         dfu = p.DataFrame()
         if threading:
             from multiprocessing.pool import ThreadPool
@@ -282,20 +283,22 @@ if __name__ == "__main__":
         print e
     """
     
-    def modeLeverage(args, runMain=False):
+    def modeLeverage(args, runMain=False, description=None):
         # fleetingProfits mode
         args.live = True
         args.noInteractiveLeverage = True
         dryrun = getDryRun(args)
+        logApplicationUsage('modeLeverage', description=description)
         if runMain:
             main(args, leverage=leverage, dryrun=dryrun)
         return dryrun
 
-    def modeFleetingProfits(args, runMain=False):
+    def modeFleetingProfits(args, runMain=False, description=None):
         # fleetingProfits mode
         args.live = True
         args.noInteractiveFleetingProfits = True
         dryrun = getDryRun(args)
+        logApplicationUsage('modeFleetingProfits', description=description)
         if runMain:
             main(args, leverage=leverage, dryrun=dryrun)
         return dryrun
@@ -308,28 +311,34 @@ if __name__ == "__main__":
             print usage
             mode = raw_input('mode ?: ')
             if mode == 'a': # analyze mode
+                logApplicationUsage(mode, description='manual')
                 args.analyze = True
                 args.live = False
             if mode == 'd': # deleverage mode (risk-off / remove from positions)
+                logApplicationUsage(mode, description='manual')
                 ans = raw_input('Sure you want to deleverage? y/N: ')
                 if ans == 'y':
                     args.live = True
                     args.noInteractiveDeleverage = True
                 
             if mode == 'l': # leverage mode (risk-on / add to positions)
+                logApplicationUsage(mode, description='manual')
                 #args.live = True
                 #args.noInteractiveLeverage = True
                 dryrun = modeLeverage(args, runMain=False)
             if mode == 'f': # fleetingProfits mode (tp / take profits)
+                logApplicationUsage(mode, description='manual')
                 #args.live = True
                 #args.noInteractiveFleetingProfits = True
                 dryrun = modeFleetingProfits(args, runMain=False)
             if mode == 'il': # infinite-loop
+                description='infinite-loop'
+                logApplicationUsage(mode, description=description)
                 ilWait = 15
                 while True:
-                    dryrun = modeFleetingProfits(args, runMain=True)
+                    dryrun = modeFleetingProfits(args, runMain=True, description=description)
                     time.sleep(ilWait)
-                    dryrun = modeLeverage(args, runMain=True)
+                    dryrun = modeLeverage(args, runMain=True, description=description)
                     time.sleep(ilWait)
 
             if mode == '?' or mode == 'help': # help
