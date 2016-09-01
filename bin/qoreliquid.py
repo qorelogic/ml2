@@ -2118,7 +2118,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['marginUsedP']  = dfu3['rebalanceOverUnits'] * dfu3['marginUsed']                # deprecated
     
     sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'rebalanceMarginUsed', 'diffpRebalancep']
-    sortAscending             = [True, False, False, False, True]
+    sortAscending             = [False, True, False, False, True]
     if noInteractiveLeverage: 
         sortAscending[0]      = True
     
