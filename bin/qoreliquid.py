@@ -1624,10 +1624,10 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
 def combineDF(df1, df2):
     df = p.concat([df1, df2], axis=1)
 
-    print '------'
-    print df1
-    print df2
-    print '------'
+    #print '------'
+    #print df1
+    #print df2
+    #print '------'
     return df
 
 def pairwise_python(X):
@@ -2156,7 +2156,6 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         ctsdfli = list(ct['instrument'])
         #print p_read_csv('/mldev/bin/data/oanda/cache/instruments.csv')
-        print ctsdfli
         ctsdf   = p.DataFrame(oq.syntheticCurrencyTable(ctsdfli, homeCurrency='USD'))
         qres = oanda2.get_prices(instruments=','.join(oq.wew(ctsdf['quotedCurrency'])))
         qres = p.DataFrame(qres['prices']).set_index('instrument')
@@ -2194,8 +2193,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         
         gct = ct.groupby('instrument')
         gct = gct.aggregate(sum)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
-        print ct.sort_values(by='tradeValue5', ascending=False)
-        print gct
+        if int(verbose) >= 8:
+            print ct.sort_values(by='tradeValue5', ascending=False)
+            print gct
         
         #print ct.sort_values(by='plpips', ascending=False)
     print '===1==1==1=1=1=1===='

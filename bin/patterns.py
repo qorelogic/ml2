@@ -93,9 +93,9 @@ def main(args, leverage=10, dryrun=True, verbose=False):
             from multiprocessing.pool import ThreadPool
             pool = ThreadPool(processes=270)
         instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument')
-        #symbols = instruments.index
+        symbols = instruments.index
         #symbols = 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD,EUR_AUD,USD_JPY,AUD_USD,AUD_JPY,CAD_JPY,EUR_CAD,EUR_CHF,EUR_GBP,NZD_JPY,NZD_USD,USD_CHF,CHF_JPY'.split(',')
-        symbols = 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD'.split(',')
+        #symbols = 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD'.split(',')
         print ','.join(symbols)
         for i in symbols:
             if threading:
