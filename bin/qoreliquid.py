@@ -1937,14 +1937,16 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                         print 'ticket:%s units:%s units:%s unitsLeft:%s closeBool:%s' % (j, dfu.ix[j, 'units'], units, unitsLeft, closeBool)
                     
                     try:
+                        partialDeleverageLoss = dfu3.ix[i, 'deleverageLoss'] * dfu.ix[j, 'units'] / dfu3.ix[i, 'units']
+                        dloss = 'loss:%.3f/%.3f ' % (partialDeleverageLoss, dfu3.ix[i, 'deleverageLoss'])
                         if closeBool:
-                            interactiveMode(defaultMsg='Sure you want to partialClose[%s] ticket %s %s %s? unitsLeft:%s prevUnitsLeft:%s (y/N): ' % (i, j, dfu.ix[j, 'side'], dfu.ix[j, 'units'], unitsLeft, prevUnitsLeft))
+                            interactiveMode(defaultMsg='Sure you want to partialClose[%s] ticket %s %s %s? unitsLeft:%s prevUnitsLeft:%s %s  (y/N): ' % (i, j, dfu.ix[j, 'side'], dfu.ix[j, 'units'], unitsLeft, prevUnitsLeft, dloss))
                             logApplicationUsage('d', description='deleverage[partialClose]', data=dfu.ix[j, :].to_dict())
                             if int(verbose) >= 5: print 'oanda2.close_trade(%s, %s)' % (accid, j)
                             oanda2.close_trade(accid, j)
                         else:
                             if prevUnitsLeft > 0:
-                                interactiveMode(defaultMsg='Sure you want to deleverage %s? side=%s, units=%s (y/N): ' % (j, side, prevUnitsLeft))
+                                interactiveMode(defaultMsg='Sure you want to deleverage %s? side=%s, units=%s %s (y/N): ' % (j, side, prevUnitsLeft, dloss))
                                 logApplicationUsage('d', description='deleverage[standardClose]', data=dfu.ix[j, :].to_dict())
                                 if int(verbose) >= 5: print 'oanda2.create_order(%s, type=%s, instrument=%s, side=%s, units=%s)' % (accid, 'market', i, side, prevUnitsLeft)
                                 oanda2.create_order(accid, type='market', instrument=i, side=side, units=prevUnitsLeft)
@@ -2122,9 +2124,10 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     
     for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
         dfu3.ix[i, 'pl098'] = ct[ct['instrument'] == i].ix[:,'pl'].sum()
+    dfu3['deleverageLoss'] = dfu3['pl'] * dfu3['rebalance'] / dfu3['units'] 
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity quotedCurrencyPriceBid quotedCurrencyPriceAsk diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP unitsAvailable units exposure exposureSum allMargin amount2 amount2Sum amount4 amount4Sum diffamount4amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 diffpRebalancep2 quotedCurrencyPriceBid bc_hc powQuoted pow2 rebalanceOverUnits'
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity quotedCurrencyPriceBid quotedCurrencyPriceAsk diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP unitsAvailable units exposure exposureSum allMargin amount2 amount2Sum amount4 amount4Sum diffamount4amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 deleverageLoss diffpRebalancep2 quotedCurrencyPriceBid bc_hc powQuoted pow2 rebalanceOverUnits'
         if verbose: f1 = '%s rebalanceBool deleverageBool diffRebalanceMarginUsedBool' % f1Base
         else:       f1 = f1Base
         if int(verbose) > 5:
@@ -2204,12 +2207,12 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         #dfu3.ix[i, 'side']
         if units > 0:
             status = '[LIVE]' if dryrun == False else '[dryrun]'
-            deleverageStatus = '[v deleverage pl/drb(drbp):%.3f/%.3f(%.3f%s)]' % (dfu3.ix[i, 'pl'], dfu3.ix[i, 'diffpRebalancepBalance'], dfu3.ix[i, 'diffpRebalancep']*100, '%')  if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
+            deleverageStatus = '[v deleverage pl/drb/dLoss(drbp):%.3f/%.3f/%.3f(%.3f%s)]' % (dfu3.ix[i, 'pl'], dfu3.ix[i, 'diffpRebalancepBalance'], dfu3.ix[i, 'deleverageLoss'], dfu3.ix[i, 'diffpRebalancep']*100, '%')  if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
             if int(verbose) >= 8:
-                print "<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s) %s %s %s rebalanceMU/MU/diffRebalanceMU:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']) 
+                print "<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s[%s]) %s %s %s rebalanceMU/MU/diffRebalanceMU:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']) 
             else:
-                print "<broker>.create_order(instrument='%s', side='%s', units=%s) %s %s %s r/MU/dMU:(%.3f/%.3f/%.3f)" % (i, side.rjust(4), str(units).rjust(4), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed'])
+                print "<broker>.create_order(instrument='%s', side='%s', units=%s[%s]) %s %s %s r/MU/dMU:(%.3f/%.3f/%.3f)" % (i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed'])
 
             #for i in list(plp.index):
             if threading:
