@@ -1983,7 +1983,7 @@ def logApplicationUsage(mode, description=None, data=None):
     mongo.close()
 
 #@profile
-def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True):
+def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None):
     
     import pymongo as mong
     import calendar
@@ -2117,8 +2117,16 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['rebalanceOverUnits']  = (n.abs(dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'units'])  # deprecated
     dfu3['marginUsedP']  = dfu3['rebalanceOverUnits'] * dfu3['marginUsed']                # deprecated
     
-    sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'rebalanceMarginUsed', 'diffpRebalancep']
-    sortAscending             = [False, True, False, False, True]
+    if sortRebalanceList == 'reverse'    or sortRebalanceList == 'r' or sortRebalanceList == None:
+        sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'rebalanceMarginUsed', 'diffpRebalancep']
+        sortAscending             = [False,            True,                          False,                 False,                 True]
+    if sortRebalanceList == 'deleverage' or sortRebalanceList == 'd':
+        sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'rebalanceMarginUsed', 'diffpRebalancep']
+        sortAscending             = [False,            False,                          False,                 False,                 True]
+    if sortRebalanceList == 'leverage'   or sortRebalanceList == 'l':
+        sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'rebalanceMarginUsed', 'diffpRebalancep']
+        sortAscending             = [True,             True,                          False,                 False,                 True]
+        
     if noInteractiveLeverage: 
         sortAscending[0]      = True
     

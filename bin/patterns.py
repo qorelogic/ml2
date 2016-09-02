@@ -18,6 +18,8 @@ parser.add_argument("-nid", '--noInteractiveDeleverage', help="No interactive Q&
 parser.add_argument("-nil", '--noInteractiveLeverage', help="No interactive Q&A for the deleverage option", action="store_true")
 parser.add_argument("-nif", '--noInteractiveFleetingProfits', help="No interactive Q&A for the fleeting profits routine", action="store_true")
 
+parser.add_argument("-s", '--sortRebalanceList', help="reverse[r] | deleverage[d] | leverage[l]")
+
 parser.add_argument('-not', '-noth', '-nothreads', '--nothreading', help="No threading", action="store_true")
 args = parser.parse_args()
 
@@ -232,20 +234,21 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     noInteractiveLeverage   = args.noInteractiveLeverage
     noInteractiveDeleverage = args.noInteractiveDeleverage
     noInteractiveFleetingProfits = args.noInteractiveFleetingProfits
+    sortRebalanceList            = args.sortRebalanceList
     
     oq = OandaQ(verbose=False)
 
     if args.account:
         try:
-            dfu33 = rebalanceTrades(oq, dfu2, oanda1, int(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits)
+            dfu33 = rebalanceTrades(oq, dfu2, oanda1, int(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, sortRebalanceList=sortRebalanceList)
         except oandapy.OandaError as e:
             print e
             print 'Try a different account number'
     else:
-        fu33 = rebalanceTrades(oq, dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading)
-        fu33 = rebalanceTrades(oq, dfu2, oanda1, 801996, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading)
-        fu33 = rebalanceTrades(oq, dfu2, oanda1, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading)
-        dfu33 = rebalanceTrades(oq, dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading)
+        fu33 = rebalanceTrades(oq, dfu2, oanda2, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
+        fu33 = rebalanceTrades(oq, dfu2, oanda1, 801996, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
+        fu33 = rebalanceTrades(oq, dfu2, oanda1, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
+        dfu33 = rebalanceTrades(oq, dfu2, oanda1, 558788, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
 
 def getDryRun(args):
     if args.live:
