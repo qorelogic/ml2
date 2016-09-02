@@ -1658,7 +1658,7 @@ def test_cython():
 
 #@profile
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
-    if verbose: print 'df.shape 1: %s' % str(df.shape)
+    if int(verbose) >= 5: print 'df.shape 1: %s' % str(df.shape)
     dfm = p.DataFrame()
     patterns = ['CDL2CROWS',
      'CDL3BLACKCROWS',
@@ -1726,7 +1726,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     #@profile
     #def goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument='USD_JPY', update=False):
     for i in patterns:
-        if verbose: print 'goThruPatterns(%s): %s' % (instrument, i)
+        if int(verbose) >= 5: print 'goThruPatterns(%s): %s' % (instrument, i)
         df1 = df
         #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
         #@profile
@@ -1751,11 +1751,11 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             
             try:
                 csvIndex = ','.join(list(dfh[instrument][granularity].index))
-                if verbose: print 'caching history %s.. ' % granularity
+                if int(verbose) >= 5: print 'caching history %s.. ' % granularity
                 res = dfh[instrument][granularity]
             except Exception as e:
-                if verbose: print e
-                if verbose: print 'getting history %s.. ' % granularity
+                if int(verbose) >= 5: print e
+                if int(verbose) >= 5: print 'getting history %s.. ' % granularity
                 res = oanda2.get_history(instrument=instrument, granularity=granularity, count=15)
                 try:
                     dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
@@ -1764,8 +1764,8 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
                     dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
             csvIndex = ','.join(list(dfh[instrument][granularity].index))
             #print csvIndex
-            if verbose: print hl.md5(csvIndex).hexdigest()
-            if verbose: print
+            if int(verbose) >= 5: print hl.md5(csvIndex).hexdigest()
+            if int(verbose) >= 5: print
             exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
             #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
             field = '%s' % (granularity)
@@ -1787,7 +1787,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             
             #print '%s %s' % (instrument, granularity)
             #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
-            if verbose: print df1.columns
+            if int(verbose) >= 5: print df1.columns
             #print df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
             #print pnda
             #return df1
@@ -1803,20 +1803,20 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         dfm1 = dfm1.ffill()
         #print dfm1
         dfm1 = dfm1.bfill()
-        if verbose: print dfm1
+        if int(verbose) >= 5: print dfm1
         dfm1 = dfm1.tail(1)
-        if verbose: print dfm1
+        if int(verbose) >= 5: print dfm1
         dfm1 = dfm1.ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')]
-        if verbose: print dfm1
+        if int(verbose) >= 5: print dfm1
         dfm1 = dfm1.transpose()
-        if verbose: print dfm1
+        if int(verbose) >= 5: print dfm1
         #dfm1 = df1.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
         sed = df1.index[len(df1)-1]
         #print sed
         dfm1[mode] = dfm1.ix[:, sed]
         #return dfm1.ix[:, [mode]]
         dfm0 = dfm1.ix[:, [mode]]
-        if verbose: print dfm0
+        if int(verbose) >= 5: print dfm0
         #dfm  = dfm.combine_first(dfm0)
         dfm = p.concat([dfm, dfm0], axis=1)
         if verbose:
@@ -1840,7 +1840,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         dfm = dfm.transpose()
         dfm.ix[:, instrument] = n.sum(dfm.get_values(), 1)
         #print n.sum(n.array(dfmk.transpose().get_values(), dtype=int), 0)
-        #if verbose: print dfm.transpose()
+        #if int(verbose) >= 5: print dfm.transpose()
         res = dfm.transpose().ix[[instrument],:]
         #print res
         #print instrument
@@ -1951,7 +1951,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                                 if int(verbose) >= 5: print 'oanda2.create_order(%s, type=%s, instrument=%s, side=%s, units=%s)' % (accid, 'market', i, side, prevUnitsLeft)
                                 oanda2.create_order(accid, type='market', instrument=i, side=side, units=prevUnitsLeft)
                     except Exception as e:
-                        if verbose: print e
+                        if int(verbose) >= 5: print e
                 raise(Exception(''))
                             
                 interactiveMode()
@@ -1990,7 +1990,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     if threading:
         from multiprocessing.pool import ThreadPool
 
-    if verbose: print '----------'
+    if int(verbose) >= 5: print '----------'
     
     # recalculate percentages [diffp]
     dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
@@ -2029,7 +2029,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         else:
             fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose)
             
-        if int(verbose) > 5:
+        if int(verbose) >= 5: 
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                 #print 'instruments:'
                 #print instruments 
@@ -2063,7 +2063,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         cu = currentPositions.combine_first(dfu3)
         cu['bool'] = getSideBool(cu['side'])
         cu = cu.fillna(0)
-        if int(verbose) > 5:
+        if int(verbose) >= 5: 
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                 print cu.sort_values(by='diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')]
         #print
@@ -2136,9 +2136,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity quotedCurrencyPriceBid quotedCurrencyPriceAsk diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP unitsAvailable units exposure exposureSum allMargin amount2 amount2Sum amount4 amount4Sum diffamount4amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 deleverageLoss diffpRebalancep2 quotedCurrencyPriceBid bc_hc powQuoted pow2 rebalanceOverUnits'
-        if verbose: f1 = '%s rebalanceBool deleverageBool diffRebalanceMarginUsedBool' % f1Base
+        if int(verbose) >= 5: f1 = '%s rebalanceBool deleverageBool diffRebalanceMarginUsedBool' % f1Base
         else:       f1 = f1Base
-        if int(verbose) > 5:
+        if int(verbose) >= 5: 
             print '-=-=-=-=-'
             print dfu3.ix[:, 'amount2']
             print '-=-=-=-=-'
@@ -2301,9 +2301,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
 
 @profile
 def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
-    if verbose: print '#--- cw(start)'
+    if int(verbose) >= 5: print '#--- cw(start)'
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
-    if int(verbose) > 5:
+    if int(verbose) >= 5: 
         print 'li'
         print li
 
@@ -2312,22 +2312,22 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     df = oq.syntheticCurrencyTable(pdf, homeCurrency='USD')
     df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
     pcdf = df.ix[:,'pairedCurrency'].get_values()
-    if int(verbose) > 5: print pcdf
+    if int(verbose) >= 5:  print pcdf
     pcdf = oq.wew(pcdf)
-    if int(verbose) > 5:
+    if int(verbose) >= 5: 
         print pcdf
         print
     #pdf = n.c_[pdf,pcdf]#[0]
     pdf = list(pdf)+list(pcdf)
-    if int(verbose) > 5: print pdf
+    if int(verbose) >= 5:  print pdf
     #fdf = fdf.combine_first(df)
     pairs = ','.join(list(pdf))
-    if int(verbose) > 5: print pairs
+    if int(verbose) >= 5:  print pairs
 
     sdf = p.DataFrame(oq.syntheticCurrencyTable(li, homeCurrency='USD'))
     res = oanda2.get_prices(instruments=','.join(oq.wew(sdf['quotedCurrency'])))
     res = p.DataFrame(res['prices'])
-    if int(verbose) > 5:
+    if int(verbose) >= 5: 
         print list(sdf['quotedCurrency'])
         print 'sdf'
         print sdf
@@ -2338,11 +2338,11 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     ldf = p.DataFrame(li)
     #sdf['pc'] = ma 
     sdf = sdf.set_index('instrument')
-    if int(verbose) > 5:
+    if int(verbose) >= 5: 
         print 'sdf'
         print sdf
     quotedCurrency = sdf.ix[dfu33.index, ['quotedCurrency','pow']]
-    if int(verbose) > 5:
+    if int(verbose) >= 5: 
         print 'quotedCurrency'
         print quotedCurrency
         print '===='
@@ -2356,13 +2356,13 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     quotedCurrencyPrice['diffp'] = dfu33['diffp']
     #---
     #.sort_values(by='diffp', ascending=False)
-    if int(verbose) > 5:
+    if int(verbose) >= 5: 
         print 'quotedCurrencyPrice'
         print quotedCurrencyPrice#.sort_values(by='diffp', ascending=False)
     #print res
     #print sdf['quotedCurrency']
     #print sdf.ix[quotedCurrencyPrice.index,:]
-    if verbose: print '===='
+    if int(verbose) >= 5: print '===='
 
     balance       = float(maccount['balance'])
     marginAvail   = maccount['marginAvail']
@@ -2385,11 +2385,11 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['diffamount4amount2'] = dfu33['amount2'] - dfu33['amount4']
     #print quotedCurrencyPrice['bid']
     #print p.DataFrame(netAssetValue * 50 * quotedCurrencyPrice['bid'].get_values())
-    if int(verbose) > 5:
+    if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print 'dfu33'
             print dfu33.ix[:, 'quotedCurrencyPriceBid quotedCurrencyPriceAsk unitsAvailable diffp pow2 units exposure exposureSum allMargin amount2 amount4 amount rebalance'.split(' ')]
-    if verbose: print '#--- cw(end)'
+    if int(verbose) >= 5:  print '#--- cw(end)'
     
     return dfu33
 
