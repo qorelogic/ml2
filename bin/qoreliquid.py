@@ -1656,7 +1656,7 @@ def test_numba():
 def test_cython():
     print 'test'
 
-#@profile
+@profile
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     if int(verbose) >= 5: print 'df.shape 1: %s' % str(df.shape)
     dfm = p.DataFrame()
@@ -1885,7 +1885,7 @@ def interactiveMode(defaultMsg='Sure you want to create order? (y/N): '):
     if ans != 'y':
         raise(Exception('User intervened: order not created'))
 
-#@profile
+@profile
 def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose=False):
     if dryrun == False:
         try:
@@ -1899,7 +1899,7 @@ def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleeti
         except Exception as e:
             print e
 
-#@profile
+@profile
 def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, currentTrades):
     if dryrun == False:
         try:
@@ -1982,7 +1982,7 @@ def logApplicationUsage(mode, description=None, data=None):
     mongo.ql.application_usage_patterns.insert(di)
     mongo.close()
 
-#@profile
+@profile
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None):
     
     import pymongo as mong
@@ -2298,7 +2298,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     
     return dfu3
 
-#@profile
+@profile
 def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     if int(verbose) >= 5: print '#--- cw(start)'
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
