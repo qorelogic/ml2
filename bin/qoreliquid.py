@@ -2242,57 +2242,59 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         poolFleetingProfits.close()
         poolLeverage.close()
         
-    if int(verbose) >= 2:
-        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            #print maccount
-            pll[0] = pll['pls']
-            #maccount = oanda2.get_account(accid)
-            dfa = p.DataFrame(maccount, index=[0])
-            dfa = dfa.combine_first(pll.ix[:,[0]].transpose())
-            dfa['netAssetValue'] = dfa['balance'] + dfa['unrealizedPl']
-            dfa['unrealizedPlPcnt'] = dfa['unrealizedPl'] / dfa['balance'] * 100
-            dfa['plpcnt'] = dfa['plp'] / dfa['balance'] * 100
-            dfa['plncnt'] = dfa['pln'] / dfa['balance'] * 100
-            # aliases
-            dfa['nav'] = dfa['netAssetValue']
-            dfa['uPl'] = dfa['unrealizedPl']
-            dfa['uPlPcnt'] = dfa['unrealizedPlPcnt']
+    #print maccount
+    pll[0] = pll['pls']
+    #maccount = oanda2.get_account(accid)
+    dfa = p.DataFrame(maccount, index=[0])
+    dfa = dfa.combine_first(pll.ix[:,[0]].transpose())
+    dfa['netAssetValue'] = dfa['balance'] + dfa['unrealizedPl']
+    dfa['unrealizedPlPcnt'] = dfa['unrealizedPl'] / dfa['balance'] * 100
+    dfa['plpcnt'] = dfa['plp'] / dfa['balance'] * 100
+    dfa['plncnt'] = dfa['pln'] / dfa['balance'] * 100
+    # aliases
+    dfa['nav'] = dfa['netAssetValue']
+    dfa['uPl'] = dfa['unrealizedPl']
+    dfa['uPlPcnt'] = dfa['unrealizedPlPcnt']
 
-            ds = datetime.datetime.utcnow()
-            ts = calendar.timegm(ds.utctimetuple())
-            ts = ts + float(ds.microsecond)/1000000
-            dfa.ix[0, 'utctime'] = ts
+    ds = datetime.datetime.utcnow()
+    ts = calendar.timegm(ds.utctimetuple())
+    ts = ts + float(ds.microsecond)/1000000
+    dfa.ix[0, 'utctime'] = ts
+
+    balanceDeleveraged    = dfa.ix[0, 'balance'] + dfu3['diffpRebalancepBalance'].sum()
+    balanceDeleveragedPlp = dfa.ix[0, 'balance'] + dfa.ix[0, 'plp'] + dfu3['diffpRebalancepBalance'].sum()
+
+    #li = list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
+    #li = li.append('%')
+
+    dfa = dfa.transpose()
+    accountId = str(dfa.ix['accountId', 0])
+    dfa[accountId] = dfa[0]
+    
+    dfa = dfa.transpose()
+
+    di = dfa.ix[int(accountId), :].transpose().to_dict()
+    mongo = mong.MongoClient()
+    mongo.ql.broker_oanda_account.insert(di)
+
+    if int(verbose) >= 1:
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
 
             #print dfu3[:, ['diffpRebalancepBalance', 'diffpRebalancep']].sum()
             print '%s %s' % (dfu3['diffpRebalancepBalance'].sum(), dfu3['diffpRebalancep'].sum())
-            balanceDeleveraged    = dfa.ix[0, 'balance'] + dfu3['diffpRebalancepBalance'].sum()
-            balanceDeleveragedPlp = dfa.ix[0, 'balance'] + dfa.ix[0, 'plp'] + dfu3['diffpRebalancepBalance'].sum()
             print 'DeleveragedBalance: %s' % (balanceDeleveraged)
             print 'DeleveragedBalance+plp: %s' % (balanceDeleveragedPlp)
             print 'diffDeleveragedBalance+plp2Balance: %s' % (balanceDeleveragedPlp - dfa.ix[0, 'balance'])
             print
             print plp.ix[:, ffsds]                        
-            #li = list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
-            #li = li.append('%')
             #print '%s %s%s' % li            
             #print '%s %s' % list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
             print list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
             #print pln.ix[:, ffsds]
             print
-            dfa = dfa.transpose()
-            accountId = str(dfa.ix['accountId', 0])
-            dfa[accountId] = dfa[0]
-            
-            dfa = dfa.transpose()
             
             print dfa.ix[:, 'accountCurrency accountId accountName balance uPl uPlPcnt nav realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')]
             print 
-            
-            di = dfa.ix[int(accountId), :].transpose().to_dict()
-            mongo = mong.MongoClient()
-            mongo.ql.broker_oanda_account.insert(di)
-            
-            print
     
     return dfu3
 
