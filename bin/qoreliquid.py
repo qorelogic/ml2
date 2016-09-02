@@ -1620,10 +1620,49 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
     
     
 
+#import numba
+#@numba.jit(nopython=True)
 @profile
 def combineDF(df1, df2):
+    df1 = p.DataFrame(df1)
+    df2 = p.DataFrame(df2)
     df = p.concat([df1, df2], axis=1)
 
+    #print '------'
+    #print df1
+    #print df2
+    #print '------'
+    return df
+
+# g: python combine two dictionaries by key, source: http://stackoverflow.com/questions/5946236/how-to-merge-multiple-dicts-with-same-key
+@profile
+def combineDF2(df1, df2):
+    ds = [df1, df2]
+    df = {}
+    for k in df1.iterkeys():
+        df[k] = tuple(df[k] for df in ds)
+    df = p.DataFrame(df)
+    #print '------'
+    #print df1
+    #print df2
+    #print '------'
+    return df
+    
+#from collections import defaultdict
+# g: python combine two dictionaries by key, source: http://stackoverflow.com/questions/5946236/how-to-merge-multiple-dicts-with-same-key
+@profile
+def combineDF3(df1, df2):
+    #df1 = {1: 2, 3: 4}
+    #df2 = {1: 6, 3: 7}
+    #df = defaultdict(list)
+    df = {}
+    for d in (df1, df2): # you can list as many input dicts as you want here
+        for key, value in d.iteritems():
+            #df[key].append(value)
+            df.update({key:value})
+    #df = p.DataFrame(df)
+    #print(df)
+    #sys.exit()
     #print '------'
     #print df1
     #print df2
@@ -1723,6 +1762,8 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
      'CDLLONGLEGGEDDOJI',
      'CDLMORNINGDOJISTAR'
     """
+    qd = QoreDebug()
+    qd.on()
     #@profile
     #def goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument='USD_JPY', update=False):
     for i in patterns:
@@ -1781,9 +1822,21 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             # df1 = p.concat([df1, df2], axis=1)
             #print dfh
             nsrch = dfh[instrument][granularity].ix[:,'complete']
+            #print nsrch
             dfh0 = dfh[instrument][granularity].ix[nsrch,[field]]
-            df1 = combineDF(df1, dfh0)
-            #df1 = p.concat([df1, dfh0], axis=1)
+            #print dfh0            
+            try:
+                dif1 = df1.to_dict()
+                difh0 = dfh0.to_dict()
+                
+                #df1 = combineDF(dif1, difh0)
+                #df1 = combineDF2(dif1, difh0)
+                df1 = combineDF3(dif1, difh0)
+                df1 = p.DataFrame(df1)
+                #df1 = combineDF(df1, dfh0)
+                #df1 = p.concat([df1, dfh0], axis=1)
+            except Exception as e:
+                qd.printTraceBack()
             
             #print '%s %s' % (instrument, granularity)
             #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
@@ -1799,11 +1852,11 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         #df1['mode'] = mode
         #df1 = getcc(df1, dfh, oanda2, mode, instrument=instrument, update=update)
         dfm1 = df1
-        #print dfm1
+        #print dfm1.tail(3)
         dfm1 = dfm1.ffill()
-        #print dfm1
+        #print dfm1.tail(3)
         dfm1 = dfm1.bfill()
-        if int(verbose) >= 5: print dfm1
+        if int(verbose) >= 5: print dfm1.tail(3)
         dfm1 = dfm1.tail(1)
         if int(verbose) >= 5: print dfm1
         dfm1 = dfm1.ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')]
@@ -1811,6 +1864,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         dfm1 = dfm1.transpose()
         if int(verbose) >= 5: print dfm1
         #dfm1 = df1.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
+        if int(verbose) >= 5: print 'len df1: %s' % len(df1)
         sed = df1.index[len(df1)-1]
         #print sed
         dfm1[mode] = dfm1.ix[:, sed]

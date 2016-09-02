@@ -46,6 +46,9 @@ from pylab import rcParams
 
 import oandapy
 
+qd = QoreDebug()
+qd.on()
+
 co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
 
 env1=co.ix[0,1]
@@ -388,6 +391,7 @@ if __name__ == "__main__":
             else:
                 main(args, leverage=leverage, dryrun=dryrun)
         except Exception as e:
+            qd.printTraceBack()
             print e
         if not args.interactive:
             break
