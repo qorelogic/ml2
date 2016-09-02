@@ -102,7 +102,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         #symbols = 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD'.split(',')
         print ','.join(symbols)
         for i in symbols:
-            i = strip(i)
+            i = i.strip()
             if threading:
                 async_result = pool.apply_async(getc4, [df, dfh, oanda2, i])
                 dfu0   = async_result.get()
