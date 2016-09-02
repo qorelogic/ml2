@@ -1656,7 +1656,7 @@ def test_numba():
 def test_cython():
     print 'test'
 
-#@profile
+@profile
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     if int(verbose) >= 5: print 'df.shape 1: %s' % str(df.shape)
     dfm = p.DataFrame()
@@ -1982,7 +1982,7 @@ def logApplicationUsage(mode, description=None, data=None):
     mongo.ql.application_usage_patterns.insert(di)
     mongo.close()
 
-#@profile
+@profile
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None):
     
     import pymongo as mong
