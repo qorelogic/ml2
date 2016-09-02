@@ -66,7 +66,7 @@ try:
 except:
     ''
 
-#@profile
+@profile
 def main(args, leverage=10, dryrun=True, verbose=False):
     # In[ ]:
 

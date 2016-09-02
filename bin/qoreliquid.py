@@ -1697,6 +1697,8 @@ def test_cython():
 
 @profile
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
+    import hashlib as hl
+    import talib
     if int(verbose) >= 5: print 'df.shape 1: %s' % str(df.shape)
     dfm = p.DataFrame()
     patterns = ['CDL2CROWS',
@@ -1766,9 +1768,10 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     qd.on()
     #@profile
     #def goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument='USD_JPY', update=False):
+    df1 = df
+    dif1  = df1.to_dict()
     for i in patterns:
         if int(verbose) >= 5: print 'goThruPatterns(%s): %s' % (instrument, i)
-        df1 = df
         #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
         #@profile
         #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
@@ -1783,8 +1786,6 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             #@profile
             #def getc(df1, dfh, oanda2, instrument='USD_JPY', granularity='M1', mode='CDLBELTHOLD', verbose=False, update=False):
             granularity=j
-            import hashlib as hl
-            import talib
         
             if update:
                 try: dfh[instrument][granularity] = None
@@ -1809,46 +1810,62 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             if int(verbose) >= 5: print
             exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
             #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
-            field = '%s' % (granularity)
-            #df1[field] = pnda
-            dfh[instrument][granularity][field] = pnda
-            #print dfh[instrument][granularity].ix[:,field]
+            #df1[granularity] = pnda
+            dfh[instrument][granularity][granularity] = pnda
+            #print dfh[instrument][granularity].ix[:,granularity]
             #df1 = normalizeme(df1)
             #df1 = sigmoidme(df1)
             #df1 = tanhme(df1)
             # original
-            #df1 = df1.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]])
+            #df1 = df1.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[granularity]])
             # cythonized
             # df1 = p.concat([df1, df2], axis=1)
             #print dfh
-            nsrch = dfh[instrument][granularity].ix[:,'complete']
+            #nsrch = dfh[instrument][granularity].ix[:,'complete']
+            nsrch = dfh[instrument][granularity]['complete']
             #print nsrch
-            dfh0 = dfh[instrument][granularity].ix[nsrch,[field]]
-            #print dfh0            
-            try:
-                dif1 = df1.to_dict()
-                difh0 = dfh0.to_dict()
-                
-                #df1 = combineDF(dif1, difh0)
-                #df1 = combineDF2(dif1, difh0)
-                df1 = combineDF3(dif1, difh0)
-                df1 = p.DataFrame(df1)
-                #df1 = combineDF(df1, dfh0)
-                #df1 = p.concat([df1, dfh0], axis=1)
-            except Exception as e:
-                qd.printTraceBack()
+            #dfh0 = dfh[instrument][granularity].ix[nsrch,[granularity]]
+
+            #print nsrch
+            dfh0_0 = dfh[instrument][granularity][granularity].ix[nsrch]
+            dfh0_0 = pnda.ix[nsrch]
+            
+            #dfh0 = p.DataFrame(dfh0_0, columns=[granularity])
+            #dfh0 = dfh0.combine_first(dfh0_0)
+            
+            #dfh0 = p.DataFrame([], index=dfh0_0.index)
+            #dfh0[granularity] = dfh0_0
+
+            #******
+            #dfh0 = p.DataFrame(dfh0_0, index=dfh0_0.index)
+            #dict(zip(df.index, df.get_values().tolist()))
+            difh0 = {granularity: dict(zip(dfh0_0.index, dfh0_0.get_values().tolist()))}
+	
+
+            #difh0 = dfh0.to_dict()
+            #print difh0
+            #sys.exit()
+
+            #df1 = combineDF(dif1, difh0)
+            #df1 = combineDF2(dif1, difh0)
+            
+            dif1 = combineDF3(dif1, difh0)
+            
+            #df1 = combineDF(df1, dfh0)
+            #df1 = p.concat([df1, dfh0], axis=1)
             
             #print '%s %s' % (instrument, granularity)
-            #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [field]]
-            if int(verbose) >= 5: print df1.columns
+            #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [granularity]]
+            #if int(verbose) >= 5: print df1.columns
             #print df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
-            #print pnda
             #return df1
-            #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[field]]
+            #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[granularity]]
 
 
             #print 'df1.shape 3: %s' % str(df1.shape)
         #return df1#.set_index('mode')
+        try:    df1 = p.DataFrame(dif1)
+        except: df1 = p.DataFrame(dif1, index=[granularity])
         #df1['mode'] = mode
         #df1 = getcc(df1, dfh, oanda2, mode, instrument=instrument, update=update)
         dfm1 = df1
