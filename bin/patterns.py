@@ -310,10 +310,12 @@ if __name__ == "__main__":
     while True:
         print 'receiving feed..'
         if args.interactive:
-            usage = 'usage: a=analyze, d=deleverage, l=leverage, f=fleetingProfits, il=infinite-loop, ?=help'
+            usage = 'usage: a=analyze, d=deleverage, l=leverage, f=fleetingProfits, il=infinite-loop, ?=help, q=quit'
             args = parser.parse_args()
             print usage
             mode = raw_input('mode ?: ')
+            if mode == 'q': # quit
+                sys.exit()
             if mode == 'a': # analyze mode
                 logApplicationUsage(mode, description='manual')
                 args.analyze = True
