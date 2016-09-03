@@ -90,6 +90,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     dfh = {}
     df = p.DataFrame()
     if args.analyze:
+        logApplicationUsage('analyze', description='analyze')
         dfu = p.DataFrame()
         if threading:
             from multiprocessing.pool import ThreadPool
