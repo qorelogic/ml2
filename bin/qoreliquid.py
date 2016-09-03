@@ -1621,8 +1621,6 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
     
     
 
-#import numba
-#@numba.jit(nopython=True)
 @profile
 def combineDF(df1, df2):
     df1 = p.DataFrame(df1)
@@ -1651,7 +1649,9 @@ def combineDF2(df1, df2):
     
 #from collections import defaultdict
 # g: python combine two dictionaries by key, source: http://stackoverflow.com/questions/5946236/how-to-merge-multiple-dicts-with-same-key
+import numba
 @profile
+@numba.jit(nopython=True)
 def combineDF3(df1, df2):
     #df1 = {1: 2, 3: 4}
     #df2 = {1: 6, 3: 7}
@@ -1669,6 +1669,15 @@ def combineDF3(df1, df2):
     #print df2
     #print '------'
     return df
+
+def combineDF3_numba(df1, df2):
+    from numba import double
+    from numba.decorators import jit, autojit
+    func_numba = autojit(combineDF3)
+    #X = n.random.random((1000, 3))
+    return func_numba(df1, df2)
+#    %timeit pairwise_numba(X)
+
 
 def pairwise_python(X):
     M = X.shape[0]
@@ -1851,7 +1860,10 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             #print 'shape nsrch: %s' % nsrch.shape
             #print pnda
             #print nsrch
-            dfh0_0 = pnda.ix[nsrch]
+            dfh0_0 = dfh[instrument][granularity][granularity].ix[nsrch]
+            #dfh0_0 = pnda.ix[nsrch]
+            #dfh0_0 = pnda[nsrch]
+            #dfh0_0 = n.where(pnda == nsrch)
             
             #dfh0 = p.DataFrame(dfh0_0, columns=[granularity])
             #dfh0 = dfh0.combine_first(dfh0_0)
@@ -1873,6 +1885,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             #df1 = combineDF2(dif1, difh0)
             
             dif1 = combineDF3(dif1, difh0)
+            #dif1 = combineDF3_numba(dif1, difh0)
             
             #df1 = combineDF(df1, dfh0)
             #df1 = p.concat([df1, dfh0], axis=1)
