@@ -2135,7 +2135,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['deleverageLoss'] = dfu3['pl'] * dfu3['rebalance'] / dfu3['units'] 
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity quotedCurrencyPriceBid quotedCurrencyPriceAsk diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP unitsAvailable units exposure exposureSum allMargin amount2 amount2Sum amount4 amount4Sum diffamount4amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 deleverageLoss diffpRebalancep2 quotedCurrencyPriceBid bc_hc powQuoted pow2 rebalanceOverUnits'
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity pairedCurrencyPriceBid bid ask pairedCurrencyPriceBid pairedCurrencyPriceAsk quotedCurrencyPriceBid quotedCurrencyPriceAsk diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP unitsAvailable units exposure exposureSum allMargin amount2 amount2Sum amount4 amount4Sum diffamount4amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 deleverageLoss diffpRebalancep2 bc_hc powQuoted pow2 rebalanceOverUnits'
         if int(verbose) >= 5: f1 = '%s rebalanceBool deleverageBool diffRebalanceMarginUsedBool' % f1Base
         else:       f1 = f1Base
         if int(verbose) >= 5: 
