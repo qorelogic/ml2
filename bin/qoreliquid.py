@@ -1811,7 +1811,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
             #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
             #df1[granularity] = pnda
-            dfh[instrument][granularity][granularity] = pnda
+            #dfh[instrument][granularity][granularity] = pnda
             #print dfh[instrument][granularity].ix[:,granularity]
             #df1 = normalizeme(df1)
             #df1 = sigmoidme(df1)
@@ -1827,8 +1827,19 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             #dfh0 = dfh[instrument][granularity].ix[nsrch,[granularity]]
 
             #print nsrch
-            dfh0_0 = dfh[instrument][granularity][granularity].ix[nsrch]
+            #dfh0_0 = dfh[instrument][granularity][granularity].ix[nsrch]
+            #print 'type dfh[instrument][granularity][granularity]: %s' % type(dfh[instrument][granularity][granularity])
+            pnda = p.Series(pnda, index=nsrch.index)
+            pnda = p.Series(pnda, index=dfh[instrument][granularity].index)
+            #print 'type pnda: %s' % type(pnda)
+            #print 'shape pnda: %s' % pnda.shape
+            #print 'shape nsrch: %s' % nsrch.shape
+            #print pnda
+            #print nsrch
             dfh0_0 = pnda.ix[nsrch]
+            dfh0_0 = pnda.ix[dfh[instrument][granularity]['complete']]
+            
+            #sys.exit()
             
             #dfh0 = p.DataFrame(dfh0_0, columns=[granularity])
             #dfh0 = dfh0.combine_first(dfh0_0)
