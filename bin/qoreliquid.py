@@ -1792,7 +1792,6 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
                 except: ''
             
             try:
-                csvIndex = ','.join(list(dfh[instrument][granularity].index))
                 if int(verbose) >= 5: print 'caching history %s.. ' % granularity
                 res = dfh[instrument][granularity]
             except Exception as e:
@@ -1806,8 +1805,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
                     dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
             csvIndex = ','.join(list(dfh[instrument][granularity].index))
             #print csvIndex
-            if int(verbose) >= 5: print hl.md5(csvIndex).hexdigest()
-            if int(verbose) >= 5: print
+            if int(verbose) >= 5: print hl.md5(csvIndex).hexdigest(); print
             exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
             #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
             #df1[granularity] = pnda
@@ -1823,21 +1821,17 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             #print dfh
             #nsrch = dfh[instrument][granularity].ix[:,'complete']
             nsrch = dfh[instrument][granularity]['complete']
-            #print nsrch
             #dfh0 = dfh[instrument][granularity].ix[nsrch,[granularity]]
 
-            #print nsrch
             #dfh0_0 = dfh[instrument][granularity][granularity].ix[nsrch]
             #print 'type dfh[instrument][granularity][granularity]: %s' % type(dfh[instrument][granularity][granularity])
             pnda = p.Series(pnda, index=nsrch.index)
-            pnda = p.Series(pnda, index=dfh[instrument][granularity].index)
             #print 'type pnda: %s' % type(pnda)
             #print 'shape pnda: %s' % pnda.shape
             #print 'shape nsrch: %s' % nsrch.shape
             #print pnda
             #print nsrch
             dfh0_0 = pnda.ix[nsrch]
-            dfh0_0 = pnda.ix[dfh[instrument][granularity]['complete']]
             
             #sys.exit()
             
@@ -2393,9 +2387,8 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
         print 'li'
         print li
 
-    pdf = li
-    
-    df = oq.syntheticCurrencyTable(pdf, homeCurrency='USD')
+    df  = oq.syntheticCurrencyTable(li, homeCurrency='USD')
+    sdf = p.DataFrame(df)
     df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
     pcdf = df.ix[:,'pairedCurrency'].get_values()
     if int(verbose) >= 5:  print pcdf
@@ -2403,14 +2396,13 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     if int(verbose) >= 5: 
         print pcdf
         print
-    #pdf = n.c_[pdf,pcdf]#[0]
-    pdf = list(pdf)+list(pcdf)
+    #li = n.c_[li,pcdf]#[0]
+    pdf = list(li)+list(pcdf)
     if int(verbose) >= 5:  print pdf
     #fdf = fdf.combine_first(df)
     pairs = ','.join(list(pdf))
     if int(verbose) >= 5:  print pairs
 
-    sdf = p.DataFrame(oq.syntheticCurrencyTable(li, homeCurrency='USD'))
     res = oanda2.get_prices(instruments=','.join(oq.wew(sdf['quotedCurrency'])))
     res = p.DataFrame(res['prices'])
     if int(verbose) >= 5: 
