@@ -2395,12 +2395,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     if sortRebalanceList == 'reverse'    or sortRebalanceList == 'r' or sortRebalanceList == None:
         sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'diffpRebalancep']
         sortAscending             = [False,            True,                          False,                 True]
-    if sortRebalanceList == 'reversepl'    or sortRebalanceList == 'p':
-        sortby                    = ['deleverageBool', 'pl', 'diffpRebalancep']
-        sortAscending             = [False,            True,                          False,                 True]
     if sortRebalanceList == 'reversepl'    or sortRebalanceList == 'rp':
-        sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'pl', 'diffpRebalancep']
-        sortAscending             = [False,            True,                          False,                 True]
+        sortby                    = ['deleverageBool', 'pl', 'diffRebalanceMarginUsedBool', 'diffpRebalancep']
+        sortAscending             = [False,            True, True,                         True]
     
     if sortRebalanceList == 'deleverage' or sortRebalanceList == 'd':
         sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'diffpRebalancep']
