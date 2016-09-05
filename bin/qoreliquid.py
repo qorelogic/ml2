@@ -1770,6 +1770,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     #def goThruPatterns(df, dfm, dfh, oanda2, patterns, instrument='USD_JPY', update=False):
     df1 = df
     dif1  = df1.to_dict()
+    verbose=False
     for i in patterns:
         if int(verbose) >= 5: print 'goThruPatterns(%s): %s' % (instrument, i)
         #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
@@ -1777,7 +1778,6 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
         ##def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
         mode=i
-        verbose=False
         for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
             #print 'goThruPatterns(%s): %s' % (instrument, j)
             #print 'df1.shape 2: %s' % str(df1.shape)
@@ -1805,7 +1805,21 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
                     dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
             csvIndex = ','.join(list(dfh[instrument][granularity].index))
             #print csvIndex
-            if int(verbose) >= 5: print hl.md5(csvIndex).hexdigest(); print
+            if int(verbose) >= 5: 
+                print hl.md5(csvIndex).hexdigest()
+                print
+                print 'instrument/granularity: %s/%s' % (instrument, granularity)
+            
+        
+    for i in patterns:
+        if int(verbose) >= 5: print 'goThruPatterns(%s): %s' % (instrument, i)
+        #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
+        #@profile
+        #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
+        ##def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
+        mode=i
+        for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
+            granularity=j
             exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
             #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
             #df1[granularity] = pnda
