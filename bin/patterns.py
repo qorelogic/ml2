@@ -314,10 +314,22 @@ if __name__ == "__main__":
     while True:
         print 'receiving feed..'
         if args.interactive:
-            usage = 'usage: a=analyze, d=deleverage, l=leverage, f=fleetingProfits, il=infinite-loop, ?=help, q=quit'
+            usageOptions = """
+a    = analyze,
+d    = deleverage,
+dl   = deleverage list
+l    = leverage,
+f    = fleetingProfits,
+fd   = fleetingProfits [deleverage],
+fr   = fleetingProfits [reverse entry],
+il   = infinite-loop,
+?, h = help,
+q  = quit
+"""
+            usage = 'usage: '+usageOptions
             args = parser.parse_args()
             print usage
-            mode = raw_input('mode ?: ')
+            mode = raw_input('mode >>> ')
             if mode == 'q': # quit
                 sys.exit()
             if mode == 'a': # analyze mode
@@ -350,9 +362,9 @@ if __name__ == "__main__":
                     dryrun = modeLeverage(args, runMain=True, description=description)
                     time.sleep(ilWait)
 
-            if mode == '?' or mode == 'help': # help
+            if mode == '?' or mode == 'help' or mode == 'h': # help
                 print usage
-                break
+                continue
             if int(args.verbose) >= 5:
                 print 'mode: %s' % mode
                 print 'live: %s' % args.live
