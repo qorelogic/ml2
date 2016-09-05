@@ -1833,8 +1833,6 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             #print nsrch
             dfh0_0 = pnda.ix[nsrch]
             
-            #sys.exit()
-            
             #dfh0 = p.DataFrame(dfh0_0, columns=[granularity])
             #dfh0 = dfh0.combine_first(dfh0_0)
             
