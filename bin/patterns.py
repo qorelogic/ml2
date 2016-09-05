@@ -18,7 +18,7 @@ parser.add_argument("-nid", '--noInteractiveDeleverage', help="No interactive Q&
 parser.add_argument("-nil", '--noInteractiveLeverage', help="No interactive Q&A for the deleverage option", action="store_true")
 parser.add_argument("-nif", '--noInteractiveFleetingProfits', help="No interactive Q&A for the fleeting profits routine", action="store_true")
 
-parser.add_argument("-s", '--sortRebalanceList', help="reverse[r] | deleverage[d] | leverage[l]")
+parser.add_argument("-s", '--sortRebalanceList', help="reverse[r[p=pl]] | deleverage[d[p=pl]] | leverage[l]")
 
 parser.add_argument('-not', '-noth', '-nothreads', '--nothreading', help="No threading", action="store_true")
 args = parser.parse_args()
