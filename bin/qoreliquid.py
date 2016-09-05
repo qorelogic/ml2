@@ -1973,6 +1973,7 @@ def interactiveMode(defaultMsg='Sure you want to create order? (y/N/q): '):
     if ans.strip() == 'q':
         import sys
         sys.exit()
+        return
     if ans.strip() != 'y':
         raise(Exception('User intervened: order not created'))
 
