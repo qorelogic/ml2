@@ -1953,10 +1953,13 @@ def getCurrentTrades(oanda2, accid, currentPositions):
         currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
     return currentTrades
 
-def interactiveMode(defaultMsg='Sure you want to create order? (y/N): '):
+def interactiveMode(defaultMsg='Sure you want to create order? (y/N/q): '):
     print 'interactiveMode()'
     ans = raw_input(defaultMsg)
-    if ans != 'y':
+    if ans.strip() == 'q':
+        import sys
+        sys.exit()
+    if ans.strip() != 'y':
         raise(Exception('User intervened: order not created'))
 
 @profile
@@ -2014,13 +2017,13 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                         partialDeleverageLoss = dfu3.ix[i, 'deleverageLoss'] * dfu.ix[j, 'units'] / dfu3.ix[i, 'units']
                         dloss = 'loss:%.3f/%.3f ' % (partialDeleverageLoss, dfu3.ix[i, 'deleverageLoss'])
                         if closeBool:
-                            interactiveMode(defaultMsg='Sure you want to partialClose[%s] ticket %s %s %s? unitsLeft:%s prevUnitsLeft:%s %s  (y/N): ' % (i, j, dfu.ix[j, 'side'], dfu.ix[j, 'units'], unitsLeft, prevUnitsLeft, dloss))
+                            interactiveMode(defaultMsg='Sure you want to partialClose[%s] ticket %s %s %s? unitsLeft:%s prevUnitsLeft:%s %s  (y/N/q): ' % (i, j, dfu.ix[j, 'side'], dfu.ix[j, 'units'], unitsLeft, prevUnitsLeft, dloss))
                             logApplicationUsage('d', description='deleverage[partialClose]', data=dfu.ix[j, :].to_dict())
                             if int(verbose) >= 5: print 'oanda2.close_trade(%s, %s)' % (accid, j)
                             oanda2.close_trade(accid, j)
                         else:
                             if prevUnitsLeft > 0:
-                                interactiveMode(defaultMsg='Sure you want to deleverage %s? side=%s, units=%s %s (y/N): ' % (j, side, prevUnitsLeft, dloss))
+                                interactiveMode(defaultMsg='Sure you want to deleverage %s? side=%s, units=%s %s (y/N/q): ' % (j, side, prevUnitsLeft, dloss))
                                 logApplicationUsage('d', description='deleverage[standardClose]', data=dfu.ix[j, :].to_dict())
                                 if int(verbose) >= 5: print 'oanda2.create_order(%s, type=%s, instrument=%s, side=%s, units=%s)' % (accid, 'market', i, side, prevUnitsLeft)
                                 oanda2.create_order(accid, type='market', instrument=i, side=side, units=prevUnitsLeft)
