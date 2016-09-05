@@ -1981,7 +1981,7 @@ def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleeti
     if dryrun == False:
         try:
             if int(verbose) > 7: plp.ix[i,:]
-            if int(verbose) >= 2: print "oanda2.close_trade(%s, %s, %s) %s" % (plp.ix[i, 'instrument'], accid, i, plp.ix[i, 'pl'])
+            if int(verbose) >= 2: print "oanda2.close_trade(%s, %s, %s, %s) %s" % (plp.ix[i, 'instrument'], plp.ix[i, 'units'], accid, i, plp.ix[i, 'pl'])
             if not noInteractiveFleetingProfits:
                 if noInteractiveLeverage: raise(Exception('nil --> nif conflict'))
                 if noInteractiveDeleverage: raise(Exception('nid --> nif conflict'))
