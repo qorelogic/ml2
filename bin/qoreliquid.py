@@ -2222,14 +2222,14 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['marginUsedP']  = dfu3['rebalanceOverUnits'] * dfu3['marginUsed']                # deprecated
     
     if sortRebalanceList == 'reverse'    or sortRebalanceList == 'r' or sortRebalanceList == None:
-        sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'rebalanceMarginUsed', 'diffpRebalancep']
-        sortAscending             = [False,            True,                          False,                 False,                 True]
+        sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'diffpRebalancep']
+        sortAscending             = [False,            True,                          False,                 True]
     if sortRebalanceList == 'deleverage' or sortRebalanceList == 'd':
-        sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'rebalanceMarginUsed', 'diffpRebalancep']
-        sortAscending             = [False,            False,                          False,                 False,                 True]
+        sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'diffpRebalancep']
+        sortAscending             = [False,            False,                         False,                 True]
     if sortRebalanceList == 'leverage'   or sortRebalanceList == 'l':
-        sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'rebalanceMarginUsed', 'diffpRebalancep']
-        sortAscending             = [True,             True,                          False,                 False,                 True]
+        sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'diffpRebalancep']
+        sortAscending             = [True,             True,                          False,                 True]
         
     if noInteractiveLeverage: 
         sortAscending[0]      = True
