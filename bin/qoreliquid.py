@@ -2443,10 +2443,20 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     if int(verbose) >= 5: 
         print 'sdf'
         print sdf
+    instrumentCurrency = sdf.ix[dfu33.index, ['instrument','pow']]
+    if int(verbose) >= 5: 
+        print 'instrumentCurrency'
+        print instrumentCurrency
+        print '===='
     quotedCurrency = sdf.ix[dfu33.index, ['quotedCurrency','pow']]
     if int(verbose) >= 5: 
         print 'quotedCurrency'
         print quotedCurrency
+        print '===='
+    pairedCurrency = sdf.ix[dfu33.index, ['pairedCurrency','pow']]
+    if int(verbose) >= 5: 
+        print 'pairedCurrency'
+        print pairedCurrency
         print '===='
     #---
     quotedCurrencyPrice = res.ix[quotedCurrency['quotedCurrency'],['bid']].fillna(1)
@@ -2456,11 +2466,27 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     quotedCurrencyPrice['quotedCurrency'] = quotedCurrencyPrice.index
     quotedCurrencyPrice = quotedCurrencyPrice.set_index('instrument')
     quotedCurrencyPrice['diffp'] = dfu33['diffp']
+
+    pairedCurrencyPrice = res.ix[pairedCurrency['pairedCurrency'],['bid']].fillna(1)
+    pairedCurrencyPrice['ask'] = res.ix[pairedCurrency['pairedCurrency'],['ask']].fillna(1)
+    pairedCurrencyPrice['instrument'] = pairedCurrency.index
+    pairedCurrencyPrice['pairedCurrency'] = pairedCurrencyPrice.index
+    pairedCurrencyPrice = pairedCurrencyPrice.set_index('instrument')
+
+    instrumentCurrencyPrice = res.ix[instrumentCurrency['instrument'],['bid']].fillna(1)
+    instrumentCurrencyPrice['ask'] = res.ix[instrumentCurrency['instrument'],['ask']].fillna(1)
+    instrumentCurrencyPrice['instrument'] = instrumentCurrency.index
+    instrumentCurrencyPrice['instrumentCurrency'] = instrumentCurrencyPrice.index
+    instrumentCurrencyPrice = instrumentCurrencyPrice.set_index('instrument')
+
     #---
     #.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
         print 'quotedCurrencyPrice'
         print quotedCurrencyPrice#.sort_values(by='diffp', ascending=False)
+    if int(verbose) >= 5: 
+        print 'pairedCurrencyPrice'
+        print pairedCurrencyPrice#.sort_values(by='diffp', ascending=False)
     #print res
     #print sdf['quotedCurrency']
     #print sdf.ix[quotedCurrencyPrice.index,:]
@@ -2474,6 +2500,10 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['powQuoted'] = sdf.ix[quotedCurrencyPrice.index,'powQuoted'].get_values()
     dfu33['quotedCurrencyPriceBid'] = quotedCurrencyPrice['bid'].get_values()
     dfu33['quotedCurrencyPriceAsk'] = quotedCurrencyPrice['ask'].get_values()
+    dfu33['pairedCurrencyPriceBid'] = pairedCurrencyPrice['bid'].get_values()
+    dfu33['pairedCurrencyPriceAsk'] = pairedCurrencyPrice['ask'].get_values()
+    dfu33['bid'] = instrumentCurrencyPrice['bid'].get_values()
+    dfu33['ask'] = instrumentCurrencyPrice['ask'].get_values()
     dfu33['unitsAvailable'] = netAssetValue * leverage / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
     dfu33['exposure'] = dfu33['units'] * dfu33['quotedCurrencyPriceAsk']
     dfu33['exposureSum'] = n.sum(dfu33['exposure'])
