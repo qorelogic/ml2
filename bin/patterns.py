@@ -344,10 +344,9 @@ if __name__ == "__main__":
             if mode == 'il': # infinite-loop
                 description='infinite-loop'
                 logApplicationUsage(mode, description=description)
-                ilWait = 15
+                ilWait = 30
                 while True:
                     dryrun = modeFleetingProfits(args, runMain=True, description=description)
-                    time.sleep(ilWait)
                     dryrun = modeLeverage(args, runMain=True, description=description)
                     time.sleep(ilWait)
 
