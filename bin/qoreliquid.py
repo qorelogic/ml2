@@ -2268,7 +2268,6 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         else:       f1 = f1Base
         if int(verbose) >= 5: 
             print '-=-=-=-=-'
-            print dfu3.ix[:, 'amount2']
             print '-=-=-=-=-'
             print 'sumMarginUsed: %s' % n.sum(dfu3['marginUsed'])
             #print dfu3.sort_values(by='diffp', ascending=False).ix[:, f1.split(' ')]
@@ -2430,11 +2429,12 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     res = oanda2.get_prices(instruments=','.join(oq.wew(sdf['quotedCurrency'])))
     res = p.DataFrame(res['prices'])
     if int(verbose) >= 5: 
-        print list(sdf['quotedCurrency'])
-        print 'sdf'
-        print sdf
-        print 'res'
-        print res
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print list(sdf['quotedCurrency'])
+            print 'sdf'
+            print sdf
+            print 'res'
+            print res
     res = res.set_index('instrument')
     #print res.ix[oq.wew(list(sdf['quotedCurrency'])), :]
     ldf = p.DataFrame(li)
