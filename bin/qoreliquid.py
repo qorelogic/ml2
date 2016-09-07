@@ -1940,7 +1940,7 @@ def differentPolarity(a, b):
 def getSideBool(ser):
     return map(lambda x: 1 if x == 'buy' else -1, ser)
 
-def getCurrentTrades(oanda2, accid, currentPositions):
+def getCurrentTrades(oanda2, oq, accid, currentPositions):
     from numpy import zeros as n_zeros
     currentTrades = oanda2.get_trades(accid, count=500)['trades']
     currentTrades = p.DataFrame(currentTrades)
@@ -1962,7 +1962,40 @@ def getCurrentTrades(oanda2, accid, currentPositions):
     for i in xrange(len(currentTrades)):
         currentTrades.ix[i, 'sideS'] = currentTrades.ix[i, 'bid'] if currentTrades.ix[i, 'sideBool']  > 0 else currentTrades.ix[i, 'ask']
     currentTrades['plpips'] = (currentTrades['sideS'] - currentTrades['price']) / currentTrades['pip'] * currentTrades['sideBool']
-    currentTrades['pl'] = (currentTrades['sideS'] - currentTrades['price']) * currentTrades['units'] * currentTrades['sideBool'] #*  currentTrades['pip']
+    #currentTrades['pl'] = (currentTrades['sideS'] - currentTrades['price']) * currentTrades['units'] * currentTrades['sideBool'] #*  currentTrades['pip']
+
+    #    ctsdf = getSyntheticCurrencyTable(oanda2, oq, ct['instrument'])
+    #    
+    #    ct['indx'] = ct.index
+    #    ct['rg'] = range(0, len(ct.index))
+    #    ct = ct.set_index('rg')
+    #    ct = ct.combine_first(ctsdf)
+    #    ct = ct.set_index('indx')
+    ctsdf = getSyntheticCurrencyTable(oanda2, oq, currentTrades['instrument'])    
+    currentTrades['indx'] = currentTrades.index
+    currentTrades['rg'] = range(0, len(currentTrades.index))
+    currentTrades = currentTrades.set_index('rg')
+    currentTrades = currentTrades.combine_first(ctsdf)
+    currentTrades = currentTrades.set_index('indx')
+
+    currentTrades['pairedCurrencyAsk'] = currentTrades['pairedCurrencyAsk'].fillna(1)
+    currentTrades['pairedCurrencyBid'] = currentTrades['pairedCurrencyBid'].fillna(1)
+
+    currentTrades['tradeValue'] = currentTrades['units'] * currentTrades['quotedCurrencyAsk']
+    currentTrades['tradeValue2'] = currentTrades['units'] * currentTrades['pairedCurrencyAsk']
+    currentTrades['tradeValue3'] = 1.0 / currentTrades['pairedCurrencyAsk']
+    currentTrades['tradeValue4'] = currentTrades['sideS'] - currentTrades['price']
+    currentTrades['tradeValue5'] = currentTrades['units'] * currentTrades['tradeValue3'] * currentTrades['tradeValue4']
+    #currentTrades['pl00001'] = ( ((currentTrades['bid']+currentTrades['ask'])/2) )
+    #currentTrades['pl00002'] = ( currentTrades['price'] )
+    #currentTrades['pl00003'] = ((currentTrades['pairedCurrencyBid']+currentTrades['pairedCurrencyAsk'])/2)   #* dfu33['pow2']
+    #currentTrades['pl00004'] = (1 / ((currentTrades['pairedCurrencyBid']+currentTrades['pairedCurrencyAsk'])/2))   #* dfu33['pow2']
+    #currentTrades['pl00005'] = ( ((currentTrades['bid']+currentTrades['ask'])/2) - currentTrades['price'] ) * (1 / ((currentTrades['pairedCurrencyBid']+currentTrades['pairedCurrencyAsk'])/2))   #* dfu33['pow2']
+    currentTrades['pl'] = ( ((currentTrades['bid']+currentTrades['ask'])/2) - currentTrades['price'] ) * currentTrades['sideBool'] * (1 / ((currentTrades['pairedCurrencyBid']+currentTrades['pairedCurrencyAsk'])/2)) * currentTrades['units']
+
+    #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+    #    print 'currentTrades'
+    #    print currentTrades.sort_values(by='pl')
     for i in xrange(len(currentTrades)):
         currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
     return currentTrades
@@ -2040,7 +2073,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                     
                     try:
                         partialDeleverageLoss = dfu3.ix[i, 'deleverageLoss'] * dfu.ix[j, 'units'] / dfu3.ix[i, 'units']
-                        dloss = 'loss:%.3f/%.3f ' % (partialDeleverageLoss, dfu3.ix[i, 'deleverageLoss'])
+                        dloss = 'loss[partialDeleverageLoss/deleverageLoss/unitsj/unitsi]:%.3f/%.3f/%.3f/%.3f' % (partialDeleverageLoss, dfu3.ix[i, 'deleverageLoss'], dfu.ix[j, 'units'], dfu3.ix[i, 'units'] )
                         if closeBool:
                             interactiveMode(defaultMsg='Sure you want to partialClose[%s] ticket %s %s %s? unitsLeft:%s prevUnitsLeft:%s %s  (y/N/q): ' % (i, j, dfu.ix[j, 'side'], dfu.ix[j, 'units'], unitsLeft, prevUnitsLeft, dloss))
                             logApplicationUsage('d', description='deleverage[partialClose]', data=dfu.ix[j, :].to_dict())
@@ -2149,7 +2182,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['amount'] = n.ceil(dfu3['diffp'] * netAssetValue * leverage / prdf.ix[:,'bid'])
     try:
         currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument')#.ix[:,'side units'.split(' ')]
-        currentTrades = getCurrentTrades(oanda2, accid, currentPositions)
+        currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions)
         ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
         gct = ct.groupby('instrument') #.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
         gct = gct.aggregate(sum).ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]                                 
@@ -2285,7 +2318,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['deleverageLoss'] = dfu3['pl'] * dfu3['rebalance'] / dfu3['units'] 
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity pairedCurrencyPriceBid bid ask pairedCurrencyPriceBid pairedCurrencyPriceAsk quotedCurrencyPriceBid quotedCurrencyPriceAsk diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP unitsAvailable units exposure exposureSum allMargin amount2 amount2Sum amount4 amount4Sum diffamount4amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 deleverageLoss diffpRebalancep2 bc_hc powQuoted pow2 rebalanceOverUnits'
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity bid ask pairedCurrencyPriceBid pairedCurrencyPriceAsk quotedCurrencyPriceBid quotedCurrencyPriceAsk diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP unitsAvailable units exposure exposureSum allMargin amount2 amount2Sum amount4 amount4Sum diffamount4amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 pl00001 deleverageLoss diffpRebalancep2 bc_hc powQuoted pow2 rebalanceOverUnits'
         if int(verbose) >= 5: f1 = '%s rebalanceBool deleverageBool diffRebalanceMarginUsedBool' % f1Base
         else:       f1 = f1Base
         if int(verbose) >= 5: 
@@ -2311,24 +2344,10 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         print '                                                               drbp=diffpRebalancep'
     print '===1==1==1=1=1=1===='
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        
-        ctsdf = getSyntheticCurrencyTable(oanda2, oq, ct['instrument'])
-        
-        ct['indx'] = ct.index
-        ct['rg'] = range(0, len(ct.index))
-        ct = ct.set_index('rg')
-        ct = ct.combine_first(ctsdf)
-        ct = ct.set_index('indx')
-        ct['tradeValue'] = ct['units'] * ct['quotedCurrencyAsk']
-        ct['tradeValue2'] = ct['units'] * ct['pairedCurrencyAsk']
-        ct['tradeValue3'] = 1.0 / ct['pairedCurrencyAsk']
-        ct['tradeValue4'] = ct['sideS'] - ct['price']
-        ct['tradeValue5'] = ct['units'] * ct['tradeValue3'] * ct['tradeValue4']
-        
         gct = ct.groupby('instrument')
-        gct = gct.aggregate(sum)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
+        gct = gct.aggregate(mean)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
         if int(verbose) >= 8:
-            print ct.sort_values(by='tradeValue5', ascending=False)
+            print ct #.sort_values(by='', ascending=False)
             print gct
         
         #print ct.sort_values(by='plpips', ascending=False)
@@ -2448,7 +2467,7 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     pairs = ','.join(list(pdf))
     if int(verbose) >= 5:  print pairs
 
-    res = oanda2.get_prices(instruments=','.join(oq.wew(sdf['quotedCurrency'])))
+    res = oanda2.get_prices(instruments=','.join(oq.wew(sdf['instrument'])))
     res = p.DataFrame(res['prices'])
     if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -2463,9 +2482,13 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     #sdf['pc'] = ma 
     sdf = sdf.set_index('instrument')
     if int(verbose) >= 5: 
+        print 'dfu33'
+        print dfu33
+    if int(verbose) >= 5: 
         print 'sdf'
         print sdf
     instrumentCurrency = sdf.ix[dfu33.index, ['instrument','pow']]
+    instrumentCurrency['instrument'] = dfu33.index
     if int(verbose) >= 5: 
         print 'instrumentCurrency'
         print instrumentCurrency
@@ -2509,6 +2532,10 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     if int(verbose) >= 5: 
         print 'pairedCurrencyPrice'
         print pairedCurrencyPrice#.sort_values(by='diffp', ascending=False)
+    if int(verbose) >= 5: 
+        print 'instrumentCurrencyPrice'
+        print instrumentCurrencyPrice
+        print '===='
     #print res
     #print sdf['quotedCurrency']
     #print sdf.ix[quotedCurrencyPrice.index,:]
@@ -2530,6 +2557,7 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['exposure'] = dfu33['units'] * dfu33['quotedCurrencyPriceAsk']
     dfu33['exposureSum'] = n.sum(dfu33['exposure'])
     dfu33['allMargin'] = balance * leverage
+    dfu33['pl00001'] = ( ((dfu33['bid']+dfu33['ask'])/2) ) * (1 / (dfu33['pairedCurrencyPriceBid']+dfu33['pairedCurrencyPriceAsk'])/2)   #* dfu33['pow2']
 
     dfu33['amount4'] = dfu33['unitsAvailable'] * dfu33['diffp']
     dfu33['amount4Sum'] = n.sum(dfu33['amount4'])
