@@ -2451,6 +2451,20 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         print '                                                               drbp=diffpRebalancep'
     print '===1==1==1=1=1=1===='
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        
+        ctsdf = getSyntheticCurrencyTable(oanda2, oq, ct['instrument'])
+        
+        ct['indx'] = ct.index
+        ct['rg'] = range(0, len(ct.index))
+        ct = ct.set_index('rg')
+        ct = ct.combine_first(ctsdf)
+        ct = ct.set_index('indx')
+        ct['tradeValue'] = ct['units'] * ct['quotedCurrencyAsk']
+        ct['tradeValue2'] = ct['units'] * ct['pairedCurrencyAsk']
+        ct['tradeValue3'] = 1.0 / ct['pairedCurrencyAsk']
+        ct['tradeValue4'] = ct['sideS'] - ct['price']
+        ct['tradeValue5'] = ct['units'] * ct['tradeValue3'] * ct['tradeValue4']
+        
         try:
             gct = ct.groupby('instrument')
             gct = gct.aggregate(n.mean)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
@@ -2458,6 +2472,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                 print ct #.sort_values(by='', ascending=False)
                 print gct
         except: ''
+        
         #print ct.sort_values(by='plpips', ascending=False)
     print '===1==1==1=1=1=1===='
     try:    dfu3s = dfu3.sort_values(by=sortby, ascending=sortAscending).index
