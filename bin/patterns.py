@@ -332,6 +332,7 @@ f    = fleetingProfits,
 fd   = fleetingProfits [deleverage],
 fr   = fleetingProfits [reverse entry],
 il   = infinite-loop,
+li   = live [interactive mode],
 ?, h = help,
 q  = quit
 """
@@ -341,6 +342,18 @@ q  = quit
             mode = raw_input('mode >>> ')
             if mode == 'q': # quit
                 sys.exit()
+            if mode == 'li': # 
+                args.live = True
+                args.noInteractiveDeleverage = False
+                args.noInteractiveLeverage = False
+                # ask how to sort the list
+                # reverse[r[p=pl]] | deleverage[d[p=pl]] | leverage[l]
+                ans = raw_input('sortRebalanceList? r[p]/d[p]/l: ')
+                ans = ans.strip()
+                if ans == 'r' or ans == 'rp' or ans == 'd' or ans == 'dp' or ans == 'l':
+                    args.sortRebalanceList = ans
+                else:
+                    print 'default to sorting by r'
             if mode == 'a': # analyze mode
                 logApplicationUsage(mode, description='manual')
                 #args.analyze = True
