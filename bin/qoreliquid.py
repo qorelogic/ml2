@@ -2622,8 +2622,9 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print 'dfu33'
             print dfu33
-            print 'sdf'
-            print sdf
+            if int(verbose) >= 5: 
+                print 'sdf'
+                print sdf
     instrumentCurrency = sdf.ix[dfu33.index, ['instrument','pow']]
     instrumentCurrency['instrument'] = dfu33.index
     if int(verbose) >= 5: 
