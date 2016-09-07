@@ -367,9 +367,19 @@ q  = quit
                 description='infinite-loop'
                 logApplicationUsage(mode, description=description)
                 ilWait = 30
+                cnt = 1
+                # initial analyze routine is called
+                modeAnalyze(args, runMain=True, description=description)
                 while True:
+                    # close trades run modeFleetingProfits
                     dryrun = modeFleetingProfits(args, runMain=True, description=description)
+                    # run analyzer every minute
+                    if cnt % int(15 * 60.0 / ilWait) == 0:
+                        dryrun = modeAnalyze(args, runMain=True, description=description)
+                    # open trades run modeLeverage
                     dryrun = modeLeverage(args, runMain=True, description=description)
+                    print 'infinite-loop[count]:%s' % cnt
+                    cnt += 1
                     time.sleep(ilWait)
 
             if mode == '?' or mode == 'help' or mode == 'h': # help
