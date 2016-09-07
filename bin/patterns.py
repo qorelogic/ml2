@@ -291,6 +291,15 @@ if __name__ == "__main__":
         print e
     """
     
+    def modeAnalyze(args, runMain=False, description=None):
+        args.analyze = True
+        args.live = False
+        dryrun = getDryRun(args)
+        logApplicationUsage('modeAnalyze', description=description)
+        if runMain:
+            main(args, leverage=leverage, dryrun=dryrun)
+        return dryrun
+
     def modeLeverage(args, runMain=False, description=None):
         # fleetingProfits mode
         args.live = True
@@ -334,8 +343,9 @@ q  = quit
                 sys.exit()
             if mode == 'a': # analyze mode
                 logApplicationUsage(mode, description='manual')
-                args.analyze = True
-                args.live = False
+                #args.analyze = True
+                #args.live = False
+                dryrun = modeAnalyze(args, runMain=False)
             if mode == 'd': # deleverage mode (risk-off / remove from positions)
                 logApplicationUsage(mode, description='manual')
                 ans = raw_input('Sure you want to deleverage? y/N: ')
