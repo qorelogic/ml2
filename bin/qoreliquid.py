@@ -2469,7 +2469,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             gct = ct.groupby('instrument')
             gct = gct.aggregate(n.mean)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
             if int(verbose) >= 8:
-                print ct #.sort_values(by='', ascending=False)
+                print ct.sort_values(by='tradeValue5', ascending=False)
                 print gct
         except: ''
         
