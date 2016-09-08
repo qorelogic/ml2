@@ -24,6 +24,7 @@ parser.add_argument("-ni", '--noInteractive', help="No interactive Q&A", action=
 parser.add_argument("-nid", '--noInteractiveDeleverage', help="No interactive Q&A for the deleverage option", action="store_true")
 parser.add_argument("-nil", '--noInteractiveLeverage', help="No interactive Q&A for the deleverage option", action="store_true")
 parser.add_argument("-nif", '--noInteractiveFleetingProfits', help="No interactive Q&A for the fleeting profits routine", action="store_true")
+parser.add_argument("-fa", '--fleetingProfitsPL', help="Set fleetingProfitsPL")
 
 parser.add_argument("-s", '--sortRebalanceList', help="reverse[r[p=pl]] | deleverage[d[p=pl]] | leverage[l]")
 
@@ -327,7 +328,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
 
     if args.account:
         try:
-            dfu33 = rebalanceTrades(oq, dfu2, oanda0, str(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, sortRebalanceList=sortRebalanceList)
+            dfu33 = rebalanceTrades(args, oq, dfu2, oanda1, int(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, sortRebalanceList=sortRebalanceList)
         except oandapy.OandaError as e:
             print e
             qd.printTraceBack()
@@ -335,7 +336,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
             qd.printTraceBack()
     else:
         try:
-            dfu33 = rebalanceTrades(oq, dfu2, oanda0, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
+            dfu33 = rebalanceTrades(args, oq, dfu2, oanda0, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
         except oandapy.OandaError as e:
             qd.printTraceBack()
         except Exception as e:

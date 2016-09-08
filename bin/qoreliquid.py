@@ -2249,7 +2249,7 @@ def getCurrentTradesAndPositions(oanda2, accid, oq):
     return [currentPositions, currentTrades, ct, gct]
 
 @profile
-def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None):
+def rebalanceTrades(args, oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None):
     
     import pymongo as mong
     import calendar
@@ -2290,7 +2290,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             fleetingProfitsPL = (netAssetValue * (1.0/len(ct))/100)
             print 'fleetingProfitsPL:%s' % fleetingProfitsPL
             for i in list(plp.index):
-                if plp.ix[i, 'pl'] >= fleetingProfitsPL:
+                if plp.ix[i, 'pl'] >= fleetingProfitsPL or plp.ix[i, 'pl'] >= int(args.fleetingProfitsPL):
                     async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose])
                     return_val   = async_result.get()
                     #print return_val
