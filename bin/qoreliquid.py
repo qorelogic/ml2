@@ -1946,7 +1946,7 @@ def differentPolarity(a, b):
 def getSideBool(ser):
     return map(lambda x: 1 if x == 'buy' else -1, ser)
 
-@profile
+#@profile
 def calcPl(bid, ask, price, sideBool, pairedCurrencyBid, pairedCurrencyAsk, units):
     #pl00001 = ( ((bid+ask)/2) )
     #pl00002 = ( price )
