@@ -2325,6 +2325,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             print '-=-=-=-=-'
             print '-=-=-=-=-'
             print 'sumMarginUsed: %s' % n.sum(dfu3['marginUsed'])
+            print 'sortRebalanceList:%s' % sortRebalanceList
+            print 'sortby:%s' % sortby
+            print 'sortAscending:%s' % sortAscending
             #print dfu3.sort_values(by='diffp', ascending=False).ix[:, f1.split(' ')]
             print dfu3.sort_values(by=sortby, ascending=sortAscending).ix[:, f1.split(' ')]
             print
