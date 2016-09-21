@@ -2185,7 +2185,11 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions)
         ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
         gct = ct.groupby('instrument') #.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
-        gct = gct.aggregate(sum).ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]                                 
+        gct = gct.aggregate(mean).ix[:, 'units pl pip'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
+        
+        #print 'gct'
+        #print gct
+        currentPositions['pip'] = gct['pip']
 
         ffsds = 'instrument side units plpips pl time'.split(' ')
         plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
@@ -2211,7 +2215,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                 #print currentPrices
                 print 'currentTrades:'
                 print len(currentTrades)
-                #print currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('id').ix[:,'instrument price side time units'.split(' ')]
+                print currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('id')#.ix[:,'instrument price side time units'.split(' ')]
                 #print gct
                 ffsds = 'instrument side units plpips pl time'.split(' ')
                 
@@ -2318,7 +2322,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['deleverageLoss'] = dfu3['pl'] * dfu3['rebalance'] / dfu3['units'] 
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity bid ask pairedCurrencyPriceBid pairedCurrencyPriceAsk quotedCurrencyPriceBid quotedCurrencyPriceAsk diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP unitsAvailable units exposure exposureSum allMargin amount2 amount2Sum amount4 amount4Sum diffamount4amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 pl00001 deleverageLoss diffpRebalancep2 bc_hc powQuoted pow2 rebalanceOverUnits'
+        f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity bid ask spread pip spreadPip pairedCurrencyPriceBid pairedCurrencyPriceAsk quotedCurrencyPriceBid quotedCurrencyPriceAsk diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP unitsAvailable units exposure exposureSum allMargin amount2 amount2Sum amount4 amount4Sum diffamount4amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 pl00001 deleverageLoss diffpRebalancep2 bc_hc powQuoted pow2 rebalanceOverUnits'
         if int(verbose) >= 5: f1 = '%s rebalanceBool deleverageBool diffRebalanceMarginUsedBool' % f1Base
         else:       f1 = f1Base
         if int(verbose) >= 5: 
@@ -2485,11 +2489,11 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     #sdf['pc'] = ma 
     sdf = sdf.set_index('instrument')
     if int(verbose) >= 5: 
-        print 'dfu33'
-        print dfu33
-    if int(verbose) >= 5: 
-        print 'sdf'
-        print sdf
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print 'dfu33'
+            print dfu33
+            print 'sdf'
+            print sdf
     instrumentCurrency = sdf.ix[dfu33.index, ['instrument','pow']]
     instrumentCurrency['instrument'] = dfu33.index
     if int(verbose) >= 5: 
@@ -2556,6 +2560,8 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['pairedCurrencyPriceAsk'] = pairedCurrencyPrice['ask'].get_values()
     dfu33['bid'] = instrumentCurrencyPrice['bid'].get_values()
     dfu33['ask'] = instrumentCurrencyPrice['ask'].get_values()
+    dfu33['spread'] = n.abs(dfu33['bid'] - dfu33['ask'])
+    dfu33['spreadPip'] = dfu33['spread'] / dfu33['pip']
     dfu33['unitsAvailable'] = netAssetValue * leverage / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
     dfu33['exposure'] = dfu33['units'] * dfu33['quotedCurrencyPriceAsk']
     dfu33['exposureSum'] = n.sum(dfu33['exposure'])
