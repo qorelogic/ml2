@@ -2085,7 +2085,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                             mongo.ql.broker_oanda_trades.insert(di)
                         else:
                             if prevUnitsLeft > 0:
-                                interactiveMode(defaultMsg='Sure you want to deleverage %s? side=%s, units=%s %s (y/N/q): ' % (j, side, prevUnitsLeft, dloss))
+                                interactiveMode(defaultMsg='Sure you want to deleverage %s[%s]? side=%s, units=%s %s (y/N/q): ' % (i, j, side, prevUnitsLeft, dloss))
                                 logApplicationUsage('d', description='deleverage[standardClose]', data=dfu.ix[j, :].to_dict())
                                 if int(verbose) >= 5: print 'oanda2.create_order(%s, type=%s, instrument=%s, side=%s, units=%s)' % (accid, 'market', i, side, prevUnitsLeft)
                                 oanda2.create_order(accid, type='market', instrument=i, side=side, units=prevUnitsLeft)
