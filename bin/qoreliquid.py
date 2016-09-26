@@ -2257,8 +2257,6 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         print e
         #dfu3['positions'] = 0
         ''
-    dfu3 = dfu3.fillna(0)
-    
     dfu3 = cw(dfu3, oanda2, oq, accid, maccount, leverage=leverage, verbose=verbose)
 
     #dfu3['rebalance'] = dfu3.ix[:, 'amountSidePolarity'] - dfu3.ix[:, 'positions']
@@ -2455,6 +2453,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
 
 @profile
 def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
+    dfu33 = dfu33.fillna(0)
     if int(verbose) >= 5: print '#--- cw(start)'
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
     if int(verbose) >= 5: 
