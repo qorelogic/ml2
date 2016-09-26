@@ -104,6 +104,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         #symbols = 'AUD_CAD,AUD_CHF,AUD_HKD,AUD_JPY,AUD_NZD,AUD_SGD,AUD_USD,CAD_CHF,CAD_HKD,CAD_JPY,CAD_SGD,CHF_HKD,CHF_JPY,CHF_ZAR,EUR_AUD,EUR_CAD,EUR_CHF,EUR_CZK,EUR_DKK,EUR_GBP,EUR_HKD,EUR_HUF,EUR_JPY,EUR_NOK,EUR_NZD,EUR_PLN,EUR_SEK,EUR_SGD,EUR_TRY,EUR_USD,EUR_ZAR,GBP_AUD,GBP_CAD,GBP_CHF,GBP_HKD,GBP_JPY,GBP_NZD,GBP_PLN,GBP_SGD,GBP_USD,GBP_ZAR,HKD_JPY,NZD_CAD,NZD_CHF,NZD_HKD,NZD_JPY,NZD_SGD,NZD_USD,SGD_CHF,SGD_HKD,SGD_JPY,TRY_JPY,USD_CAD,USD_CHF,USD_CNH,USD_CZK,USD_DKK,USD_HKD,USD_HUF,USD_JPY,USD_MXN,USD_NOK,USD_PLN,USD_SAR,USD_SEK,USD_SGD,USD_THB,USD_TRY,USD_ZAR,ZAR_JPY'.split(',')        
         #symbols = 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD'.split(',')
         print ','.join(symbols)
+        dmcnt = 0                                                        # display matrix: counter
         for i in symbols:
             i = i.strip()
             if threading:
@@ -111,16 +112,13 @@ def main(args, leverage=10, dryrun=True, verbose=False):
                 dfu0   = async_result.get()
             else:
                 dfu0 = getc4(df, dfh, oanda2, instrument=i)
-            #print 'test3'
-            #print dfu#.dtypes
-            #print dfu0#.dtypes
+            if dmcnt == 0:                                               # display matrix:
+                print '%s %s' % ('       ', n.array(list(dfu0.columns))) # display matrix: header
+            print '%s %s' % (list(dfu0.index)[0], dfu0.get_values()[0])  # display matrix: body
+            dmcnt += 1                                                   # display matrix
             dfu  = dfu.combine_first(dfu0)
-            #print 'test4'
-            #if int(verbose) >= 3:
-            print
-            #print dfu0
-            print '---'
-            print dfu
+            if int(verbose) >= 8:
+                print dfu
         if threading:
             pool.close()
 	    #break
