@@ -2,37 +2,37 @@
 from oandaq import OandaQ
 
 #from numpy import *
-from numpy import divide as n_divide
-from numpy import float16 as n_float16
-from numpy import rint as n_rint
-from numpy import c_ as n_c_
-from numpy import min as n_min
-from numpy import max as n_max
-from numpy import tanh as n_tanh
-from numpy import concatenate as n_concatenate
+#from numpy import divide as n_divide
+#from numpy import float16 as n_float16
+#from numpy import rint as n_rint
+#from numpy import c_ as n_c_
+#from numpy import min as n_min
+#from numpy import max as n_max
+#from numpy import tanh as n_tanh
+#from numpy import concatenate as n_concatenate
 
-from pandas import read_csv as p_read_csv
+#from pandas import read_csv as p_read_csv
 
 import plotly.plotly as py
 from plotly.graph_objs import *
 
-import os, sys, oandapy
+#import os
 import datetime as dd
-from matplotlib.pyplot import plot, legend, title, show, imshow, tight_layout
+from matplotlib.pyplot import plot, legend, title, show #, imshow, tight_layout
+from matplotlib.pylab import *
 from pylab import rcParams
 from IPython.display import display, clear_output
-import ujson as j
+import ujson as ujson
 
 from qore import *
 #from qore_qstk import *
-from matplotlib.pylab import *
 
 import numpy as n
 import pandas as p
 import Quandl as q
-import datetime as dd
-import urllib2 as u
-import html2text
+#import datetime as dd
+#import urllib2 as u
+#import html2text
 import exceptions as ex
 import re, sys
 import StringIO as sio
@@ -189,8 +189,8 @@ class FinancialModel:
         res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
         print res
 
-from IPython.display import display, clear_output
-import time
+#from IPython.display import display, clear_output
+#import time
 class ml007:
 
     def __init__(self, thetaDir=None):
@@ -572,7 +572,7 @@ class StatWing:
         #print Xc
             Xc.remove(keyCol)
         except Exception as e:
-            #print e
+            e
             ''
         X = X[Xc]
         #print list(X.columns)
@@ -587,7 +587,7 @@ class StatWing:
         ##X = data.ix[:,0]; 
         #y = data.ix[:,'hi']
         ##y = data.ix[:,0]
-        m = len(data)
+        #m = len(data)
         
         #scatter(X,y, marker='x', c='r'); show();
         
@@ -803,7 +803,7 @@ class StatWing:
             print list(X.columns)
 
         #s = len(X)-20
-        s = len(X)-1
+        #s = len(X)-1
         #print X.ix[s:s+20, data.columns[[0]].insert(0,0)]
         #print X.ix[s+19,data.columns[self.relatedCols].insert(0,0)]
         #print theta
@@ -859,10 +859,10 @@ class StatWing:
         #print n.c_[n.ones(1), nX.ix[1:,:].get_values().T].T
         #print nX.shape
         #print n.dot(nX.T, theta)
-        if type(self.theta) == type(p.DataFrame()):
-            theta = self.theta.get_values()
-        else:
-            theta = self.theta
+        #if type(self.theta) == type(p.DataFrame()):
+        #    theta = self.theta.get_values()
+        #else:
+        #    theta = self.theta
         nXbias = n.c_[n.ones(1), nX.ix[1:,:].get_values().T]
         #print nXbias
         #print theta
@@ -891,8 +891,8 @@ class StatWing:
         return val
  
 
-import plotly.plotly as py
-from plotly.graph_objs import *
+#import plotly.plotly as py
+#from plotly.graph_objs import *
 class RealtimeChart:
     
     def __init__(self):
@@ -1181,15 +1181,15 @@ def searchQuandl(query, mode='manifest', headers=None, returndataset=False, cach
         if cache == False:
             raise IOError
         fp = open(fname, 'r')
-        res = j.loads(fp.read())
+        res = ujson.loads(fp.read())
         fp.close()
         writeQuandlSearchLog(str(tt)+':cached:'+str(query)+' to '+fname)
-    except IOError, e:
+    except IOError:
         try:
             writeQuandlSearchLog(str(tt)+':searched:'+str(query)+' to '+fname)
             res = q.search(query, verbose=False)
             fp = open(fname, 'w')
-            fp.write(j.dumps(res))
+            fp.write(ujson.dumps(res))
             fp.close()
             print 'saved to: '+fname
         except q.DatasetNotFound, f:
@@ -1266,7 +1266,7 @@ def getDataFromQuandl(tk, dataset='', index_col=None, verbosity=1, plot=False, s
         
         try:
             df = p.read_csv(fname, index_col=index_col)
-        except IOError, e:
+        except IOError:
             try:
                 df = q.get(tk)
                 df.to_csv(fname)
@@ -1414,8 +1414,8 @@ def testMicrofinance():
     
     years    = 4
     months   = 12 * years + 1
-    days     = 250 * years + 1
-    ic       = 100
+    #days     = 250 * years + 1
+    #ic       = 100
     myrates  = []
     
     # 12% monthly
@@ -1571,9 +1571,10 @@ def getDataAUD(noUpdate=False):
     #pa += ' /BITCOIN/MTGOXAUD /WGC/GOLD_DAILY_AUD'
     
     da = getDataFromQuandlBNP(pa, 'AUD', noUpdate=noUpdate)
+    return da
     
 def quandlSweepDatasources():
-    import StringIO as sio
+    #import StringIO as sio
     df = p.read_csv('/mldev/lib/crawlers/finance/quandl.scrapy/datasources_quandl.csv')
     print df['code']
     #print df.ix[:,['name','code','datasets','url']]
@@ -1587,8 +1588,8 @@ def quandlSweepDatasources():
             break
             url = 'http://www.quandl.com/api/v2/datasets.csv?query=*&source_code={0}&per_page=300&page={1}&auth_token=WVsyCxwHeYZZyhf5RHs2'
             print 'fetching url:'+url
-            c = fetchURL(url.format(df.ix[i,['code']]['code'], j), mode='')
             """
+            c = fetchURL(url.format(df.ix[i,['code']]['code'], j), mode='')
             s = sio.StringIO()
             s.write(c)
             s.seek(0)
@@ -2004,7 +2005,6 @@ def interactiveMode(defaultMsg='Sure you want to create order? (y/N/q): '):
     print 'interactiveMode()'
     ans = raw_input(defaultMsg)
     if ans.strip() == 'q':
-        import sys
         sys.exit()
         return
     if ans.strip() != 'y':
@@ -2171,11 +2171,11 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
 
     maccount = oanda2.get_account(accid)
-    marginAvail = maccount['marginAvail']
+    #marginAvail = maccount['marginAvail']
     unrealizedPl = float(maccount['unrealizedPl'])
     netAssetValue = float(maccount['balance']) + unrealizedPl
     balance       = float(maccount['balance'])
-    oinsts = ','.join(list(dfu3.index))
+    #oinsts = ','.join(list(dfu3.index))
     prdf = p.DataFrame(oanda2.get_prices(instruments=','.join(list(dfu3.index)))['prices']).set_index('instrument')
     #prdf.ix[:,['instrument','bid']]
     #prdf.ix['EUR_USD','bid']
@@ -2384,6 +2384,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     
                 async_result = poolLeverage.apply_async(leverageTrades, [dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct])
                 return_val   = async_result.get()
+                return_val
             else:
                 fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose)
                 leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct)
@@ -2487,7 +2488,7 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
             print res
     res = res.set_index('instrument')
     #print res.ix[oq.wew(list(sdf['quotedCurrency'])), :]
-    ldf = p.DataFrame(li)
+    #ldf = p.DataFrame(li)
     #sdf['pc'] = ma 
     sdf = sdf.set_index('instrument')
     if int(verbose) >= 5: 
@@ -2551,7 +2552,7 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     if int(verbose) >= 5: print '===='
 
     balance       = float(maccount['balance'])
-    marginAvail   = maccount['marginAvail']
+    #marginAvail   = maccount['marginAvail']
     netAssetValue = float(maccount['balance']) - float(maccount['unrealizedPl'])
     dfu33['pow2'] = sdf.ix[quotedCurrencyPrice.index,'pow'].get_values()
     dfu33['powPaired'] = sdf.ix[quotedCurrencyPrice.index,'powPaired'].get_values()
@@ -2599,6 +2600,7 @@ class CoinMarketCap:
     def updateData(self):
         # source: http://coinmarketcap-nexuist.rhcloud.com/
         t = fetchURL('http://coinmarketcap-nexuist.rhcloud.com/api/all', cachemode='a', fromCache=False, mode='json')
+        t
 
 class btce(CryptoCoinBaseClass):
     def getTicker(self, code):
@@ -2784,7 +2786,7 @@ Peercoin	PPC	6	3600
         r = fetchURL(url, mode='json')
         #print r
         try:        
-            ky = r[code].keys()    
+            #ky = r[code].keys()    
             #print ky
             rb = p.DataFrame(r[code]['bids'], columns=['bp','ba'])
             ra = p.DataFrame(r[code]['asks'], columns=['ap','aa'])
@@ -2873,7 +2875,7 @@ Peercoin	PPC	6	3600
             exhds = list(m1.index)
             #print (n.nonzero(m == m1))
             #print (n.nonzero(m1 == n.max(m1)))
-            maxIndx = n.max(n.nonzero(m1 == n.max(m1)))
+            #maxIndx = n.max(n.nonzero(m1 == n.max(m1)))
             maxNum = n.max(m1,0); #print maxNum;
             indx = (n.nonzero(n.array(m == maxNum, dtype=int)))
             arbRate = p.DataFrame([exhds[indx[0][0]], exhds[indx[1][0]], maxNum], index=arbHdr, columns=[self.pk[ind]])
@@ -2903,7 +2905,7 @@ Peercoin	PPC	6	3600
     
     def getMostProfitablePair(self):
         fastestCoins = self.getFastestCryptoCoins()
-        fcs = []
+        #fcs = []
         try:
             arbRates
         except Exception as e:
@@ -3127,11 +3129,10 @@ class ShapeShift(CryptoCoinBaseClass):
 # pip install -U selenium
  
 # Import the Selenium 2 namespace (aka "webdriver")
-from selenium import webdriver
-from selenium.selenium import selenium
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-from selenium.webdriver.common.action_chains import ActionChains
-import pandas as p
+#from selenium import webdriver
+#from selenium.selenium import selenium
+#from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+#from selenium.webdriver.common.action_chains import ActionChains
 
 class Bloomberg():
     def __init__(self):
@@ -3223,7 +3224,7 @@ class Bloomberg():
         mkdir_p(hdir)
         #df.to_csv('{0}rank.{1}.csv'.format(hdir, rank))
         #import ujson as j
-        #jdf = j.dumps(df)
+        #jdf = ujson.dumps(df)
         #print jdf
         return df
 
@@ -3295,7 +3296,7 @@ class Bloomberg():
         #print dfs
         
         #print p.DataFrame(ps)
-        a = n.array(ps['cash'])
+        #a = n.array(ps['cash'])
         li = []
         for i in ps:
             li.append(len(ps[i]))
@@ -3384,7 +3385,7 @@ class Etoro():
                 self.driver.find_elements_by_xpath('//*[contains(@class, "ob-crown-user-drop-logout-a")]')[0]
                 #python_link = self.driver.find_elements_by_xpath('//*[@id="layouts"]/div/header/div/div[2]/div[1]/div[2]/div[1]/span')[0]
                 if verbose == True: flow.append(3);
-            except IndexError, f:
+            except IndexError:
                 if verbose == True: flow.append(4);
                 self.driver.get('https://openbook.etoro.com/manapana/portfolio/open-trades/')
         try:
@@ -3621,7 +3622,7 @@ gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-
                 #print e
                 
             fp = open(self.fname_trader_positions, 'r')
-            allPositions2 = j.loads(fp.read())
+            allPositions2 = ujson.loads(fp.read())
             fp.close()
             
             #print allPositions2
@@ -3633,11 +3634,11 @@ gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-
             allPositions2[username] = positions.to_dict()
             #allPositions2.to_json(self.fname_trader_positions)
             allPositions2 = convertDictKeysToString(allPositions2)
-            #print j.dumps(allPositions2)
+            #print ujson.dumps(allPositions2)
             
             fp = open(self.fname_trader_positions, 'w')
-            fp.write(j.dumps(allPositions2))
-            fp.close()        
+            fp.write(ujson.dumps(allPositions2))
+            fp.close()
             
         return df
         
@@ -3646,7 +3647,7 @@ gain //*[@id="open-trades-holder"]/div[2]/div/div/div[1]/div[@class="user-table-
         fname = self.fname_trader_positions
         fp = open(fname, 'r')
         em = fp.read()
-        em = j.loads(em)
+        em = ujson.loads(em)
         #for i in em:
         #    print p.DataFrame(em[i])
         target = p.DataFrame([])
@@ -3764,7 +3765,7 @@ class Bancor:
                     #print i[0]
                     print m
                 ms.append(m)
-            except AttributeError, e:
+            except AttributeError:
                 if mode == 1:
                     print i[0]
                 #print e
@@ -3775,7 +3776,7 @@ class Bancor:
             ms.ix[i,2] = self.cleanBancorNumber(ms.ix[i,2])
             ms.ix[i,3] = self.cleanBancorNumber(ms.ix[i,3])
         #print ms
-        pres = p.DataFrame(res).ix[:,:]
+        #pres = p.DataFrame(res).ix[:,:]
         ms = ms.set_index('Fecha')
         #ms.ix[:,'Saldo'].plot(); show();
         #print ms
