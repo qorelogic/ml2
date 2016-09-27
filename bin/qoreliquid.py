@@ -2157,6 +2157,18 @@ def getSyntheticCurrencyTable(oanda2, oq, instruments):
     #res = oanda2.get_prices(instruments=','.join(oq.wew(ctsdf['quotedCurrency'])))
     return ctsdf
 
+def getCurrentTradesAndPositions(oanda2, accid, oq):
+    currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument')#.ix[:,'side units'.split(' ')]
+    currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions)
+    ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
+    gct = ct.groupby('instrument') #.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
+    gct = gct.aggregate(mean).ix[:, 'units pl pip'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
+    #print 'gct'
+    #print gct
+    currentPositions['pip'] = gct['pip']
+    
+    return [currentPositions, currentTrades, ct, gct]
+
 @profile
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None):
     
@@ -2180,17 +2192,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     #prdf.ix[:,['instrument','bid']]
     #prdf.ix['EUR_USD','bid']
     dfu3['amount'] = n.ceil(dfu3['diffp'] * netAssetValue * leverage / prdf.ix[:,'bid'])
-    try:
-        currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument')#.ix[:,'side units'.split(' ')]
-        currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions)
-        ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
-        gct = ct.groupby('instrument') #.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
-        gct = gct.aggregate(mean).ix[:, 'units pl pip'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
-        
-        #print 'gct'
-        #print gct
-        currentPositions['pip'] = gct['pip']
 
+    try:
+        [currentPositions, currentTrades, ct, gct] = getCurrentTradesAndPositions(oanda2, accid, oq)
         ffsds = 'instrument side units plpips pl time'.split(' ')
         plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
         pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
