@@ -2216,7 +2216,7 @@ def getSyntheticCurrencyTable(oanda2, oq, instruments):
     ctsdf.ix[:,'pairedCurrencyAsk pairedCurrencyBid'.split(' ')] = ctsdf.ix[:,'pairedCurrencyAsk pairedCurrencyBid'.split(' ')].fillna(1)
     return ctsdf
 
-def getCurrentTradesAndPositions(oanda2, accid, oq):
+def getCurrentTradesAndPositions(oanda2, accid, oq, dfu3, maccount=None, leverage=50, verbose=False):
     cp = oanda2.get_positions(accid)['positions']
     currentPositions = p.DataFrame(cp)
     try:    currentPositions = currentPositions.set_index('instrument')#.ix[:,'side units'.split(' ')]
@@ -2246,7 +2246,34 @@ def getCurrentTradesAndPositions(oanda2, accid, oq):
     print 'gct'
     print gct
     
-    return [currentPositions, currentTrades, ct, gct]
+    plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
+    pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
+    pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
+
+    # get rebalance amount
+    #print currentPositions
+    #print dfu3.ix[currentPositions.index, :]
+    #cu = currentPositions.ix[dfu3.index, :]
+    cu = currentPositions.combine_first(dfu3)
+    cu['bool'] = getSideBool(cu['side'])
+    cu = cu.fillna(0)
+    dfu3 = dfu3.combine_first(cu)
+    dfu3 = dfu3.combine_first(gct)
+    try:
+        dfu3['amountSidePolarity'] = dfu3['sidePolarity'] * dfu3['amount']
+        dfu3['positions'] = cu.ix[:, 'units'] * cu.ix[:, 'bool']
+    except:
+        dfu3['positions'] = 0 # except
+    
+    if maccount == None:
+        maccount = oanda2.get_account(accid)
+    try:
+        dfu3 = cw(dfu3, oanda2, oq, accid, maccount, leverage=leverage, verbose=verbose)
+    except:
+        ''
+
+    print dfu3
+    return [currentPositions, currentTrades, ct, gct, plp, pln, pll, cu, dfu3]
 
 @profile
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None):
@@ -2275,11 +2302,12 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     #prdf.ix['EUR_USD','bid']
     dfu3['amount'] = n.ceil(dfu3['diffp'] * netAssetValue * leverage / prdf.ix[:,'bid'])
 
+    ffsds = 'instrument side units plpips pl time'.split(' ')
+
     try:
-        [currentPositions, currentTrades, ct, gct] = getCurrentTradesAndPositions(oanda2, accid, oq)
+        [currentPositions, currentTrades, ct, gct, plp, pln, pll, cu, dfu3] = getCurrentTradesAndPositions(oanda2, accid, oq, dfu3, maccount, leverage, verbose)
     except Exception as e:
         print e
-        
     try:
         ffsds = 'instrument side units plpips pl time'.split(' ')
         plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
@@ -2297,57 +2325,32 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             pool.close()
         else:
             fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose)
+    except Exception as e:
+        print e
+
+    if int(verbose) >= 5:
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print 'instruments:'
+            #print instruments 
+            #print currentPrices
+            print 'currentTrades:'
+            print len(currentTrades)
+            print currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('id')#.ix[:,'instrument price side time units'.split(' ')]
+            #print gct
             
-        if int(verbose) >= 5: 
-            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                #print 'instruments:'
-                #print instruments 
-                #print currentPrices
-                print 'currentTrades:'
-                print len(currentTrades)
-                print currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('id')#.ix[:,'instrument price side time units'.split(' ')]
-                #print gct
-                ffsds = 'instrument side units plpips pl time'.split(' ')
+            print pll
+            for i in list(plp.index):
+                if dryrun == False:
+                    print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
+                    #oanda2.close_trade(accid, i)
                 
-                plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
-                pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
-                pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
+            print plp.ix[:, ffsds]
+            print pln.ix[:, ffsds]
 
-                print pll
-                for i in list(plp.index):
-                    if dryrun == False:
-                        print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
-                        #oanda2.close_trade(accid, i)
-                    
-                print plp.ix[:, ffsds]
-                print pln.ix[:, ffsds]
+            print 'currentPositions:'
+            print currentPositions.sort_values(by='units', ascending=False)
 
-                print 'currentPositions:'
-                print currentPositions.sort_values(by='units', ascending=False)
-
-        # get rebalance amount
-        #print currentPositions
-        #print dfu3.ix[currentPositions.index, :]
-        #cu = currentPositions.ix[dfu3.index, :]
-        cu = currentPositions.combine_first(dfu3)
-        cu['bool'] = getSideBool(cu['side'])
-        cu = cu.fillna(0)
-        if int(verbose) >= 5: 
-            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                print cu.sort_values(by='diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')]
-        #print
-        dfu3 = dfu3.combine_first(cu)
-        dfu3 = dfu3.combine_first(gct)
-    except Exception as e:
-        print e
-    try:
-        dfu3['amountSidePolarity'] = dfu3['sidePolarity'] * dfu3['amount']
-        dfu3['positions'] = cu.ix[:, 'units'] * cu.ix[:, 'bool']
-    except Exception as e:
-        print e
-        #dfu3['positions'] = 0
-        ''
-    dfu3 = cw(dfu3, oanda2, oq, accid, maccount, leverage=leverage, verbose=verbose)
+            print cu.sort_values(by='diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')]
 
     #dfu3['rebalance'] = dfu3.ix[:, 'amountSidePolarity'] - dfu3.ix[:, 'positions']
     try:    positions = dfu3.ix[:, 'positions']

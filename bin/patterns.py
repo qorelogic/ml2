@@ -135,6 +135,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
 
     # In[ ]:
 
+    oq = OandaQ(verbose=False)
     threading = not args.nothreading
     
     """
@@ -148,9 +149,6 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     """
     
     # In[ ]:
-    
-    
-    
     
     import os
     cmd = 'ls -t /ml.dev/bin/data/oanda/cache/patterns/patterns* 2> /dev/null'
@@ -179,6 +177,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
                 dfu0 = getc4(df, dfh, oanda0, instrument=i)
             if dmcnt == 0:                                               # display matrix:
                 print '%s %s' % ('       ', n.array(list(dfu0.columns))) # display matrix: header
+            [currentPositions, currentTrades, ct, gct, plp, pln, pll, cu, dfu3] = getCurrentTradesAndPositions(oanda2, accid, oq, p.DataFrame([]))
             print '%s %s' % (list(dfu0.index)[0], dfu0.get_values()[0])  # display matrix: body
             dmcnt += 1                                                   # display matrix
             dfu  = dfu.combine_first(dfu0)
@@ -323,8 +322,6 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     noInteractiveFleetingProfits = args.noInteractiveFleetingProfits
     sortRebalanceList            = args.sortRebalanceList
     
-    oq = OandaQ(verbose=False)
-
     if args.account:
         try:
             dfu33 = rebalanceTrades(oq, dfu2, oanda0, str(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, sortRebalanceList=sortRebalanceList)
