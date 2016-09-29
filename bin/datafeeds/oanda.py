@@ -106,8 +106,15 @@ class MyStreamer(oandapy.Streamer):
                 accid = <account no.>
                 self.trades    = oq.oanda2.get_trades(accid, count=500)
                 self.trades    = p.DataFrame(self.trades['trades']) #.set_index('instrument')
+                self.trades    = self.trades.combine_first(getSyntheticCurrencyTable(oq.oanda2, oq, self.trades['instrument']))
+                self.prices    = oq.oanda2.get_prices(instruments=','.join(self.trades['instrument']))
+                self.prices    = p.DataFrame(self.prices['prices']) #.set_index('instrument')
+                self.trades['bid'] = self.prices['bid']
+                self.trades['ask'] = self.prices['ask']
                 self.positions = oq.oanda2.get_positions(accid, count=500)
                 self.positions = p.DataFrame(self.positions['positions']).set_index('instrument')
+                self.account = oq.oanda2.get_account(accid)
+                self.account = p.DataFrame(self.account)
                 break
             if case('plotly'):
                 self.rtc = RealtimeChart()
@@ -172,9 +179,15 @@ class MyStreamer(oandapy.Streamer):
                         self.trades.ix[tdf.index, 'bid'] = float(pcsv[1])
                         self.trades.ix[tdf.index, 'ask'] = float(pcsv[2])
                         self.trades = self.trades.fillna(0)
-                        self.trades['pl'] = (((self.trades['bid'] + self.trades['ask'])/2)-self.trades['price'])*self.trades['units']
+                        self.trades['pl'] = calcPl(self.trades['bid'], self.trades['ask'], self.trades['price'], getSideBool(self.trades['side']), self.trades['pairedCurrencyBid'], self.trades['pairedCurrencyAsk'], self.trades['units'])
                         #print self.trades[self.trades['instrument'] == pcsv[0]]
-                        print self.trades
+                        #print self.trades.shape
+                        #print self.trades.columns
+                        #print self.trades.index
+                        #print self.trades.ix[:, 'id instrument price side stopLoss takeProfit time trailingAmount trailingStop units bid ask pl'.split(' ')]
+                        print self.trades.ix[:, 'id instrument price side units bid ask pl'.split(' ')]
+                        #print self.account
+                        #print self.prices
                         #print csv
                         #print '---'
                         #print
