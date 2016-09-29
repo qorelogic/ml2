@@ -1941,6 +1941,36 @@ def differentPolarity(a, b):
 def getSideBool(ser):
     return map(lambda x: 1 if x == 'buy' else -1, ser)
 
+@profile
+def calcPl(bid, ask, price, sideBool, pairedCurrencyBid, pairedCurrencyAsk, units):
+    #pl00001 = ( ((bid+ask)/2) )
+    #pl00002 = ( price )
+    #pl00003 = ((pairedCurrencyBid+pairedCurrencyAsk)/2)
+    #pl00004 = (1 / ((pairedCurrencyBid+pairedCurrencyAsk)/2))
+    #pl00005 = ( ((bid+ask)/2) - price ) * (1 / ((pairedCurrencyBid+pairedCurrencyAsk)/2))
+    #print 'sideBool:%s' % sideBool
+    lsb = len(sideBool)
+    close = n.zeros(lsb)
+    pairedCurrencyClose = n.zeros(lsb)
+    #close = map(lambda x: , sideBool)
+    for i in range(lsb):
+        #if sideBool[i] == 1: 
+        #    close[i] = ask[i]
+        #    pairedCurrencyClose[i] = pairedCurrencyAsk[i]
+        #else:                
+        #    close[i] = bid[i]
+        #    pairedCurrencyClose[i] = pairedCurrencyBid[i]
+        close[i]               = ask[i]               if sideBool[i] == 1 else bid[i]
+        pairedCurrencyClose[i] = pairedCurrencyAsk[i] if sideBool[i] == 1 else pairedCurrencyBid[i]
+    #if sideBool == 1:
+    #    close               = bid
+    #    pairedCurrencyClose = pairedCurrencyBid
+    #if sideBool == -1:
+    #    close               = ask
+    #    pairedCurrencyClose = pairedCurrencyAsk
+    #return ( ( (bid + ask) / 2) - price ) * sideBool * (1 / ((pairedCurrencyBid + pairedCurrencyAsk) / 2)) * units
+    return ( close - price ) * sideBool * (1 / pairedCurrencyClose) * units
+
 def getCurrentTrades(oanda2, oq, accid, currentPositions):
     from numpy import zeros as n_zeros
     currentTrades = oanda2.get_trades(accid, count=500)['trades']
@@ -1987,12 +2017,7 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions):
     currentTrades['tradeValue3'] = 1.0 / currentTrades['pairedCurrencyAsk']
     currentTrades['tradeValue4'] = currentTrades['sideS'] - currentTrades['price']
     currentTrades['tradeValue5'] = currentTrades['units'] * currentTrades['tradeValue3'] * currentTrades['tradeValue4']
-    #currentTrades['pl00001'] = ( ((currentTrades['bid']+currentTrades['ask'])/2) )
-    #currentTrades['pl00002'] = ( currentTrades['price'] )
-    #currentTrades['pl00003'] = ((currentTrades['pairedCurrencyBid']+currentTrades['pairedCurrencyAsk'])/2)   #* dfu33['pow2']
-    #currentTrades['pl00004'] = (1 / ((currentTrades['pairedCurrencyBid']+currentTrades['pairedCurrencyAsk'])/2))   #* dfu33['pow2']
-    #currentTrades['pl00005'] = ( ((currentTrades['bid']+currentTrades['ask'])/2) - currentTrades['price'] ) * (1 / ((currentTrades['pairedCurrencyBid']+currentTrades['pairedCurrencyAsk'])/2))   #* dfu33['pow2']
-    currentTrades['pl'] = ( ((currentTrades['bid']+currentTrades['ask'])/2) - currentTrades['price'] ) * currentTrades['sideBool'] * (1 / ((currentTrades['pairedCurrencyBid']+currentTrades['pairedCurrencyAsk'])/2)) * currentTrades['units']
+    currentTrades['pl'] = calcPl(currentTrades['bid'], currentTrades['ask'], currentTrades['price'], currentTrades['sideBool'], currentTrades['pairedCurrencyBid'], currentTrades['pairedCurrencyAsk'], currentTrades['units'])
 
     #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
     #    print 'currentTrades'

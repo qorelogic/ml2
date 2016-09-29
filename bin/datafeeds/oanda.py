@@ -114,7 +114,7 @@ class MyStreamer(oandapy.Streamer):
                 self.positions = oq.oanda2.get_positions(accid, count=500)
                 self.positions = p.DataFrame(self.positions['positions']).set_index('instrument')
                 self.account = oq.oanda2.get_account(accid)
-                self.account = p.DataFrame(self.account)
+                self.account = p.DataFrame(self.account, index=[0])#.transpose()
                 break
             if case('plotly'):
                 self.rtc = RealtimeChart()
@@ -185,8 +185,15 @@ class MyStreamer(oandapy.Streamer):
                         #print self.trades.columns
                         #print self.trades.index
                         #print self.trades.ix[:, 'id instrument price side stopLoss takeProfit time trailingAmount trailingStop units bid ask pl'.split(' ')]
-                        print self.trades.ix[:, 'id instrument price side units bid ask pl'.split(' ')]
-                        #print self.account
+                        #print self.trades.ix[:, 'id instrument price side stopLoss takeProfit trailingAmount trailingStop units bid ask pl pairedCurrencyBid pairedCurrencyAsk'.split(' ')]
+                        #print self.trades.ix[:, 'id instrument price side units bid ask pl'.split(' ')]
+                        #print self.trades.ix[:, 'id instrument pl'.split(' ')]
+                        #print self.trades.ix[:, 'id instrument price side units bid ask pl'.split(' ')]
+                        sumPl = n.sum(self.trades['pl'])
+                        self.account.ix[0, 'unrealizedPl'] = sumPl
+                        self.account['netAssetValue'] = self.account['balance'] + self.account['unrealizedPl']
+                        self.ffds = 'balance netAssetValue unrealizedPl'.split(' ')
+                        print self.account.ix[:, self.ffds]#.to_dict()
                         #print self.prices
                         #print csv
                         #print '---'
