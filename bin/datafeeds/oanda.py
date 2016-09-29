@@ -49,11 +49,12 @@ except IOError, e:
     
 oq = OandaQ(selectOandaAccount=0, selectOandaSubAccount=6)
 
-modes = 'demo,feed,plotly,csv,babysit,zmq'.split(',')
+modes = 'demo,feed,plotly,csv,babysit,zmq,accountdata'.split(',')
 
 def usage():
     qd._getMethod()
-    return "usage: demo | feed | plotly | csv | babysit | zmq | accountdata"
+    #return "usage: demo | feed | plotly | csv | babysit | zmq | "
+    return "usage: %s" % ' | '.join(modes)
 
 @profile
 def getCsvc(data):
