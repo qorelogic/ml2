@@ -53,9 +53,9 @@ modes = 'demo,feed,plotly,csv,babysit,zmq'.split(',')
 
 def usage():
     qd._getMethod()
-    return "usage: demo | feed | plotly | csv | babysit | zmq"
+    return "usage: demo | feed | plotly | csv | babysit | zmq | accountdata"
 
-#@profile
+@profile
 def getCsvc(data):
     #data['tick']['timestamp'] = str(OandaQ._oandaToTimestamp(data['tick']['time']))
     data['tick']['timestamp'] = str(oq.oandaToTimestamp(data['tick']['time']))
@@ -100,6 +100,14 @@ class MyStreamer(oandapy.Streamer):
                 break
             if case('csv'):
                 break
+            if case('accountdata'):
+                #print oq.oanda2.get_accounts()
+                accid = <account no.>
+                self.trades    = oq.oanda2.get_trades(accid, count=500)
+                self.trades    = p.DataFrame(self.trades['trades']) #.set_index('instrument')
+                self.positions = oq.oanda2.get_positions(accid, count=500)
+                self.positions = p.DataFrame(self.positions['positions']).set_index('instrument')
+                break
             if case('plotly'):
                 self.rtc = RealtimeChart()
                 #self.rtc.qd.on()
@@ -121,7 +129,7 @@ class MyStreamer(oandapy.Streamer):
             print usage()
             break
 
-    #@profile
+    @profile
     def on_success(self, data):
         #qd._getMethod()
         
@@ -146,6 +154,29 @@ class MyStreamer(oandapy.Streamer):
                     #fp.write(csv+'\n')
                     #fp.close()
                     print csv
+                    break
+                if case('accountdata'):
+                    pcsv = getCsvc(data)
+                    csv  = ",".join(pcsv)
+
+                    #self.positions.ix[pcsv[0], 'bid'] = pcsv[1]
+                    #self.positions.ix[pcsv[0], 'ask'] = pcsv[2]
+                    #self.positions = self.positions.fillna(0)
+                    #print self.positions
+
+                    #self.trades.ix[pcsv[0], 'bid'] = pcsv[1]
+                    #self.trades.ix[pcsv[0], 'ask'] = pcsv[2]
+                    with p.option_context('display.max_rows', 15, 'display.max_columns', 4000, 'display.width', 1000000):
+                        tdf = self.trades[self.trades['instrument'] == pcsv[0]]
+                        self.trades.ix[tdf.index, 'bid'] = float(pcsv[1])
+                        self.trades.ix[tdf.index, 'ask'] = float(pcsv[2])
+                        self.trades = self.trades.fillna(0)
+                        self.trades['pl'] = (((self.trades['bid'] + self.trades['ask'])/2)-self.trades['price'])*self.trades['units']
+                        #print self.trades[self.trades['instrument'] == pcsv[0]]
+                        print self.trades
+                        #print csv
+                        #print '---'
+                        #print
                     break
                 if case('plotly'):
                     self.rtc.update(getCsvc(data))
@@ -253,6 +284,9 @@ def do_work(mode, forever = True):
                     pairs = ",".join(list(n.array(p.DataFrame(oq.oandaConnection().get_instruments(oq.aid)['instruments']).ix[:,'instrument'].get_values(), dtype=str))) #"EUR_USD,USD_CAD"
                     break
                 if case('csv'):
+                    pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
+                    break
+                if case('accountdata'):
                     pairs = 'EUR_USD,EUR_JPY,EUR_GBP,EUR_CHF,EUR_CAD,EUR_AUD,EUR_NZD,EUR_SEK,EUR_NOK,EUR_TRY,EUR_DKK'
                     break
                 if case('plotly'):
