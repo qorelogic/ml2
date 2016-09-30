@@ -2180,6 +2180,7 @@ def getSyntheticCurrencyTable(oanda2, oq, instruments):
         except: ''
     #print ctsdf
     #res = oanda2.get_prices(instruments=','.join(oq.wew(ctsdf['quotedCurrency'])))
+    ctsdf.ix[:,'pairedCurrencyAsk pairedCurrencyBid'.split(' ')] = ctsdf.ix[:,'pairedCurrencyAsk pairedCurrencyBid'.split(' ')].fillna(1)
     return ctsdf
 
 def getCurrentTradesAndPositions(oanda2, accid, oq):
