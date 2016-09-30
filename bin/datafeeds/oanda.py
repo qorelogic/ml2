@@ -24,6 +24,7 @@ import socket
 import matplotlib.pyplot as plt
 import zmq, time
 import ujson as j
+import ujson as json
 import pymongo as mong
 
 qd = QoreDebug()
@@ -103,17 +104,17 @@ class MyStreamer(oandapy.Streamer):
                 break
             if case('accountdata'):
                 #print oq.oanda2.get_accounts()
-                accid = <account no.>
-                self.trades    = oq.oanda2.get_trades(accid, count=500)
+                self.accid = <account no.>
+                self.trades    = oq.oanda2.get_trades(self.accid, count=500)
                 self.trades    = p.DataFrame(self.trades['trades']) #.set_index('instrument')
                 self.trades    = self.trades.combine_first(getSyntheticCurrencyTable(oq.oanda2, oq, self.trades['instrument']))
                 self.prices    = oq.oanda2.get_prices(instruments=','.join(self.trades['instrument']))
                 self.prices    = p.DataFrame(self.prices['prices']) #.set_index('instrument')
                 self.trades['bid'] = self.prices['bid']
                 self.trades['ask'] = self.prices['ask']
-                self.positions = oq.oanda2.get_positions(accid, count=500)
+                self.positions = oq.oanda2.get_positions(self.accid, count=500)
                 self.positions = p.DataFrame(self.positions['positions']).set_index('instrument')
-                self.account = oq.oanda2.get_account(accid)
+                self.account = oq.oanda2.get_account(self.accid)
                 self.account = p.DataFrame(self.account, index=[0])#.transpose()
                 break
             if case('plotly'):
@@ -175,6 +176,7 @@ class MyStreamer(oandapy.Streamer):
                     self.trades.ix[tdf.index, 'ask'] = float(pcsv[2])
                     self.trades = self.trades.fillna(0)
                     self.trades['pl'] = calcPl(self.trades['bid'], self.trades['ask'], self.trades['price'], getSideBool(self.trades['side']), self.trades['pairedCurrencyBid'], self.trades['pairedCurrencyAsk'], self.trades['units'])
+                    self.trades['tpv'] = self.account.ix[0,'balance'] * (1.0/200) / 100
                     
                     self.account.ix[0, 'unrealizedPl'] = n.sum(self.trades['pl']) # sumPl
                     self.account['netAssetValue'] = self.account['balance'] + self.account['unrealizedPl']
@@ -188,7 +190,17 @@ class MyStreamer(oandapy.Streamer):
                         #print self.trades.ix[:, 'id instrument price side stopLoss takeProfit trailingAmount trailingStop units bid ask pl pairedCurrencyBid pairedCurrencyAsk'.split(' ')]
                         #print self.trades.ix[:, 'id instrument price side units bid ask pl'.split(' ')]
                         #print self.trades.ix[:, 'id instrument pl'.split(' ')]
-                        print self.account.ix[:, self.ffds]#.to_dict()
+                        #print self.account.ix[:, self.ffds]#.to_dict()
+                        
+                        plp = self.trades[self.trades['pl'] > 0].ix[:, 'id pl tpv'.split(' ')]
+                        for i in plp.index:
+                            if plp.ix[i,'pl'] >= plp.ix[i,'tpv']:
+                                id = plp.ix[i,'id']
+                                print "oandaCloseTrade(oq.oanda2, self.accid, %s, method='feed::fleetingProfitsCloseTrade', data=json.dumps(%s))" % (id, plp.ix[i, :].fillna(0).to_dict())
+                                oandaCloseTrade(oq.oanda2, self.accid, id, method='feed::fleetingProfitsCloseTrade', data=json.dumps(plp.ix[i, :].fillna(0).to_dict()))
+                                self.trades = self.trades.drop(i,0) # remove entry from self.trades
+                        #print self.trades[self.trades['pl'] < 0].ix[:, 'id pl'.split(' ')]
+                        print plp
                         #print self.prices
                         #print csv
                         #print '---'
