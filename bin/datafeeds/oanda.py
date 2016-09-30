@@ -166,20 +166,20 @@ class MyStreamer(oandapy.Streamer):
                 if case('accountdata'):
                     pcsv = getCsvc(data)
                     csv  = ",".join(pcsv)
-
                     #self.positions.ix[pcsv[0], 'bid'] = pcsv[1]
                     #self.positions.ix[pcsv[0], 'ask'] = pcsv[2]
                     #self.positions = self.positions.fillna(0)
                     #print self.positions
-
-                    #self.trades.ix[pcsv[0], 'bid'] = pcsv[1]
-                    #self.trades.ix[pcsv[0], 'ask'] = pcsv[2]
+                    tdf = self.trades[self.trades['instrument'] == pcsv[0]]
+                    self.trades.ix[tdf.index, 'bid'] = float(pcsv[1])
+                    self.trades.ix[tdf.index, 'ask'] = float(pcsv[2])
+                    self.trades = self.trades.fillna(0)
+                    self.trades['pl'] = calcPl(self.trades['bid'], self.trades['ask'], self.trades['price'], getSideBool(self.trades['side']), self.trades['pairedCurrencyBid'], self.trades['pairedCurrencyAsk'], self.trades['units'])
+                    
+                    self.account.ix[0, 'unrealizedPl'] = n.sum(self.trades['pl']) # sumPl
+                    self.account['netAssetValue'] = self.account['balance'] + self.account['unrealizedPl']
+                    self.ffds = 'balance netAssetValue unrealizedPl'.split(' ')
                     with p.option_context('display.max_rows', 15, 'display.max_columns', 4000, 'display.width', 1000000):
-                        tdf = self.trades[self.trades['instrument'] == pcsv[0]]
-                        self.trades.ix[tdf.index, 'bid'] = float(pcsv[1])
-                        self.trades.ix[tdf.index, 'ask'] = float(pcsv[2])
-                        self.trades = self.trades.fillna(0)
-                        self.trades['pl'] = calcPl(self.trades['bid'], self.trades['ask'], self.trades['price'], getSideBool(self.trades['side']), self.trades['pairedCurrencyBid'], self.trades['pairedCurrencyAsk'], self.trades['units'])
                         #print self.trades[self.trades['instrument'] == pcsv[0]]
                         #print self.trades.shape
                         #print self.trades.columns
@@ -188,11 +188,6 @@ class MyStreamer(oandapy.Streamer):
                         #print self.trades.ix[:, 'id instrument price side stopLoss takeProfit trailingAmount trailingStop units bid ask pl pairedCurrencyBid pairedCurrencyAsk'.split(' ')]
                         #print self.trades.ix[:, 'id instrument price side units bid ask pl'.split(' ')]
                         #print self.trades.ix[:, 'id instrument pl'.split(' ')]
-                        #print self.trades.ix[:, 'id instrument price side units bid ask pl'.split(' ')]
-                        sumPl = n.sum(self.trades['pl'])
-                        self.account.ix[0, 'unrealizedPl'] = sumPl
-                        self.account['netAssetValue'] = self.account['balance'] + self.account['unrealizedPl']
-                        self.ffds = 'balance netAssetValue unrealizedPl'.split(' ')
                         print self.account.ix[:, self.ffds]#.to_dict()
                         #print self.prices
                         #print csv
