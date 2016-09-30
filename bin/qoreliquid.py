@@ -2035,9 +2035,33 @@ def interactiveMode(defaultMsg='Sure you want to create order? (y/N/q): '):
     if ans.strip() != 'y':
         raise(Exception('User intervened: order not created'))
 
+
+def oandaCloseTrade(oanda2, accid, ticket, method=None, data=None):
+    import pymongo as mong
+    try:
+        oanda2.close_trade(accid, ticket)
+        # collect trade data
+        di = {'method':'oandaCloseTrade::%s' % method, 'account':accid, 'ticket':ticket, 'type':'close-trade', 'data':data}
+        mongo = mong.MongoClient()
+        mongo.ql.broker_oanda_trades.insert(di)
+        mongo.close()
+    except Exception as e:
+        print e
+
+def oandaCreateOrder(oanda2, accid, instrument, side, units, method=None, data=None):
+    import pymongo as mong
+    try:
+        oanda2.create_order(accid, type='market', instrument=instrument, side=side, units=units)
+        # collect trade data
+        di = {'method':'oandaCreateOrder::%s' % method, 'account':accid, 'type':'market', 'instrument':instrument, 'side':side, 'units':units, 'data':data}
+        mongo = mong.MongoClient()
+        mongo.ql.broker_oanda_trades.insert(di)
+        mongo.close()
+    except Exception as e:
+        print e
+    
 @profile
 def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose=False):
-    import pymongo as mong
     import ujson as json
     if dryrun == False:
         try:
@@ -2047,19 +2071,13 @@ def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleeti
                 if noInteractiveLeverage: raise(Exception('nil --> nif conflict'))
                 if noInteractiveDeleverage: raise(Exception('nid --> nif conflict'))
                 interactiveMode()
-            oanda2.close_trade(accid, i)
-
-            # collect trade data
-            #di = dfa.ix[int(accountId), :].transpose().to_dict()
-            di = {'method':'fleetingProfitsCloseTrade', 'account':accid, 'ticket':i, 'type':'close-trade', 'data':json.dumps(plp.ix[i, :].fillna(0).to_dict())}
-            mongo = mong.MongoClient()
-            mongo.ql.broker_oanda_trades.insert(di)
+            oandaCloseTrade(oanda2, accid, i, method='fleetingProfitsCloseTrade', data=json.dumps(plp.ix[ticket, :].fillna(0).to_dict()))
         except Exception as e:
             print e
 
 @profile
 def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, currentTrades):
-    import pymongo as mong
+    #import pymongo as mong
     import ujson as json
     if dryrun == False:
         try:
@@ -2103,21 +2121,27 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                             interactiveMode(defaultMsg='Sure you want to partialClose[%s] ticket %s %s %s? unitsLeft:%s prevUnitsLeft:%s %s  (y/N/q): ' % (i, j, dfu.ix[j, 'side'], dfu.ix[j, 'units'], unitsLeft, prevUnitsLeft, dloss))
                             logApplicationUsage('d', description='deleverage[partialClose]', data=dfu.ix[j, :].to_dict())
                             if int(verbose) >= 5: print 'oanda2.close_trade(%s, %s)' % (accid, j)
-                            oanda2.close_trade(accid, j)
-                            # collect trade data
-                            di = {'method':'leverageTrades[deleverage:partial-close]', 'account':accid, 'ticket':j, 'type':'close-trade', 'data':json.dumps(dfu.ix[j, :].fillna(0).to_dict())}
-                            mongo = mong.MongoClient()
-                            mongo.ql.broker_oanda_trades.insert(di)
+                            
+                            #oanda2.close_trade(accid, j)
+                            ## collect trade data
+                            #di = {'method':'leverageTrades[deleverage:partial-close]', 'account':accid, 'ticket':j, 'type':'close-trade', 'data':json.dumps(dfu.ix[j, :].fillna(0).to_dict())}
+                            #mongo = mong.MongoClient()
+                            #mongo.ql.broker_oanda_trades.insert(di)
+                            #mongo.close()
+                            oandaCloseTrade(oanda2, accid, j, method='leverageTrades[deleverage:partial-close]', data=json.dumps(dfu.ix[j, :].fillna(0).to_dict()))
                         else:
                             if prevUnitsLeft > 0:
                                 interactiveMode(defaultMsg='Sure you want to deleverage %s[%s]? side=%s, units=%s %s (y/N/q): ' % (i, j, side, prevUnitsLeft, dloss))
                                 logApplicationUsage('d', description='deleverage[standardClose]', data=dfu.ix[j, :].to_dict())
                                 if int(verbose) >= 5: print 'oanda2.create_order(%s, type=%s, instrument=%s, side=%s, units=%s)' % (accid, 'market', i, side, prevUnitsLeft)
-                                oanda2.create_order(accid, type='market', instrument=i, side=side, units=prevUnitsLeft)
-                                # collect trade data
-                                di = {'method':'leverageTrades[deleverage:complete]', 'account':accid, 'type':'market', 'instrument':i, 'side':side, 'units':prevUnitsLeft, 'data':json.dumps(dfu.ix[j, :].fillna(0).to_dict())}
-                                mongo = mong.MongoClient()
-                                mongo.ql.broker_oanda_trades.insert(di)
+                                    
+                                #oanda2.create_order(accid, type='market', instrument=i, side=side, units=prevUnitsLeft)
+                                ## collect trade data
+                                #di = {'method':'leverageTrades[deleverage:complete]', 'account':accid, 'type':'market', 'instrument':i, 'side':side, 'units':prevUnitsLeft, 'data':json.dumps(dfu.ix[j, :].fillna(0).to_dict())}
+                                #mongo = mong.MongoClient()
+                                #mongo.ql.broker_oanda_trades.insert(di)
+                                #mongo.close()
+                                oandaCreateOrder(oanda2, accid, i, side, prevUnitsLeft, method='leverageTrades[deleverage:complete]', data=json.dumps(dfu.ix[j, :].fillna(0).to_dict()))
                     except Exception as e:
                         if int(verbose) >= 5: print e
                 raise(Exception(''))
@@ -2131,11 +2155,13 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
             #if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
             #    print 'ni---'
             #    interactiveMode()
-            oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
-            # collect trade data
-            di = {'method':'leverageTrades[leverage:create-order]', 'account':accid, 'type':'market', 'instrument':i, 'side':side, 'units':units, 'data':json.dumps(dfu.ix[j, :].fillna(0).to_dict())}
-            mongo = mong.MongoClient()
-            mongo.ql.broker_oanda_trades.insert(di)
+            #oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
+            ## collect trade data
+            #di = {'method':'leverageTrades[leverage:create-order]', 'account':accid, 'type':'market', 'instrument':i, 'side':side, 'units':units, 'data':json.dumps(dfu.ix[j, :].fillna(0).to_dict())}
+            #mongo = mong.MongoClient()
+            #mongo.ql.broker_oanda_trades.insert(di)
+            #mongo.close()
+            oandaCreateOrder(oanda2, accid, i, side, units, method='leverageTrades[leverage:create-order]', data=json.dumps(dfu.ix[j, :].fillna(0).to_dict()))
         except Exception as e:
             if int(verbose) >= 8: print e
 
