@@ -190,7 +190,7 @@ class MyStreamer(oandapy.Streamer):
                         #print self.trades.ix[:, 'id instrument price side stopLoss takeProfit trailingAmount trailingStop units bid ask pl pairedCurrencyBid pairedCurrencyAsk'.split(' ')]
                         #print self.trades.ix[:, 'id instrument price side units bid ask pl'.split(' ')]
                         #print self.trades.ix[:, 'id instrument pl'.split(' ')]
-                        #print self.account.ix[:, self.ffds]#.to_dict()
+                        print self.account.ix[:, self.ffds]#.to_dict()
                         
                         plp = self.trades[self.trades['pl'] > 0].ix[:, 'id pl tpv'.split(' ')]
                         for i in plp.index:
@@ -200,7 +200,7 @@ class MyStreamer(oandapy.Streamer):
                                 oandaCloseTrade(oq.oanda2, self.accid, id, method='feed::fleetingProfitsCloseTrade', data=json.dumps(plp.ix[i, :].fillna(0).to_dict()))
                                 self.trades = self.trades.drop(i,0) # remove entry from self.trades
                         #print self.trades[self.trades['pl'] < 0].ix[:, 'id pl'.split(' ')]
-                        print plp
+                        #print plp
                         #print self.prices
                         #print csv
                         #print '---'
