@@ -199,6 +199,12 @@ class MyStreamer(oandapy.Streamer):
                                 print "oandaCloseTrade(oq.oanda2, self.accid, %s, method='feed::fleetingProfitsCloseTrade', data=json.dumps(%s))" % (id, plp.ix[i, :].fillna(0).to_dict())
                                 oandaCloseTrade(oq.oanda2, self.accid, id, method='feed::fleetingProfitsCloseTrade', data=json.dumps(plp.ix[i, :].fillna(0).to_dict()))
                                 self.trades = self.trades.drop(i,0) # remove entry from self.trades
+                                oco = {}
+                                oco['instrument'] = plp.ix[i, 'instrument']
+                                oco['side'] = plp.ix[i, 'side']
+                                oco['units'] = plp.ix[i, 'units']
+                                print "oandaCreateOrder(oanda2, %s, %s, %s, %s, method='%s', data='%s')" % (accid, oco'[instrument'], oco'[side'], oco'[units'], 'feed::fleetingProfitsCloseTrade::reopenTrade[leverage:create-order]', json.dumps(plp.ix[i, :].fillna(0).to_dict()))
+                                oandaCreateOrder(oanda2, accid, oco'[instrument'], oco'[side'], oco'[units'], method='feed::fleetingProfitsCloseTrade::reopenTrade[leverage:create-order]', data=json.dumps(plp.ix[i, :].fillna(0).to_dict()))
                         #print self.trades[self.trades['pl'] < 0].ix[:, 'id pl'.split(' ')]
                         #print plp
                         #print self.prices
