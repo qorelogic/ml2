@@ -203,10 +203,12 @@ class MyStreamer(oandapy.Streamer):
                                 oco['instrument'] = plp.ix[i, 'instrument']
                                 oco['side'] = plp.ix[i, 'side']
                                 oco['units'] = plp.ix[i, 'units']
-                                print "oandaCreateOrder(oanda2, %s, %s, %s, %s, method='%s', data='%s')" % (accid, oco'[instrument'], oco'[side'], oco'[units'], 'feed::fleetingProfitsCloseTrade::reopenTrade[leverage:create-order]', json.dumps(plp.ix[i, :].fillna(0).to_dict()))
-                                oandaCreateOrder(oanda2, accid, oco'[instrument'], oco'[side'], oco'[units'], method='feed::fleetingProfitsCloseTrade::reopenTrade[leverage:create-order]', data=json.dumps(plp.ix[i, :].fillna(0).to_dict()))
+                                oco['i'] = i
+                                print oco
+                                print "reopenTrade:: oandaCreateOrder(oanda2, %s, %s, %s, %s, method='%s', data='%s')" % (accid, oco['instrument'], oco['side'], oco['units'], 'feed::fleetingProfitsCloseTrade::reopenTrade[leverage:create-order]', json.dumps(plp.ix[i, :].fillna(0).to_dict()))
+                                oandaCreateOrder(oanda2, accid, oco['instrument'], oco['side'], oco['units'], method='feed::fleetingProfitsCloseTrade::reopenTrade[leverage:create-order]', data=json.dumps(plp.ix[i, :].fillna(0).to_dict()))
+                        #        print plp
                         #print self.trades[self.trades['pl'] < 0].ix[:, 'id pl'.split(' ')]
-                        #print plp
                         #print self.prices
                         #print csv
                         #print '---'
