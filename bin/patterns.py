@@ -7,6 +7,7 @@ parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="
 parser.add_argument("-hh", '--history', help="history", action="store_true")
 parser.add_argument("-hf", '--historyFilename', help="history file name")
 parser.add_argument("-a", '--analyze', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-w", '--web', help="data dump", action="store_true")
 parser.add_argument("-acc", '--account', help="account number")
 parser.add_argument('-g', "-gearing", '--leverage', help="gearing or leverage, default=50")
 parser.add_argument('-n', '--num', help="number of trades default=None")
@@ -260,7 +261,67 @@ def getDryRun(args):
         print 'dryrun: %s' % dryrun
     return dryrun
 
-if __name__ == "__main__":
+
+import flask
+import ujson as json
+
+app = flask.Flask(__name__)
+
+@app.route('/')
+def test():
+    return 'everything is running\n'
+
+@app.route('/live')
+def live():
+    """
+    args.live = True
+    args.noInteractiveDeleverage = False
+    args.noInteractiveLeverage = False
+    # ask how to sort the list
+    # reverse[r[p=pl]] | deleverage[d[p=pl]] | leverage[l]
+    #ans = raw_input('sortRebalanceList? r[p]/d[p]/l: ')
+    #ans = ans.strip()
+    ans = 'rp'
+    if ans == 'r' or ans == 'rp' or ans == 'd' or ans == 'dp' or ans == 'l':
+        args.sortRebalanceList = ans
+    else:
+        res = 'default to sorting by r'
+    """
+    #res = json.dumps(oanda1.get_accounts()['accounts'])
+    #res2 = json.dumps(oanda1.get_positions(947325))
+    trades = oanda1.get_trades(947325, count=500)['trades']
+    df = p.DataFrame(trades)
+    #print df
+    trades = json.dumps(trades)
+    #return trades    
+    resp = flask.Response(trades)
+    #resp.headers['mode'] = 'no-cors'
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    resp.headers['Content-Type'] = "application/json"
+    resp.headers['Accept'] = "application/json"
+    return resp
+    #return '<pre>%s</pre>' % df.to_string()
+
+"""
+@app.route('/')
+def test():
+	import urllib2
+	url = 'http://'
+	response = urllib2.urlopen(url)
+	html = response.read()
+	ret = j.loads(html)
+	#print ret
+	return html
+"""
+
+if __name__ == "__main__":    
+	
+    if args.web:        
+        host = '127.0.0.1'
+        port = 8080
+        print 'listening[host=%s, port=%s]' % (host, port)
+        app.run(host=host, port=port)        
+        sys.exit()
     
     if args.leverage:
         leverage=int(args.leverage)
