@@ -317,7 +317,7 @@ def test():
 if __name__ == "__main__":    
 	
     if args.web:        
-        host = '127.0.0.1'
+        host = '0.0.0.0'
         port = 8080
         print 'listening[host=%s, port=%s]' % (host, port)
         app.run(host=host, port=port)        
