@@ -302,6 +302,21 @@ def live():
     return resp
     #return '<pre>%s</pre>' % df.to_string()
 
+@app.route('/accounts')
+def accounts():
+    
+    try:
+        import pymongo as mong
+        mongo = mong.MongoClient()
+        res = mongo.ql.broker_oanda_accounts.find().limit(1)
+        for i in res:
+            print i
+        mongo.close()
+    except Exception as e:
+        return e
+        
+    return 'test'
+
 """
 @app.route('/')
 def test():
