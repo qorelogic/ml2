@@ -2214,7 +2214,7 @@ def getCurrentTradesAndPositions(oanda2, accid, oq):
     currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions)
     ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
     gct = ct.groupby('instrument') #.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
-    gct = gct.aggregate(mean).ix[:, 'units pl pip'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
+    gct = gct.aggregate(n.mean).ix[:, 'units pl pip'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
     #print 'gct'
     #print gct
     currentPositions['pip'] = gct['pip']
@@ -2409,7 +2409,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     print '===1==1==1=1=1=1===='
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         gct = ct.groupby('instrument')
-        gct = gct.aggregate(mean)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
+        gct = gct.aggregate(n.mean)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
         if int(verbose) >= 8:
             print ct #.sort_values(by='', ascending=False)
             print gct
@@ -2466,7 +2466,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfa['uPl'] = dfa['unrealizedPl']
     dfa['uPlPcnt'] = dfa['unrealizedPlPcnt']
 
-    ds = datetime.datetime.utcnow()
+    ds = dd.datetime.utcnow()
     ts = calendar.timegm(ds.utctimetuple())
     ts = ts + float(ds.microsecond)/1000000
     dfa.ix[0, 'utctime'] = ts
