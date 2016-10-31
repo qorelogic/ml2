@@ -399,6 +399,8 @@ if __name__ == "__main__":
         if args.interactive:
             usageOptions = """
 as   = account status,
+tr   = trades,
+po   = positions,
 a    = analyze,
 d    = deleverage,
 dl   = deleverage list
@@ -422,6 +424,18 @@ q  = quit
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     print p.DataFrame(oanda1.get_accounts()['accounts'])
                     print p.DataFrame(oanda1.get_account(947325), index=[0])
+                sys.exit()
+            if mode == 'tr': # 
+                args.live = False
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    print p.DataFrame(oanda1.get_accounts()['accounts'])
+                    print p.DataFrame(oanda1.get_trades(947325)['trades'])
+                sys.exit()
+            if mode == 'po': # 
+                args.live = False
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    print p.DataFrame(oanda1.get_accounts()['accounts'])
+                    print p.DataFrame(oanda1.get_positions(947325)['positions'])
                 sys.exit()
             if mode == 'li': # 
                 args.live = True
