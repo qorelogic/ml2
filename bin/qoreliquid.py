@@ -679,9 +679,9 @@ class StatWing:
         
         # get current quotes
         co = p.read_csv('datafeeds/config.csv', header=None)
-        env2=co.ix[1,1]
-        access_token2=co.ix[1,2]
-        oanda2 = oandapy.API(environment=env2, access_token=access_token2)
+        env1=co.ix[1,1]
+        access_token1=co.ix[1,2]
+        oanda1 = oandapy.API(environment=env1, access_token=access_token1)
         li = []
         if mode == 1: fl = 0; ll = len(dp.index)-1;
         if mode == 2: fl = 1; ll = len(dp.index);
@@ -689,7 +689,7 @@ class StatWing:
             if i != 'bias':
                 try:
                     pai = "{0}_{1}".format(i[0:3], i[3:6])
-                    response = oanda2.get_prices(instruments=pai)
+                    response = oanda1.get_prices(instruments=pai)
                     prices = response.get("prices")
                     asking_price = prices[0].get("ask")
                     li.append(asking_price)
