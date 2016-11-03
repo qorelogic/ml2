@@ -84,7 +84,7 @@ class QoreQuant():
         self.verbose = verbose
         self.oq.verbose = self.verbose
         
-    def __init__(self, verbose=False, selectOandaAccount=2):
+    def __init__(self, verbose=False, selectOandaAccount=2, oandaInit=True, statWingInit=True):
 
         self.thetaDir         = '/mldev/bin/data/oanda/qorequant'
         self.hdirDatapipeline = '/mldev/lib/crawlers/finance/dataPipeline.scrapy'
@@ -96,16 +96,17 @@ class QoreQuant():
 
         co = p.read_csv(self.configfile, header=None)
         
-        env1=co.ix[0,1]
-        access_token1=co.ix[0,2]
-        self.oanda1 = oandapy.API(environment=env1, access_token=access_token1)
-        
-        env2=co.ix[1,1]
-        access_token2=co.ix[1,2]
-        self.oanda2 = oandapy.API(environment=env2, access_token=access_token2)
-        
-        self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
-        self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
+        if oandaInit:
+            env1=co.ix[0,1]
+            access_token1=co.ix[0,2]
+            self.oanda1 = oandapy.API(environment=env1, access_token=access_token1)
+            
+            env2=co.ix[1,1]
+            access_token2=co.ix[1,2]
+            self.oanda2 = oandapy.API(environment=env2, access_token=access_token2)
+            
+            self.accid1 = self.oanda1.get_accounts()['accounts'][6]['accountId']
+            self.accid2 = self.oanda2.get_accounts()['accounts'][0]['accountId']
 
         #print 'using account: {0}'.format(self.accid1)
         
@@ -113,12 +114,14 @@ class QoreQuant():
         #driver = webdriver.Chrome()
         self.et = Etoro()
         
-        self.sw = StatWing(thetaDir=self.thetaDir)
+        if statWingInit:
+            self.sw = StatWing(thetaDir=self.thetaDir)
 
-        try:    self.oq = OandaQ(verbose=self.verbose, selectOandaAccount=selectOandaAccount)
-        except Exception as e:
-            print e
-            print 'offline mode'
+        if oandaInit:
+            try:    self.oq = OandaQ(verbose=self.verbose, selectOandaAccount=selectOandaAccount)
+            except Exception as e:
+                print e
+                print 'offline mode'
         
         self.dfdata = None
         
