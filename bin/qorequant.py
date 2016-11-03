@@ -850,5 +850,141 @@ class QoreQuant():
         
         return header
         
+
+    # sourced idea: #maxtax #circleofwealth
+    def calcCapitalRequirements(self, earns):
+        """
+        #c = pi*(1+r/100)^p
+        #c/pi = 
+        period = 10
+        pi = 5.0
+        earn = 0.5
+        c = pi+earn
+        #r = 
+        #period = log(c/pi)/log((1+r+100))
+        r = 100* ( n.power(((pi+earn)/pi), float(1)/period) -1)
+        #print r
+        df = p.DataFrame(n.array(range((21))))
+        df[1] = n.power(1+float(10)/100, df[0])
+        df['rate'] = 100* ( n.power(((pi+earn)/pi), float(1)/df[0]) -1)
+        #df
+        #interestRate(pi, earn, cc)
+        """
+        print 'with <column head>% / day = $<index amount>'
+        print 'maxtax'
+        print 'circleofwealth'
+        print '1000/day = +10k usd'
+        print '1000/day = +100 usd blow your account'
+        #
+        print '2400/day'
+        print '5000/day = 50k or 100k'
+        print '1000/day = 500 risk for 1000 per trade'
+        #
+        print '500 5 10000'
+        print '500 3 12000'
+        print '1000/day = 11-12000 @ 10% interest'
+        print '17k in 4weeks'
+        print
+        print 'Capital Requirements:'
+        print '                      column = risk (%)'
+        print '                       index = capitalEarned (U$D)'
+        print '                        body = capitalToDeposit (U$D)'
+        #return earn / 5 * 100
+        risk = 10
+        v = [1, 3, 5, 10]
+        #v = [1]
+        a = n.array(earns)
+        b = n.array(v).reshape(len(v), 1)
+        #print a
+        #print b
+        res = a / b * 100
+        df = p.DataFrame(res, index=v, columns=[earns]).transpose()
+        print df
+        for i in df.index:        
+            print
+            lcdf = len(df.columns)
+            cc1 = n.array([0]*lcdf).reshape(1, lcdf)
+            cc2 = df.ix[i, :].transpose()#.get_values()
+            
+            print '============================================================'
+            print 'capitalEarned:%s' % i
+            print '         risk:%s' % risk
+            #print df.columns
+            #print cc2
+            print '------------------------------'
+            #print p.DataFrame(cc2, columns=df.columns, index=[0])
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                print self.interestRate(risk, i, v)
+            #print interestRate(risk, i, v)
+        #df.plot()
+        #return df
+    
+    def calcPercentageTarget(self, capitalToDeposit, capitalEarned, lendf):
+        #print '100 * ( n.power(((%s+%s)/%s), float(1)/n.array(range(%s))) -1)' % (capitalToDeposit, capitalEarned, capitalToDeposit, lendf)
+        print capitalToDeposit.shape[0]
+        capitalToDeposit = capitalToDeposit.reshape(capitalToDeposit.size,1)
+        sr1 = 100 * ( n.power(((capitalToDeposit+capitalEarned)/capitalToDeposit), float(1)/n.array(range(lendf)).reshape(1,lendf)) -1)
+        sr2 = capitalToDeposit * sr1 / 100
+        
+        sr1 = sr1.transpose()
+        sr2 = sr2.transpose()
+
+        sr1 = n.round(sr1, decimals=4)
+        sr2 = n.round(sr2, decimals=4)
+        #print sr2
+        #sr0 = np.core.defchararray.add(n.array(sr2, dtype=n.string0), ['|']*len(sr1))
+        #sr0 = np.core.defchararray.add(sr0, n.array(sr1, dtype=n.string0))
+
+        #print sr2.shape
+        #sr0 = n.array(['']*len(sr1))#.transpose()
+        sr0 = n.array([[' '*40]*4]*len(sr1))#.transpose()
+        #print sr0
+        for i in range(sr2.shape[1]):
+            #print i
+            #print sr2[:,i]
+            sr0[:,i] = np.core.defchararray.add(n.array(sr2[:,i], dtype=n.string0), ['|']*len(sr1))
+            sr0[:,i] = np.core.defchararray.add(sr0[:,i], n.array(sr1[:,i], dtype=n.string0))
+        #sr0 = np.core.defchararray.add(sr0, n.array(sr1, dtype=n.string0))
+        #print sr2
+        #print sr0
+        #sr0 = sr0.reshape(1,101)#.transpose()
+        
+        #print sr0.shape
+        return sr0
+
+    def interestRate(self, risk, capitalEarned, risks):
+
+        #capitalToDeposit = float(capitalEarned) / risk * 100
+        capitalToDeposit = float(capitalEarned) / n.array(risks) * 100
+        #capitalToDeposit = float(capitalToDeposit)
+        capitalEarnings = n.array(risks) * capitalToDeposit / 100
+
+        print 'Interest rate:'
+        print '                column = risk (%)'
+        print '                 index = period (days)'
+        print '                  body = percentage target (%)'
+        print 'capitalEarned    = %s' % capitalEarned
+        print 'capitalToDeposit = %s' % capitalToDeposit
+        print 'risk             = %s' % risk
+        print 'risks            = %s' % risks
+        print 'capitalEarnings:%s' % capitalEarnings
+        print
+
+        lendf = 100+1
+
+        df1 = p.DataFrame(['*']*lendf)
+        """
+        for i in xrange(len(capitalEarnings)):
+            #print '--- %s' % i
+            srsrs = '{0}%'.format(str(risks[i]))
+            df1[srsrs] = self.calcPercentageTarget(capitalToDeposit, capitalEarnings[i], lendf)
+        """
+        #df1[str(risk)] = self.calcPercentageTarget(capitalToDeposit, capitalEarned, lendf)
+        df1 = p.DataFrame(self.calcPercentageTarget(capitalToDeposit, capitalEarned, lendf), columns=risks)
+
+        return df1
+
+
+        
 if __name__ == "__main__":
     print 'stub'
