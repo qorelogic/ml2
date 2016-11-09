@@ -90,7 +90,7 @@ alias .al="apt-file list"
 alias  .g="gem"
 alias .gs="gem search -b -d"
 alias .gi="sudo gem install"
-alias .gr="sudo gem uninstall"
+#alias .gr="sudo gem uninstall"
 alias .go="gem outdated"
 alias .gu="sudo gem update"
 alias .gcl="sudo gem cleanup"
@@ -104,8 +104,8 @@ alias .wipe.pass32="wipe -rfqQ32 "
 alias .dubs="du -bscm  "
 alias g="git" # just a git alias
 alias .gis="git status" # show status
-alias .gb="git branch -v | less -S" # list branches
-alias .gba="git branch -a -v | less -S" # list branches
+alias .gb="git branch -vv --color | less -SR" # list branches
+alias .gba="git branch -a -vv --color | less -SR" # list branches
 alias .gib="git branch -v " # list branches
 alias .gch="git checkout" # switch to branch
 alias .gic="git checkout" # switch to branch
@@ -247,6 +247,7 @@ alias .gcini="git commit -m "
 alias .ga="git add -i "
 alias .grh="git reset --hard "
 alias .gri="git rebase -i "
+alias .gr="git remote -v" # list remotes
 # quick git rebase -i HEAD~n method
 .gfb() {
 	if [ "$1" == "" ] || [ "$2" == "" ]; then
