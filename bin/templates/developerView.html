@@ -1,0 +1,12 @@
+
+<style type="text/css">
+img {
+width:300px
+}
+</style>
+
+<div>
+	{% for i in mess %}
+	<a href="{{url_for('static', filename=i)}}"><img src="{{url_for('static', filename=i)}}" /></a>
+	{% endfor %}
+</div>
