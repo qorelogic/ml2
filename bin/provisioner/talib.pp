@@ -10,6 +10,8 @@ $nodeTarballURL  = "https://nodejs.org/dist/$nodeVe/$nodeTarball"
 $nodeHdir        = "$installHdir/node"
 
 class talib {
+      exec { "swapOn": command => "/mldev/bin/swapon.sh", timeout => 600, tries => 3, before  => Exec["mkdir_talib"] }
+
 	exec { "mkdir_talib": 
 		command => "/bin/mkdir -p /mldev/lib/hft/talib/",
 		before  => Exec["wget_talib"],
@@ -98,7 +100,9 @@ class talib {
            before  => Exec["pip install Ta-Lib"],
 	}
 
-      exec { "pip install Ta-Lib": command => "/usr/local/bin/pip install Ta-Lib", timeout => 60, tries => 3 }
+      exec { "pip install Ta-Lib": command => "/usr/local/bin/pip install Ta-Lib", timeout => 600, tries => 3, before  => Exec["swapOff"] }
+
+      exec { "swapOff": command => "/mldev/bin/swapoff.sh", timeout => 600, tries => 3 }
 }
 
 
