@@ -56,3 +56,35 @@ dfp.to_csv('/mldev/bin/mongo.ql.ticks.pivot.csv')
 print dfp
 "
 }
+
+swapOn() {
+	# free | grep -i swap | perl -pe 's/[\s]+/ /g' | cut -d' ' -f2
+	let swapSpace=`free | grep -i mem | perl -pe 's/[\s]+/ /g' | cut -d' ' -f2`
+	let swapSpace=`python -c "print $swapSpace * 2"`
+	if [ ! -f "/tmp/swapfile1" ]; then
+	# turn swap on
+	# http://stackoverflow.com/questions/18334366/out-of-memory-issue-in-installing-packages-on-ubuntu-server
+	echo 'turning swap on'
+	#sudo dd if=/dev/zero of=/tmp/swapfile1 bs=1024 count=524288
+	# https://github.com/tensorflow/models/issues/80
+	sudo dd if=/dev/zero of=/tmp/swapfile1 bs=1024 count=$swapSpace
+	sudo mkswap /tmp/swapfile1
+	sudo chown root:root /tmp/swapfile1
+	sudo chmod 0600 /tmp/swapfile1
+	sudo swapon /tmp/swapfile1
+	else
+	echo 'swap already on'
+	fi
+}
+
+swapOff() {
+	if [ -f "/tmp/swapfile1" ]; then
+	# swapp off
+	echo 'turning swap off'
+	sudo swapoff -v /tmp/swapfile1
+	sudo rm -f /tmp/swapfile1
+	else
+	echo 'swap already off'
+	fi
+}
+
