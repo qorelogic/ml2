@@ -4,6 +4,9 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", '--verbose', help="turn on verbosity")
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-ll", '--listLogins', help="list logins", action="store_true")
+parser.add_argument("-la", '--listAccounts', help="list logins", action="store_true")
+parser.add_argument("-li", '--loginIndex', help="go live and turn off dryrun")
 parser.add_argument("-hh", '--history', help="history", action="store_true")
 parser.add_argument("-hf", '--historyFilename', help="history file name")
 parser.add_argument("-a", '--analyze', help="go live and turn off dryrun", action="store_true")
@@ -52,18 +55,35 @@ qd.on()
 
 co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
 
-env0=co.ix[0,1]
-access_token0=co.ix[0,2]
+try:    loginIndex = int(args.loginIndex)
+except: loginIndex = 0
+
+env0=co.ix[loginIndex,1]
+access_token0=co.ix[loginIndex,2]
 oanda0 = oandapy.API(environment=env0, access_token=access_token0)
 
-env1=co.ix[1,1]
-access_token1=co.ix[1,2]
-oanda1 = oandapy.API(environment=env1, access_token=access_token1)
+#env1=co.ix[1,1]
+#access_token1=co.ix[1,2]
+#oanda1 = oandapy.API(environment=env1, access_token=access_token1)
+
+with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+    if args.listLogins:
+            print co
+            sys.exit()
+    
+    if args.listAccounts:
+            #print co
+            acc = oanda0.get_accounts()['accounts']            
+            print p.DataFrame(acc)
+            #accid = acc[loginIndex]['accountId']
+            #print 'using account: {0}'.format(accid)
+            sys.exit()
 
 try:
-    acc = oanda1.get_accounts()['accounts']
-    accid = acc[0]['accountId']
-    #print 'using account: {0}'.format(accid)
+    acc = oanda0.get_accounts()['accounts']
+    try:    accid = int(args.account)
+    except: accid = acc[loginIndex]['accountId']
+    print 'using account: {0}'.format(accid)
 except:
     ''
 
@@ -99,7 +119,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         if threading:
             from multiprocessing.pool import ThreadPool
             pool = ThreadPool(processes=270)
-        instruments = p.DataFrame(oanda1.get_instruments(accid)['instruments']).set_index('instrument')
+        instruments = p.DataFrame(oanda0.get_instruments(accid)['instruments']).set_index('instrument')
         #symbols = instruments.index
         symbols  = 'AUD_CAD,AUD_CHF,AUD_HKD,AUD_JPY,AUD_NZD,AUD_SGD,AUD_USD,CAD_CHF,CAD_HKD,CAD_JPY,CAD_SGD,CHF_HKD,CHF_JPY,CHF_ZAR,EUR_AUD,EUR_CAD,EUR_CHF,        EUR_DKK,EUR_GBP,EUR_HKD,EUR_HUF,EUR_JPY,EUR_NOK,EUR_NZD,EUR_PLN,EUR_SEK,EUR_SGD,EUR_TRY,EUR_USD,EUR_ZAR,GBP_AUD,GBP_CAD,GBP_CHF,GBP_HKD,GBP_JPY,GBP_NZD,GBP_PLN,GBP_SGD,GBP_USD,GBP_ZAR,HKD_JPY,NZD_CAD,NZD_CHF,NZD_HKD,NZD_JPY,NZD_SGD,NZD_USD,SGD_CHF,SGD_HKD,SGD_JPY,TRY_JPY,USD_CAD,USD_CHF,USD_CNH,USD_CZK,USD_DKK,USD_HKD,USD_HUF,USD_JPY,USD_MXN,USD_NOK,USD_PLN,        USD_SEK,USD_SGD,USD_THB,USD_TRY,USD_ZAR,ZAR_JPY'.split(',')
         #symbols = 'AUD_CAD,AUD_CHF,AUD_HKD,AUD_JPY,AUD_NZD,AUD_SGD,AUD_USD,CAD_CHF,CAD_HKD,CAD_JPY,CAD_SGD,CHF_HKD,CHF_JPY,CHF_ZAR,EUR_AUD,EUR_CAD,EUR_CHF,EUR_CZK,EUR_DKK,EUR_GBP,EUR_HKD,EUR_HUF,EUR_JPY,EUR_NOK,EUR_NZD,EUR_PLN,EUR_SEK,EUR_SGD,EUR_TRY,EUR_USD,EUR_ZAR,GBP_AUD,GBP_CAD,GBP_CHF,GBP_HKD,GBP_JPY,GBP_NZD,GBP_PLN,GBP_SGD,GBP_USD,GBP_ZAR,HKD_JPY,NZD_CAD,NZD_CHF,NZD_HKD,NZD_JPY,NZD_SGD,NZD_USD,SGD_CHF,SGD_HKD,SGD_JPY,TRY_JPY,USD_CAD,USD_CHF,USD_CNH,USD_CZK,USD_DKK,USD_HKD,USD_HUF,USD_JPY,USD_MXN,USD_NOK,USD_PLN,USD_SAR,USD_SEK,USD_SGD,USD_THB,USD_TRY,USD_ZAR,ZAR_JPY'.split(',')        
@@ -109,10 +129,10 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         for i in symbols:
             i = i.strip()
             if threading:
-                async_result = pool.apply_async(getc4, [df, dfh, oanda1, i])
+                async_result = pool.apply_async(getc4, [df, dfh, oanda0, i])
                 dfu0   = async_result.get()
             else:
-                dfu0 = getc4(df, dfh, oanda1, instrument=i)
+                dfu0 = getc4(df, dfh, oanda0, instrument=i)
             if dmcnt == 0:                                               # display matrix:
                 print '%s %s' % ('       ', n.array(list(dfu0.columns))) # display matrix: header
             print '%s %s' % (list(dfu0.index)[0], dfu0.get_values()[0])  # display matrix: body
@@ -247,9 +267,9 @@ def main(args, leverage=10, dryrun=True, verbose=False):
             print e
             print 'Try a different account number'
     else:
-        fu33 = rebalanceTrades(oq, dfu2, oanda1, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
-        fu33 = rebalanceTrades(oq, dfu2, oanda0, 801996, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
-        fu33 = rebalanceTrades(oq, dfu2, oanda0, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
+        dfu33 = rebalanceTrades(oq, dfu2, oanda0, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
+        dfu33 = rebalanceTrades(oq, dfu2, oanda0, 801996, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
+        dfu33 = rebalanceTrades(oq, dfu2, oanda0, 135830, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
         dfu33 = rebalanceTrades(oq, dfu2, oanda0, 558788, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
 
 def getDryRun(args):
@@ -290,7 +310,7 @@ def live():
     #res = json.dumps(oanda0.get_accounts()['accounts'])
     #res2 = json.dumps(oanda0.get_positions(947325))
     trades = oanda0.get_trades(947325, count=500)['trades']
-    df = p.DataFrame(trades)
+    #df = p.DataFrame(trades)
     #print df
     trades = json.dumps(trades)
     #return trades    
