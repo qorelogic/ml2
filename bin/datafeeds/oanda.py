@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 
-import sys
+import argparse
+parser = argparse.ArgumentParser()
+#parser.add_argument("-a", '--account', help="acoount", action="store_true")
+parser.add_argument("-a", '--account', help="acoount")
+parser.add_argument("-m", '--mode', help="mode")
+args = parser.parse_args()
 
+import sys
 def defp(pt):
     try:    sys.path.index(pt)
     except: sys.path.append(pt)
@@ -104,7 +110,9 @@ class MyStreamer(oandapy.Streamer):
                 break
             if case('accountdata'):
                 #print oq.oanda2.get_accounts()
-                self.accid = <account no.>
+                try:    accid = int(args.account)
+                except: accid = 0
+                self.accid = accid
                 self.trades    = oq.oanda2.get_trades(self.accid, count=500)
                 self.trades    = p.DataFrame(self.trades['trades']) #.set_index('instrument')
                 self.trades    = self.trades.combine_first(getSyntheticCurrencyTable(oq.oanda2, oq, self.trades['instrument']))
@@ -404,9 +412,10 @@ if __name__ == '__main__':
     qd._getMethod()
     
     try:
-        if sys.argv[1] not in modes:
+        mode = args.mode
+        if mode not in modes:
             raise
-        do_work(sys.argv[1], True)
+        do_work(mode, True)
     except Exception as e:
         qd.printTraceBack()
         print e
