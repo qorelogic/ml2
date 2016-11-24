@@ -2620,10 +2620,22 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['bid'] = instrumentCurrencyPrice['bid'].get_values()
     dfu33['ask'] = instrumentCurrencyPrice['ask'].get_values()
     dfu33['spread'] = n.abs(dfu33['bid'] - dfu33['ask'])
-    dfu33['spreadPip'] = dfu33['spread'] / dfu33['pip']
+    print '============================================'
+    print '============================================'
+    print '============================================'
+    print '============================================'
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        print dfu33
+    print '============================================'
+    print '============================================'
+    print '============================================'
+    try: dfu33['spreadPip'] = dfu33['spread'] / dfu33['pip']
+    except: ''
     dfu33['unitsAvailable'] = netAssetValue * leverage / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
-    dfu33['exposure'] = dfu33['units'] * dfu33['quotedCurrencyPriceAsk']
-    dfu33['exposureSum'] = n.sum(dfu33['exposure'])
+    try: 
+        dfu33['exposure'] = dfu33['units'] * dfu33['quotedCurrencyPriceAsk']
+        dfu33['exposureSum'] = n.sum(dfu33['exposure'])
+    except: ''
     dfu33['allMargin'] = balance * leverage
     dfu33['pl00001'] = ( ((dfu33['bid']+dfu33['ask'])/2) ) * (1 / (dfu33['pairedCurrencyPriceBid']+dfu33['pairedCurrencyPriceAsk'])/2)   #* dfu33['pow2']
 
