@@ -1960,8 +1960,10 @@ def calcPl(bid, ask, price, sideBool, pairedCurrencyBid, pairedCurrencyAsk, unit
         #else:                
         #    close[i] = bid[i]
         #    pairedCurrencyClose[i] = pairedCurrencyBid[i]
-        close[i]               = ask[i]               if sideBool[i] == 1 else bid[i]
-        pairedCurrencyClose[i] = pairedCurrencyAsk[i] if sideBool[i] == 1 else pairedCurrencyBid[i]
+        try:    close[i]               = ask[i]               if sideBool[i] == 1 else bid[i]
+        except: ''
+        try:    pairedCurrencyClose[i] = pairedCurrencyAsk[i] if sideBool[i] == 1 else pairedCurrencyBid[i]
+        except: ''
     #if sideBool == 1:
     #    close               = bid
     #    pairedCurrencyClose = pairedCurrencyBid
@@ -2210,14 +2212,34 @@ def getSyntheticCurrencyTable(oanda2, oq, instruments):
     return ctsdf
 
 def getCurrentTradesAndPositions(oanda2, accid, oq):
-    currentPositions = p.DataFrame(oanda2.get_positions(accid)['positions']).set_index('instrument')#.ix[:,'side units'.split(' ')]
-    currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions)
-    ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
-    gct = ct.groupby('instrument') #.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
-    gct = gct.aggregate(n.mean).ix[:, 'units pl pip'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
-    #print 'gct'
-    #print gct
-    currentPositions['pip'] = gct['pip']
+    cp = oanda2.get_positions(accid)['positions']
+    currentPositions = p.DataFrame(cp)
+    try:    currentPositions = currentPositions.set_index('instrument')#.ix[:,'side units'.split(' ')]
+    except Exception as e:
+        print e
+    print currentPositions
+    print 'tesst-------2'
+    try:
+        currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions)
+    except Exception as e:
+        #print e
+        currentTrades = p.DataFrame([])
+    try:
+        ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
+    except Exception as e:
+        ct = p.DataFrame([])
+    print 'ct'
+    print ct
+    gct = p.DataFrame([])
+    try:
+        gct = ct.groupby('instrument') #.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
+        gct = gct.aggregate(n.mean).ix[:, 'units pl pip'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
+        currentPositions['pip'] = gct['pip']
+    except Exception as e:
+        ''
+    print 'tesst-------'
+    print 'gct'
+    print gct
     
     return [currentPositions, currentTrades, ct, gct]
 
@@ -2247,6 +2269,10 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
 
     try:
         [currentPositions, currentTrades, ct, gct] = getCurrentTradesAndPositions(oanda2, accid, oq)
+    except Exception as e:
+        print e
+        
+    try:
         ffsds = 'instrument side units plpips pl time'.split(' ')
         plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
         pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
@@ -2325,16 +2351,20 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['diffpRebalancep'] = dfu3.ix[:, 'diffp'].get_values() * dfu3.ix[:, 'rebalancep'].get_values() * dfu3.ix[:, 'deleverageBool'].get_values()
     #dfu3['diffpRebalancepBalance'] = dfu3.ix[:, 'diffpRebalancep'].get_values() * balance
     #dfu3['diffpRebalancepBalance'] = dfu3.ix[:, 'diffpRebalancep'] * dfu3.ix[:, 'pl']
-    dfu3['diffpRebalancep2'] = abs((dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'positions'])
-    dfu3['diffpRebalancepBalance'] = map(lambda x: 1 if x > 1 else x, abs((dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'positions'])) * dfu3.ix[:, 'pl']
-    #dfu3['diffpRebalancepBalance'] = map(lambda x: 1 if x > 1 else x, abs((dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'positions']))
-    dfu3['diffpRebalancep'] = dfu3.ix[:, 'diffpRebalancepBalance'] / balance
-    #dfu3['diffpRebalancepBalance'] = netAssetValue
+    try: dfu3['diffpRebalancep2'] = abs((dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'positions'])
+    except: ''
+    try:
+        dfu3['diffpRebalancepBalance'] = map(lambda x: 1 if x > 1 else x, abs((dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'positions'])) * dfu3.ix[:, 'pl']
+        #dfu3['diffpRebalancepBalance'] = map(lambda x: 1 if x > 1 else x, abs((dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'positions']))
+        dfu3['diffpRebalancep'] = dfu3.ix[:, 'diffpRebalancepBalance'] / balance
+        #dfu3['diffpRebalancepBalance'] = netAssetValue
+    except: ''
 
     # margin used
     dfu3['bc_hc']       = map(lambda x: dfu3.ix[x, 'quotedCurrencyPriceBid'] if dfu3.ix[x, 'powQuoted'] > 0 else (1 / dfu3.ix[x, 'quotedCurrencyPriceBid']), dfu3.index)
     dfu3['marginRatio'] = 50
-    dfu3['marginUsed']  = (dfu3.ix[:, 'bc_hc'] * dfu3.ix[:, 'units']) / dfu3['marginRatio']
+    try: dfu3['marginUsed']  = (dfu3.ix[:, 'bc_hc'] * dfu3.ix[:, 'units']) / dfu3['marginRatio']
+    except: ''
     dfu3['rebalanceMarginUsed'] = (dfu3.ix[:, 'bc_hc'] * n.abs(dfu3.ix[:, 'rebalance'])) / dfu3['marginRatio']
     
     # indicates if this is:
@@ -2343,12 +2373,16 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     #   a leverage
     #     - (-e.) 
     #     - if rebalance consumes the marginUsed and changes the sidePolarity
-    dfu3['diffRebalanceMarginUsed']     = dfu3['marginUsed'] - dfu3['rebalanceMarginUsed']
-    dfu3['diffRebalanceMarginUsedBool'] = dfu3['diffRebalanceMarginUsed'] > 0
+    try: dfu3['diffRebalanceMarginUsed']     = dfu3['marginUsed'] - dfu3['rebalanceMarginUsed']
+    except: ''
+    try: dfu3['diffRebalanceMarginUsedBool'] = dfu3['diffRebalanceMarginUsed'] > 0
+    except: ''
     
     # the rebalance units as percentage of all units
-    dfu3['rebalanceOverUnits']  = (n.abs(dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'units'])  # deprecated
-    dfu3['marginUsedP']  = dfu3['rebalanceOverUnits'] * dfu3['marginUsed']                # deprecated
+    try: dfu3['rebalanceOverUnits']  = (n.abs(dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'units'])  # deprecated
+    except: ''
+    try: dfu3['marginUsedP']  = dfu3['rebalanceOverUnits'] * dfu3['marginUsed']                # deprecated
+    except: ''
     
     if sortRebalanceList == 'reverse'    or sortRebalanceList == 'r' or sortRebalanceList == None:
         sortby                    = ['deleverageBool', 'diffRebalanceMarginUsedBool', 'rebalanceMarginUsed', 'diffpRebalancep']
@@ -2374,9 +2408,10 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     if noInteractiveLeverage: 
         sortAscending[0]      = True
     
-    for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
-        dfu3.ix[i, 'pl098'] = ct[ct['instrument'] == i].ix[:,'pl'].sum()
-    dfu3['deleverageLoss'] = dfu3['pl'] * dfu3['rebalance'] / dfu3['units'] 
+    #for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
+    #    dfu3.ix[i, 'pl098'] = ct[ct['instrument'] == i].ix[:,'pl'].sum()
+    try: dfu3['deleverageLoss'] = dfu3['pl'] * dfu3['rebalance'] / dfu3['units'] 
+    except: ''
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         f1Base         = 'amount bool buy diff diffp sell side sidePolarity amountSidePolarity bid ask spread pip spreadPip pairedCurrencyPriceBid pairedCurrencyPriceAsk quotedCurrencyPriceBid quotedCurrencyPriceAsk diffRebalanceMarginUsed rebalanceMarginUsed marginUsed marginUsedP unitsAvailable units exposure exposureSum allMargin amount2 amount2Sum amount4 amount4Sum diffamount4amount2 positions rebalance rebalancep diffp diffpRebalancep diffpRebalancepBalance pl pl098 pl00001 deleverageLoss diffpRebalancep2 bc_hc powQuoted pow2 rebalanceOverUnits'
@@ -2408,15 +2443,18 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         print '                                                               drbp=diffpRebalancep'
     print '===1==1==1=1=1=1===='
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        gct = ct.groupby('instrument')
-        gct = gct.aggregate(n.mean)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
-        if int(verbose) >= 8:
-            print ct #.sort_values(by='', ascending=False)
-            print gct
-        
+        try:
+            gct = ct.groupby('instrument')
+            gct = gct.aggregate(n.mean)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
+            if int(verbose) >= 8:
+                print ct #.sort_values(by='', ascending=False)
+                print gct
+        except: ''
         #print ct.sort_values(by='plpips', ascending=False)
     print '===1==1==1=1=1=1===='
-    for i in dfu3.sort_values(by=sortby, ascending=sortAscending).index:
+    try:    dfu3s = dfu3.sort_values(by=sortby, ascending=sortAscending).index
+    except: dfu3s = dfu3.index
+    for i in dfu3s:
         #print dfu3.ix[[i], :].transpose()
         units = int(abs(dfu3.ix[i, 'rebalance']))#-1
         side  = 'buy' if int(dfu3.ix[i, 'rebalance']) > 0 else 'sell'
@@ -2424,25 +2462,34 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         #dfu3.ix[i, 'side']
         if units > 0:
             status = '[LIVE]' if dryrun == False else '[dryrun]'
-            reverseEntryStatus  = 'reverseEntry' if dfu3.ix[i, 'diffRebalanceMarginUsedBool'] == False else 'deleverage'
-            deleverageStatus    = '[v %s pl/drb/dLoss(drbp):%.3f/%.3f/%.3f(%.3f%s)]' % (reverseEntryStatus.rjust(12), dfu3.ix[i, 'pl'], dfu3.ix[i, 'diffpRebalancepBalance'], dfu3.ix[i, 'deleverageLoss'], dfu3.ix[i, 'diffpRebalancep']*100, '%')  if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
+            try:
+                reverseEntryStatus  = 'reverseEntry' if dfu3.ix[i, 'diffRebalanceMarginUsedBool'] == False else 'deleverage'
+                deleverageStatus = '[v %s pl/drb/dLoss(drbp):%.3f/%.3f/%.3f(%.3f%s)]' % (reverseEntryStatus.rjust(12), dfu3.ix[i, 'pl'], dfu3.ix[i, 'diffpRebalancepBalance'], dfu3.ix[i, 'deleverageLoss'], dfu3.ix[i, 'diffpRebalancep']*100, '%')  if dfu3.ix[i, 'deleverageBool'] == 1 else '[^   leverage]'
+            except:
+               deleverageStatus = ''
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
-            if int(verbose) >= 8:
-                print "<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s[%s]) %s %s %s rebalanceMU/MU/diffRebalanceMU:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed'])
-            else:
-                print "<broker>.create_order(instrument='%s', side='%s', units=%s[%s]) %s %s %s r/MU/dMU:(%.3f/%.3f/%.3f)" % (i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed'])
+            try:
+                if int(verbose) >= 8:
+                    print "<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s[%s]) %s %s %s rebalanceMU/MU/diffRebalanceMU:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed'])
+                else:
+                    print "<broker>.create_order(instrument='%s', side='%s', units=%s[%s]) %s %s %s r/MU/dMU:(%.3f/%.3f/%.3f)" % (i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed'])
+            except: ''
 
             #for i in list(plp.index):
             if threading:
-                async_result = poolFleetingProfits.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose])
-                return_val   = async_result.get()
-                #print return_val
+                try:
+                    async_result = poolFleetingProfits.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose])
+                    return_val   = async_result.get()
+                    #print return_val
+                except: ''
     
                 async_result = poolLeverage.apply_async(leverageTrades, [dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct])
                 return_val   = async_result.get()
                 return_val
             else:
-                fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose)
+                try:
+                    fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose)
+                except: ''
                 leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct)
                 
             #print return_val
@@ -2453,7 +2500,8 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         poolLeverage.close()
         
     #print maccount
-    pll[0] = pll['pls']
+    try: pll[0] = pll['pls']
+    except: ''
     #maccount = oanda2.get_account(accid)
     dfa = p.DataFrame(maccount, index=[0])
     dfa = dfa.combine_first(pll.ix[:,[0]].transpose())
@@ -2482,8 +2530,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfa[accountId] = dfa[0]
     
     dfa = dfa.transpose()
-
-    di = dfa.ix[int(accountId), :].transpose().to_dict()
+    di = dfa.ix[accountId, :].transpose().to_dict()
     mongo = mong.MongoClient()
     mongo.ql.broker_oanda_account.insert(di)
 
