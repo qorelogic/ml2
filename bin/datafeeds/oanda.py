@@ -2,7 +2,10 @@
 
 import argparse
 parser = argparse.ArgumentParser()
-#parser.add_argument("-a", '--account', help="acoount", action="store_true")
+parser.add_argument("-ll", '--listLogins', help="list logins", action="store_true")
+parser.add_argument("-la", '--listAccounts', help="list logins", action="store_true")
+parser.add_argument("-li", '--loginIndex', help="set the account index given by -ll")
+parser.add_argument("-ai", '--accountIndex', help="set the account index given by -la")
 parser.add_argument("-a", '--account', help="acoount")
 parser.add_argument("-m", '--mode', help="mode")
 args = parser.parse_args()
@@ -53,8 +56,38 @@ try:
 except IOError, e:
     print e
     sys.exit()
+
+co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
+
+try:    loginIndex = int(args.loginIndex)
+except: loginIndex = 0
+
+try:    accountIndex = int(args.accountIndex)
+except: accountIndex = 0
+
+env0=co.ix[loginIndex,1]
+access_token0=co.ix[loginIndex,2]
+oanda0  = oandapy.API(environment=env0, access_token=access_token0)
+
+#env1=co.ix[1,1]
+#access_token1=co.ix[1,2]
+#oanda1 = oandapy.API(environment=env1, access_token=access_token1)
+
+with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+    if args.listLogins:
+            print co
+            sys.exit()
     
-oq = OandaQ(selectOandaAccount=0, selectOandaSubAccount=6)
+    if args.listAccounts:
+            #print co
+            acc = oanda0.get_accounts()['accounts']            
+            print p.DataFrame(acc)
+            #accid = acc[loginIndex]['accountId']
+            #print 'using account: {0}'.format(accid)
+            sys.exit()
+
+    
+oq = OandaQ(selectOandaAccount=loginIndex, selectOandaSubAccount=accountIndex)
 
 modes = 'demo,feed,plotly,csv,babysit,zmq,accountdata'.split(',')
 
@@ -86,6 +119,11 @@ class MyStreamer(oandapy.Streamer):
         self.ticks = 0
         self.hdir = '/ml.dev/bin/data/oanda/datafeed'
         mkdir_p(self.hdir)
+
+        #print oq.oanda2.get_accounts()
+        try:    self.accid = int(args.account)
+        except: self.accid = int(oq.aid)        
+        print 'accid: %s' % self.accid
         
 #    @profile
     def init(self, mode):
@@ -109,10 +147,6 @@ class MyStreamer(oandapy.Streamer):
             if case('csv'):
                 break
             if case('accountdata'):
-                #print oq.oanda2.get_accounts()
-                try:    accid = int(args.account)
-                except: accid = 0
-                self.accid = accid
                 self.trades    = oq.oanda2.get_trades(self.accid, count=500)
                 self.trades    = p.DataFrame(self.trades['trades']) #.set_index('instrument')
                 self.trades    = self.trades.combine_first(getSyntheticCurrencyTable(oq.oanda2, oq, self.trades['instrument']))
@@ -213,8 +247,8 @@ class MyStreamer(oandapy.Streamer):
                                 oco['units'] = plp.ix[i, 'units']
                                 oco['i'] = i
                                 print oco
-                                print "reopenTrade:: oandaCreateOrder(oanda2, %s, %s, %s, %s, method='%s', data='%s')" % (accid, oco['instrument'], oco['side'], oco['units'], 'feed::fleetingProfitsCloseTrade::reopenTrade[leverage:create-order]', json.dumps(plp.ix[i, :].fillna(0).to_dict()))
-                                oandaCreateOrder(oanda2, accid, oco['instrument'], oco['side'], oco['units'], method='feed::fleetingProfitsCloseTrade::reopenTrade[leverage:create-order]', data=json.dumps(plp.ix[i, :].fillna(0).to_dict()))
+                                print "reopenTrade:: oandaCreateOrder(oanda2, %s, %s, %s, %s, method='%s', data='%s')" % (self.accid, oco['instrument'], oco['side'], oco['units'], 'feed::fleetingProfitsCloseTrade::reopenTrade[leverage:create-order]', json.dumps(plp.ix[i, :].fillna(0).to_dict()))
+                                oandaCreateOrder(oanda2, self.accid, oco['instrument'], oco['side'], oco['units'], method='feed::fleetingProfitsCloseTrade::reopenTrade[leverage:create-order]', data=json.dumps(plp.ix[i, :].fillna(0).to_dict()))
                         #        print plp
                         #print self.trades[self.trades['pl'] < 0].ix[:, 'id pl'.split(' ')]
                         #print self.prices
