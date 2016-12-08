@@ -49,7 +49,12 @@ from pylab import rcParams
 #get_ipython().magic(u'pylab inline')
 #rcParams['figure.figsize'] = 20, 5
 
+# oanda api
 import oandapy
+# oanda (v20) api
+from oandapyV20 import API # the client
+#import oandapyV20.endpoints.trades as trades
+import oandapyV20.endpoints.accounts as accounts
 
 qd = QoreDebug()
 qd.on()
@@ -73,20 +78,40 @@ with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'di
             sys.exit()
     
     if args.listAccounts:
+            
+            # oanda v20 api
+            try:
+                #accountID = "..."
+                client = API(access_token=access_token0)
+                df = p.DataFrame(client.request(accounts.AccountList())['accounts'])
+                df['accountId'] = df['id']
+                df = df.set_index('accountId')
+            except:
+                ''
+            
+            # oanda api
             #print co
-            acc = oanda0.get_accounts()['accounts']            
-            print p.DataFrame(acc)
+            acc = oanda0.get_accounts()['accounts']
+            adf = p.DataFrame(acc).set_index('accountId')
+            try:
+                adf = adf.combine_first(df)
+            except:
+                ''
+            adf['accountId'] = adf.index
+            adf['id'] = range(len(adf.index))
+            adf = adf.set_index('id')
+            print adf.ix[:,'accountId accountCurrency accountName marginRate mt4AccountID tags'.split(' ')]
             #accid = acc[loginIndex]['accountId']
             #print 'using account: {0}'.format(accid)
             sys.exit()
 
 try:
     acc = oanda0.get_accounts()['accounts']
-    try:    accid = int(args.account)
+    try:    accid = str(args.account)
     except: accid = acc[loginIndex]['accountId']
     print 'using account: {0}'.format(accid)
-except:
-    ''
+except Exception as e:
+    print e
 
 @profile
 def main(args, leverage=10, dryrun=True, verbose=False):
@@ -120,7 +145,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         if threading:
             from multiprocessing.pool import ThreadPool
             pool = ThreadPool(processes=270)
-        instruments = p.DataFrame(oanda0.get_instruments(accid)['instruments']).set_index('instrument')
+        #instruments = p.DataFrame(oanda0.get_instruments(accid)['instruments']).set_index('instrument')
         #symbols = instruments.index
         symbols  = 'AUD_CAD,AUD_CHF,AUD_HKD,AUD_JPY,AUD_NZD,AUD_SGD,AUD_USD,CAD_CHF,CAD_HKD,CAD_JPY,CAD_SGD,CHF_HKD,CHF_JPY,CHF_ZAR,EUR_AUD,EUR_CAD,EUR_CHF,        EUR_DKK,EUR_GBP,EUR_HKD,EUR_HUF,EUR_JPY,EUR_NOK,EUR_NZD,EUR_PLN,EUR_SEK,EUR_SGD,EUR_TRY,EUR_USD,EUR_ZAR,GBP_AUD,GBP_CAD,GBP_CHF,GBP_HKD,GBP_JPY,GBP_NZD,GBP_PLN,GBP_SGD,GBP_USD,GBP_ZAR,HKD_JPY,NZD_CAD,NZD_CHF,NZD_HKD,NZD_JPY,NZD_SGD,NZD_USD,SGD_CHF,SGD_HKD,SGD_JPY,TRY_JPY,USD_CAD,USD_CHF,USD_CNH,USD_CZK,USD_DKK,USD_HKD,USD_HUF,USD_JPY,USD_MXN,USD_NOK,USD_PLN,        USD_SEK,USD_SGD,USD_THB,USD_TRY,USD_ZAR,ZAR_JPY'.split(',')
         #symbols = 'AUD_CAD,AUD_CHF,AUD_HKD,AUD_JPY,AUD_NZD,AUD_SGD,AUD_USD,CAD_CHF,CAD_HKD,CAD_JPY,CAD_SGD,CHF_HKD,CHF_JPY,CHF_ZAR,EUR_AUD,EUR_CAD,EUR_CHF,EUR_CZK,EUR_DKK,EUR_GBP,EUR_HKD,EUR_HUF,EUR_JPY,EUR_NOK,EUR_NZD,EUR_PLN,EUR_SEK,EUR_SGD,EUR_TRY,EUR_USD,EUR_ZAR,GBP_AUD,GBP_CAD,GBP_CHF,GBP_HKD,GBP_JPY,GBP_NZD,GBP_PLN,GBP_SGD,GBP_USD,GBP_ZAR,HKD_JPY,NZD_CAD,NZD_CHF,NZD_HKD,NZD_JPY,NZD_SGD,NZD_USD,SGD_CHF,SGD_HKD,SGD_JPY,TRY_JPY,USD_CAD,USD_CHF,USD_CNH,USD_CZK,USD_DKK,USD_HKD,USD_HUF,USD_JPY,USD_MXN,USD_NOK,USD_PLN,USD_SAR,USD_SEK,USD_SGD,USD_THB,USD_TRY,USD_ZAR,ZAR_JPY'.split(',')        
@@ -263,7 +288,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
 
     if args.account:
         try:
-            dfu33 = rebalanceTrades(oq, dfu2, oanda0, int(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, sortRebalanceList=sortRebalanceList)
+            dfu33 = rebalanceTrades(oq, dfu2, oanda0, str(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, sortRebalanceList=sortRebalanceList)
         except oandapy.OandaError as e:
             print e
             print 'Try a different account number'
@@ -362,9 +387,9 @@ if __name__ == "__main__":
         leverage=50
 
     if args.account:
-        account=int(args.account)
+        account= str(args.account)
     else:
-        account=558788
+        account='558788'
 
     def plotTransactionHistory(acc, oaoa):
         th = oaoa.get_transaction_history(acc)
