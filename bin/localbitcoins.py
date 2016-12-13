@@ -6,6 +6,24 @@ Created on Mon Dec  7 17:18:27 2015
 @author: qore2
 """
 
+import argparse
+# source: https://docs.python.org/2/howto/argparse.html
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", '--verbose', help="turn on verbosity")
+parser.add_argument("-l", '--list', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-pm", '--paymentMethods', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-cc", '--localbitcoinsCountryCodes', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-currs", '--localbitcoinsCurrencies', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-ua", '--updateAds', help="go live and turn off dryrun", action="store_true")
+
+parser.add_argument("-ca", '--createAd', help="go live and turn off dryrun", action="store_true")
+group = parser.add_argument_group('createAd')
+group.add_argument("-max", '--maxAmount', help="max amount = int")
+group.add_argument("-tt", '--tradeType', help="trade type = buy bitcoin | sell bitcoin")
+group.add_argument("-cu", '--currency', help="currency = ARS | USD")
+
+args = parser.parse_args()
+
 from qore import *
 import numpy as n
 
@@ -100,6 +118,43 @@ class LocalBitcoins:
         p.set_option('display.width', 1000)
         print df.transpose()
 
+    def getPage(self, url, df):
+        print 'url:%s' % url
+        try:
+            res = fetchURL(url)
+        except TypeError as e:
+            print 'no url to fetch'
+            return [df, None]
+            
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print 'df'
+            #print df
+            print 'count_df:%s' % len(df.index)
+            print 'res'
+            #print p.DataFrame(res)
+        #print res
+        print 'count_res:%s' % len(res['data']['ad_list'])
+        for i in res['data']['ad_list']:
+            data = i['data']
+            #print i
+            #df = p.DataFrame(i['data']).transpose()
+            #print df.ix[['temp_price','temp_price_usd'], 'username']
+            #print data
+            df = df.combine_first(p.DataFrame(data, index=[data['ad_id']]))                
+            #.transpose()
+        try: print 'count_df:%s' % len(df.index)
+        except: ''
+        nextP = None
+        try:    nextP = res['pagination']['next']
+        except: ''
+        print 'nextP:%s' % nextP
+        print '----------'
+        try:
+            df, nextP = self.getPage(url=nextP, df=df)
+        except Exception as e:
+            print e
+        return [df, nextP]
+
     def localbitcoinsPublicAds(self, currency='USD', adtype='buy', payment_method=None):
         #from qore import *
 
@@ -107,17 +162,12 @@ class LocalBitcoins:
             payment_method_txt = payment_method+'/' # follows: /buy-bitcoins-online/{currency:3}/{payment_method}/.json
         else:
             payment_method_txt = ''
-            
-        res = fetchURL('https://localbitcoins.com/{1}-bitcoins-online/{0}/{2}.json'.format(currency, adtype, payment_method_txt))
-        df = p.DataFrame()
-        for i in res['data']['ad_list']:
-            data = i['data']
-            #print i
-            #df = p.DataFrame(i['data']).transpose()
-            #print df.ix[['temp_price','temp_price_usd'], 'username']
-            #print data
-            df = df.combine_first(p.DataFrame(data, index=[data['ad_id']]))
-            #.transpose()
+        
+        murl = 'https://localbitcoins.com/{1}-bitcoins-online/{0}/{2}.json'.format(currency, adtype, payment_method_txt)
+        #murl = 'https://localbitcoins.com/{1}-bitcoins-online/{2}/.json'.format(currency, adtype, payment_method_txt)
+        
+        df, nextP = self.getPage(murl, df=p.DataFrame())
+        
         df = df.convert_objects(convert_numeric=True)
         df['p']  = df.ix[:,'temp_price'] / df.ix[:,'temp_price_usd']
         df['p1'] = df.ix[:,'temp_price_usd'] * self.USD_in_ARS
@@ -131,7 +181,7 @@ class LocalBitcoins:
 
         #dfi = df.ix[:,['temp_price', 'temp_price_usd','p', 'p1', 'p2','profile', 'payment_method', 'trade_type']].sort('temp_price')
         #dfi = df.ix[:,['temp_price', 'temp_price_usd','p', 'p2','profile', 'payment_method', 'trade_type', 'online_provider', 'payment_window_minutes', 'max_amount', 'max_amount_available', 'max_amount_diff', 'max_amount_pcnt', 'min_amount', 'url']].sort('temp_price')
-        dfi = df.ix[:,['url', 'sms_verification_required', 'require_feedback_score', 'online_provider', 'currency', 'temp_price', 'temp_price_usd', 'temp_price_usdblue', 'max_amount', 'max_amount_available', 'min_amount', 'max_amount_diff', 'max_amount_pcnt', 'trade_type', 'bank_name', 'city', 'countrycode', 'created_at', 'first_time_limit_btc', 'location_string', 'msg', 'payment_window_minutes', 'reference_type', 'require_identification', 'require_trade_volume', 'trusted_required', 'visible', 'volume_coefficient_btc']].sort('temp_price')
+        dfi = df.ix[:,['url', 'sms_verification_required', 'require_feedback_score', 'online_provider', 'currency', 'temp_price', 'temp_price_usd', 'temp_price_usdblue', 'max_amount', 'max_amount_available', 'min_amount', 'max_amount_diff', 'max_amount_pcnt', 'trade_type', 'bank_name', 'city', 'countrycode', 'created_at', 'first_time_limit_btc', 'location_string', 'msg', 'payment_window_minutes', 'reference_type', 'require_identification', 'require_trade_volume', 'trusted_required', 'visible', 'volume_coefficient_btc']].sort_values(by='temp_price')
 
         #dfi.plot()
         #print dfi.sort('max_amount_pcnt')
@@ -142,12 +192,14 @@ class LocalBitcoins:
 
         #sortby = 'max_amount_pcnt'
         sortby = 'temp_price_usdblue'
-        print dfi.sort(sortby)
+        print dfi.sort_values(by=sortby)
         #print '================================================================================'
         #print dfi.sort(sortby).transpose()
         print n.max(dfi.ix[:,'temp_price'])
         print n.min(dfi.ix[:,'temp_price'])
         print n.mean(dfi.ix[:,'temp_price'])
+        print 'count:%s' % len(dfi.index)
+        
         
     #/api/contact_create/{ad_id}/
 
@@ -194,18 +246,21 @@ class LocalBitcoins:
     
     Please call / whatsapp me on +6285217939597 if I'm offline or you want to discuss something about term of trade.
             """
+
+            """
+    -100+ trades (DEALS) 
+    -localbitcoins account older than 6 months
+    -{0} Account matching localbitcoins verified name or I.D.
+    I accept payment from EACH PayPal account only ONCE A DAY.
+    If your localbitcoins account is less than 1 year old I will consider trading only once a week. 
+    I leave the right to refuse trading with you without explanations.
+            """
             data['msg']                             = """Term of Trade :
     PLEASE READ THIS BEFORE YOU START A TRADE! 
     MUST MEET ALL THE REQUIREMENTS!!!
     I acсept trades with buyers who have:
-    -100+ trades (DEALS) 
-    -localbitcoins account older than 6 months
     -{0} VERIFIED account
-    -{0} Account matching localbitcoins verified name or I.D.
     You are required to send {0} only after my confirmation.
-    I accept payment from EACH PayPal account only ONCE A DAY.
-    If your localbitcoins account is less than 1 year old I will consider trading only once a week. 
-    I leave the right to refuse trading with you without explanations.
     Please send as to family or friends or cover PP fee!
     Thanks!
     """.format(online_provider)
@@ -278,22 +333,22 @@ class LocalBitcoins:
             method = '/api/ad/{0}/'.format(ad_id)
             print method
             print 
-            #try:
-            response = api.make_request('POST', method, params=data)
-            #except:
-            #    print ''
+            try:
+                response = api.make_request('POST', method, params=data)
+            except Exception as e:
+                print e
             #    print dir(response)
             #    print response.headers
     
             
-    def createAd(self, amount, trade_type, lang, currency, online_provider=None):
+    def createAd(self, max_amount, trade_type, lang, currency, online_provider=None):
         
         os.environ['DREST_DEBUG'] = '1'
     
         from api import LocalbitcoinsAPI
         api = LocalbitcoinsAPI()
         data = {}
-        data['amount']                          = str(amount)
+        data['max_amount']                          = str(max_amount)
         data['lat']                             = '0'
         data['lon']                             = '0'
         
@@ -326,14 +381,23 @@ class LocalBitcoins:
             data['location_string']                 = 'New York, New York'
             data['countrycode']                     = 'US'
     
-            if online_provider.upper() == 'OKPAY':
-                data['max_amount'] = 1
-                data['min_amount'] = 1
-            else:
-                data['max_amount'] = int(n.floor(amount))
-                data['min_amount'] = 1
+            try:
+                if online_provider.upper() == 'OKPAY':
+                    data['max_amount'] = 1
+                    data['min_amount'] = 1
+                else:
+                    data['max_amount'] = int(n.floor(max_amount))
+                    data['min_amount'] = 1
+            except:
+                ''
             
+            try:    data['trade_type']
+            except:
+                parser.print_help()
+                sys.exit()
+
             data['price_equation'] = self.renderPriceEquation(data['trade_type'], currency)
+                
     
             if online_provider != None:
                 data['online_provider']                 = online_provider.upper()
@@ -451,25 +515,42 @@ class LocalBitcoins:
 
 if __name__ == "__main__":
 
-    country_code='US'
-    currency='ARS'
-    payment_method=None
     lb = LocalBitcoins()
-    lb.localbitcoinsPublicAds(currency=currency, adtype='buy', payment_method=payment_method)
-    print '================================================================================'
-    lb.localbitcoinsPublicAds(currency=currency, adtype='sell', payment_method=payment_method)
-    print '================================================================================'
-
-    country_code='US'
-    currency='USD'
-    payment_method='paypal'
-    lb = LocalBitcoins()
-    lb.localbitcoinsPublicAds(currency=currency, adtype='buy', payment_method=payment_method)
-    print '================================================================================'
-    lb.localbitcoinsPublicAds(currency=currency, adtype='sell', payment_method=payment_method)
-    print '================================================================================'
-
-    #lb.localbitcoinsPaymentMethods(country_code=country_code)
-    #lb.localbitcoinsCountryCodes()
-    #lb.localbitcoinsCurrencies()
     
+    country_code='US'
+    
+    if args.list:
+        currency='ARS'
+        payment_method=None
+        lb.localbitcoinsPublicAds(currency=currency, adtype='buy', payment_method=payment_method)
+        print '================================================================================'
+        lb.localbitcoinsPublicAds(currency=currency, adtype='sell', payment_method=payment_method)
+        print '================================================================================'
+    
+        currency='USD'
+        payment_method='paypal'
+        lb = LocalBitcoins()
+        lb.localbitcoinsPublicAds(currency=currency, adtype='buy', payment_method=payment_method)
+        print '================================================================================'
+        lb.localbitcoinsPublicAds(currency=currency, adtype='sell', payment_method=payment_method)
+        print '================================================================================'
+
+    if args.updateAds:
+        lb.updateAds()
+
+    if args.createAd:
+        max_amount = args.maxAmount # int
+        trade_type = args.tradeType # buy | sell
+        currency   = args.currency # ARS | USD
+        lang = 'en'
+        
+        lb.createAd(max_amount, trade_type, lang, currency, online_provider=None)
+
+    if args.paymentMethods:
+        lb.localbitcoinsPaymentMethods(country_code=country_code)
+
+    if args.localbitcoinsCountryCodes:
+        lb.localbitcoinsCountryCodes()
+
+    if args.localbitcoinsCurrencies:
+        lb.localbitcoinsCurrencies()
