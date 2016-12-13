@@ -131,6 +131,7 @@ def fetchFromCache(url):
     return r
 
 def fetchURL(url, mode='json', cachemode='w', fromCache=False):
+    import requests as req
     # mode = json | html
     try:
         if fromCache == True:
@@ -138,8 +139,14 @@ def fetchURL(url, mode='json', cachemode='w', fromCache=False):
             ret = fetchFromCache(url)
         else:
             debug('fetchURL(fetchedFromCache): '+url)
-            response = u.urlopen(url)
-            ret = response.read()
+            # method 1 urllib2
+            #response = u.urlopen(url)
+            #ret = response.read()
+            
+            # method 2 requests
+            # source: http://docs.python-requests.org/en/master/
+            r = req.get(url)
+            ret = r.text
             
             # cache to file
             mkdir_p(hdir)
