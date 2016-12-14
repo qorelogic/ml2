@@ -29,6 +29,10 @@ $minor_h2o        = "7"
 #$codename_h2o    = "tukey"
 #$minor_h2o       = "4"
 
+#$version_h2o     = "3.10.1.1"
+#$codename_h2o    = "turnbull"
+#$minor_h2o       = "1"
+
 $h2oTarball       = "http://h2o-release.s3.amazonaws.com/h2o/rel-$codename_h2o/$minor_h2o/h2o-$version_h2o.zip"
 
 ### Spark #####################################################################
