@@ -10,6 +10,7 @@ parser.add_argument("-li", '--loginIndex', help="set the account index given by 
 #parser.add_argument("-ai", '--accountIndex', help="set the account index given by -la")
 parser.add_argument("-hh", '--history', help="history", action="store_true")
 parser.add_argument("-hf", '--historyFilename', help="history file name")
+parser.add_argument("-hi", '--historyIndex', help="history index")
 parser.add_argument("-a", '--analyze', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-w", '--web', help="data dump", action="store_true")
 parser.add_argument("-acc", '--account', help="account number")
@@ -560,10 +561,13 @@ q  = quit
                     except:
                         historyFilename = '/home/qore2/Desktop/f566016f51bde41a6c6fd2b4ec74cd82.csv'
                     df = p.read_csv(historyFilename)
-                    dfi = df.sort('Transaction ID', ascending=True)
+                    dfi = df.sort_values(by='Transaction ID', ascending=True)
                 except:
                     dfi = p.DataFrame([])
-                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                with p.option_context('display.max_rows', 20000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    if args.historyIndex:
+                        historyIndex = int(args.historyIndex)
+                        dfi = dfi.ix[historyIndex:0,:]
                     print dfi#.columns
                     dfii = dfi.ix[:,'Transaction ID;Balance;Time (UTC)'.split(';')]#.tail(5)#.transpose()
                     #dfii['time'] = oq.oandaToTimestamp(dfii['Time (UTC)'])
