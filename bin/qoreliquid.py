@@ -3416,8 +3416,11 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     except: ''
     dfa['netAssetValue'] = dfa['balance'] + dfa['unrealizedPl']
     dfa['unrealizedPlPcnt'] = dfa['unrealizedPl'] / dfa['balance'] * 100
-    dfa['plpcnt'] = dfa['plp'] / dfa['balance'] * 100
-    dfa['plncnt'] = dfa['pln'] / dfa['balance'] * 100
+    try: dfa['plpcnt'] = dfa['plp'] / dfa['balance'] * 100
+    except: ''
+    try: dfa['plncnt'] = dfa['pln'] / dfa['balance'] * 100
+    except: ''
+    
     # aliases
     dfa['nav'] = dfa['netAssetValue']
     dfa['uPl'] = dfa['unrealizedPl']
