@@ -3412,7 +3412,8 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     qd.data(maccount, name='maccount 010')
     #qd.data(maccount.shape, name='maccount shape')
     dfa = p.DataFrame(maccount, index=[0])
-    dfa = dfa.combine_first(pll.ix[:,[0]].transpose())
+    try: dfa = dfa.combine_first(pll.ix[:,[0]].transpose())
+    except: ''
     dfa['netAssetValue'] = dfa['balance'] + dfa['unrealizedPl']
     dfa['unrealizedPlPcnt'] = dfa['unrealizedPl'] / dfa['balance'] * 100
     dfa['plpcnt'] = dfa['plp'] / dfa['balance'] * 100
