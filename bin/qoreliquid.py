@@ -2256,6 +2256,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     # recalculate percentages [diffp]
     dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
 
+    print 'accid:%s' % accid
     maccount = oanda2.get_account(accid)
     #marginAvail = maccount['marginAvail']
     unrealizedPl = float(maccount['unrealizedPl'])
