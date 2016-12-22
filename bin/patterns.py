@@ -17,6 +17,7 @@ parser.add_argument("-acc", '--account', help="account number")
 parser.add_argument('-g', "-gearing", '--leverage', help="gearing or leverage, default=50")
 parser.add_argument('-n', '--num', help="number of trades default=None")
 parser.add_argument('-dp', '--diffpThreshold', help="trade only signals above a given threshold default=5")
+parser.add_argument('-lim', '--limitMaxTrades', help="trade only a maximum limit number of trades limitMaxTrades")
 #parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
 parser.add_argument("-i", '--interactive', help="Interactive Loop", action="store_true")
 parser.add_argument("-ni", '--noInteractive', help="No interactive Q&A", action="store_true")
@@ -219,13 +220,34 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     if args.diffpThreshold: diffpThreshold=int(args.diffpThreshold)
     else:                   diffpThreshold=5
 
+    if args.limitMaxTrades: limitMaxTrades=int(args.limitMaxTrades)
+    else:                   limitMaxTrades=0
+
     dfu['diff'] = n.abs(dfu['buy'].get_values() - dfu['sell'].get_values())
     dfu['diffp'] = (dfu['diff'].get_values())/n.sum(dfu['diff'].get_values())
     dfu['side'] = map(lambda x: 'buy' if x == 1 else 'sell', (n.array((dfu['buy'].get_values() - dfu['sell'].get_values()) > 0, dtype=int)))
     dfu['sidePolarity'] = map(lambda x: 1 if x == 1 else -1, (n.array((dfu['buy'].get_values() - dfu['sell'].get_values()) > 0, dtype=int)))
     
+    if int(verbose) >= 8:
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print '=4=4=4=4=4=4=4'
+            print dfu
+
+    # set the limit number of maximum trades (limitMaxTrades)
+    if limitMaxTrades == 0: # if limitMaxTrades is default (0), remove the limit
+        limitMaxTrades = len(dfu.index)
+    dfu = dfu.sort_values(by='diffp', ascending=True).tail(limitMaxTrades)
+    dfu = dfu.sort_index()
+
+    if int(verbose) >= 8:
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print '=5=5=5=5=5=5=5'
+            print dfu
+            print '=4=4=4=4=4=4=4'
+    
     # set the percentage threshold
     dfu2 = dfu[dfu['diffp'] > (float(diffpThreshold)/100)].sort_values(by='diff', ascending=False)
+    
     # recalculate percentages [diffp]
     dfu2['diffp'] = (dfu2['diff'].get_values())/n.sum(dfu2['diff'].get_values())
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
