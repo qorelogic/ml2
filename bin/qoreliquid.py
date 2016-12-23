@@ -2249,10 +2249,106 @@ def getCurrentTradesAndPositions(oanda2, accid, oq):
     return [currentPositions, currentTrades, ct, gct]
 
 @profile
-def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None):
+
+def getAccounts(oanda0, access_token0):
+    
+    # oanda (v20) api
+    from oandapyV20 import API # the client
+    from oandapyV20.exceptions import V20Error
+    import oandapyV20.endpoints.accounts as accounts
+    from oandapyV20.endpoints.accounts import AccountSummary
+    qd = QoreDebug()
+    qd.on()
+    #qd.off()
+    # oanda v20 api
+    try:
+        #accountID = "..."
+        client = API(access_token=access_token0)
+        df = p.DataFrame(client.request(accounts.AccountList())['accounts'])
+        df['accountId'] = df['id']
+        df = df.set_index('accountId')
+        for i in df.index:
+            try:
+                #print 'inddsd:%s' % i
+                r = AccountSummary(accountID=i)
+                rv = client.request(r)
+                dfa = p.DataFrame(rv)
+                dfa[i] = dfa['account']
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    idf = dfa.transpose()
+                    #idf = p.DataFrame(idf.ix[i, :], axis=[0])
+                    #print idf
+                    df = df.combine_first(idf)
+                    #df = idf.combine_first(df)
+            except V20Error as ve:
+                print ve
+        df = df.drop('account')
+        df = df.drop('lastTransactionID')
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print 'df:::'
+        #    print df
+    except Exception as e:
+        qd.printTraceBack()
+        print e
+        ''
+    
+    # oanda api
+    #print co
+    acc = p.DataFrame(oanda0.get_accounts()['accounts'])
+    for i in list(acc.index):
+        acc = acc.combine_first(p.DataFrame(oanda0.get_account(acc.ix[i, 'accountId']), index=[i]))
+    adf = acc.set_index('accountId')
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        print 'acc::'
+        print acc
+        print 'adf::'
+        print adf
+    
+    try:
+        #adf = adf.combine_first(df)
+        adf = df.combine_first(adf)
+    except Exception as e:
+        #qd.printTraceBack()
+        print e
+        ''        
+    #print adf
+    adf['accountId'] = adf.index
+    # convert all rows in accountId column to strings (make it searchable)
+    adf['accountId'] = n.array(adf['accountId'], dtype=n.str)
+    adf['id'] = range(len(adf.index))
+    adf = adf.set_index('id')
+    return adf
+
+def getConfig(loginIndex=None, args=None):
+
+    co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
+    
+    print 'loginIndex::%s' % loginIndex
+    print 'args::%s' % args
+    
+    try:    loginIndex = int(args.loginIndex)
+    except:
+        if loginIndex == None:
+            loginIndex = 0    
+    loginIndex =  int(loginIndex)
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        print 'co::%s' % co
+        print 'co:type:%s' % type(co)
+        print 'loginIndex::%s' % loginIndex
+        print 'loginIndex type::%s' % type(loginIndex)
+    env0=co.ix[loginIndex,1]
+    access_token0=co.ix[int(loginIndex),2]
+    oanda0 = oandapy.API(environment=env0, access_token=access_token0)
+    print 'access_token0::%s' % access_token0
+    return [co, loginIndex, env0, access_token0, oanda0]
+
+def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None, loginIndex=None):
     
     import pymongo as mong
     import calendar
+
+    co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=loginIndex)
+
     if threading:
         from multiprocessing.pool import ThreadPool
 
@@ -2262,7 +2358,23 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
 
     print 'accid:%s' % accid
-    maccount = oanda2.get_account(accid)
+    print 'access_token0:%s' % access_token0
+    #maccount = oanda2.get_account(accid)
+    maccount = getAccounts(oanda2, access_token0)
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        print 'accid 2:%s %s' % (accid, type(accid))
+        print 'access_token0 2:%s' % access_token0
+        print 'maccount::'
+        #print p.DataFrame(maccount.columns)
+        print maccount#.to_dict()
+        #print maccount.to_dict()
+        #print maccount.dtypes
+        print 'maccount::2'
+        maccount = maccount[maccount['accountId'] == str(accid)]
+        print maccount
+        maccount = maccount.ix[maccount.index[0],:].to_dict()
+        print 'maccount::3'
+        print maccount
     #marginAvail = maccount['marginAvail']
     unrealizedPl = float(maccount['unrealizedPl'])
     netAssetValue = float(maccount['balance']) + unrealizedPl
