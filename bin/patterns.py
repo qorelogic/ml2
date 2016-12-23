@@ -7,7 +7,7 @@ parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="
 parser.add_argument("-ll", '--listLogins', help="list logins", action="store_true")
 parser.add_argument("-la", '--listAccounts', help="list logins", action="store_true")
 parser.add_argument("-li", '--loginIndex', help="set the account index given by -ll")
-#parser.add_argument("-ai", '--accountIndex', help="set the account index given by -la")
+parser.add_argument("-ai", '--accountIndex', help="set the account index given by -la")
 parser.add_argument("-hh", '--history', help="history", action="store_true")
 parser.add_argument("-hf", '--historyFilename', help="history file name")
 parser.add_argument("-hi", '--historyIndex', help="history index")
@@ -53,22 +53,13 @@ from pylab import rcParams
 
 # oanda api
 import oandapy
-# oanda (v20) api
-from oandapyV20 import API # the client
 #import oandapyV20.endpoints.trades as trades
 import oandapyV20.endpoints.accounts as accounts
 
 qd = QoreDebug()
 qd.on()
 
-co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
-
-try:    loginIndex = int(args.loginIndex)
-except: loginIndex = 0
-
-env0=co.ix[loginIndex,1]
-access_token0=co.ix[loginIndex,2]
-oanda0 = oandapy.API(environment=env0, access_token=access_token0)
+co, loginIndex, env0, access_token0, oanda0 = getConfig(args=args)
 
 #env1=co.ix[1,1]
 #access_token1=co.ix[1,2]
@@ -81,27 +72,7 @@ with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'di
     
     if args.listAccounts:
             
-            # oanda v20 api
-            try:
-                #accountID = "..."
-                client = API(access_token=access_token0)
-                df = p.DataFrame(client.request(accounts.AccountList())['accounts'])
-                df['accountId'] = df['id']
-                df = df.set_index('accountId')
-            except:
-                ''
-            
-            # oanda api
-            #print co
-            acc = oanda0.get_accounts()['accounts']
-            adf = p.DataFrame(acc).set_index('accountId')
-            try:
-                adf = adf.combine_first(df)
-            except:
-                ''
-            adf['accountId'] = adf.index
-            adf['id'] = range(len(adf.index))
-            adf = adf.set_index('id')
+            adf = getAccounts(oanda0, access_token0)
             print adf.ix[:,'accountId accountCurrency accountName marginRate mt4AccountID tags'.split(' ')]
             #accid = acc[loginIndex]['accountId']
             #print 'using account: {0}'.format(accid)
@@ -110,21 +81,32 @@ with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'di
 try:
     if args.accountIndex == None:
         raise('accountIndex is none')
-    accountIndex = str(args.accountIndex)
+    accountIndex = int(args.accountIndex)
 except:        
     accountIndex = 0
 
 try:
-    acc = oanda0.get_accounts()['accounts']
+    acc = getAccounts(oanda0, access_token0)
+    if int(args.verbose) >= 5:
+        print 'args account:'; print args.account
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print 'acc:'; print p.DataFrame(acc)
     try:
         if args.account == None:
             raise('account is none')
         accid = str(args.account)
     except:        
-        accid = acc[accountIndex]['accountId']
-    print 'args account:'; print args.account
-    print 'acc:'; print acc
-    print 'using account: {0}'.format(accid)
+        try:
+            #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #    print acc
+            print accountIndex
+            accid = acc.ix[accountIndex, 'accountId']
+        except Exception as e:
+            print e
+            qd.printTraceBack()
+            sys.exit()
+    if int(args.verbose) >= 1:
+        print 'using account: {0}'.format(accid)
 except Exception as e:
     print e
 
@@ -322,17 +304,19 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     noInteractiveDeleverage = args.noInteractiveDeleverage
     noInteractiveFleetingProfits = args.noInteractiveFleetingProfits
     sortRebalanceList            = args.sortRebalanceList
+    loginIndex                   = args.loginIndex
     
     oq = OandaQ(verbose=False)
 
     if args.account:
         try:
-            dfu33 = rebalanceTrades(oq, dfu2, oanda0, str(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, sortRebalanceList=sortRebalanceList)
+            dfu33 = rebalanceTrades(oq, dfu2, oanda0, str(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, sortRebalanceList=sortRebalanceList, loginIndex=loginIndex)
         except oandapy.OandaError as e:
             print e
+            qd.printTraceBack()
             print 'Try a different account number'
     else:
-        dfu33 = rebalanceTrades(oq, dfu2, oanda0, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
+        dfu33 = rebalanceTrades(oq, dfu2, oanda0, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList, loginIndex=loginIndex)
 
 def getDryRun(args):
     if args.live:
