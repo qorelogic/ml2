@@ -132,6 +132,10 @@ alias sc='scrapy'
 	echo "Pulling from branch $currentBranch.."
 	git pull origin $currentBranch
 }
+.gpulli() {
+	git stash && .gpull && git stash pop stash@{0}
+}
+
 .gsweepPullPush() {
 	nsleep=0
         for i in `git branch | cut -c 3-`; do
