@@ -16,7 +16,7 @@ parser.add_argument("-w", '--web', help="data dump", action="store_true")
 parser.add_argument("-acc", '--account', help="account number")
 parser.add_argument('-g', "-gearing", '--leverage', help="gearing or leverage, default=50")
 parser.add_argument('-n', '--num', help="number of trades default=None")
-parser.add_argument('-dp', '--diffpThreshold', help="trade only signals above a given threshold default=5")
+parser.add_argument('-dp', '--diffpThreshold', help="trade only signals above a given threshold default=0")
 parser.add_argument('-lim', '--limitMaxTrades', help="trade only a maximum limit number of trades limitMaxTrades")
 #parser.add_argument("-c", '--connect', help="connect, v=Vultr", action="store_true")
 parser.add_argument("-i", '--interactive', help="Interactive Loop", action="store_true")
@@ -218,7 +218,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     #sys.exit()
     
     if args.diffpThreshold: diffpThreshold=int(args.diffpThreshold)
-    else:                   diffpThreshold=5
+    else:                   diffpThreshold=0
 
     if args.limitMaxTrades: limitMaxTrades=int(args.limitMaxTrades)
     else:                   limitMaxTrades=0
