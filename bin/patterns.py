@@ -108,9 +108,22 @@ with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'di
             sys.exit()
 
 try:
+    if args.accountIndex == None:
+        raise('accountIndex is none')
+    accountIndex = str(args.accountIndex)
+except:        
+    accountIndex = 0
+
+try:
     acc = oanda0.get_accounts()['accounts']
-    try:    accid = str(args.account)
-    except: accid = acc[loginIndex]['accountId']
+    try:
+        if args.account == None:
+            raise('account is none')
+        accid = str(args.account)
+    except:        
+        accid = acc[accountIndex]['accountId']
+    print 'args account:'; print args.account
+    print 'acc:'; print acc
     print 'using account: {0}'.format(accid)
 except Exception as e:
     print e
