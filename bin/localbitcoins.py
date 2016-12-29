@@ -192,7 +192,10 @@ class LocalBitcoins:
 
         #sortby = 'max_amount_pcnt'
         sortby = 'temp_price_usdblue'
-        print dfi.sort_values(by=sortby)
+        dfi['rank'] = range(1,len(dfi.index)+1)
+        dfi['rankPcnt'] = map(lambda x: float(x)/n.max(dfi['rank'])*100, dfi['rank'])
+
+        print dfi
         #print '================================================================================'
         #print dfi.sort(sortby).transpose()
         print n.max(dfi.ix[:,'temp_price'])
