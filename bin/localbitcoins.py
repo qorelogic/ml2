@@ -16,6 +16,10 @@ parser.add_argument("-cc", '--localbitcoinsCountryCodes', help="go live and turn
 parser.add_argument("-currs", '--localbitcoinsCurrencies', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-ua", '--updateAds', help="go live and turn off dryrun", action="store_true")
 
+parser.add_argument("-sms", '--sms_verification_required', help="turn on verbosity", action="store_true")
+parser.add_argument("-nosms", '--sms_verification_not_required', help="turn on verbosity", action="store_true")
+parser.add_argument("-feedback", '--require_feedback_score', help="turn on verbosity")
+
 parser.add_argument("-ca", '--createAd', help="go live and turn off dryrun", action="store_true")
 group = parser.add_argument_group('createAd')
 group.add_argument("-max", '--maxAmount', help="max amount = int")
@@ -192,6 +196,17 @@ class LocalBitcoins:
 
         #sortby = 'max_amount_pcnt'
         sortby = 'temp_price_usdblue'
+        
+        if args.sms_verification_required:
+            dfi = dfi[dfi['sms_verification_required'] == True]
+
+        if args.sms_verification_not_required:
+            dfi = dfi[dfi['sms_verification_required'] == False]
+
+        #if args.require_feedback_score:
+        print dfi.dtypes
+        dfi = dfi[dfi['require_feedback_score'] <= 85]
+        dfi = dfi.sort_values(by=sortby)
         dfi['rank'] = range(1,len(dfi.index)+1)
         dfi['rankPcnt'] = map(lambda x: float(x)/n.max(dfi['rank'])*100, dfi['rank'])
 
