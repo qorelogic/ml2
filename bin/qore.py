@@ -57,7 +57,7 @@ class QoreDebug:
         
         if self._on == True:
             print
-            print '=============================='
+            print '=== QoreDebug::Method ======================================'
             print '{1} for {0}():'.format(sys._getframe(1).f_code.co_name, 'call stack')
             if self.stackTrace == True:
                 for i in range(2,10):
@@ -67,11 +67,13 @@ class QoreDebug:
 
     def printTraceBack(self):
         if self._on == True:
+            print '=== QoreDebug::TracebackStart==============================='
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print "*** print_tb:"
             traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
             print "*** print_exception:"
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=self.limit, file=sys.stdout)
+            print '=== QoreDebug::TracebackEnd ================================'
 
     def logTraceBack(self, e, limit=100):
         self._on = True
