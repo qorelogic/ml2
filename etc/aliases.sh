@@ -250,6 +250,14 @@ alias .gci=".gb && sleep 0 && git commit -m "
 alias .gcini="git commit -m "
 alias .ga="git add -i "
 alias .grh="git reset --hard "
+.grhi() {
+  if [ "$1" == "" ]; then
+        echo "usage: <git hash>"
+  else
+	git stash && git reset --hard $1 && git stash pop stash@{0}
+  fi
+}
+
 alias .gri="git rebase -i "
 alias .gr="git remote -v" # list remotes
 # quick git rebase -i HEAD~n method
