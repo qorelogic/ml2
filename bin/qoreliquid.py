@@ -2241,13 +2241,18 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
     qd = QoreDebug()
     qd.on()
 
-    cp = oanda2.get_positions(accid)['positions']
-    currentPositions = p.DataFrame(cp)
-    try:    currentPositions = currentPositions.set_index('instrument')#.ix[:,'side units'.split(' ')]
-    except Exception as e:
-        print e
-    print currentPositions
+    try:
+        cp = oanda2.get_positions(accid)['positions']
+        currentPositions = p.DataFrame(cp)
+        try:    currentPositions = currentPositions.set_index('instrument')#.ix[:,'side units'.split(' ')]
+        except Exception as e:
+            print e
+        print currentPositions
+    except:
+        currentPositions = p.DataFrame([])
+    
     print 'tesst-------2'
+    
     try:
         currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=loginIndex)
     except Exception as e:
