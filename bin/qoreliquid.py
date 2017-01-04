@@ -1978,9 +1978,30 @@ def calcPl(bid, ask, price, sideBool, pairedCurrencyBid, pairedCurrencyAsk, unit
     #return ( ( (bid + ask) / 2) - price ) * sideBool * (1 / ((pairedCurrencyBid + pairedCurrencyAsk) / 2)) * units
     return ( close - price ) * sideBool * (1 / pairedCurrencyClose) * units
 
-def getCurrentTrades(oanda2, oq, accid, currentPositions):
+def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
     from numpy import zeros as n_zeros
-    currentTrades = oanda2.get_trades(accid, count=500)['trades']
+    
+    import oandapyV20
+    import oandapyV20.endpoints.trades as trades
+    co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=loginIndex)
+    client = oandapyV20.API(access_token=access_token0)
+
+    r = trades.TradesList(accid)
+    rv = client.request(r)
+    df = p.DataFrame(rv['trades'])
+    print df
+    """
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        try:
+            #print df.dtypes
+            #df = df.convert_objects(convert_numeric=True)
+            df['unrealizedPL'] = p.to_numeric(df['unrealizedPL'])
+            mdf = df.sort_values(by='unrealizedPL', ascending=False)
+            #print mdf[mdf['unrealizedPL'] > 0]
+            print mdf
+        except: ''
+    """        
+    currentTrades = oanda2.get_trades(accid, count=500)['trades']    
     currentTrades = p.DataFrame(currentTrades)
     
     # source: http://stackoverflow.com/questions/33126477/pandas-convert-objectsconvert-numeric-true-deprecated
@@ -2216,7 +2237,7 @@ def getSyntheticCurrencyTable(oanda2, oq, instruments):
     ctsdf.ix[:,'pairedCurrencyAsk pairedCurrencyBid'.split(' ')] = ctsdf.ix[:,'pairedCurrencyAsk pairedCurrencyBid'.split(' ')].fillna(1)
     return ctsdf
 
-def getCurrentTradesAndPositions(oanda2, accid, oq):
+def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
     qd = QoreDebug()
     qd.on()
 
@@ -2228,9 +2249,9 @@ def getCurrentTradesAndPositions(oanda2, accid, oq):
     print currentPositions
     print 'tesst-------2'
     try:
-        currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions)
+        currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=loginIndex)
     except Exception as e:
-        #print e
+        print e
         qd.printTraceBack()
         currentTrades = p.DataFrame([])
     try:
@@ -2392,7 +2413,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     dfu3['amount'] = n.ceil(dfu3['diffp'] * netAssetValue * leverage / prdf.ix[:,'bid'])
 
     try:
-        [currentPositions, currentTrades, ct, gct] = getCurrentTradesAndPositions(oanda2, accid, oq)
+        [currentPositions, currentTrades, ct, gct] = getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=loginIndex)
     except Exception as e:
         print e
         
