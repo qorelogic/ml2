@@ -1989,6 +1989,9 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
     r = trades.TradesList(accid)
     rv = client.request(r)
     df = p.DataFrame(rv['trades'])
+    print 'accid 00101: %s' % accid
+    print 'access_token0 00101: %s' % access_token0
+    print 'df 0010'
     print df
     """
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -2000,9 +2003,19 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
             #print mdf[mdf['unrealizedPL'] > 0]
             print mdf
         except: ''
-    """        
-    currentTrades = oanda2.get_trades(accid, count=500)['trades']    
-    currentTrades = p.DataFrame(currentTrades)
+    """
+    try:
+        currentTrades = oanda2.get_trades(accid, count=500)['trades']    
+        currentTrades = p.DataFrame(currentTrades)
+    except:
+        currentTrades = p.DataFrame([])
+
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        print 'currentTrades:: 00101'
+        print currentTrades
+        currentTrades = currentTrades.combine_first(df)
+        print 'currentTrades:: 00102'
+        print currentTrades
     
     # source: http://stackoverflow.com/questions/33126477/pandas-convert-objectsconvert-numeric-true-deprecated
     #instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument').convert_objects(convert_numeric=True)
