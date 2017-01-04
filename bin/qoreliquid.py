@@ -2217,6 +2217,9 @@ def getSyntheticCurrencyTable(oanda2, oq, instruments):
     return ctsdf
 
 def getCurrentTradesAndPositions(oanda2, accid, oq):
+    qd = QoreDebug()
+    qd.on()
+
     cp = oanda2.get_positions(accid)['positions']
     currentPositions = p.DataFrame(cp)
     try:    currentPositions = currentPositions.set_index('instrument')#.ix[:,'side units'.split(' ')]
@@ -2228,6 +2231,7 @@ def getCurrentTradesAndPositions(oanda2, accid, oq):
         currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions)
     except Exception as e:
         #print e
+        qd.printTraceBack()
         currentTrades = p.DataFrame([])
     try:
         ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
