@@ -11,14 +11,18 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", '--verbose', help="turn on verbosity")
 parser.add_argument("-l", '--list', help="go live and turn off dryrun", action="store_true")
-parser.add_argument("-pm", '--paymentMethods', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-pms", '--paymentMethods', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-cc", '--localbitcoinsCountryCodes', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-currs", '--localbitcoinsCurrencies', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-ua", '--updateAds', help="go live and turn off dryrun", action="store_true")
 
-parser.add_argument("-sms", '--sms_verification_required', help="turn on verbosity", action="store_true")
-parser.add_argument("-nosms", '--sms_verification_not_required', help="turn on verbosity", action="store_true")
-parser.add_argument("-feedback", '--require_feedback_score', help="turn on verbosity")
+parser.add_argument("-sms", '--sms_verification_required', help="sms verify required", action="store_true")
+parser.add_argument("-nosms", '--sms_verification_not_required', help="sms verify not required", action="store_true")
+parser.add_argument("-feedback", '--require_feedback_score', help="require a feedback score higher than ...")
+parser.add_argument("-id", '--require_identification', help="require a feedback score higher than ...", action="store_true")
+parser.add_argument("-noid", '--require_no_identification', help="require a feedback score higher than ...", action="store_true")
+parser.add_argument("-tv", '-vol', '--require_trade_volume', help="require a feedback score higher than ...")
+parser.add_argument("-pm", '--paymentMethod', help="paymentMethod = paypal")
 
 parser.add_argument("-ca", '--createAd', help="go live and turn off dryrun", action="store_true")
 group = parser.add_argument_group('createAd')
@@ -122,7 +126,7 @@ class LocalBitcoins:
         p.set_option('display.width', 1000)
         print df.transpose()
 
-    def getPage(self, url, df):
+    def getPage(self, url, df=None):
         print 'url:%s' % url
         try:
             res = fetchURL(url)
@@ -137,15 +141,18 @@ class LocalBitcoins:
             print 'res'
             #print p.DataFrame(res)
         #print res
-        print 'count_res:%s' % len(res['data']['ad_list'])
-        for i in res['data']['ad_list']:
-            data = i['data']
-            #print i
-            #df = p.DataFrame(i['data']).transpose()
-            #print df.ix[['temp_price','temp_price_usd'], 'username']
-            #print data
-            df = df.combine_first(p.DataFrame(data, index=[data['ad_id']]))                
-            #.transpose()
+        try:
+            print 'count_res:%s' % len(res['data']['ad_list'])
+            for i in res['data']['ad_list']:
+                data = i['data']
+                #print i
+                #df = p.DataFrame(i['data']).transpose()
+                #print df.ix[['temp_price','temp_price_usd'], 'username']
+                #print data
+                df = df.combine_first(p.DataFrame(data, index=[data['ad_id']]))
+                #.transpose()
+        except:
+            ''
         try: print 'count_df:%s' % len(df.index)
         except: ''
         nextP = None
@@ -171,6 +178,8 @@ class LocalBitcoins:
         #murl = 'https://localbitcoins.com/{1}-bitcoins-online/{2}/.json'.format(currency, adtype, payment_method_txt)
         
         df, nextP = self.getPage(murl, df=p.DataFrame())
+        try: print 'count_df 2:%s' % len(df.index)
+        except: ''
         
         df = df.convert_objects(convert_numeric=True)
         df['p']  = df.ix[:,'temp_price'] / df.ix[:,'temp_price_usd']
@@ -202,10 +211,24 @@ class LocalBitcoins:
 
         if args.sms_verification_not_required:
             dfi = dfi[dfi['sms_verification_required'] == False]
+            
+        if args.require_identification:
+            dfi = dfi[dfi['sms_verification_required'] == True]
+        if args.require_no_identification:
+            dfi = dfi[dfi['sms_verification_required'] == False]
 
-        #if args.require_feedback_score:
-        print dfi.dtypes
-        dfi = dfi[dfi['require_feedback_score'] <= 85]
+        if args.require_trade_volume:
+            try:    require_trade_volume = int(args.require_trade_volume)
+            except: require_trade_volume = 0
+            dfi = dfi[dfi['require_trade_volume'] <= require_trade_volume]
+
+        #print dfi.dtypes
+
+        if args.require_feedback_score:
+            try:    require_feedback_score = int(args.require_feedback_score)
+            except: require_feedback_score = 100
+            dfi = dfi[dfi['require_feedback_score'] <= require_feedback_score]
+
         dfi = dfi.sort_values(by=sortby)
         dfi['rank'] = range(1,len(dfi.index)+1)
         dfi['rankPcnt'] = map(lambda x: float(x)/n.max(dfi['rank'])*100, dfi['rank'])
@@ -536,18 +559,32 @@ if __name__ == "__main__":
     lb = LocalBitcoins()
     
     country_code='US'
+    currency = args.currency
+    payment_method = args.paymentMethod
+    
+    if currency == None:
+        currency = 'usd'
+    print 'currency:%s' % currency
+    print 'currency type:%s' % type(currency)
+    
+    #if payment_method == None:
+    #    payment_method = 'usd'
     
     if args.list:
-        currency='ARS'
-        payment_method=None
-        lb.localbitcoinsPublicAds(currency=currency, adtype='buy', payment_method=payment_method)
-        print '================================================================================'
-        lb.localbitcoinsPublicAds(currency=currency, adtype='sell', payment_method=payment_method)
-        print '================================================================================'
-    
-        currency='USD'
-        payment_method='paypal'
-        lb = LocalBitcoins()
+        try:
+            #if  currency.upper() == 'ARS':
+            #    #currency='ARS'
+            #    payment_method=None
+            ''
+        except: ''
+
+        try:
+            #if  currency.upper() == 'USD':
+            #    #currency='USD'
+            #    payment_method='paypal'
+            ''
+        except: ''
+
         lb.localbitcoinsPublicAds(currency=currency, adtype='buy', payment_method=payment_method)
         print '================================================================================'
         lb.localbitcoinsPublicAds(currency=currency, adtype='sell', payment_method=payment_method)
