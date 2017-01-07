@@ -327,3 +327,8 @@ qiptables() {
 	sudo iptables -vL -t raw
 	sudo iptables -vL -t security
 }
+
+qnato-phonetic() {
+	#eog /mldev/assets/art/Desktop/350px-FAA_Phonetic_and_Morse_Chart2.svg.png
+	eog /mldev/assets/art/nato-phonetic-hS7467E.jpg
+}
