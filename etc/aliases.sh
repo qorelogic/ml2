@@ -352,3 +352,8 @@ complete -o bashdefault -o default -o nospace -F _git g 2>/dev/null || complete 
 #complete -o bashdefault -o default -o nospace -F git g 2>/dev/null || complete -o default -o nospace -F git g
 #alias g='git'
 #source /usr/share/bash-completion/completions/git
+
+qnato-phonetic() {
+	#eog /mldev/assets/art/Desktop/350px-FAA_Phonetic_and_Morse_Chart2.svg.png
+	eog /mldev/assets/art/nato-phonetic-hS7467E.jpg
+}
