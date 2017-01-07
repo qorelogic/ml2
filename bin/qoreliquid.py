@@ -1983,23 +1983,32 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
     
     import oandapyV20
     import oandapyV20.endpoints.trades as trades
+    import oandapyV20.endpoints.accounts as accounts
     co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=loginIndex)
     client = oandapyV20.API(access_token=access_token0)
 
-    r = trades.TradesList(accid)
-    rv = client.request(r)
-    df = p.DataFrame(rv['trades'])
-    print 'accid 00101: %s' % accid
-    print 'access_token0 00101: %s' % access_token0
-    print 'df 0010'
-    print df
+    try:
+        r = trades.TradesList(accid)
+        rv = client.request(r)
+        currentTradesV20                 = p.DataFrame(rv['trades'])
+        currentTradesV20['price']        = p.to_numeric(currentTradesV20['price'])
+        currentTradesV20['initialUnits'] = p.to_numeric(currentTradesV20['initialUnits'])
+        currentTradesV20['units']        = n.absolute(currentTradesV20['initialUnits'])
+        currentTradesV20['side']         = map(lambda x: 'buy' if x > 0 else 'sell', currentTradesV20['initialUnits'])
+        print 'accid 00101: %s' % accid
+        print 'access_token0 00101: %s' % access_token0
+        print 'currentTradesV20 0010'
+        print currentTradesV20
+    except Exception as e:
+        print 'err: %s' % e
+        currentTradesV20 = p.DataFrame([])
     """
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         try:
-            #print df.dtypes
-            #df = df.convert_objects(convert_numeric=True)
-            df['unrealizedPL'] = p.to_numeric(df['unrealizedPL'])
-            mdf = df.sort_values(by='unrealizedPL', ascending=False)
+            #print currentTradesV20.dtypes
+            #currentTradesV20 = currentTradesV20.convert_objects(convert_numeric=True)
+            currentTradesV20['unrealizedPL'] = p.to_numeric(currentTradesV20['unrealizedPL'])
+            mdf = currentTradesV20.sort_values(by='unrealizedPL', ascending=False)
             #print mdf[mdf['unrealizedPL'] > 0]
             print mdf
         except: ''
@@ -2013,13 +2022,33 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         print 'currentTrades:: 00101'
         print currentTrades
-        currentTrades = currentTrades.combine_first(df)
+        currentTrades = currentTrades.combine_first(currentTradesV20)
         print 'currentTrades:: 00102'
         print currentTrades
     
+    try:
+        r = accounts.AccountInstruments(accid)
+        rv = client.request(r)
+        instrumentsV20 = p.DataFrame(rv['instruments']).set_index('name')
+        instrumentsV20['pip'] = n.power(10.0, instrumentsV20['pipLocation']) # convert legacy pip to v20
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print 'instruments 00103a'
+            print instrumentsV20
+    except Exception as e:
+        print 'err: %s' % e
+        instrumentsV20 = p.DataFrame([])
+
     # source: http://stackoverflow.com/questions/33126477/pandas-convert-objectsconvert-numeric-true-deprecated
-    #instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument').convert_objects(convert_numeric=True)
-    instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument')
+    try:
+        #instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument').convert_objects(convert_numeric=True)
+        instruments = p.DataFrame(oanda2.get_instruments(accid)['instruments']).set_index('instrument')
+    except:
+        instruments = p.DataFrame([])
+    instruments = instruments.combine_first(instrumentsV20)
+    print 'instruments 00103b'
+    print instruments
+    print 'currentPositions 00104'
+    print currentPositions
     instruments['pip'] = p.to_numeric(instruments['pip'])
     currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
     currentPrices = p.DataFrame(currentPrices).set_index('instrument')
@@ -2254,6 +2283,21 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
     qd = QoreDebug()
     qd.on()
 
+    import oandapyV20
+    import oandapyV20.endpoints.positions as positions
+    co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=loginIndex)
+    client = oandapyV20.API(access_token=access_token0)
+
+    try:
+        r = positions.PositionList(accid)
+        rv = client.request(r)
+        currentPositionsV20 = p.DataFrame(rv['positions']).set_index('instrument')
+        currentPositionsV20['unrealizedPL'] = p.to_numeric(currentPositionsV20['unrealizedPL'])
+        currentPositionsV20 = currentPositionsV20[currentPositionsV20['unrealizedPL'] <> 0]
+    except Exception as e:
+        print e
+        currentPositionsV20 = p.DataFrame([])
+
     try:
         cp = oanda2.get_positions(accid)['positions']
         currentPositions = p.DataFrame(cp)
@@ -2263,6 +2307,8 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         print currentPositions
     except:
         currentPositions = p.DataFrame([])
+        
+    currentPositions = currentPositions.combine_first(currentPositionsV20)
     
     print 'tesst-------2'
     
@@ -2295,22 +2341,22 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
 
 def getAccounts(oanda0, access_token0):
     
-    # oanda (v20) api
-    from oandapyV20 import API # the client
-    from oandapyV20.exceptions import V20Error
-    import oandapyV20.endpoints.accounts as accounts
-    from oandapyV20.endpoints.accounts import AccountSummary
     qd = QoreDebug()
     qd.on()
     #qd.off()
-    # oanda v20 api
+
+    # oanda (v20) api
+    from oandapyV20 import API # the client
+    from oandapyV20.exceptions import V20Error
+    from oandapyV20.endpoints.accounts import AccountList
+    from oandapyV20.endpoints.accounts import AccountSummary
     try:
         #accountID = "..."
         client = API(access_token=access_token0)
-        df = p.DataFrame(client.request(accounts.AccountList())['accounts'])
-        df['accountId'] = df['id']
-        df = df.set_index('accountId')
-        for i in df.index:
+        accountsV20 = p.DataFrame(client.request(AccountList())['accounts'])
+        accountsV20['accountId'] = accountsV20['id']
+        accountsV20 = accountsV20.set_index('accountId')
+        for i in accountsV20.index:
             try:
                 #print 'inddsd:%s' % i
                 r = AccountSummary(accountID=i)
@@ -2321,46 +2367,44 @@ def getAccounts(oanda0, access_token0):
                     idf = dfa.transpose()
                     #idf = p.DataFrame(idf.ix[i, :], axis=[0])
                     #print idf
-                    df = df.combine_first(idf)
-                    #df = idf.combine_first(df)
+                    accountsV20 = accountsV20.combine_first(idf)
+                    #accountsV20 = idf.combine_first(accountsV20)
             except V20Error as ve:
                 print ve
-        df = df.drop('account')
-        df = df.drop('lastTransactionID')
-        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        #    print 'df:::'
-        #    print df
+        accountsV20 = accountsV20.drop('account')
+        accountsV20 = accountsV20.drop('lastTransactionID')
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print 'accountsV20:::'
+            print accountsV20
     except Exception as e:
         qd.printTraceBack()
         print e
         ''
     
     # oanda api
-    #print co
     acc = p.DataFrame(oanda0.get_accounts()['accounts'])
     for i in list(acc.index):
         acc = acc.combine_first(p.DataFrame(oanda0.get_account(acc.ix[i, 'accountId']), index=[i]))
-    adf = acc.set_index('accountId')
+    accounts = acc.set_index('accountId')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         print 'acc::'
         print acc
-        print 'adf::'
-        print adf
+        print 'accounts::'
+        print accounts
     
     try:
-        #adf = adf.combine_first(df)
-        adf = df.combine_first(adf)
+        accounts = accounts.combine_first(accountsV20)
     except Exception as e:
         #qd.printTraceBack()
         print e
         ''        
-    #print adf
-    adf['accountId'] = adf.index
+    #print accounts
+    accounts['accountId'] = accounts.index
     # convert all rows in accountId column to strings (make it searchable)
-    adf['accountId'] = n.array(adf['accountId'], dtype=n.str)
-    adf['id'] = range(len(adf.index))
-    adf = adf.set_index('id')
-    return adf
+    accounts['accountId'] = n.array(accounts['accountId'], dtype=n.str)
+    accounts['id'] = range(len(accounts.index))
+    accounts = accounts.set_index('id')
+    return accounts
 
 def getConfig(loginIndex=None, args=None):
 
