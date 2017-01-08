@@ -2382,13 +2382,13 @@ def getAccounts(oanda0, access_token0):
         ''
     
     # oanda api
-    acc = p.DataFrame(oanda0.get_accounts()['accounts'])
-    for i in list(acc.index):
-        acc = acc.combine_first(p.DataFrame(oanda0.get_account(acc.ix[i, 'accountId']), index=[i]))
-    accounts = acc.set_index('accountId')
+    accounts0 = p.DataFrame(oanda0.get_accounts()['accounts'])
+    for i in list(accounts0.index):
+        accounts0 = accounts0.combine_first(p.DataFrame(oanda0.get_account(accounts0.ix[i, 'accountId']), index=[i]))
+    accounts = accounts0.set_index('accountId')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print 'acc::'
-        print acc
+        print 'accounts0::'
+        print accounts0
         print 'accounts::'
         print accounts
     
