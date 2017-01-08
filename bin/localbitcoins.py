@@ -567,17 +567,22 @@ if __name__ == "__main__":
     print 'currency:%s' % currency
     print 'currency type:%s' % type(currency)
     
+    #if payment_method == None:
+    #    payment_method = 'usd'
+    
     if args.list:
         try:
-            if  currency.upper() == 'ARS':
-                #currency='ARS'
-                payment_method=None
+            #if  currency.upper() == 'ARS':
+            #    #currency='ARS'
+            #    payment_method=None
+            ''
         except: ''
 
         try:
-            if  currency.upper() == 'USD':
-                #currency='USD'
-                payment_method='paypal'
+            #if  currency.upper() == 'USD':
+            #    #currency='USD'
+            #    payment_method='paypal'
+            ''
         except: ''
 
         lb.localbitcoinsPublicAds(currency=currency, adtype='buy', payment_method=payment_method)
