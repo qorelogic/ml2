@@ -7,9 +7,6 @@ import re
 import pandas as p
 import traceback
 
-#logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
-logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
-
 hdir = '/ml.live/bin/data/cache'
 
 from numpy import array as n_array
@@ -23,7 +20,7 @@ def debug(str, verbosity=8):
     #if verbosity == 9:
     if verbosity == 8:
         #print str
-        logging.debug(str)
+        self._logging.debug(str)
 
         return str
 
@@ -33,6 +30,9 @@ class QoreDebug:
         self._on        = on
         self.stackTrace = stackTrace
         self.limit      = 100
+        self._logging = logging
+        #self._logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
+        self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
         
     def on(self):
         self.debugOn()
@@ -103,7 +103,7 @@ class QoreDebug:
         #if verbosity == 9:
         if verbosity == 8:
             #print str
-            logging.debug(str)
+            self._logging.debug(str)
     
             #return str
     
