@@ -2316,7 +2316,7 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=loginIndex)
     except Exception as e:
         print e
-        qd.printTraceBack()
+        qd.logTraceBack()
         currentTrades = p.DataFrame([])
     try:
         ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
@@ -2377,7 +2377,7 @@ def getAccounts(oanda0, access_token0):
             print 'accountsV20:::'
             print accountsV20
     except Exception as e:
-        qd.printTraceBack()
+        qd.logTraceBack()
         print e
         ''
     
@@ -2395,7 +2395,7 @@ def getAccounts(oanda0, access_token0):
     try:
         accounts = accounts.combine_first(accountsV20)
     except Exception as e:
-        #qd.printTraceBack()
+        #qd.logTraceBack()
         print e
         ''        
     #print accounts
