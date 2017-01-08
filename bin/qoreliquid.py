@@ -1696,6 +1696,11 @@ def test_numba():
 def test_cython():
     print 'test'
 
+    
+class Patterns:
+    def __init__(self):
+        'stub'
+
 @profile
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     import hashlib as hl

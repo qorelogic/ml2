@@ -130,6 +130,9 @@ except Exception as e:
 
 @profile
 def main(args, leverage=10, dryrun=True, verbose=False):
+
+    pa = Patterns()
+
     # In[ ]:
 
     threading = not args.nothreading
