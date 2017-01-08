@@ -2295,7 +2295,7 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         currentPositionsV20['unrealizedPL'] = p.to_numeric(currentPositionsV20['unrealizedPL'])
         currentPositionsV20 = currentPositionsV20[currentPositionsV20['unrealizedPL'] <> 0]
     except Exception as e:
-        print e
+        qd.exception(e)
         currentPositionsV20 = p.DataFrame([])
 
     try:
@@ -2303,7 +2303,7 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         currentPositions = p.DataFrame(cp)
         try:    currentPositions = currentPositions.set_index('instrument')#.ix[:,'side units'.split(' ')]
         except Exception as e:
-            print e
+            qd.exception(e)
         print currentPositions
     except:
         currentPositions = p.DataFrame([])
@@ -2315,8 +2315,8 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
     try:
         currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=loginIndex)
     except Exception as e:
-        print e
-        qd.logTraceBack()
+        qd.exception(e)
+        qd.logTraceBack(e)
         currentTrades = p.DataFrame([])
     try:
         ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
@@ -2377,8 +2377,8 @@ def getAccounts(oanda0, access_token0):
             print 'accountsV20:::'
             print accountsV20
     except Exception as e:
-        qd.logTraceBack()
-        print e
+        qd.logTraceBack(e)
+        qd.exception(e)
         ''
     
     # oanda api
@@ -2395,8 +2395,8 @@ def getAccounts(oanda0, access_token0):
     try:
         accounts = accounts.combine_first(accountsV20)
     except Exception as e:
-        #qd.logTraceBack()
-        print e
+        qd.logTraceBack(e)
+        qd.exception(e)
         ''        
     #print accounts
     accounts['accountId'] = accounts.index
@@ -2431,6 +2431,10 @@ def getConfig(loginIndex=None, args=None):
 
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None, loginIndex=None):
     
+    qd = QoreDebug()
+    qd.on()
+    #qd.off()
+
     import pymongo as mong
     import calendar
 
@@ -2477,7 +2481,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     try:
         [currentPositions, currentTrades, ct, gct] = getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=loginIndex)
     except Exception as e:
-        print e
+        qd.exception(e)
         
     try:
         ffsds = 'instrument side units plpips pl time'.split(' ')
@@ -2538,12 +2542,12 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         dfu3 = dfu3.combine_first(cu)
         dfu3 = dfu3.combine_first(gct)
     except Exception as e:
-        print e
+        qd.exception(e)
     try:
         dfu3['amountSidePolarity'] = dfu3['sidePolarity'] * dfu3['amount']
         dfu3['positions'] = cu.ix[:, 'units'] * cu.ix[:, 'bool']
     except Exception as e:
-        print e
+        qd.exception(e)
         #dfu3['positions'] = 0
         ''
     dfu3 = cw(dfu3, oanda2, oq, accid, maccount, leverage=leverage, verbose=verbose)
@@ -2565,7 +2569,8 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         #dfu3['diffpRebalancepBalance'] = map(lambda x: 1 if x > 1 else x, abs((dfu3.ix[:, 'rebalance']) / dfu3.ix[:, 'positions']))
         dfu3['diffpRebalancep'] = dfu3.ix[:, 'diffpRebalancepBalance'] / balance
         #dfu3['diffpRebalancepBalance'] = netAssetValue
-    except: ''
+    except Exception as e: 
+        qd.exception(e)
 
     # margin used
     dfu3['bc_hc']       = map(lambda x: dfu3.ix[x, 'quotedCurrencyPriceBid'] if dfu3.ix[x, 'powQuoted'] > 0 else (1 / dfu3.ix[x, 'quotedCurrencyPriceBid']), dfu3.index)
