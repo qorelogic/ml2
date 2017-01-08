@@ -107,6 +107,12 @@ class QoreDebug:
     
             #return str
     
+    def exception(self, str, verbosity=8):
+        #if verbosity == 9:
+        if verbosity == 8:
+            self._logging.debug(str)
+            #return str
+    
     def type(self, v):
         self.log('{0} {1}'.format(v, type(v)))
     
