@@ -2377,7 +2377,7 @@ def getAccounts(oanda0, access_token0):
             print 'accountsV20:::'
             print accountsV20
     except Exception as e:
-        qd.printTraceBack()
+        qd.logTraceBack()
         print e
         ''
     
