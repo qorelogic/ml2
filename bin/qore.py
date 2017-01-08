@@ -30,6 +30,7 @@ class QoreDebug:
         self._on        = on
         self.stackTrace = stackTrace
         self.limit      = 100
+        self._logging = logging
         #self._logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
         self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
         
