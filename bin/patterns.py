@@ -102,8 +102,7 @@ try:
             print accountIndex
             accid = acc.ix[accountIndex, 'accountId']
         except Exception as e:
-            print e
-            qd.logTraceBack()
+            qd.exception(e)
             sys.exit()
     if int(args.verbose) >= 1:
         print 'using account: {0}'.format(accid)
@@ -312,8 +311,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         try:
             dfu33 = rebalanceTrades(oq, dfu2, oanda0, str(args.account), dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, sortRebalanceList=sortRebalanceList, loginIndex=loginIndex)
         except oandapy.OandaError as e:
-            print e
-            qd.logTraceBack()
+            qd.exception(e)
             print 'Try a different account number'
             qd.printTraceBack()
     else:
@@ -434,7 +432,7 @@ if __name__ == "__main__":
     try:
         main(args, leverage=leverage, dryrun=dryrun)
     except Exception as e:
-        qd.logTraceBack()
+        qd.exception(e)
         print e
     """
     
@@ -606,7 +604,7 @@ q  = quit
             else:
                 main(args, leverage=leverage, dryrun=dryrun)
         except Exception as e:
-            qd.logTraceBack()
+            qd.exception(e)
             print e
         if not args.interactive:
             break
