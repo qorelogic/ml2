@@ -2294,6 +2294,22 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         currentPositionsV20 = p.DataFrame(rv['positions']).set_index('instrument')
         currentPositionsV20['unrealizedPL'] = p.to_numeric(currentPositionsV20['unrealizedPL'])
         currentPositionsV20 = currentPositionsV20[currentPositionsV20['unrealizedPL'] <> 0]
+
+        # convert v20 units [long/short] to single 'units' field for legacy versopm
+        csd = p.DataFrame()
+        cddf = p.DataFrame(p.DataFrame(currentPositionsV20['long'].to_dict()).transpose()['units'])
+        cddf['unitsLong'] = cddf['units']
+        csd = csd.combine_first(cddf)
+        cddf = p.DataFrame(p.DataFrame(currentPositionsV20['short'].to_dict()).transpose()['units'])
+        cddf['unitsShort'] = cddf['units']
+        csd = csd.combine_first(cddf)
+        csd['unitsLong'] = p.to_numeric(csd['unitsLong'])
+        csd['unitsShort'] = p.to_numeric(csd['unitsShort'])
+        csd['units'] = csd['unitsLong'] + csd['unitsShort']
+        #print csd.dtypes
+        #print csd.ix[:, 'units'.split()]
+        currentPositionsV20['units'] = csd['units']
+        #print currentPositionsV20
     except Exception as e:
         qd.exception(e)
         currentPositionsV20 = p.DataFrame([])
