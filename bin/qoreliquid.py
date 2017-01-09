@@ -2244,7 +2244,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                 # oanda (v20) api
                 from oandapyV20 import API # the client
                 from oandapyV20.exceptions import V20Error
-                from oandapyV20.endpoints.orders import orders
+                import oandapyV20.endpoints.orders as orders
                 co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=loginIndex)
                 client = API(access_token=access_token0)
                 orderData = {
