@@ -69,20 +69,21 @@ class QoreDebug:
         if self._on == True:
             print '=== QoreDebug::TracebackStart==============================='
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print "*** print_tb:"
+            print "=== print_tb: ==="
             traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-            print "*** print_exception:"
+            print "=== print_exception: ==="
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=self.limit, file=sys.stdout)
             print '=== QoreDebug::TracebackEnd ================================'
 
     def logTraceBack(self, e, limit=100):
         self._on = True
         if self._on == True:
+            self.log('=== QoreDebug::TracebackStart===============================')
             exc_type, exc_value, exc_traceback = sys.exc_info()
             self.log('')
-            self.log("*** print_exception:")
+            self.log("=== print_exception: ===")
             self.log(e)
-            self.log("*** print_tb:")
+            self.log("=== print_tb: ===")
             
             #fp = open('/tmp/qore.dev.log', 'a')
             #traceback.print_tb(exc_traceback, limit=1, file=fp)
@@ -90,12 +91,13 @@ class QoreDebug:
             #self.log(tb)
             #self.log('{0}{1}'.format('\n', p.DataFrame(tb)))
             for i in tb: self.log(i)
-            self.log("*** print_stack:")
+            self.log("=== print_stack: ===")
             #traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=fp)
             stack = traceback.extract_stack(limit=limit)
             #self.log(stack)
             #self.log('{0}{1}'.format('\n', p.DataFrame(stack)))
             for i in stack: self.log(i)
+            self.log('=== QoreDebug::TracebackEnd ================================')
             self.log('')
             #fp.close()
 
