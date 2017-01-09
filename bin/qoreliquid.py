@@ -2310,6 +2310,9 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         
     currentPositions = currentPositions.combine_first(currentPositionsV20)
     
+    print 'currentPositions::'
+    print currentPositions
+    
     print 'tesst-------2'
     
     try:
