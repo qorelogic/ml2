@@ -20,7 +20,7 @@ def debug(str, verbosity=8):
     #if verbosity == 9:
     if verbosity == 8:
         #print str
-        self._logging.debug(str)
+        logging.debug(str)
 
         return str
 
