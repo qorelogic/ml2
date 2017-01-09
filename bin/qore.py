@@ -69,21 +69,21 @@ class QoreDebug:
         if self._on == True:
             print '=== QoreDebug::TracebackStart==============================='
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print "=== print_tb: ==="
+            print "=== traceback: ==="
             traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-            print "=== print_exception: ==="
+            print "=== exception: ==="
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=self.limit, file=sys.stdout)
             print '=== QoreDebug::TracebackEnd ================================'
 
     def logTraceBack(self, e, limit=100):
         self._on = True
         if self._on == True:
+            self.log('')
             self.log('=== QoreDebug::TracebackStart===============================')
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            self.log('')
-            self.log("=== print_exception: ===")
+            self.log("=== exception: ===")
             self.log(e)
-            self.log("=== print_tb: ===")
+            self.log("=== traceback: ===")
             
             #fp = open('/tmp/qore.dev.log', 'a')
             #traceback.print_tb(exc_traceback, limit=1, file=fp)
@@ -112,7 +112,7 @@ class QoreDebug:
     def exception(self, e, verbosity=8):
         #if verbosity == 9:
         if verbosity == 8:
-            self._logging.debug(e)
+            #self._logging.debug(e)
             self.logTraceBack(e)
             #return e
     
