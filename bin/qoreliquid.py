@@ -2431,6 +2431,10 @@ def getConfig(loginIndex=None, args=None):
 
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None, loginIndex=None):
     
+    qd = QoreDebug()
+    qd.on()
+    #qd.off()
+
     import pymongo as mong
     import calendar
 
