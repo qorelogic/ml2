@@ -2247,13 +2247,14 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                 import oandapyV20.endpoints.orders as orders
                 co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=loginIndex)
                 client = API(access_token=access_token0)
+                vunits = str(units if side == 'buy' else -units)
                 orderData = {
                     "order": {
                         "type": "MARKET",
                         "positionFill": "DEFAULT",
                         "instrument": i,
                         "timeInForce": "FOK",
-                        "units": units if side == 'buy' else -units
+                        "units": vunits
                     }
                 }
                 r = orders.OrderCreate(accid, data=orderData)
