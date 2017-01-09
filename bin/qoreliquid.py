@@ -2155,7 +2155,7 @@ def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleeti
             qd.exception(e)
 
 @profile
-def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, currentTrades):
+def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, currentTrades, loginIndex=None):
     qd = QoreDebug()
     qd.on()
     #qd.off()
@@ -2237,7 +2237,31 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
             #if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
             #    print 'ni---'
             #    interactiveMode()
-            oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
+            try:
+                # oanda legacy
+                oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
+            except:
+                # oanda (v20) api
+                from oandapyV20 import API # the client
+                from oandapyV20.exceptions import V20Error
+                from oandapyV20.endpoints.orders import orders
+                co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=loginIndex)
+                client = API(access_token=access_token0)
+                orderData = {
+                    "order": {
+                        "type": "MARKET",
+                        "positionFill": "DEFAULT",
+                        "instrument": i,
+                        "timeInForce": "FOK",
+                        "units": units if side == 'buy' else -units
+                    }
+                }
+                r = orders.OrderCreate(accid, data=orderData)
+                client.request(r)
+                #print r.response
+                #p.DataFrame(r.response['orderCreateTransaction'])
+                #p.DataFrame(r.response['orderFillTransaction'])
+                
             # collect trade data
             di = {'method':'leverageTrades[leverage:create-order]', 'account':accid, 'type':'market', 'instrument':i, 'side':side, 'units':units, 'data':json.dumps(dfu.ix[j, :].fillna(0).to_dict())}
             mongo = mong.MongoClient()
@@ -2724,14 +2748,14 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                     #print return_val
                 except: ''
     
-                async_result = poolLeverage.apply_async(leverageTrades, [dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct])
+                async_result = poolLeverage.apply_async(leverageTrades, [dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct, loginIndex])
                 return_val   = async_result.get()
                 return_val
             else:
                 try:
                     fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose)
                 except: ''
-                leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct)
+                leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct, loginIndex=loginIndex)
                 
             #print return_val
             #leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive)
