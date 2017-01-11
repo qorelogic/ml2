@@ -2499,7 +2499,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     if threading:
         from multiprocessing.pool import ThreadPool
 
-    if int(verbose) >= 5: print '----------'
+    if int(verbose) >= 5: print('----------')
     
     # recalculate percentages [diffp]
     dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
@@ -2511,17 +2511,15 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         print 'accid 2:%s %s' % (accid, type(accid))
         print 'access_token0 2:%s' % access_token0
-        print 'maccount::'
-        #print p.DataFrame(maccount.columns)
-        print maccount#.to_dict()
-        #print maccount.to_dict()
-        #print maccount.dtypes
-        print 'maccount::2'
+        qd.data('maccount::', maccount)
+        #qd.data(p.DataFrame(maccount.columns))
+        qd.data('maccount', maccount.to_dict())
+        qd.data('maccount', maccount.dtypes)
+        qd.data('maccount::2')
         maccount = maccount[maccount['accountId'] == str(accid)]
-        print maccount
+        qd.data('maccount', maccount)
         maccount = maccount.ix[maccount.index[0],:].to_dict()
-        print 'maccount::3'
-        print maccount
+        qd.data('maccount::3', maccount)
     #marginAvail = maccount['marginAvail']
     unrealizedPl = float(maccount['unrealizedPl'])
     netAssetValue = float(maccount['balance']) + unrealizedPl
@@ -2824,64 +2822,64 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
 @profile
 def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33 = dfu33.fillna(0)
-    if int(verbose) >= 5: print '#--- cw(start)'
+    if int(verbose) >= 5: print('#--- cw(start)')
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
     if int(verbose) >= 5: 
-        print 'li'
-        print li
+        print('li')
+        print(li)
 
     df  = oq.syntheticCurrencyTable(li, homeCurrency='USD')
     sdf = p.DataFrame(df)
     df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
     pcdf = df.ix[:,'pairedCurrency'].get_values()
-    if int(verbose) >= 5:  print pcdf
+    if int(verbose) >= 5:  print(pcdf)
     pcdf = oq.wew(pcdf)
     if int(verbose) >= 5: 
-        print pcdf
+        print(pcdf)
         print
     #li = n.c_[li,pcdf]#[0]
     pdf = list(li)+list(pcdf)
-    if int(verbose) >= 5:  print pdf
+    if int(verbose) >= 5:  print(pdf)
     #fdf = fdf.combine_first(df)
     pairs = ','.join(list(pdf))
-    if int(verbose) >= 5:  print pairs
+    if int(verbose) >= 5:  print(pairs)
 
     res = oanda2.get_prices(instruments=','.join(oq.wew(sdf['instrument'])))
     res = p.DataFrame(res['prices'])
     if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print list(sdf['quotedCurrency'])
-            print 'sdf'
-            print sdf
-            print 'res'
-            print res
+            print(list(sdf['quotedCurrency']))
+            print('sdf')
+            print(sdf)
+            print('res')
+            print(res)
     res = res.set_index('instrument')
-    #print res.ix[oq.wew(list(sdf['quotedCurrency'])), :]
+    #print(res.ix[oq.wew(list(sdf['quotedCurrency'])), :])
     #ldf = p.DataFrame(li)
     #sdf['pc'] = ma 
     sdf = sdf.set_index('instrument')
     if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print 'dfu33'
-            print dfu33
-            print 'sdf'
-            print sdf
+            print('dfu33')
+            print(dfu33)
+            print('sdf')
+            print(sdf)
     instrumentCurrency = sdf.ix[dfu33.index, ['instrument','pow']]
     instrumentCurrency['instrument'] = dfu33.index
     if int(verbose) >= 5: 
-        print 'instrumentCurrency'
-        print instrumentCurrency
-        print '===='
+        print('instrumentCurrency')
+        print(instrumentCurrency)
+        print('====')
     quotedCurrency = sdf.ix[dfu33.index, ['quotedCurrency','pow']]
     if int(verbose) >= 5: 
-        print 'quotedCurrency'
-        print quotedCurrency
-        print '===='
+        print('quotedCurrency')
+        print(quotedCurrency)
+        print('====')
     pairedCurrency = sdf.ix[dfu33.index, ['pairedCurrency','pow']]
     if int(verbose) >= 5: 
-        print 'pairedCurrency'
-        print pairedCurrency
-        print '===='
+        print('pairedCurrency')
+        print(pairedCurrency)
+        print('====')
     #---
     quotedCurrencyPrice = res.ix[quotedCurrency['quotedCurrency'],['bid']].fillna(1)
     #quotedCurrencyPrice['pow'] = 
@@ -2906,19 +2904,19 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     #---
     #.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
-        print 'quotedCurrencyPrice'
-        print quotedCurrencyPrice#.sort_values(by='diffp', ascending=False)
+        print('quotedCurrencyPrice')
+        print(quotedCurrencyPrice#.sort_values(by='diffp', ascending=False))
     if int(verbose) >= 5: 
-        print 'pairedCurrencyPrice'
-        print pairedCurrencyPrice#.sort_values(by='diffp', ascending=False)
+        print('pairedCurrencyPrice')
+        print(pairedCurrencyPrice#.sort_values(by='diffp', ascending=False))
     if int(verbose) >= 5: 
-        print 'instrumentCurrencyPrice'
-        print instrumentCurrencyPrice
-        print '===='
-    #print res
-    #print sdf['quotedCurrency']
-    #print sdf.ix[quotedCurrencyPrice.index,:]
-    if int(verbose) >= 5: print '===='
+        print('instrumentCurrencyPrice')
+        print(instrumentCurrencyPrice)
+        print('====')
+    #print(res)
+    #print(sdf['quotedCurrency'])
+    #print(sdf.ix[quotedCurrencyPrice.index,:])
+    if int(verbose) >= 5: print('====')
 
     balance       = float(maccount['balance'])
     #marginAvail   = maccount['marginAvail']
@@ -2933,15 +2931,15 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['bid'] = instrumentCurrencyPrice['bid'].get_values()
     dfu33['ask'] = instrumentCurrencyPrice['ask'].get_values()
     dfu33['spread'] = n.abs(dfu33['bid'] - dfu33['ask'])
-    print '============================================'
-    print '============================================'
-    print '============================================'
-    print '============================================'
+    print('============================================')
+    print('============================================')
+    print('============================================')
+    print('============================================')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print dfu33.sort_values(by='diffp', ascending=False)
-    print '============================================'
-    print '============================================'
-    print '============================================'
+        print(dfu33.sort_values(by='diffp', ascending=False))
+    print('============================================')
+    print('============================================')
+    print('============================================')
     try: dfu33['spreadPip'] = dfu33['spread'] / dfu33['pip']
     except: ''
     dfu33['unitsAvailable'] = netAssetValue * leverage / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
@@ -2958,13 +2956,13 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['amount2'] = dfu33['allMargin'] * dfu33['diffp']
     dfu33['amount2Sum'] = n.sum(dfu33['amount2'])
     dfu33['diffamount4amount2'] = dfu33['amount2'] - dfu33['amount4']
-    #print quotedCurrencyPrice['bid']
-    #print p.DataFrame(netAssetValue * 50 * quotedCurrencyPrice['bid'].get_values())
+    #print(quotedCurrencyPrice['bid'])
+    #print(p.DataFrame(netAssetValue * 50 * quotedCurrencyPrice['bid'].get_values()))
     if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print 'dfu33'
-            print dfu33.ix[:, 'quotedCurrencyPriceBid quotedCurrencyPriceAsk unitsAvailable diffp pow2 units exposure exposureSum allMargin amount2 amount4 amount rebalance'.split(' ')]
-    if int(verbose) >= 5:  print '#--- cw(end)'
+            print('dfu33')
+            print(dfu33.ix[:, 'quotedCurrencyPriceBid quotedCurrencyPriceAsk unitsAvailable diffp pow2 units exposure exposureSum allMargin amount2 amount4 amount rebalance'.split(' ')])
+    if int(verbose) >= 5:  print('#--- cw(end)')
     
     return dfu33
 
