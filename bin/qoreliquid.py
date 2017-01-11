@@ -1662,7 +1662,7 @@ def combineDF3(df1, df2):
             #df[key].append(value)
             df.update({key:value})
     #df = p.DataFrame(df)
-    #print(df)
+    #qd.data(df)
     #sys.exit()
     #print '------'
     #print df1
@@ -1705,7 +1705,7 @@ class Patterns:
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     import hashlib as hl
     import talib
-    if int(verbose) >= 5: print('df.shape 1: %s' % str(df.shape))
+    if int(verbose) >= 5: qd.data('df.shape 1: %s' % str(df.shape))
     dfm = p.DataFrame()
     patterns = ['CDL2CROWS',
      'CDL3BLACKCROWS',
@@ -1778,15 +1778,15 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     dif1  = df1.to_dict()
     verbose=False
     for i in patterns:
-        if int(verbose) >= 5: print('goThruPatterns(%s): %s' % (instrument, i))
+        if int(verbose) >= 5: qd.data('goThruPatterns(%s): %s' % (instrument, i))
         #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
         #@profile
         #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
         ##def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
         mode=i
         for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
-            #print('goThruPatterns(%s): %s' % (instrument, j))
-            #print('df1.shape 2: %s' % str(df1.shape))
+            #qd.data('goThruPatterns(%s): %s' % (instrument, j))
+            #qd.data('df1.shape 2: %s' % str(df1.shape))
             #df1 = getc(df1, dfh, oanda2, instrument=instrument, granularity=j, mode=mode, update=update, verbose=verbose)
             
             #@profile
@@ -1798,11 +1798,11 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
                 except: ''
             
             try:
-                if int(verbose) >= 5: print('caching history %s.. ' % granularity)
+                if int(verbose) >= 5: qd.data('caching history %s.. ' % granularity)
                 res = dfh[instrument][granularity]
             except Exception as e:
-                if int(verbose) >= 5: print(e)
-                if int(verbose) >= 5: print('getting history %s.. ' % granularity)
+                if int(verbose) >= 5: qd.data(e)
+                if int(verbose) >= 5: qd.data('getting history %s.. ' % granularity)
                 res = oanda2.get_history(instrument=instrument, granularity=granularity, count=15)
                 try:
                     dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
@@ -1810,15 +1810,15 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
                     dfh[instrument] = {}
                     dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
             csvIndex = ','.join(list(dfh[instrument][granularity].index))
-            #print(csvIndex)
+            #qd.data(csvIndex)
             if int(verbose) >= 5: 
-                print(hl.md5(csvIndex).hexdigest())
+                qd.data(hl.md5(csvIndex).hexdigest())
                 print
-                print('instrument/granularity: %s/%s' % (instrument, granularity))
+                qd.data('instrument/granularity: %s/%s' % (instrument, granularity))
             
         
     for i in patterns:
-        if int(verbose) >= 5: print('goThruPatterns(%s): %s' % (instrument, i))
+        if int(verbose) >= 5: qd.data('goThruPatterns(%s): %s' % (instrument, i))
         #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
         #@profile
         #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
@@ -1827,10 +1827,10 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
             granularity=j
             exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
-            #print('%s: %s' % (len(dfh[instrument][granularity]), len(pnda)))
+            #qd.data('%s: %s' % (len(dfh[instrument][granularity]), len(pnda)))
             #df1[granularity] = pnda
             #dfh[instrument][granularity][granularity] = pnda
-            #print(dfh[instrument][granularity].ix[:,granularity])
+            #qd.data(dfh[instrument][granularity].ix[:,granularity])
             #df1 = normalizeme(df1)
             #df1 = sigmoidme(df1)
             #df1 = tanhme(df1)
@@ -1838,19 +1838,19 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             #df1 = df1.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[granularity]])
             # cythonized
             # df1 = p.concat([df1, df2], axis=1)
-            #print(dfh)
+            #qd.data(dfh)
             #nsrch = dfh[instrument][granularity].ix[:,'complete']
             nsrch = dfh[instrument][granularity]['complete']
             #dfh0 = dfh[instrument][granularity].ix[nsrch,[granularity]]
 
             #dfh0_0 = dfh[instrument][granularity][granularity].ix[nsrch]
-            #print('type dfh[instrument][granularity][granularity]: %s' % type(dfh[instrument][granularity][granularity]))
+            #qd.data('type dfh[instrument][granularity][granularity]: %s' % type(dfh[instrument][granularity][granularity]))
             pnda = p.Series(pnda, index=nsrch.index)
-            #print('type pnda: %s' % type(pnda))
-            #print('shape pnda: %s' % pnda.shape)
-            #print('shape nsrch: %s' % nsrch.shape)
-            #print(pnda)
-            #print(nsrch)
+            #qd.data('type pnda: %s' % type(pnda))
+            #qd.data('shape pnda: %s' % pnda.shape)
+            #qd.data('shape nsrch: %s' % nsrch.shape)
+            #qd.data(pnda)
+            #qd.data(nsrch)
             dfh0_0 = pnda.ix[nsrch]
             
             #dfh0 = p.DataFrame(dfh0_0, columns=[granularity])
@@ -1866,7 +1866,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
 	
 
             #difh0 = dfh0.to_dict()
-            #print(difh0)
+            #qd.data(difh0)
             #sys.exit()
 
             #df1 = combineDF(dif1, difh0)
@@ -1877,48 +1877,48 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             #df1 = combineDF(df1, dfh0)
             #df1 = p.concat([df1, dfh0], axis=1)
             
-            #print('%s %s' % (instrument, granularity))
-            #print(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [granularity]])
-            #if int(verbose) >= 5: print(df1.columns)
-            #print(df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')])
+            #qd.data('%s %s' % (instrument, granularity))
+            #qd.data(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [granularity]])
+            #if int(verbose) >= 5: qd.data(df1.columns)
+            #qd.data(df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')])
             #return df1
             #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[granularity]]
 
 
-            #print('df1.shape 3: %s' % str(df1.shape))
+            #qd.data('df1.shape 3: %s' % str(df1.shape))
         #return df1#.set_index('mode')
         try:    df1 = p.DataFrame(dif1)
         except: df1 = p.DataFrame(dif1, index=[granularity])
         #df1['mode'] = mode
         #df1 = getcc(df1, dfh, oanda2, mode, instrument=instrument, update=update)
         dfm1 = df1
-        #print(dfm1.tail(3))
+        #qd.data(dfm1.tail(3))
         dfm1 = dfm1.ffill()
-        #print(dfm1.tail(3))
+        #qd.data(dfm1.tail(3))
         dfm1 = dfm1.bfill()
-        if int(verbose) >= 5: print(dfm1.tail(3))
+        if int(verbose) >= 5: qd.data(dfm1.tail(3))
         dfm1 = dfm1.tail(1)
-        if int(verbose) >= 5: print(dfm1)
+        if int(verbose) >= 5: qd.data(dfm1)
         dfm1 = dfm1.ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')]
-        if int(verbose) >= 5: print(dfm1)
+        if int(verbose) >= 5: qd.data(dfm1)
         dfm1 = dfm1.transpose()
-        if int(verbose) >= 5: print(dfm1)
+        if int(verbose) >= 5: qd.data(dfm1)
         #dfm1 = df1.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
-        if int(verbose) >= 5: print('len df1: %s' % len(df1))
+        if int(verbose) >= 5: qd.data('len df1: %s' % len(df1))
         sed = df1.index[len(df1)-1]
-        #print(sed)
+        #qd.data(sed)
         dfm1[mode] = dfm1.ix[:, sed]
         #return dfm1.ix[:, [mode]]
         dfm0 = dfm1.ix[:, [mode]]
-        if int(verbose) >= 5: print(dfm0)
+        if int(verbose) >= 5: qd.data(dfm0)
         #dfm  = dfm.combine_first(dfm0)
         dfm = p.concat([dfm, dfm0], axis=1)
         if verbose:
-            print('dfm1.shape: %s' % str(dfm1.shape))
-            print('dfm.shape: %s' % str(dfm.shape))
-            print('dfm0.shape: %s' % str(dfm0.shape))
-            print('df.shape: %s' % str(df.shape))
-            print('dfh.shape: %s' % len(dfh))
+            qd.data('dfm1.shape: %s' % str(dfm1.shape))
+            qd.data('dfm.shape: %s' % str(dfm.shape))
+            qd.data('dfm0.shape: %s' % str(dfm0.shape))
+            qd.data('df.shape: %s' % str(df.shape))
+            qd.data('dfh.shape: %s' % len(dfh))
 
     #from numba import double
     #from numba.decorators import jit, autojit
@@ -1933,11 +1933,11 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         dfm['sell'] = n.sum(n.array(dfml.get_values(), dtype=int), 1)
         dfm = dfm.transpose()
         dfm.ix[:, instrument] = n.sum(dfm.get_values(), 1)
-        #print(n.sum(n.array(dfmk.transpose().get_values(), dtype=int), 0))
-        #if int(verbose) >= 5: print(dfm.transpose())
+        #qd.data(n.sum(n.array(dfmk.transpose().get_values(), dtype=int), 0))
+        #if int(verbose) >= 5: qd.data(dfm.transpose())
         res = dfm.transpose().ix[[instrument],:]
-        #print(res)
-        #print(instrument)
+        #qd.data(res)
+        #qd.data(instrument)
         return res
 
 def differentPolarity(a, b):
@@ -1953,7 +1953,7 @@ def calcPl(bid, ask, price, sideBool, pairedCurrencyBid, pairedCurrencyAsk, unit
     #pl00003 = ((pairedCurrencyBid+pairedCurrencyAsk)/2)
     #pl00004 = (1 / ((pairedCurrencyBid+pairedCurrencyAsk)/2))
     #pl00005 = ( ((bid+ask)/2) - price ) * (1 / ((pairedCurrencyBid+pairedCurrencyAsk)/2))
-    #print('sideBool:%s' % sideBool)
+    #qd.data('sideBool:%s' % sideBool)
     lsb = len(sideBool)
     close = n.zeros(lsb)
     pairedCurrencyClose = n.zeros(lsb)
@@ -1995,22 +1995,22 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
         currentTradesV20['initialUnits'] = p.to_numeric(currentTradesV20['initialUnits'])
         currentTradesV20['units']        = n.absolute(currentTradesV20['initialUnits'])
         currentTradesV20['side']         = map(lambda x: 'buy' if x > 0 else 'sell', currentTradesV20['initialUnits'])
-        print('accid 00101: %s' % accid)
-        print('access_token0 00101: %s' % access_token0)
-        print('currentTradesV20 0010')
-        print(currentTradesV20)
+        qd.data('accid 00101: %s' % accid)
+        qd.data('access_token0 00101: %s' % access_token0)
+        qd.data('currentTradesV20 0010')
+        qd.data(currentTradesV20)
     except Exception as e:
-        print('err: %s' % e)
+        qd.data('err: %s' % e)
         currentTradesV20 = p.DataFrame([])
     """
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         try:
-            #print(currentTradesV20.dtypes)
+            #qd.data(currentTradesV20.dtypes)
             #currentTradesV20 = currentTradesV20.convert_objects(convert_numeric=True)
             currentTradesV20['unrealizedPL'] = p.to_numeric(currentTradesV20['unrealizedPL'])
             mdf = currentTradesV20.sort_values(by='unrealizedPL', ascending=False)
-            #print(mdf[mdf['unrealizedPL'] > 0])
-            print(mdf)
+            #qd.data(mdf[mdf['unrealizedPL'] > 0])
+            qd.data(mdf)
         except: ''
     """
     try:
@@ -2020,11 +2020,11 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
         currentTrades = p.DataFrame([])
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print('currentTrades:: 00101')
-        print(currentTrades)
+        qd.data('currentTrades:: 00101')
+        qd.data(currentTrades)
         currentTrades = currentTrades.combine_first(currentTradesV20)
-        print('currentTrades:: 00102')
-        print(currentTrades)
+        qd.data('currentTrades:: 00102')
+        qd.data(currentTrades)
     
     try:
         r = accounts.AccountInstruments(accid)
@@ -2032,10 +2032,10 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
         instrumentsV20 = p.DataFrame(rv['instruments']).set_index('name')
         instrumentsV20['pip'] = n.power(10.0, instrumentsV20['pipLocation']) # convert legacy pip to v20
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print('instruments 00103a')
-            print(instrumentsV20)
+            qd.data('instruments 00103a')
+            qd.data(instrumentsV20)
     except Exception as e:
-        print('err: %s' % e)
+        qd.data('err: %s' % e)
         instrumentsV20 = p.DataFrame([])
 
     # source: http://stackoverflow.com/questions/33126477/pandas-convert-objectsconvert-numeric-true-deprecated
@@ -2045,10 +2045,10 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
     except:
         instruments = p.DataFrame([])
     instruments = instruments.combine_first(instrumentsV20)
-    print('instruments 00103b')
-    print(instruments)
-    print('currentPositions 00104')
-    print(currentPositions)
+    qd.data('instruments 00103b')
+    qd.data(instruments)
+    qd.data('currentPositions 00104')
+    qd.data(currentPositions)
     instruments['pip'] = p.to_numeric(instruments['pip'])
     currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
     currentPrices = p.DataFrame(currentPrices).set_index('instrument')
@@ -2090,14 +2090,14 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
     currentTrades['pl'] = calcPl(currentTrades['bid'], currentTrades['ask'], currentTrades['price'], currentTrades['sideBool'], currentTrades['pairedCurrencyBid'], currentTrades['pairedCurrencyAsk'], currentTrades['units'])
 
     #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-    #    print('currentTrades')
-    #    print(currentTrades.sort_values(by='pl'))
+    #    qd.data('currentTrades')
+    #    qd.data(currentTrades.sort_values(by='pl'))
     for i in xrange(len(currentTrades)):
         currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
     return currentTrades
 
 def interactiveMode(defaultMsg='Sure you want to create order? (y/N/q): '):
-    print('interactiveMode()')
+    qd.data('interactiveMode()')
     ans = raw_input(defaultMsg)
     if ans.strip() == 'q':
         sys.exit()
@@ -2145,7 +2145,7 @@ def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleeti
     if dryrun == False:
         try:
             if int(verbose) > 7: plp.ix[i,:]
-            if int(verbose) >= 2: print("oanda2.close_trade(%s, %s, %s, %s) %s" % (plp.ix[i, 'instrument'], plp.ix[i, 'units'], accid, i, plp.ix[i, 'pl']))
+            if int(verbose) >= 2: qd.data("oanda2.close_trade(%s, %s, %s, %s) %s" % (plp.ix[i, 'instrument'], plp.ix[i, 'units'], accid, i, plp.ix[i, 'pl']))
             if not noInteractiveFleetingProfits:
                 if noInteractiveLeverage: raise(Exception('nil --> nif conflict'))
                 if noInteractiveDeleverage: raise(Exception('nid --> nif conflict'))
@@ -2167,26 +2167,26 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                 #noInteractive = True
                 ''
             if int(verbose) >= 5:
-                print('deleverageBool:          %s' % dfu3.ix[i, 'deleverageBool'])
-                print('noInteractive:           %s' % noInteractive)
-                print('noInteractiveLeverage:   %s' % noInteractiveLeverage)
-                print('noInteractiveDeleverage: %s' % noInteractiveDeleverage)
-                print('noInteractiveFleetingProfits: %s' % noInteractiveFleetingProfits)
+                qd.data('deleverageBool:          %s' % dfu3.ix[i, 'deleverageBool'])
+                qd.data('noInteractive:           %s' % noInteractive)
+                qd.data('noInteractiveLeverage:   %s' % noInteractiveLeverage)
+                qd.data('noInteractiveDeleverage: %s' % noInteractiveDeleverage)
+                qd.data('noInteractiveFleetingProfits: %s' % noInteractiveFleetingProfits)
             if dfu3.ix[i, 'deleverageBool'] == True and (not noInteractive and not noInteractiveDeleverage):
-                if int(verbose) >= 5: print('nid---')
+                if int(verbose) >= 5: qd.data('nid---')
                 if noInteractiveLeverage: raise(Exception('nil --> nid conflict'))
                 if noInteractiveFleetingProfits: raise(Exception('nif --> nid conflict'))
-                #print(ct.sort_values(by=['pl'], ascending=[False]))
+                #qd.data(ct.sort_values(by=['pl'], ascending=[False]))
                 dfu = currentTrades[currentTrades['instrument'] == i]
                 dfu['plPerUnit'] = dfu['pl'] / dfu['units']
                 dfu = dfu.sort_values(by=['plPerUnit', 'units'], ascending=[False, True])
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     if int(verbose) >= 7:
-                        print(dfu)
+                        qd.data(dfu)
                 if int(verbose) >= 5: 
-                    print('pl: %s' % currentTrades[currentTrades['instrument'] == i].ix[:,'pl'].sum())
+                    qd.data('pl: %s' % currentTrades[currentTrades['instrument'] == i].ix[:,'pl'].sum())
                     print
-                    print('# selective deleverage')
+                    qd.data('# selective deleverage')
                 unitsLeft = units
                 for j in dfu.index:
                     
@@ -2194,7 +2194,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                     unitsLeft -= dfu.ix[j, 'units']
                     closeBool = True if unitsLeft >= 0 else False
                     if int(verbose) >= 8:
-                        print('ticket:%s units:%s units:%s unitsLeft:%s closeBool:%s' % (j, dfu.ix[j, 'units'], units, unitsLeft, closeBool))
+                        qd.data('ticket:%s units:%s units:%s unitsLeft:%s closeBool:%s' % (j, dfu.ix[j, 'units'], units, unitsLeft, closeBool))
                     
                     try:
                         partialDeleverageLoss = dfu3.ix[i, 'deleverageLoss'] * dfu.ix[j, 'units'] / dfu3.ix[i, 'units']
@@ -2202,7 +2202,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                         if closeBool:
                             interactiveMode(defaultMsg='Sure you want to partialClose[%s] ticket %s %s %s? unitsLeft:%s prevUnitsLeft:%s %s  (y/N/q): ' % (i, j, dfu.ix[j, 'side'], dfu.ix[j, 'units'], unitsLeft, prevUnitsLeft, dloss))
                             logApplicationUsage('d', description='deleverage[partialClose]', data=dfu.ix[j, :].to_dict())
-                            if int(verbose) >= 5: print('oanda2.close_trade(%s, %s)' % (accid, j))
+                            if int(verbose) >= 5: qd.data('oanda2.close_trade(%s, %s)' % (accid, j))
                             
                             #oanda2.close_trade(accid, j)
                             ## collect trade data
@@ -2215,7 +2215,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                             if prevUnitsLeft > 0:
                                 interactiveMode(defaultMsg='Sure you want to deleverage %s[%s]? side=%s, units=%s %s (y/N/q): ' % (i, j, side, prevUnitsLeft, dloss))
                                 logApplicationUsage('d', description='deleverage[standardClose]', data=dfu.ix[j, :].to_dict())
-                                if int(verbose) >= 5: print('oanda2.create_order(%s, type=%s, instrument=%s, side=%s, units=%s)' % (accid, 'market', i, side, prevUnitsLeft))
+                                if int(verbose) >= 5: qd.data('oanda2.create_order(%s, type=%s, instrument=%s, side=%s, units=%s)' % (accid, 'market', i, side, prevUnitsLeft))
                                     
                                 #oanda2.create_order(accid, type='market', instrument=i, side=side, units=prevUnitsLeft)
                                 ## collect trade data
@@ -2230,12 +2230,12 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                             
                 interactiveMode()
             if dfu3.ix[i, 'deleverageBool'] == False and (not noInteractive and not noInteractiveLeverage):
-                if int(verbose) >= 5: print('nil---')
+                if int(verbose) >= 5: qd.data('nil---')
                 if noInteractiveDeleverage: raise(Exception('nid --> nil conflict'))
                 if noInteractiveFleetingProfits: raise(Exception('nif --> nil conflict'))
                 interactiveMode()
             #if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
-            #    print('ni---')
+            #    qd.data('ni---')
             #    interactiveMode()
             try:
                 # oanda legacy
@@ -2259,7 +2259,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                 }
                 r = orders.OrderCreate(accid, data=orderData)
                 client.request(r)
-                #print(r.response)
+                #qd.data(r.response)
                 #p.DataFrame(r.response['orderCreateTransaction'])
                 #p.DataFrame(r.response['orderFillTransaction'])
                 
@@ -2289,7 +2289,7 @@ def logApplicationUsage(mode, description=None, data=None):
 
 def getSyntheticCurrencyTable(oanda2, oq, instruments):
     ctsdfli = list(instruments)
-    #print(p_read_csv('/mldev/bin/data/oanda/cache/instruments.csv'))
+    #qd.data(p_read_csv('/mldev/bin/data/oanda/cache/instruments.csv'))
     ctsdf = p.DataFrame(oq.syntheticCurrencyTable(ctsdfli, homeCurrency='USD'))
     qres  = oanda2.get_prices(instruments=','.join(oq.wew(ctsdf['quotedCurrency'])))
     qres  = p.DataFrame(qres['prices']).set_index('instrument')
@@ -2299,9 +2299,9 @@ def getSyntheticCurrencyTable(oanda2, oq, instruments):
     res = res.combine_first(qres)
     res = res.combine_first(pres)
     
-    #print(qres)
-    #print(pres)
-    #print(res)
+    #qd.data(qres)
+    #qd.data(pres)
+    #qd.data(res)
     for x in range(len(ctsdf.index)):
         try:    ctsdf.ix[x, 'quotedCurrencyAsk'] = res.ix[ctsdf.ix[x, 'quotedCurrency'], 'ask']
         except: ''
@@ -2311,7 +2311,7 @@ def getSyntheticCurrencyTable(oanda2, oq, instruments):
         except: ''
         try:    ctsdf.ix[x, 'pairedCurrencyBid'] = res.ix[ctsdf.ix[x, 'pairedCurrency'], 'bid']
         except: ''
-    #print(ctsdf)
+    #qd.data(ctsdf)
     #res = oanda2.get_prices(instruments=','.join(oq.wew(ctsdf['quotedCurrency'])))
     ctsdf.ix[:,'pairedCurrencyAsk pairedCurrencyBid'.split(' ')] = ctsdf.ix[:,'pairedCurrencyAsk pairedCurrencyBid'.split(' ')].fillna(1)
     return ctsdf
@@ -2343,10 +2343,10 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         csd['unitsLong'] = p.to_numeric(csd['unitsLong'])
         csd['unitsShort'] = p.to_numeric(csd['unitsShort'])
         csd['units'] = csd['unitsLong'] + csd['unitsShort']
-        #print(csd.dtypes)
-        #print(csd.ix[:, 'units'.split()])
+        #qd.data(csd.dtypes)
+        #qd.data(csd.ix[:, 'units'.split()])
         currentPositionsV20['units'] = csd['units']
-        #print(currentPositionsV20)
+        #qd.data(currentPositionsV20)
     except Exception as e:
         qd.exception(e)
         currentPositionsV20 = p.DataFrame([])
@@ -2357,16 +2357,16 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         try:    currentPositions = currentPositions.set_index('instrument')#.ix[:,'side units'.split(' ')]
         except Exception as e:
             qd.exception(e)
-        print(currentPositions)
+        qd.data(currentPositions)
     except:
         currentPositions = p.DataFrame([])
         
     currentPositions = currentPositions.combine_first(currentPositionsV20)
     
-    print('currentPositions::')
-    print(currentPositions)
+    qd.data('currentPositions::')
+    qd.data(currentPositions)
     
-    print('tesst-------2')
+    qd.data('tesst-------2')
     
     try:
         currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=loginIndex)
@@ -2378,8 +2378,8 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
     except Exception as e:
         ct = p.DataFrame([])
-    print('ct')
-    print(ct)
+    qd.data('ct')
+    qd.data(ct)
     gct = p.DataFrame([])
     try:
         gct = ct.groupby('instrument') #.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
@@ -2387,9 +2387,9 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         currentPositions['pip'] = gct['pip']
     except Exception as e:
         ''
-    print('tesst-------')
-    print('gct')
-    print(gct)
+    qd.data('tesst-------')
+    qd.data('gct')
+    qd.data(gct)
     
     return [currentPositions, currentTrades, ct, gct]
 
@@ -2414,7 +2414,7 @@ def getAccounts(oanda0, access_token0):
         accountsV20 = accountsV20.set_index('accountId')
         for i in accountsV20.index:
             try:
-                #print('inddsd:%s' % i)
+                #qd.data('inddsd:%s' % i)
                 r = AccountSummary(accountID=i)
                 rv = client.request(r)
                 dfa = p.DataFrame(rv)
@@ -2422,16 +2422,16 @@ def getAccounts(oanda0, access_token0):
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     idf = dfa.transpose()
                     #idf = p.DataFrame(idf.ix[i, :], axis=[0])
-                    #print(idf)
+                    #qd.data(idf)
                     accountsV20 = accountsV20.combine_first(idf)
                     #accountsV20 = idf.combine_first(accountsV20)
             except V20Error as ve:
-                print(ve)
+                qd.data(ve)
         accountsV20 = accountsV20.drop('account')
         accountsV20 = accountsV20.drop('lastTransactionID')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print('accountsV20:::')
-            print(accountsV20)
+            qd.data('accountsV20:::')
+            qd.data(accountsV20)
     except Exception as e:
         qd.logTraceBack(e)
         qd.exception(e)
@@ -2443,10 +2443,10 @@ def getAccounts(oanda0, access_token0):
         accounts0 = accounts0.combine_first(p.DataFrame(oanda0.get_account(accounts0.ix[i, 'accountId']), index=[i]))
     accounts = accounts0.set_index('accountId')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print('accounts0::')
-        print(accounts0)
-        print('accounts::')
-        print(accounts)
+        qd.data('accounts0::')
+        qd.data(accounts0)
+        qd.data('accounts::')
+        qd.data(accounts)
     
     try:
         accounts = accounts.combine_first(accountsV20)
@@ -2454,7 +2454,7 @@ def getAccounts(oanda0, access_token0):
         qd.logTraceBack(e)
         qd.exception(e)
         ''        
-    #print(accounts)
+    #qd.data(accounts)
     accounts['accountId'] = accounts.index
     # convert all rows in accountId column to strings (make it searchable)
     accounts['accountId'] = n.array(accounts['accountId'], dtype=n.str)
@@ -2466,8 +2466,8 @@ def getConfig(loginIndex=None, args=None):
 
     co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
     
-    print('loginIndex::%s' % loginIndex)
-    print('args::%s' % args)
+    qd.data('loginIndex::%s' % loginIndex)
+    qd.data('args::%s' % args)
     
     try:    loginIndex = int(args.loginIndex)
     except:
@@ -2475,14 +2475,14 @@ def getConfig(loginIndex=None, args=None):
             loginIndex = 0    
     loginIndex =  int(loginIndex)
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print('co::%s' % co)
-        print('co:type:%s' % type(co))
-        print('loginIndex::%s' % loginIndex)
-        print('loginIndex type::%s' % type(loginIndex))
+        qd.data('co::%s' % co)
+        qd.data('co:type:%s' % type(co))
+        qd.data('loginIndex::%s' % loginIndex)
+        qd.data('loginIndex type::%s' % type(loginIndex))
     env0=co.ix[loginIndex,1]
     access_token0=co.ix[int(loginIndex),2]
     oanda0 = oandapy.API(environment=env0, access_token=access_token0)
-    print('access_token0::%s' % access_token0)
+    qd.data('access_token0::%s' % access_token0)
     return [co, loginIndex, env0, access_token0, oanda0]
 
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None, loginIndex=None):
@@ -2499,18 +2499,18 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     if threading:
         from multiprocessing.pool import ThreadPool
 
-    if int(verbose) >= 5: print('----------')
+    if int(verbose) >= 5: qd.data('----------')
     
     # recalculate percentages [diffp]
     dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
 
-    print('accid:%s' % accid)
-    print('access_token0:%s' % access_token0)
+    qd.data('accid:%s' % accid)
+    qd.data('access_token0:%s' % access_token0)
     #maccount = oanda2.get_account(accid)
     maccount = getAccounts(oanda2, access_token0)
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print('accid 2:%s %s' % (accid, type(accid)))
-        print('access_token0 2:%s' % access_token0)
+        qd.data('accid 2:%s %s' % (accid, type(accid)))
+        qd.data('access_token0 2:%s' % access_token0)
         qd.data('maccount::', maccount)
         #qd.data(p.DataFrame(maccount.columns))
         qd.data('maccount', maccount.to_dict())
@@ -2543,53 +2543,53 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         if threading:
             pool = ThreadPool(processes=270)
             fleetingProfitsPL = (netAssetValue * (1.0/len(ct))/100)
-            print('fleetingProfitsPL:%s' % fleetingProfitsPL)
+            qd.data('fleetingProfitsPL:%s' % fleetingProfitsPL)
             for i in list(plp.index):
                 if plp.ix[i, 'pl'] >= fleetingProfitsPL:
                     async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose])
                     return_val   = async_result.get()
-                    #print(return_val)
+                    #qd.data(return_val)
             pool.close()
         else:
             fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose)
             
         if int(verbose) >= 5: 
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                #print('instruments:')
-                #print(instruments )
-                #print(currentPrices)
-                print('currentTrades:')
-                print(len(currentTrades))
-                print(currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('id'))#.ix[:,'instrument price side time units'.split(' ')]
-                #print(gct)
+                #qd.data('instruments:')
+                #qd.data(instruments )
+                #qd.data(currentPrices)
+                qd.data('currentTrades:')
+                qd.data(len(currentTrades))
+                qd.data(currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('id'))#.ix[:,'instrument price side time units'.split(' ')]
+                #qd.data(gct)
                 ffsds = 'instrument side units plpips pl time'.split(' ')
                 
                 plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
                 pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
                 pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
 
-                print(pll)
+                qd.data(pll)
                 for i in list(plp.index):
                     if dryrun == False:
-                        print("oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl']))
+                        qd.data("oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl']))
                         #oanda2.close_trade(accid, i)
                     
-                print(plp.ix[:, ffsds])
-                print(pln.ix[:, ffsds])
+                qd.data(plp.ix[:, ffsds])
+                qd.data(pln.ix[:, ffsds])
 
-                print('currentPositions:')
-                print(currentPositions.sort_values(by='units', ascending=False))
+                qd.data('currentPositions:')
+                qd.data(currentPositions.sort_values(by='units', ascending=False))
 
         # get rebalance amount
-        #print(currentPositions)
-        #print(dfu3.ix[currentPositions.index, :])
+        #qd.data(currentPositions)
+        #qd.data(dfu3.ix[currentPositions.index, :])
         #cu = currentPositions.ix[dfu3.index, :]
         cu = currentPositions.combine_first(dfu3)
         cu['bool'] = getSideBool(cu['side'])
         cu = cu.fillna(0)
         if int(verbose) >= 5: 
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                print(cu.sort_values(by='diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')])
+                qd.data(cu.sort_values(by='diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')])
         #print
         dfu3 = dfu3.combine_first(cu)
         dfu3 = dfu3.combine_first(gct)
@@ -2682,44 +2682,44 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         if int(verbose) >= 5: f1 = '%s rebalanceBool deleverageBool diffRebalanceMarginUsedBool' % f1Base
         else:       f1 = f1Base
         if int(verbose) >= 5: 
-            print('-=-=-=-=-')
-            print('-=-=-=-=-')
-            print('sumMarginUsed: %s' % n.sum(dfu3['marginUsed']))
-            print('sortRebalanceList:%s' % sortRebalanceList)
-            print('sortby:%s' % sortby)
-            print('sortAscending:%s' % sortAscending)
-            #print(dfu3.sort_values(by='diffp', ascending=False).ix[:, f1.split(' ')])
-            print(dfu3.sort_values(by=sortby, ascending=sortAscending).ix[:, f1.split(' ')])
+            qd.data('-=-=-=-=-')
+            qd.data('-=-=-=-=-')
+            qd.data('sumMarginUsed: %s' % n.sum(dfu3['marginUsed']))
+            qd.data('sortRebalanceList:%s' % sortRebalanceList)
+            qd.data('sortby:%s' % sortby)
+            qd.data('sortAscending:%s' % sortAscending)
+            #qd.data(dfu3.sort_values(by='diffp', ascending=False).ix[:, f1.split(' ')])
+            qd.data(dfu3.sort_values(by=sortby, ascending=sortAscending).ix[:, f1.split(' ')])
             print
             
-            #print(ct.sort_values(by=['pl'], ascending=[False]))
+            #qd.data(ct.sort_values(by=['pl'], ascending=[False]))
             #print
 
     if threading:
         poolFleetingProfits = ThreadPool(processes=270)
         poolLeverage        = ThreadPool(processes=270)
     if int(verbose) >= 5:
-        print('                                                                 MU=MarginUsed')
-        print('                                                                  R=Rebalance')
-        print('                                                                  r=rebalanceMarginUsed')
-        print('                                                                dMU=diffRebalanceMarginUsed')
-        print('                                                                drb=diffpRpBalance')
-        print('                                                               drbp=diffpRebalancep')
-    print('===1==1==1=1=1=1====')
+        qd.data('                                                                 MU=MarginUsed')
+        qd.data('                                                                  R=Rebalance')
+        qd.data('                                                                  r=rebalanceMarginUsed')
+        qd.data('                                                                dMU=diffRebalanceMarginUsed')
+        qd.data('                                                                drb=diffpRpBalance')
+        qd.data('                                                               drbp=diffpRebalancep')
+    qd.data('===1==1==1=1=1=1====')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         try:
             gct = ct.groupby('instrument')
             gct = gct.aggregate(n.mean)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
             if int(verbose) >= 8:
-                print(ct) #.sort_values(by='', ascending=False)
-                print(gct)
+                qd.data(ct) #.sort_values(by='', ascending=False)
+                qd.data(gct)
         except: ''
-        #print(ct.sort_values(by='plpips', ascending=False))
-    print('===1==1==1=1=1=1====')
+        #qd.data(ct.sort_values(by='plpips', ascending=False))
+    qd.data('===1==1==1=1=1=1====')
     try:    dfu3s = dfu3.sort_values(by=sortby, ascending=sortAscending).index
     except: dfu3s = dfu3.index
     for i in dfu3s:
-        #print(dfu3.ix[[i], :].transpose())
+        #qd.data(dfu3.ix[[i], :].transpose())
         units = int(abs(dfu3.ix[i, 'rebalance']))#-1
         side  = 'buy' if int(dfu3.ix[i, 'rebalance']) > 0 else 'sell'
         #dfu3.ix[i, 'side']
@@ -2734,9 +2734,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
             try:
                 if int(verbose) >= 8:
-                    print("<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s[%s]) %s %s %s rebalanceMU/MU/diffRebalanceMU:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']))
+                    qd.data("<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s[%s]) %s %s %s rebalanceMU/MU/diffRebalanceMU:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']))
                 else:
-                    print("<broker>.create_order(instrument='%s', side='%s', units=%s[%s]) %s %s %s r/MU/dMU:(%.3f/%.3f/%.3f)" % (i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']))
+                    qd.data("<broker>.create_order(instrument='%s', side='%s', units=%s[%s]) %s %s %s r/MU/dMU:(%.3f/%.3f/%.3f)" % (i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']))
             except: ''
 
             #for i in list(plp.index):
@@ -2744,7 +2744,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                 try:
                     async_result = poolFleetingProfits.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose])
                     return_val   = async_result.get()
-                    #print(return_val)
+                    #qd.data(return_val)
                 except: ''
     
                 async_result = poolLeverage.apply_async(leverageTrades, [dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct, loginIndex])
@@ -2756,14 +2756,14 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                 except: ''
                 leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct, loginIndex=loginIndex)
                 
-            #print(return_val)
+            #qd.data(return_val)
             #leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive)
     
     if threading:
         poolFleetingProfits.close()
         poolLeverage.close()
         
-    #print(maccount)
+    #qd.data(maccount)
     try: pll[0] = pll['pls']
     except: ''
     #maccount = oanda2.get_account(accid)
@@ -2801,20 +2801,20 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     if int(verbose) >= 1:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
 
-            #print(dfu3[:, ['diffpRebalancepBalance', 'diffpRebalancep']].sum())
-            print('%s %s' % (dfu3['diffpRebalancepBalance'].sum(), dfu3['diffpRebalancep'].sum()))
-            print('DeleveragedBalance: %s' % (balanceDeleveraged))
-            print('DeleveragedBalance+plp: %s' % (balanceDeleveragedPlp))
-            print('diffDeleveragedBalance+plp2Balance: %s' % (balanceDeleveragedPlp - dfa.ix[0, 'balance']))
+            #qd.data(dfu3[:, ['diffpRebalancepBalance', 'diffpRebalancep']].sum())
+            qd.data('%s %s' % (dfu3['diffpRebalancepBalance'].sum(), dfu3['diffpRebalancep'].sum()))
+            qd.data('DeleveragedBalance: %s' % (balanceDeleveraged))
+            qd.data('DeleveragedBalance+plp: %s' % (balanceDeleveragedPlp))
+            qd.data('diffDeleveragedBalance+plp2Balance: %s' % (balanceDeleveragedPlp - dfa.ix[0, 'balance']))
             print
-            print(plp.ix[:, ffsds])
-            #print('%s %s%s' % li)
-            #print('%s %s' % list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0]))
-            print(list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0]))
-            #print(pln.ix[:, ffsds])
+            qd.data(plp.ix[:, ffsds])
+            #qd.data('%s %s%s' % li)
+            #qd.data('%s %s' % list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0]))
+            qd.data(list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0]))
+            #qd.data(pln.ix[:, ffsds])
             print
             
-            print(dfa.ix[:, 'accountCurrency accountId accountName balance uPl uPlPcnt nav realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')])
+            qd.data(dfa.ix[:, 'accountCurrency accountId accountName balance uPl uPlPcnt nav realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')])
             print
     
     return dfu3
@@ -2822,64 +2822,64 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
 @profile
 def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33 = dfu33.fillna(0)
-    if int(verbose) >= 5: print('#--- cw(start)')
+    if int(verbose) >= 5: qd.data('#--- cw(start)')
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
     if int(verbose) >= 5: 
-        print('li')
-        print(li)
+        qd.data('li')
+        qd.data(li)
 
     df  = oq.syntheticCurrencyTable(li, homeCurrency='USD')
     sdf = p.DataFrame(df)
     df = p.DataFrame(df).set_index('instrument').ix[:,['pairedCurrency','pow']]
     pcdf = df.ix[:,'pairedCurrency'].get_values()
-    if int(verbose) >= 5:  print(pcdf)
+    if int(verbose) >= 5:  qd.data(pcdf)
     pcdf = oq.wew(pcdf)
     if int(verbose) >= 5: 
-        print(pcdf)
+        qd.data(pcdf)
         print
     #li = n.c_[li,pcdf]#[0]
     pdf = list(li)+list(pcdf)
-    if int(verbose) >= 5:  print(pdf)
+    if int(verbose) >= 5:  qd.data(pdf)
     #fdf = fdf.combine_first(df)
     pairs = ','.join(list(pdf))
-    if int(verbose) >= 5:  print(pairs)
+    if int(verbose) >= 5:  qd.data(pairs)
 
     res = oanda2.get_prices(instruments=','.join(oq.wew(sdf['instrument'])))
     res = p.DataFrame(res['prices'])
     if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print(list(sdf['quotedCurrency']))
-            print('sdf')
-            print(sdf)
-            print('res')
-            print(res)
+            qd.data(list(sdf['quotedCurrency']))
+            qd.data('sdf')
+            qd.data(sdf)
+            qd.data('res')
+            qd.data(res)
     res = res.set_index('instrument')
-    #print(res.ix[oq.wew(list(sdf['quotedCurrency'])), :])
+    #qd.data(res.ix[oq.wew(list(sdf['quotedCurrency'])), :])
     #ldf = p.DataFrame(li)
     #sdf['pc'] = ma 
     sdf = sdf.set_index('instrument')
     if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print('dfu33')
-            print(dfu33)
-            print('sdf')
-            print(sdf)
+            qd.data('dfu33')
+            qd.data(dfu33)
+            qd.data('sdf')
+            qd.data(sdf)
     instrumentCurrency = sdf.ix[dfu33.index, ['instrument','pow']]
     instrumentCurrency['instrument'] = dfu33.index
     if int(verbose) >= 5: 
-        print('instrumentCurrency')
-        print(instrumentCurrency)
-        print('====')
+        qd.data('instrumentCurrency')
+        qd.data(instrumentCurrency)
+        qd.data('====')
     quotedCurrency = sdf.ix[dfu33.index, ['quotedCurrency','pow']]
     if int(verbose) >= 5: 
-        print('quotedCurrency')
-        print(quotedCurrency)
-        print('====')
+        qd.data('quotedCurrency')
+        qd.data(quotedCurrency)
+        qd.data('====')
     pairedCurrency = sdf.ix[dfu33.index, ['pairedCurrency','pow']]
     if int(verbose) >= 5: 
-        print('pairedCurrency')
-        print(pairedCurrency)
-        print('====')
+        qd.data('pairedCurrency')
+        qd.data(pairedCurrency)
+        qd.data('====')
     #---
     quotedCurrencyPrice = res.ix[quotedCurrency['quotedCurrency'],['bid']].fillna(1)
     #quotedCurrencyPrice['pow'] = 
@@ -2904,19 +2904,19 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     #---
     #.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
-        print('quotedCurrencyPrice')
-        print(quotedCurrencyPrice)#.sort_values(by='diffp', ascending=False)
+        qd.data('quotedCurrencyPrice')
+        qd.data(quotedCurrencyPrice)#.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
-        print('pairedCurrencyPrice')
-        print(pairedCurrencyPrice)#.sort_values(by='diffp', ascending=False)
+        qd.data('pairedCurrencyPrice')
+        qd.data(pairedCurrencyPrice)#.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
-        print('instrumentCurrencyPrice')
-        print(instrumentCurrencyPrice)
-        print('====')
-    #print(res)
-    #print(sdf['quotedCurrency'])
-    #print(sdf.ix[quotedCurrencyPrice.index,:])
-    if int(verbose) >= 5: print('====')
+        qd.data('instrumentCurrencyPrice')
+        qd.data(instrumentCurrencyPrice)
+        qd.data('====')
+    #qd.data(res)
+    #qd.data(sdf['quotedCurrency'])
+    #qd.data(sdf.ix[quotedCurrencyPrice.index,:])
+    if int(verbose) >= 5: qd.data('====')
 
     balance       = float(maccount['balance'])
     #marginAvail   = maccount['marginAvail']
@@ -2931,15 +2931,15 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['bid'] = instrumentCurrencyPrice['bid'].get_values()
     dfu33['ask'] = instrumentCurrencyPrice['ask'].get_values()
     dfu33['spread'] = n.abs(dfu33['bid'] - dfu33['ask'])
-    print('============================================')
-    print('============================================')
-    print('============================================')
-    print('============================================')
+    qd.data('============================================')
+    qd.data('============================================')
+    qd.data('============================================')
+    qd.data('============================================')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print(dfu33.sort_values(by='diffp', ascending=False))
-    print('============================================')
-    print('============================================')
-    print('============================================')
+        qd.data(dfu33.sort_values(by='diffp', ascending=False))
+    qd.data('============================================')
+    qd.data('============================================')
+    qd.data('============================================')
     try: dfu33['spreadPip'] = dfu33['spread'] / dfu33['pip']
     except: ''
     dfu33['unitsAvailable'] = netAssetValue * leverage / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
@@ -2956,13 +2956,13 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['amount2'] = dfu33['allMargin'] * dfu33['diffp']
     dfu33['amount2Sum'] = n.sum(dfu33['amount2'])
     dfu33['diffamount4amount2'] = dfu33['amount2'] - dfu33['amount4']
-    #print(quotedCurrencyPrice['bid'])
-    #print(p.DataFrame(netAssetValue * 50 * quotedCurrencyPrice['bid'].get_values()))
+    #qd.data(quotedCurrencyPrice['bid'])
+    #qd.data(p.DataFrame(netAssetValue * 50 * quotedCurrencyPrice['bid'].get_values()))
     if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print('dfu33')
-            print(dfu33.ix[:, 'quotedCurrencyPriceBid quotedCurrencyPriceAsk unitsAvailable diffp pow2 units exposure exposureSum allMargin amount2 amount4 amount rebalance'.split(' ')])
-    if int(verbose) >= 5:  print('#--- cw(end)')
+            qd.data('dfu33')
+            qd.data(dfu33.ix[:, 'quotedCurrencyPriceBid quotedCurrencyPriceAsk unitsAvailable diffp pow2 units exposure exposureSum allMargin amount2 amount4 amount rebalance'.split(' ')])
+    if int(verbose) >= 5:  qd.data('#--- cw(end)')
     
     return dfu33
 
