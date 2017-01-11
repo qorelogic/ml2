@@ -1705,7 +1705,7 @@ class Patterns:
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     import hashlib as hl
     import talib
-    if int(verbose) >= 5: print 'df.shape 1: %s' % str(df.shape)
+    if int(verbose) >= 5: print('df.shape 1: %s' % str(df.shape))
     dfm = p.DataFrame()
     patterns = ['CDL2CROWS',
      'CDL3BLACKCROWS',
@@ -1778,15 +1778,15 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     dif1  = df1.to_dict()
     verbose=False
     for i in patterns:
-        if int(verbose) >= 5: print 'goThruPatterns(%s): %s' % (instrument, i)
+        if int(verbose) >= 5: print('goThruPatterns(%s): %s' % (instrument, i))
         #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
         #@profile
         #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
         ##def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
         mode=i
         for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
-            #print 'goThruPatterns(%s): %s' % (instrument, j)
-            #print 'df1.shape 2: %s' % str(df1.shape)
+            #print('goThruPatterns(%s): %s' % (instrument, j))
+            #print('df1.shape 2: %s' % str(df1.shape))
             #df1 = getc(df1, dfh, oanda2, instrument=instrument, granularity=j, mode=mode, update=update, verbose=verbose)
             
             #@profile
@@ -1798,11 +1798,11 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
                 except: ''
             
             try:
-                if int(verbose) >= 5: print 'caching history %s.. ' % granularity
+                if int(verbose) >= 5: print('caching history %s.. ' % granularity)
                 res = dfh[instrument][granularity]
             except Exception as e:
-                if int(verbose) >= 5: print e
-                if int(verbose) >= 5: print 'getting history %s.. ' % granularity
+                if int(verbose) >= 5: print(e)
+                if int(verbose) >= 5: print('getting history %s.. ' % granularity)
                 res = oanda2.get_history(instrument=instrument, granularity=granularity, count=15)
                 try:
                     dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
@@ -1810,15 +1810,15 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
                     dfh[instrument] = {}
                     dfh[instrument][granularity] = p.DataFrame(res['candles']).set_index('time')
             csvIndex = ','.join(list(dfh[instrument][granularity].index))
-            #print csvIndex
+            #print(csvIndex)
             if int(verbose) >= 5: 
-                print hl.md5(csvIndex).hexdigest()
+                print(hl.md5(csvIndex).hexdigest())
                 print
-                print 'instrument/granularity: %s/%s' % (instrument, granularity)
+                print('instrument/granularity: %s/%s' % (instrument, granularity))
             
         
     for i in patterns:
-        if int(verbose) >= 5: print 'goThruPatterns(%s): %s' % (instrument, i)
+        if int(verbose) >= 5: print('goThruPatterns(%s): %s' % (instrument, i))
         #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
         #@profile
         #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
@@ -1827,10 +1827,10 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
             granularity=j
             exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
-            #print '%s: %s' % (len(dfh[instrument][granularity]), len(pnda))
+            #print('%s: %s' % (len(dfh[instrument][granularity]), len(pnda)))
             #df1[granularity] = pnda
             #dfh[instrument][granularity][granularity] = pnda
-            #print dfh[instrument][granularity].ix[:,granularity]
+            #print(dfh[instrument][granularity].ix[:,granularity])
             #df1 = normalizeme(df1)
             #df1 = sigmoidme(df1)
             #df1 = tanhme(df1)
@@ -1838,19 +1838,19 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             #df1 = df1.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[granularity]])
             # cythonized
             # df1 = p.concat([df1, df2], axis=1)
-            #print dfh
+            #print(dfh)
             #nsrch = dfh[instrument][granularity].ix[:,'complete']
             nsrch = dfh[instrument][granularity]['complete']
             #dfh0 = dfh[instrument][granularity].ix[nsrch,[granularity]]
 
             #dfh0_0 = dfh[instrument][granularity][granularity].ix[nsrch]
-            #print 'type dfh[instrument][granularity][granularity]: %s' % type(dfh[instrument][granularity][granularity])
+            #print('type dfh[instrument][granularity][granularity]: %s' % type(dfh[instrument][granularity][granularity]))
             pnda = p.Series(pnda, index=nsrch.index)
-            #print 'type pnda: %s' % type(pnda)
-            #print 'shape pnda: %s' % pnda.shape
-            #print 'shape nsrch: %s' % nsrch.shape
-            #print pnda
-            #print nsrch
+            #print('type pnda: %s' % type(pnda))
+            #print('shape pnda: %s' % pnda.shape)
+            #print('shape nsrch: %s' % nsrch.shape)
+            #print(pnda)
+            #print(nsrch)
             dfh0_0 = pnda.ix[nsrch]
             
             #dfh0 = p.DataFrame(dfh0_0, columns=[granularity])
@@ -1866,7 +1866,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
 	
 
             #difh0 = dfh0.to_dict()
-            #print difh0
+            #print(difh0)
             #sys.exit()
 
             #df1 = combineDF(dif1, difh0)
@@ -1877,48 +1877,48 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             #df1 = combineDF(df1, dfh0)
             #df1 = p.concat([df1, dfh0], axis=1)
             
-            #print '%s %s' % (instrument, granularity)
-            #print dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [granularity]]
-            #if int(verbose) >= 5: print df1.columns
-            #print df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')]
+            #print('%s %s' % (instrument, granularity))
+            #print(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [granularity]])
+            #if int(verbose) >= 5: print(df1.columns)
+            #print(df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')])
             #return df1
             #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[granularity]]
 
 
-            #print 'df1.shape 3: %s' % str(df1.shape)
+            #print('df1.shape 3: %s' % str(df1.shape))
         #return df1#.set_index('mode')
         try:    df1 = p.DataFrame(dif1)
         except: df1 = p.DataFrame(dif1, index=[granularity])
         #df1['mode'] = mode
         #df1 = getcc(df1, dfh, oanda2, mode, instrument=instrument, update=update)
         dfm1 = df1
-        #print dfm1.tail(3)
+        #print(dfm1.tail(3))
         dfm1 = dfm1.ffill()
-        #print dfm1.tail(3)
+        #print(dfm1.tail(3))
         dfm1 = dfm1.bfill()
-        if int(verbose) >= 5: print dfm1.tail(3)
+        if int(verbose) >= 5: print(dfm1.tail(3))
         dfm1 = dfm1.tail(1)
-        if int(verbose) >= 5: print dfm1
+        if int(verbose) >= 5: print(dfm1)
         dfm1 = dfm1.ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')]
-        if int(verbose) >= 5: print dfm1
+        if int(verbose) >= 5: print(dfm1)
         dfm1 = dfm1.transpose()
-        if int(verbose) >= 5: print dfm1
+        if int(verbose) >= 5: print(dfm1)
         #dfm1 = df1.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
-        if int(verbose) >= 5: print 'len df1: %s' % len(df1)
+        if int(verbose) >= 5: print('len df1: %s' % len(df1))
         sed = df1.index[len(df1)-1]
-        #print sed
+        #print(sed)
         dfm1[mode] = dfm1.ix[:, sed]
         #return dfm1.ix[:, [mode]]
         dfm0 = dfm1.ix[:, [mode]]
-        if int(verbose) >= 5: print dfm0
+        if int(verbose) >= 5: print(dfm0)
         #dfm  = dfm.combine_first(dfm0)
         dfm = p.concat([dfm, dfm0], axis=1)
         if verbose:
-            print 'dfm1.shape: %s' % str(dfm1.shape)
-            print 'dfm.shape: %s' % str(dfm.shape)
-            print 'dfm0.shape: %s' % str(dfm0.shape)
-            print 'df.shape: %s' % str(df.shape)
-            print 'dfh.shape: %s' % len(dfh)
+            print('dfm1.shape: %s' % str(dfm1.shape))
+            print('dfm.shape: %s' % str(dfm.shape))
+            print('dfm0.shape: %s' % str(dfm0.shape))
+            print('df.shape: %s' % str(df.shape))
+            print('dfh.shape: %s' % len(dfh))
 
     #from numba import double
     #from numba.decorators import jit, autojit
@@ -1933,11 +1933,11 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
         dfm['sell'] = n.sum(n.array(dfml.get_values(), dtype=int), 1)
         dfm = dfm.transpose()
         dfm.ix[:, instrument] = n.sum(dfm.get_values(), 1)
-        #print n.sum(n.array(dfmk.transpose().get_values(), dtype=int), 0)
-        #if int(verbose) >= 5: print dfm.transpose()
+        #print(n.sum(n.array(dfmk.transpose().get_values(), dtype=int), 0))
+        #if int(verbose) >= 5: print(dfm.transpose())
         res = dfm.transpose().ix[[instrument],:]
-        #print res
-        #print instrument
+        #print(res)
+        #print(instrument)
         return res
 
 def differentPolarity(a, b):
