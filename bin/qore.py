@@ -113,7 +113,7 @@ class QoreDebug:
         #if verbosity == 9:
         if verbosity == 8:
             #print data
-            if data:
+            if data != None:
                 self._logging.debug(data)
             #print 'maccount::'
             #print p.DataFrame(maccount.columns)
