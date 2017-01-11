@@ -2097,7 +2097,7 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
     return currentTrades
 
 def interactiveMode(defaultMsg='Sure you want to create order? (y/N/q): '):
-    print 'interactiveMode()'
+    print('interactiveMode()')
     ans = raw_input(defaultMsg)
     if ans.strip() == 'q':
         sys.exit()
@@ -2145,7 +2145,7 @@ def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleeti
     if dryrun == False:
         try:
             if int(verbose) > 7: plp.ix[i,:]
-            if int(verbose) >= 2: print "oanda2.close_trade(%s, %s, %s, %s) %s" % (plp.ix[i, 'instrument'], plp.ix[i, 'units'], accid, i, plp.ix[i, 'pl'])
+            if int(verbose) >= 2: print("oanda2.close_trade(%s, %s, %s, %s) %s" % (plp.ix[i, 'instrument'], plp.ix[i, 'units'], accid, i, plp.ix[i, 'pl']))
             if not noInteractiveFleetingProfits:
                 if noInteractiveLeverage: raise(Exception('nil --> nif conflict'))
                 if noInteractiveDeleverage: raise(Exception('nid --> nif conflict'))
@@ -2167,26 +2167,26 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                 #noInteractive = True
                 ''
             if int(verbose) >= 5:
-                print 'deleverageBool:          %s' % dfu3.ix[i, 'deleverageBool']
-                print 'noInteractive:           %s' % noInteractive
-                print 'noInteractiveLeverage:   %s' % noInteractiveLeverage
-                print 'noInteractiveDeleverage: %s' % noInteractiveDeleverage
-                print 'noInteractiveFleetingProfits: %s' % noInteractiveFleetingProfits
+                print('deleverageBool:          %s' % dfu3.ix[i, 'deleverageBool'])
+                print('noInteractive:           %s' % noInteractive)
+                print('noInteractiveLeverage:   %s' % noInteractiveLeverage)
+                print('noInteractiveDeleverage: %s' % noInteractiveDeleverage)
+                print('noInteractiveFleetingProfits: %s' % noInteractiveFleetingProfits)
             if dfu3.ix[i, 'deleverageBool'] == True and (not noInteractive and not noInteractiveDeleverage):
-                if int(verbose) >= 5: print 'nid---'
+                if int(verbose) >= 5: print('nid---')
                 if noInteractiveLeverage: raise(Exception('nil --> nid conflict'))
                 if noInteractiveFleetingProfits: raise(Exception('nif --> nid conflict'))
-                #print ct.sort_values(by=['pl'], ascending=[False])
+                #print(ct.sort_values(by=['pl'], ascending=[False]))
                 dfu = currentTrades[currentTrades['instrument'] == i]
                 dfu['plPerUnit'] = dfu['pl'] / dfu['units']
                 dfu = dfu.sort_values(by=['plPerUnit', 'units'], ascending=[False, True])
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     if int(verbose) >= 7:
-                        print dfu
+                        print(dfu)
                 if int(verbose) >= 5: 
-                    print 'pl: %s' % currentTrades[currentTrades['instrument'] == i].ix[:,'pl'].sum()
+                    print('pl: %s' % currentTrades[currentTrades['instrument'] == i].ix[:,'pl'].sum())
                     print
-                    print '# selective deleverage'                        
+                    print('# selective deleverage')
                 unitsLeft = units
                 for j in dfu.index:
                     
@@ -2194,7 +2194,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                     unitsLeft -= dfu.ix[j, 'units']
                     closeBool = True if unitsLeft >= 0 else False
                     if int(verbose) >= 8:
-                        print 'ticket:%s units:%s units:%s unitsLeft:%s closeBool:%s' % (j, dfu.ix[j, 'units'], units, unitsLeft, closeBool)
+                        print('ticket:%s units:%s units:%s unitsLeft:%s closeBool:%s' % (j, dfu.ix[j, 'units'], units, unitsLeft, closeBool))
                     
                     try:
                         partialDeleverageLoss = dfu3.ix[i, 'deleverageLoss'] * dfu.ix[j, 'units'] / dfu3.ix[i, 'units']
@@ -2202,7 +2202,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                         if closeBool:
                             interactiveMode(defaultMsg='Sure you want to partialClose[%s] ticket %s %s %s? unitsLeft:%s prevUnitsLeft:%s %s  (y/N/q): ' % (i, j, dfu.ix[j, 'side'], dfu.ix[j, 'units'], unitsLeft, prevUnitsLeft, dloss))
                             logApplicationUsage('d', description='deleverage[partialClose]', data=dfu.ix[j, :].to_dict())
-                            if int(verbose) >= 5: print 'oanda2.close_trade(%s, %s)' % (accid, j)
+                            if int(verbose) >= 5: print('oanda2.close_trade(%s, %s)' % (accid, j))
                             
                             #oanda2.close_trade(accid, j)
                             ## collect trade data
@@ -2215,7 +2215,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                             if prevUnitsLeft > 0:
                                 interactiveMode(defaultMsg='Sure you want to deleverage %s[%s]? side=%s, units=%s %s (y/N/q): ' % (i, j, side, prevUnitsLeft, dloss))
                                 logApplicationUsage('d', description='deleverage[standardClose]', data=dfu.ix[j, :].to_dict())
-                                if int(verbose) >= 5: print 'oanda2.create_order(%s, type=%s, instrument=%s, side=%s, units=%s)' % (accid, 'market', i, side, prevUnitsLeft)
+                                if int(verbose) >= 5: print('oanda2.create_order(%s, type=%s, instrument=%s, side=%s, units=%s)' % (accid, 'market', i, side, prevUnitsLeft))
                                     
                                 #oanda2.create_order(accid, type='market', instrument=i, side=side, units=prevUnitsLeft)
                                 ## collect trade data
@@ -2230,12 +2230,12 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                             
                 interactiveMode()
             if dfu3.ix[i, 'deleverageBool'] == False and (not noInteractive and not noInteractiveLeverage):
-                if int(verbose) >= 5: print 'nil---'
+                if int(verbose) >= 5: print('nil---')
                 if noInteractiveDeleverage: raise(Exception('nid --> nil conflict'))
                 if noInteractiveFleetingProfits: raise(Exception('nif --> nil conflict'))
                 interactiveMode()
             #if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
-            #    print 'ni---'
+            #    print('ni---')
             #    interactiveMode()
             try:
                 # oanda legacy
@@ -2259,7 +2259,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                 }
                 r = orders.OrderCreate(accid, data=orderData)
                 client.request(r)
-                #print r.response
+                #print(r.response)
                 #p.DataFrame(r.response['orderCreateTransaction'])
                 #p.DataFrame(r.response['orderFillTransaction'])
                 
@@ -2289,7 +2289,7 @@ def logApplicationUsage(mode, description=None, data=None):
 
 def getSyntheticCurrencyTable(oanda2, oq, instruments):
     ctsdfli = list(instruments)
-    #print p_read_csv('/mldev/bin/data/oanda/cache/instruments.csv')
+    #print(p_read_csv('/mldev/bin/data/oanda/cache/instruments.csv'))
     ctsdf = p.DataFrame(oq.syntheticCurrencyTable(ctsdfli, homeCurrency='USD'))
     qres  = oanda2.get_prices(instruments=','.join(oq.wew(ctsdf['quotedCurrency'])))
     qres  = p.DataFrame(qres['prices']).set_index('instrument')
@@ -2299,9 +2299,9 @@ def getSyntheticCurrencyTable(oanda2, oq, instruments):
     res = res.combine_first(qres)
     res = res.combine_first(pres)
     
-    #print qres
-    #print pres
-    #print res
+    #print(qres)
+    #print(pres)
+    #print(res)
     for x in range(len(ctsdf.index)):
         try:    ctsdf.ix[x, 'quotedCurrencyAsk'] = res.ix[ctsdf.ix[x, 'quotedCurrency'], 'ask']
         except: ''
@@ -2311,7 +2311,7 @@ def getSyntheticCurrencyTable(oanda2, oq, instruments):
         except: ''
         try:    ctsdf.ix[x, 'pairedCurrencyBid'] = res.ix[ctsdf.ix[x, 'pairedCurrency'], 'bid']
         except: ''
-    #print ctsdf
+    #print(ctsdf)
     #res = oanda2.get_prices(instruments=','.join(oq.wew(ctsdf['quotedCurrency'])))
     ctsdf.ix[:,'pairedCurrencyAsk pairedCurrencyBid'.split(' ')] = ctsdf.ix[:,'pairedCurrencyAsk pairedCurrencyBid'.split(' ')].fillna(1)
     return ctsdf
@@ -2343,10 +2343,10 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         csd['unitsLong'] = p.to_numeric(csd['unitsLong'])
         csd['unitsShort'] = p.to_numeric(csd['unitsShort'])
         csd['units'] = csd['unitsLong'] + csd['unitsShort']
-        #print csd.dtypes
-        #print csd.ix[:, 'units'.split()]
+        #print(csd.dtypes)
+        #print(csd.ix[:, 'units'.split()])
         currentPositionsV20['units'] = csd['units']
-        #print currentPositionsV20
+        #print(currentPositionsV20)
     except Exception as e:
         qd.exception(e)
         currentPositionsV20 = p.DataFrame([])
@@ -2357,16 +2357,16 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         try:    currentPositions = currentPositions.set_index('instrument')#.ix[:,'side units'.split(' ')]
         except Exception as e:
             qd.exception(e)
-        print currentPositions
+        print(currentPositions)
     except:
         currentPositions = p.DataFrame([])
         
     currentPositions = currentPositions.combine_first(currentPositionsV20)
     
-    print 'currentPositions::'
-    print currentPositions
+    print('currentPositions::')
+    print(currentPositions)
     
-    print 'tesst-------2'
+    print('tesst-------2')
     
     try:
         currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=loginIndex)
@@ -2378,8 +2378,8 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
     except Exception as e:
         ct = p.DataFrame([])
-    print 'ct'
-    print ct
+    print('ct')
+    print(ct)
     gct = p.DataFrame([])
     try:
         gct = ct.groupby('instrument') #.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
@@ -2387,9 +2387,9 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         currentPositions['pip'] = gct['pip']
     except Exception as e:
         ''
-    print 'tesst-------'
-    print 'gct'
-    print gct
+    print('tesst-------')
+    print('gct')
+    print(gct)
     
     return [currentPositions, currentTrades, ct, gct]
 
@@ -2414,7 +2414,7 @@ def getAccounts(oanda0, access_token0):
         accountsV20 = accountsV20.set_index('accountId')
         for i in accountsV20.index:
             try:
-                #print 'inddsd:%s' % i
+                #print('inddsd:%s' % i)
                 r = AccountSummary(accountID=i)
                 rv = client.request(r)
                 dfa = p.DataFrame(rv)
@@ -2422,16 +2422,16 @@ def getAccounts(oanda0, access_token0):
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     idf = dfa.transpose()
                     #idf = p.DataFrame(idf.ix[i, :], axis=[0])
-                    #print idf
+                    #print(idf)
                     accountsV20 = accountsV20.combine_first(idf)
                     #accountsV20 = idf.combine_first(accountsV20)
             except V20Error as ve:
-                print ve
+                print(ve)
         accountsV20 = accountsV20.drop('account')
         accountsV20 = accountsV20.drop('lastTransactionID')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print 'accountsV20:::'
-            print accountsV20
+            print('accountsV20:::')
+            print(accountsV20)
     except Exception as e:
         qd.logTraceBack(e)
         qd.exception(e)
@@ -2443,10 +2443,10 @@ def getAccounts(oanda0, access_token0):
         accounts0 = accounts0.combine_first(p.DataFrame(oanda0.get_account(accounts0.ix[i, 'accountId']), index=[i]))
     accounts = accounts0.set_index('accountId')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print 'accounts0::'
-        print accounts0
-        print 'accounts::'
-        print accounts
+        print('accounts0::')
+        print(accounts0)
+        print('accounts::')
+        print(accounts)
     
     try:
         accounts = accounts.combine_first(accountsV20)
@@ -2454,7 +2454,7 @@ def getAccounts(oanda0, access_token0):
         qd.logTraceBack(e)
         qd.exception(e)
         ''        
-    #print accounts
+    #print(accounts)
     accounts['accountId'] = accounts.index
     # convert all rows in accountId column to strings (make it searchable)
     accounts['accountId'] = n.array(accounts['accountId'], dtype=n.str)
@@ -2466,8 +2466,8 @@ def getConfig(loginIndex=None, args=None):
 
     co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
     
-    print 'loginIndex::%s' % loginIndex
-    print 'args::%s' % args
+    print('loginIndex::%s' % loginIndex)
+    print('args::%s' % args)
     
     try:    loginIndex = int(args.loginIndex)
     except:
@@ -2475,14 +2475,14 @@ def getConfig(loginIndex=None, args=None):
             loginIndex = 0    
     loginIndex =  int(loginIndex)
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print 'co::%s' % co
-        print 'co:type:%s' % type(co)
-        print 'loginIndex::%s' % loginIndex
-        print 'loginIndex type::%s' % type(loginIndex)
+        print('co::%s' % co)
+        print('co:type:%s' % type(co))
+        print('loginIndex::%s' % loginIndex)
+        print('loginIndex type::%s' % type(loginIndex))
     env0=co.ix[loginIndex,1]
     access_token0=co.ix[int(loginIndex),2]
     oanda0 = oandapy.API(environment=env0, access_token=access_token0)
-    print 'access_token0::%s' % access_token0
+    print('access_token0::%s' % access_token0)
     return [co, loginIndex, env0, access_token0, oanda0]
 
 def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=False, noInteractive=False, noInteractiveLeverage=False, noInteractiveDeleverage=False, noInteractiveFleetingProfits=False, threading=True, sortRebalanceList=None, loginIndex=None):
@@ -2504,13 +2504,13 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     # recalculate percentages [diffp]
     dfu3['diffp'] = (dfu3['diff'].get_values())/n.sum(dfu3['diff'].get_values())
 
-    print 'accid:%s' % accid
-    print 'access_token0:%s' % access_token0
+    print('accid:%s' % accid)
+    print('access_token0:%s' % access_token0)
     #maccount = oanda2.get_account(accid)
     maccount = getAccounts(oanda2, access_token0)
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print 'accid 2:%s %s' % (accid, type(accid))
-        print 'access_token0 2:%s' % access_token0
+        print('accid 2:%s %s' % (accid, type(accid)))
+        print('access_token0 2:%s' % access_token0)
         qd.data('maccount::', maccount)
         #qd.data(p.DataFrame(maccount.columns))
         qd.data('maccount', maccount.to_dict())
@@ -2713,7 +2713,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             gct = ct.groupby('instrument')
             gct = gct.aggregate(n.mean)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
             if int(verbose) >= 8:
-                print(ct #.sort_values(by='', ascending=False))
+                print(ct) #.sort_values(by='', ascending=False)
                 print(gct)
         except: ''
         #print(ct.sort_values(by='plpips', ascending=False))
@@ -2908,10 +2908,10 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     #.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
         print('quotedCurrencyPrice')
-        print(quotedCurrencyPrice#.sort_values(by='diffp', ascending=False))
+        print(quotedCurrencyPrice)#.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
         print('pairedCurrencyPrice')
-        print(pairedCurrencyPrice#.sort_values(by='diffp', ascending=False))
+        print(pairedCurrencyPrice)#.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
         print('instrumentCurrencyPrice')
         print(instrumentCurrencyPrice)
