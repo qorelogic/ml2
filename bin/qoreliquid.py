@@ -2186,7 +2186,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                 if int(verbose) >= 5: 
                     print('pl: %s' % currentTrades[currentTrades['instrument'] == i].ix[:,'pl'].sum())
                     print
-                    print('# selective deleverage'                        )
+                    print('# selective deleverage')
                 unitsLeft = units
                 for j in dfu.index:
                     
@@ -2711,7 +2711,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             gct = ct.groupby('instrument')
             gct = gct.aggregate(n.mean)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
             if int(verbose) >= 8:
-                print(ct #.sort_values(by='', ascending=False))
+                print(ct) #.sort_values(by='', ascending=False)
                 print(gct)
         except: ''
         #print(ct.sort_values(by='plpips', ascending=False))
@@ -2905,10 +2905,10 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     #.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
         print('quotedCurrencyPrice')
-        print(quotedCurrencyPrice#.sort_values(by='diffp', ascending=False))
+        print(quotedCurrencyPrice)#.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
         print('pairedCurrencyPrice')
-        print(pairedCurrencyPrice#.sort_values(by='diffp', ascending=False))
+        print(pairedCurrencyPrice)#.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
         print('instrumentCurrencyPrice')
         print(instrumentCurrencyPrice)
