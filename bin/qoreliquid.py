@@ -1953,7 +1953,7 @@ def calcPl(bid, ask, price, sideBool, pairedCurrencyBid, pairedCurrencyAsk, unit
     #pl00003 = ((pairedCurrencyBid+pairedCurrencyAsk)/2)
     #pl00004 = (1 / ((pairedCurrencyBid+pairedCurrencyAsk)/2))
     #pl00005 = ( ((bid+ask)/2) - price ) * (1 / ((pairedCurrencyBid+pairedCurrencyAsk)/2))
-    #print 'sideBool:%s' % sideBool
+    #print('sideBool:%s' % sideBool)
     lsb = len(sideBool)
     close = n.zeros(lsb)
     pairedCurrencyClose = n.zeros(lsb)
@@ -1995,22 +1995,22 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
         currentTradesV20['initialUnits'] = p.to_numeric(currentTradesV20['initialUnits'])
         currentTradesV20['units']        = n.absolute(currentTradesV20['initialUnits'])
         currentTradesV20['side']         = map(lambda x: 'buy' if x > 0 else 'sell', currentTradesV20['initialUnits'])
-        print 'accid 00101: %s' % accid
-        print 'access_token0 00101: %s' % access_token0
-        print 'currentTradesV20 0010'
-        print currentTradesV20
+        print('accid 00101: %s' % accid)
+        print('access_token0 00101: %s' % access_token0)
+        print('currentTradesV20 0010')
+        print(currentTradesV20)
     except Exception as e:
-        print 'err: %s' % e
+        print('err: %s' % e)
         currentTradesV20 = p.DataFrame([])
     """
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         try:
-            #print currentTradesV20.dtypes
+            #print(currentTradesV20.dtypes)
             #currentTradesV20 = currentTradesV20.convert_objects(convert_numeric=True)
             currentTradesV20['unrealizedPL'] = p.to_numeric(currentTradesV20['unrealizedPL'])
             mdf = currentTradesV20.sort_values(by='unrealizedPL', ascending=False)
-            #print mdf[mdf['unrealizedPL'] > 0]
-            print mdf
+            #print(mdf[mdf['unrealizedPL'] > 0])
+            print(mdf)
         except: ''
     """
     try:
@@ -2020,11 +2020,11 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
         currentTrades = p.DataFrame([])
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print 'currentTrades:: 00101'
-        print currentTrades
+        print('currentTrades:: 00101')
+        print(currentTrades)
         currentTrades = currentTrades.combine_first(currentTradesV20)
-        print 'currentTrades:: 00102'
-        print currentTrades
+        print('currentTrades:: 00102')
+        print(currentTrades)
     
     try:
         r = accounts.AccountInstruments(accid)
@@ -2032,10 +2032,10 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
         instrumentsV20 = p.DataFrame(rv['instruments']).set_index('name')
         instrumentsV20['pip'] = n.power(10.0, instrumentsV20['pipLocation']) # convert legacy pip to v20
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print 'instruments 00103a'
-            print instrumentsV20
+            print('instruments 00103a')
+            print(instrumentsV20)
     except Exception as e:
-        print 'err: %s' % e
+        print('err: %s' % e)
         instrumentsV20 = p.DataFrame([])
 
     # source: http://stackoverflow.com/questions/33126477/pandas-convert-objectsconvert-numeric-true-deprecated
@@ -2045,10 +2045,10 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
     except:
         instruments = p.DataFrame([])
     instruments = instruments.combine_first(instrumentsV20)
-    print 'instruments 00103b'
-    print instruments
-    print 'currentPositions 00104'
-    print currentPositions
+    print('instruments 00103b')
+    print(instruments)
+    print('currentPositions 00104')
+    print(currentPositions)
     instruments['pip'] = p.to_numeric(instruments['pip'])
     currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
     currentPrices = p.DataFrame(currentPrices).set_index('instrument')
@@ -2090,8 +2090,8 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
     currentTrades['pl'] = calcPl(currentTrades['bid'], currentTrades['ask'], currentTrades['price'], currentTrades['sideBool'], currentTrades['pairedCurrencyBid'], currentTrades['pairedCurrencyAsk'], currentTrades['units'])
 
     #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-    #    print 'currentTrades'
-    #    print currentTrades.sort_values(by='pl')
+    #    print('currentTrades')
+    #    print(currentTrades.sort_values(by='pl'))
     for i in xrange(len(currentTrades)):
         currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
     return currentTrades
