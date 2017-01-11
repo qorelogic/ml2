@@ -109,6 +109,18 @@ class QoreDebug:
     
             #return str
     
+    def data(self, name, data=None, verbosity=8):
+        #if verbosity == 9:
+        if verbosity == 8:
+            #print data
+            if type(data) != type(None):
+                self._logging.debug(data)
+            #print 'maccount::'
+            #print p.DataFrame(maccount.columns)
+            #print maccount#.to_dict()
+    
+            #return str
+
     def exception(self, e, verbosity=8):
         #if verbosity == 9:
         if verbosity == 8:
