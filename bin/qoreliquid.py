@@ -2545,53 +2545,53 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         if threading:
             pool = ThreadPool(processes=270)
             fleetingProfitsPL = (netAssetValue * (1.0/len(ct))/100)
-            print 'fleetingProfitsPL:%s' % fleetingProfitsPL
+            print('fleetingProfitsPL:%s' % fleetingProfitsPL)
             for i in list(plp.index):
                 if plp.ix[i, 'pl'] >= fleetingProfitsPL:
                     async_result = pool.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose])
                     return_val   = async_result.get()
-                    #print return_val
+                    #print(return_val)
             pool.close()
         else:
             fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose)
             
         if int(verbose) >= 5: 
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                #print 'instruments:'
-                #print instruments 
-                #print currentPrices
-                print 'currentTrades:'
-                print len(currentTrades)
-                print currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('id')#.ix[:,'instrument price side time units'.split(' ')]
-                #print gct
+                #print('instruments:')
+                #print(instruments )
+                #print(currentPrices)
+                print('currentTrades:')
+                print(len(currentTrades))
+                print(currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('id'))#.ix[:,'instrument price side time units'.split(' ')]
+                #print(gct)
                 ffsds = 'instrument side units plpips pl time'.split(' ')
                 
                 plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
                 pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
                 pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
 
-                print pll
+                print(pll)
                 for i in list(plp.index):
                     if dryrun == False:
-                        print "oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl'])
+                        print("oanda2.close_trade(%s, %s) %s" % (accid, i, plp.ix[i, 'pl']))
                         #oanda2.close_trade(accid, i)
                     
-                print plp.ix[:, ffsds]
-                print pln.ix[:, ffsds]
+                print(plp.ix[:, ffsds])
+                print(pln.ix[:, ffsds])
 
-                print 'currentPositions:'
-                print currentPositions.sort_values(by='units', ascending=False)
+                print('currentPositions:')
+                print(currentPositions.sort_values(by='units', ascending=False))
 
         # get rebalance amount
-        #print currentPositions
-        #print dfu3.ix[currentPositions.index, :]
+        #print(currentPositions)
+        #print(dfu3.ix[currentPositions.index, :])
         #cu = currentPositions.ix[dfu3.index, :]
         cu = currentPositions.combine_first(dfu3)
         cu['bool'] = getSideBool(cu['side'])
         cu = cu.fillna(0)
         if int(verbose) >= 5: 
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                print cu.sort_values(by='diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')]
+                print(cu.sort_values(by='diffp', ascending=False).ix[:, 'amount bool buy diff diffp sell side sidePolarity unit units amountSidePolarity positions rebalance'.split(' ')])
         #print
         dfu3 = dfu3.combine_first(cu)
         dfu3 = dfu3.combine_first(gct)
@@ -2684,44 +2684,44 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         if int(verbose) >= 5: f1 = '%s rebalanceBool deleverageBool diffRebalanceMarginUsedBool' % f1Base
         else:       f1 = f1Base
         if int(verbose) >= 5: 
-            print '-=-=-=-=-'
-            print '-=-=-=-=-'
-            print 'sumMarginUsed: %s' % n.sum(dfu3['marginUsed'])
-            print 'sortRebalanceList:%s' % sortRebalanceList
-            print 'sortby:%s' % sortby
-            print 'sortAscending:%s' % sortAscending
-            #print dfu3.sort_values(by='diffp', ascending=False).ix[:, f1.split(' ')]
-            print dfu3.sort_values(by=sortby, ascending=sortAscending).ix[:, f1.split(' ')]
+            print('-=-=-=-=-')
+            print('-=-=-=-=-')
+            print('sumMarginUsed: %s' % n.sum(dfu3['marginUsed']))
+            print('sortRebalanceList:%s' % sortRebalanceList)
+            print('sortby:%s' % sortby)
+            print('sortAscending:%s' % sortAscending)
+            #print(dfu3.sort_values(by='diffp', ascending=False).ix[:, f1.split(' ')])
+            print(dfu3.sort_values(by=sortby, ascending=sortAscending).ix[:, f1.split(' ')])
             print
             
-            #print ct.sort_values(by=['pl'], ascending=[False])
+            #print(ct.sort_values(by=['pl'], ascending=[False]))
             #print
 
     if threading:
         poolFleetingProfits = ThreadPool(processes=270)
         poolLeverage        = ThreadPool(processes=270)
     if int(verbose) >= 5:
-        print '                                                                 MU=MarginUsed'
-        print '                                                                  R=Rebalance'
-        print '                                                                  r=rebalanceMarginUsed'
-        print '                                                                dMU=diffRebalanceMarginUsed'
-        print '                                                                drb=diffpRpBalance'
-        print '                                                               drbp=diffpRebalancep'
-    print '===1==1==1=1=1=1===='
+        print('                                                                 MU=MarginUsed')
+        print('                                                                  R=Rebalance')
+        print('                                                                  r=rebalanceMarginUsed')
+        print('                                                                dMU=diffRebalanceMarginUsed')
+        print('                                                                drb=diffpRpBalance')
+        print('                                                               drbp=diffpRebalancep')
+    print('===1==1==1=1=1=1====')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         try:
             gct = ct.groupby('instrument')
             gct = gct.aggregate(n.mean)#.ix[:, 'units pl'.split(' ')].sort_values(by='pl', ascending=False)#[ct['pl'] > 0]
             if int(verbose) >= 8:
-                print ct #.sort_values(by='', ascending=False)
-                print gct
+                print(ct #.sort_values(by='', ascending=False))
+                print(gct)
         except: ''
-        #print ct.sort_values(by='plpips', ascending=False)
-    print '===1==1==1=1=1=1===='
+        #print(ct.sort_values(by='plpips', ascending=False))
+    print('===1==1==1=1=1=1====')
     try:    dfu3s = dfu3.sort_values(by=sortby, ascending=sortAscending).index
     except: dfu3s = dfu3.index
     for i in dfu3s:
-        #print dfu3.ix[[i], :].transpose()
+        #print(dfu3.ix[[i], :].transpose())
         units = int(abs(dfu3.ix[i, 'rebalance']))#-1
         side  = 'buy' if int(dfu3.ix[i, 'rebalance']) > 0 else 'sell'
         #dfu3.ix[i, 'side']
@@ -2736,9 +2736,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             closePositionStatus = '[closePosition]' if dfu3.ix[i, 'amount2'] == 0 else ''
             try:
                 if int(verbose) >= 8:
-                    print "<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s[%s]) %s %s %s rebalanceMU/MU/diffRebalanceMU:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed'])
+                    print("<broker>.create_order(%s, type='market', instrument='%s', side='%s', units=%s[%s]) %s %s %s rebalanceMU/MU/diffRebalanceMU:(%.3f/%.3f/%.3f)" % (accid, i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']))
                 else:
-                    print "<broker>.create_order(instrument='%s', side='%s', units=%s[%s]) %s %s %s r/MU/dMU:(%.3f/%.3f/%.3f)" % (i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed'])
+                    print("<broker>.create_order(instrument='%s', side='%s', units=%s[%s]) %s %s %s r/MU/dMU:(%.3f/%.3f/%.3f)" % (i, side.rjust(4), str(units).rjust(4), str(dfu3.ix[i, 'units']).rjust(10), status, deleverageStatus, closePositionStatus, dfu3.ix[i, 'rebalanceMarginUsed'], dfu3.ix[i, 'marginUsed'], dfu3.ix[i, 'diffRebalanceMarginUsed']))
             except: ''
 
             #for i in list(plp.index):
@@ -2746,7 +2746,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                 try:
                     async_result = poolFleetingProfits.apply_async(fleetingProfitsCloseTrade, [oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose])
                     return_val   = async_result.get()
-                    #print return_val
+                    #print(return_val)
                 except: ''
     
                 async_result = poolLeverage.apply_async(leverageTrades, [dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct, loginIndex])
@@ -2758,14 +2758,14 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                 except: ''
                 leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, ct, loginIndex=loginIndex)
                 
-            #print return_val
+            #print(return_val)
             #leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive)
     
     if threading:
         poolFleetingProfits.close()
         poolLeverage.close()
         
-    #print maccount
+    #print(maccount)
     try: pll[0] = pll['pls']
     except: ''
     #maccount = oanda2.get_account(accid)
@@ -2803,21 +2803,21 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     if int(verbose) >= 1:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
 
-            #print dfu3[:, ['diffpRebalancepBalance', 'diffpRebalancep']].sum()
-            print '%s %s' % (dfu3['diffpRebalancepBalance'].sum(), dfu3['diffpRebalancep'].sum())
-            print 'DeleveragedBalance: %s' % (balanceDeleveraged)
-            print 'DeleveragedBalance+plp: %s' % (balanceDeleveragedPlp)
-            print 'diffDeleveragedBalance+plp2Balance: %s' % (balanceDeleveragedPlp - dfa.ix[0, 'balance'])
+            #print(dfu3[:, ['diffpRebalancepBalance', 'diffpRebalancep']].sum())
+            print('%s %s' % (dfu3['diffpRebalancepBalance'].sum(), dfu3['diffpRebalancep'].sum()))
+            print('DeleveragedBalance: %s' % (balanceDeleveraged))
+            print('DeleveragedBalance+plp: %s' % (balanceDeleveragedPlp))
+            print('diffDeleveragedBalance+plp2Balance: %s' % (balanceDeleveragedPlp - dfa.ix[0, 'balance']))
             print
-            print plp.ix[:, ffsds]                        
-            #print '%s %s%s' % li            
-            #print '%s %s' % list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
-            print list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
-            #print pln.ix[:, ffsds]
+            print(plp.ix[:, ffsds])
+            #print('%s %s%s' % li)
+            #print('%s %s' % list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0]))
+            print(list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0]))
+            #print(pln.ix[:, ffsds])
             print
             
-            print dfa.ix[:, 'accountCurrency accountId accountName balance uPl uPlPcnt nav realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')]
-            print 
+            print(dfa.ix[:, 'accountCurrency accountId accountName balance uPl uPlPcnt nav realizedPl plp plpcnt pln plncnt openTrades marginUsed marginAvail'.split(' ')])
+            print
     
     return dfu3
 
