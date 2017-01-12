@@ -1827,7 +1827,7 @@ class Patterns:
                     apdf['unrealizedPL'] = p.to_numeric(apdf['unrealizedPL'])
                     apdf['price']        = p.to_numeric(apdf['price'])
                     apdf['unrealizedPLPcnt'] = apdf['unrealizedPL'] / float(rv['account']['NAV']) * 100
-                    #apdf = apdf.ix[:, 'id instrument pl resettablePL unrealizedPL unrealizedPLPcnt'.split(' ')].set_index('instrument')
+                    apdf = apdf.ix[:, 'id instrument pl price currentPrice resettablePL unrealizedPL unrealizedPLPcnt'.split(' ')]#.set_index('instrument')
                     for k in apdf.index:
                         inst = apdf.ix[k, 'instrument']
                         apdf.ix[k, 'currentPrice'] =  prices.ix[inst, 'avg']
@@ -1838,8 +1838,13 @@ class Patterns:
                     if verbose:
                         print apdf
                     if closeProfitableTrades:
+                        from multiprocessing.pool import ThreadPool
+                        pool = ThreadPool(processes=270)
                         for k in apdf.index:
-                            self.closeTrade(i, k)
+                            async_result = pool.apply_async(self.closeTrade, [i, k])
+                            res = async_result.get()
+                            #self.closeTrade(i, k)
+                        pool.close()
                     apdfSum = apdf.ix[:, 'unrealizedPL unrealizedPLPcnt'.split(' ')].sum().to_dict()
                     apmdf.update({i:apdfSum})
                     #apmdf = apmdf.combine_first(apdfSum)
