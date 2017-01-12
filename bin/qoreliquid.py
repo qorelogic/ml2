@@ -1701,12 +1701,10 @@ class Patterns:
 
     def __init__(self):
         
-        print 'test'
-
         from oandapyV20 import API
 
         co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=4)
-        print 'access_token0 %s' % access_token0        
+        #print 'access_token0 %s' % access_token0        
         self.client = API(access_token=access_token0)
 
         self._accountList = self.accountList()
@@ -1714,14 +1712,7 @@ class Patterns:
     def accountList(self):
 
         import oandapyV20.endpoints.accounts as accounts
-        
         r = accounts.AccountList()
-        print r
-        #print r.ENDPOINT
-        print r.METHOD
-        print r.status_code
-        print r.response
-        #print client.request(r)
         rv = self.client.request(r)
         return p.DataFrame(rv['accounts'])
         
@@ -1800,7 +1791,7 @@ class Patterns:
             plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
 
-    def monitorAccountsProfitableTrades(self):
+    def monitorAccountsProfitableTrades(self, verbose=False, closeProfitableTrades=False):
 
         import oandapyV20.endpoints.accounts as accounts
         from oandapyV20.exceptions import V20Error
@@ -1808,9 +1799,11 @@ class Patterns:
         # monitor accounts: profitable trades watcher
         mfdf = p.DataFrame()
         apmdf = {} #p.DataFrame()
+        prices = self.getPrices()
         for i in self._accountList['id']:
-            #print '=========='
-            #print i
+            if verbose:
+                print '=========='
+                print i
             #print 'NAV %s:' % rv['account']['NAV']
             r = accounts.AccountDetails(accountID=i)
             try:
@@ -1825,17 +1818,28 @@ class Patterns:
                     mfdf = mfdf.combine_first(mmdf)            
     
                     # monitor positions
-                    apdf = p.DataFrame(rv['account']['positions'])
-                    apdf['unrealizedPL'] = p.to_numeric(apdf['unrealizedPL'])
+                    #apdf = p.DataFrame(rv['account']['positions'])
+                    #apdf['unrealizedPL'] = p.to_numeric(apdf['unrealizedPL'])
                     #print apdf.ix[:, 'instrument pl resettablePL unrealizedPL'.split(' ')].set_index('instrument').sort_values(by='unrealizedPL', ascending=False)            
     
                     # monitor trades
                     apdf = p.DataFrame(rv['account']['trades'])
                     apdf['unrealizedPL'] = p.to_numeric(apdf['unrealizedPL'])
+                    apdf['price']        = p.to_numeric(apdf['price'])
                     apdf['unrealizedPLPcnt'] = apdf['unrealizedPL'] / float(rv['account']['NAV']) * 100
-                    apdf = apdf.ix[:, 'id instrument pl resettablePL unrealizedPL unrealizedPLPcnt'.split(' ')].set_index('instrument').sort_values(by='unrealizedPL', ascending=False)            
+                    #apdf = apdf.ix[:, 'id instrument pl resettablePL unrealizedPL unrealizedPLPcnt'.split(' ')].set_index('instrument')
+                    for k in apdf.index:
+                        inst = apdf.ix[k, 'instrument']
+                        apdf.ix[k, 'currentPrice'] =  prices.ix[inst, 'avg']
+                    apdf['profitPcnt'] = n.abs(apdf['currentPrice'] / apdf['price'] * 100 - 100)
                     apdf = apdf[apdf['unrealizedPL'] > 0]
-                    #print apdf
+                    apdf = apdf[apdf['profitPcnt'] > 0.1].set_index('id')
+                    apdf = apdf.sort_values(by='profitPcnt', ascending=False)
+                    if verbose:
+                        print apdf
+                    if closeProfitableTrades:
+                        for k in apdf.index:
+                            self.closeTrade(i, k)
                     apdfSum = apdf.ix[:, 'unrealizedPL unrealizedPLPcnt'.split(' ')].sum().to_dict()
                     apmdf.update({i:apdfSum})
                     #apmdf = apmdf.combine_first(apdfSum)
@@ -1866,8 +1870,36 @@ class Patterns:
             print p.DataFrame(apmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
         #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
+    def closeTrade(self, accountID, tradeID):
+        import oandapyV20.endpoints.trades as trades
+        try:
+            print 'closing trade: %s %s' % (accountID, tradeID)
+            data = {}
+            r = trades.TradeClose(accountID=accountID, tradeID=tradeID, data=data)
+            self.client.request(r)
+            print r.response
+        except Exception as e:        
+            print e
+    
+    def getPrices(self):
+        import oandapyV20.endpoints.pricing as pricing
+        symbols  = 'AUD_CAD,AUD_CHF,AUD_HKD,AUD_JPY,AUD_NZD,AUD_SGD,AUD_USD,CAD_CHF,CAD_HKD,CAD_JPY,CAD_SGD,CHF_HKD,CHF_JPY,CHF_ZAR,EUR_AUD,EUR_CAD,EUR_CHF,EUR_DKK,EUR_GBP,EUR_HKD,EUR_HUF,EUR_JPY,EUR_NOK,EUR_NZD,EUR_PLN,EUR_SEK,EUR_SGD,EUR_TRY,EUR_USD,EUR_ZAR,GBP_AUD,GBP_CAD,GBP_CHF,GBP_HKD,GBP_JPY,GBP_NZD,GBP_PLN,GBP_SGD,GBP_USD,GBP_ZAR,HKD_JPY,NZD_CAD,NZD_CHF,NZD_HKD,NZD_JPY,NZD_SGD,NZD_USD,SGD_CHF,SGD_HKD,SGD_JPY,TRY_JPY,USD_CAD,USD_CHF,USD_CNH,USD_CZK,USD_DKK,USD_HKD,USD_HUF,USD_JPY,USD_MXN,USD_NOK,USD_PLN,USD_SEK,USD_SGD,USD_THB,USD_TRY,USD_ZAR,ZAR_JPY'
+        #.split(',')
+        #print symbols
+        params = {"instruments": symbols}
+        #params = {"instruments": "EUR_USD,EUR_JPY"}
+        r = pricing.PricingInfo(accountID='101-004-1984564-001', params=params)
+        rv = self.client.request(r)
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            instruments = p.DataFrame(r.response['prices']).set_index('instrument').transpose()
+            instruments = instruments.ix['closeoutAsk closeoutBid'.split(' '), :].transpose()
+            instruments['closeoutAsk'] = p.to_numeric(instruments['closeoutAsk'])
+            instruments['closeoutBid'] = p.to_numeric(instruments['closeoutBid'])
+            instruments['avg'] = (instruments['closeoutAsk'] + instruments['closeoutBid'])/2
+            #print instruments
+        return instruments
 
-@profile
+
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     import hashlib as hl
     import talib
