@@ -1698,8 +1698,174 @@ def test_cython():
 
     
 class Patterns:
+
     def __init__(self):
-        'stub'
+        
+        print 'test'
+
+        from oandapyV20 import API
+
+        co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=4)
+        print 'access_token0 %s' % access_token0        
+        self.client = API(access_token=access_token0)
+
+        self._accountList = self.accountList()
+    
+    def accountList(self):
+
+        import oandapyV20.endpoints.accounts as accounts
+        
+        r = accounts.AccountList()
+        print r
+        #print r.ENDPOINT
+        print r.METHOD
+        print r.status_code
+        print r.response
+        #print client.request(r)
+        rv = self.client.request(r)
+        return p.DataFrame(rv['accounts'])
+        
+
+    def monitorAccountsMarginCloseout(self):
+
+        import oandapyV20.endpoints.accounts as accounts
+        from oandapyV20.exceptions import V20Error
+        from matplotlib.pylab import plot
+
+        # monitor accounts: margin closeout watcher
+        p.set_option('display.float_format', lambda x: '%.3f' % x)
+        mfdf = p.DataFrame()
+        
+        for i in self._accountList['id']:
+            #print '========== %s' % i
+            r = accounts.AccountDetails(accountID=i)
+            try:
+                rv = self.client.request(r)        
+                #print float(rv['account']['marginCloseoutPercent']) * 100
+                #print json.dumps(rv['account'], indent=4)        
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    #print '===='
+                    mmdf = p.DataFrame(rv).ix['marginCloseoutPercent balance marginAvailable unrealizedPL resettablePL'.split(' '),'account']#.transpose()
+                    mmdf['id'] = i
+                    mmdf = p.DataFrame(mmdf)
+                    mmdf[i] = mmdf['account']
+                    mfdf = mfdf.combine_first(mmdf)            
+                    #print p.DataFrame(rv)
+                    #print p.DataFrame(rv['account']['positions'])            
+                    #print
+                    #print 'positions long'
+                    try: pldf = p.DataFrame(rv['account']['positions'][1]['long'], index=[i])
+                    except: ''
+                    #mfdf = mfdf.combine_first(pldf.transpose())
+                    #print pldf
+                    #print
+                    #print 'positions short'
+                    try: psdf = p.DataFrame(rv['account']['positions'][1]['short'], index=[i])
+                    except: ''
+                    #mfdf = mfdf.combine_first(psdf.transpose())
+                    #print psdf
+                    #print
+            except V20Error as e:
+                print e
+                """
+                print("OOPS: {:d} {:s}".format(e.code, e.msg))
+                print 'args: %s' % e.args
+                print 'code: %s' % e.code
+                print 'message: %s' % e.message
+                print 'msg: %s' % e.msg
+                """
+                if e.code == 403:
+                    """
+                    print 'You received a 403 because the token being used in this v20 REST call is from the legacy REST API.'
+                    print 'You needs to revoke this token and then generate a new one, and this will work with both the legacy and v20 REST calls.'
+                    print 'source: https://github.com/bm842/Brokers/issues/3'            
+                    """
+            except Exception as e:
+                print e
+    
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            mfdf = mfdf.drop('id')
+            #mfdf = mfdf.set_index('id')
+            mfdf = mfdf.transpose()
+            mfdf = mfdf.drop('account')
+            mfdf['marginCloseoutPercent'] = p.to_numeric(mfdf['marginCloseoutPercent'])
+            mfdf['unrealizedPL']          = p.to_numeric(mfdf['unrealizedPL'])
+            mfdf['balance']               = p.to_numeric(mfdf['balance'])
+            mfdf['resettablePL']          = p.to_numeric(mfdf['resettablePL'])
+            mfdf['marginCloseoutPercent'] = mfdf['marginCloseoutPercent'] * 100
+            mfdf['unrealizedPLPcnt']      = mfdf['unrealizedPL'] / mfdf['balance'] * 100
+            mfdf['resettablePLPcnt']      = mfdf['resettablePL'] / mfdf['balance'] * 100
+            print mfdf.sort_values(by='marginCloseoutPercent')
+            print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
+            plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
+
+
+    def monitorAccountsProfitableTrades(self):
+
+        import oandapyV20.endpoints.accounts as accounts
+        from oandapyV20.exceptions import V20Error
+
+        # monitor accounts: profitable trades watcher
+        mfdf = p.DataFrame()
+        apmdf = {} #p.DataFrame()
+        for i in self._accountList['id']:
+            #print '=========='
+            #print i
+            #print 'NAV %s:' % rv['account']['NAV']
+            r = accounts.AccountDetails(accountID=i)
+            try:
+                rv = self.client.request(r)        
+                #print float(rv['account']['marginCloseoutPercent']) * 100
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    #print '===='             
+                    mmdf = p.DataFrame(rv).ix['marginCloseoutPercent balance marginAvailable unrealizedPL resettablePL'.split(' '),'account']#.transpose()
+                    mmdf['id'] = i
+                    mmdf = p.DataFrame(mmdf)
+                    mmdf[i] = mmdf['account']
+                    mfdf = mfdf.combine_first(mmdf)            
+    
+                    # monitor positions
+                    apdf = p.DataFrame(rv['account']['positions'])
+                    apdf['unrealizedPL'] = p.to_numeric(apdf['unrealizedPL'])
+                    #print apdf.ix[:, 'instrument pl resettablePL unrealizedPL'.split(' ')].set_index('instrument').sort_values(by='unrealizedPL', ascending=False)            
+    
+                    # monitor trades
+                    apdf = p.DataFrame(rv['account']['trades'])
+                    apdf['unrealizedPL'] = p.to_numeric(apdf['unrealizedPL'])
+                    apdf['unrealizedPLPcnt'] = apdf['unrealizedPL'] / float(rv['account']['NAV']) * 100
+                    apdf = apdf.ix[:, 'id instrument pl resettablePL unrealizedPL unrealizedPLPcnt'.split(' ')].set_index('instrument').sort_values(by='unrealizedPL', ascending=False)            
+                    apdf = apdf[apdf['unrealizedPL'] > 0]
+                    #print apdf
+                    apdfSum = apdf.ix[:, 'unrealizedPL unrealizedPLPcnt'.split(' ')].sum().to_dict()
+                    apmdf.update({i:apdfSum})
+                    #apmdf = apmdf.combine_first(apdfSum)
+    
+                    #print
+                #print json.dumps(rv['account'], indent=4)
+                #print json.dumps(rv['account']['positions'], indent=4)
+                #print json.dumps(rv['account']['trades'], indent=4)
+            except V20Error as e:
+                print e
+            except Exception as e:
+                print e
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            mfdf = mfdf.drop('id')
+            mfdf = mfdf.transpose()
+            mfdf = mfdf.drop('account')
+            mfdf['marginCloseoutPercent'] = p.to_numeric(mfdf['marginCloseoutPercent'])
+            mfdf['unrealizedPL']          = p.to_numeric(mfdf['unrealizedPL'])
+            mfdf['balance']               = p.to_numeric(mfdf['balance'])
+            mfdf['resettablePL']          = p.to_numeric(mfdf['resettablePL'])
+            mfdf['marginCloseoutPercent'] = mfdf['marginCloseoutPercent'] * 100
+            mfdf['unrealizedPLPcnt']      = mfdf['unrealizedPL'] / mfdf['balance'] * 100
+            mfdf['resettablePLPcnt']      = mfdf['resettablePL'] / mfdf['balance'] * 100
+            #print mfdf.sort_values(by='marginCloseoutPercent')
+            #print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
+            print
+            print '== Monitor UnrealizedPL and UnrealizedPL%'
+            print p.DataFrame(apmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
+        #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
+
 
 @profile
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
@@ -2463,6 +2629,10 @@ def getAccounts(oanda0, access_token0):
     return accounts
 
 def getConfig(loginIndex=None, args=None):
+
+    qd = QoreDebug()
+    qd.on()
+    #qd.off()
 
     co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
     
