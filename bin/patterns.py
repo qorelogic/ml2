@@ -4,6 +4,8 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", '--verbose', help="turn on verbosity")
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-mm", '--monitorMargin', help="list logins", action="store_true")
+parser.add_argument("-mt", '--monitorTrades', help="list logins", action="store_true")
 parser.add_argument("-ll", '--listLogins', help="list logins", action="store_true")
 parser.add_argument("-la", '--listAccounts', help="list logins", action="store_true")
 parser.add_argument("-li", '--loginIndex', help="set the account index given by -ll")
@@ -66,6 +68,20 @@ co, loginIndex, env0, access_token0, oanda0 = getConfig(args=args)
 #oanda1 = oandapy.API(environment=env1, access_token=access_token1)
 
 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+
+    if args.monitorMargin:
+        from qoreliquid import Patterns
+        pa = Patterns()
+        pa.monitorAccountsMarginCloseout()
+        sys.exit()
+        
+    if args.monitorTrades:
+        from qoreliquid import Patterns
+        pa = Patterns()
+        pa.monitorAccountsProfitableTrades(verbose=True)
+        sys.exit()
+        
+
     if args.listLogins:
             print co
             sys.exit()
