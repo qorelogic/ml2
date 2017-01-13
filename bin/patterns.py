@@ -335,6 +335,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
             qd.exception(e)
             print 'Try a different account number'
     else:
+        print 'using account 002: {0}'.format(accid)
         dfu33 = rebalanceTrades(oq, dfu2, oanda0, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList, loginIndex=loginIndex)
 
 def getDryRun(args):
