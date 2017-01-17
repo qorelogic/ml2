@@ -1783,12 +1783,22 @@ class Patterns:
             mfdf['unrealizedPL']          = p.to_numeric(mfdf['unrealizedPL'])
             mfdf['balance']               = p.to_numeric(mfdf['balance'])
             mfdf['resettablePL']          = p.to_numeric(mfdf['resettablePL'])
+            mfdf['initialCapital']        = mfdf['balance'] - mfdf['resettablePL']
             mfdf['marginCloseoutPercent'] = mfdf['marginCloseoutPercent'] * 100
+            mfdf['netAssetValue']         = mfdf['balance'] + mfdf['unrealizedPL'] 
             mfdf['unrealizedPLPcnt']      = mfdf['unrealizedPL'] / mfdf['balance'] * 100
-            mfdf['resettablePLPcnt']      = mfdf['balance'] / (mfdf['balance'] - mfdf['resettablePL']) * 100
+            mfdf['resettablePLPcnt2']     = mfdf['resettablePL'] / mfdf['balance'] * 100
+            mfdf['resettablePLPcnt']      = mfdf['balance'] / (mfdf['balance'] - mfdf['resettablePL']) * 100 - 100
+            mfdf['marginUnrealized']      = mfdf['marginCloseoutPercent'] / mfdf['unrealizedPLPcnt']
+            mfdf['marginUnrealized2']     = mfdf['unrealizedPLPcnt'] / mfdf['marginCloseoutPercent']
+            mfdf['netPLPcnt']             = mfdf['resettablePLPcnt'] + mfdf['unrealizedPLPcnt']
             print mfdf.sort_values(by='marginCloseoutPercent')
+            print mfdf.sort_values(by='netPLPcnt', ascending=False)
             print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
-            plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
+            print mfdf.sort_values(by='marginUnrealized', ascending=False)
+            print mfdf.sort_values(by='unrealizedPL', ascending=False)
+            print mfdf.sort_values(by='resettablePL', ascending=False)
+            #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
 
     def monitorAccountsProfitableTrades(self, verbose=False, closeProfitableTrades=False, account=None):
@@ -1872,7 +1882,17 @@ class Patterns:
             #print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
             print
             print '== Monitor UnrealizedPL and UnrealizedPL%'
-            print p.DataFrame(apmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
+            df = p.DataFrame(apmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
+            print df
+            print
+            #print p.DataFrame([n.std(df['unrealizedPLPcnt']), n.mean(df['unrealizedPLPcnt']) ], index=['stddev', 'avg']).transpose()
+            df['id']  = df.index
+            df['gid'] = map(lambda x: x.split('-')[2], df.index)
+            dfg = df.groupby('gid')
+            print  dfg.mean() + dfg.std()
+            print  dfg.mean()
+            print  dfg.mean() - dfg.std()
+            print dfg.describe()
         #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
     def closeTrade(self, accountID, tradeID):
