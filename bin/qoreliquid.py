@@ -1785,13 +1785,13 @@ class Patterns:
             mfdf['resettablePL']          = p.to_numeric(mfdf['resettablePL'])
             mfdf['marginCloseoutPercent'] = mfdf['marginCloseoutPercent'] * 100
             mfdf['unrealizedPLPcnt']      = mfdf['unrealizedPL'] / mfdf['balance'] * 100
-            mfdf['resettablePLPcnt']      = mfdf['resettablePL'] / mfdf['balance'] * 100
+            mfdf['resettablePLPcnt']      = mfdf['balance'] / (mfdf['balance'] - mfdf['resettablePL']) * 100
             print mfdf.sort_values(by='marginCloseoutPercent')
             print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
             plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
 
-    def monitorAccountsProfitableTrades(self, verbose=False, closeProfitableTrades=False):
+    def monitorAccountsProfitableTrades(self, verbose=False, closeProfitableTrades=False, account=None):
 
         import oandapyV20.endpoints.accounts as accounts
         from oandapyV20.exceptions import V20Error
@@ -1837,7 +1837,7 @@ class Patterns:
                     apdf = apdf.sort_values(by='profitPcnt', ascending=False)
                     if verbose:
                         print apdf
-                    if closeProfitableTrades:
+                    if closeProfitableTrades and (account == None or account == i):
                         from multiprocessing.pool import ThreadPool
                         pool = ThreadPool(processes=270)
                         for k in apdf.index:
