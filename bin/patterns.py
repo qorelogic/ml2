@@ -86,9 +86,11 @@ with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'di
         if args.monitorAccountsProfitableTradesVerbose:
               monitorAccountsProfitableTradesVerbose = True
         else: monitorAccountsProfitableTradesVerbose = False
-        pa.monitorAccountsProfitableTrades(verbose=monitorAccountsProfitableTradesVerbose, closeProfitableTrades=closeProfitableTrades)
-        sys.exit()
-        
+        if args.account:
+              account = args.account
+        else: account= None
+        pa.monitorAccountsProfitableTrades(verbose=monitorAccountsProfitableTradesVerbose, closeProfitableTrades=closeProfitableTrades, account=account)
+        sys.exit()        
 
     if args.listLogins:
             print co
