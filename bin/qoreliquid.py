@@ -1805,10 +1805,13 @@ class Patterns:
 
         import oandapyV20.endpoints.accounts as accounts
         from oandapyV20.exceptions import V20Error
+        from multiprocessing.pool import ThreadPool
 
         # monitor accounts: profitable trades watcher
         mfdf = p.DataFrame()
-        apmdf = {} #p.DataFrame()
+        plpmdf = {} #p.DataFrame()
+        plnmdf = {} #p.DataFrame()
+        
         prices = self.getPrices()
         for i in self._accountList['id']:
             if verbose:
@@ -1842,24 +1845,33 @@ class Patterns:
                         inst = apdf.ix[k, 'instrument']
                         apdf.ix[k, 'currentPrice'] =  prices.ix[inst, 'avg']
                     apdf['profitPcnt'] = n.abs(apdf['currentPrice'] / apdf['price'] * 100 - 100)
-                    apdf = apdf[apdf['unrealizedPL'] > 0]
-                    apdf = apdf[apdf['profitPcnt'] > 0.1].set_index('id')
-                    apdf = apdf.sort_values(by='profitPcnt', ascending=False)
+                    
+                    # positive trades
+                    plpdf = apdf[apdf['unrealizedPL'] > 0]
+                    plpdf = plpdf[plpdf['profitPcnt'] > 0.1].set_index('id')
+                    plpdf = plpdf.sort_values(by='profitPcnt', ascending=False)
                     if verbose:
-                        print apdf
+                        print plpdf
+                    plpdfSum = plpdf.ix[:, 'unrealizedPL unrealizedPLPcnt'.split(' ')].sum().to_dict()
+                    plpmdf.update({i:plpdfSum})
+
+                    # negative trades
+                    plpndf = apdf[apdf['unrealizedPL'] < 0]
+                    plpndf = plpndf[plpndf['profitPcnt'] < 0.1].set_index('id')
+                    plpndf = plpndf.sort_values(by='profitPcnt', ascending=False)
+                    if verbose:
+                        print plpndf
+                    plndfSum = plpndf.ix[:, 'unrealizedPL unrealizedPLPcnt'.split(' ')].sum().to_dict()
+                    plnmdf.update({i:plndfSum})
+
                     if closeProfitableTrades and (account == None or account == i):
-                        from multiprocessing.pool import ThreadPool
                         pool = ThreadPool(processes=270)
-                        for k in apdf.index:
+                        for k in plpdf.index:
                             async_result = pool.apply_async(self.closeTrade, [i, k])
                             res = async_result.get()
                             #self.closeTrade(i, k)
                         pool.close()
-                    apdfSum = apdf.ix[:, 'unrealizedPL unrealizedPLPcnt'.split(' ')].sum().to_dict()
-                    apmdf.update({i:apdfSum})
-                    #apmdf = apmdf.combine_first(apdfSum)
-    
-                    #print
+
                 #print json.dumps(rv['account'], indent=4)
                 #print json.dumps(rv['account']['positions'], indent=4)
                 #print json.dumps(rv['account']['trades'], indent=4)
@@ -1881,8 +1893,22 @@ class Patterns:
             #print mfdf.sort_values(by='marginCloseoutPercent')
             #print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
             print
-            print '== Monitor UnrealizedPL and UnrealizedPL%'
-            df = p.DataFrame(apmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
+            print '== Monitor UnrealizedPL and UnrealizedPL% (+trades)'
+            df = p.DataFrame(plpmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
+            print df
+            print
+            #print p.DataFrame([n.std(df['unrealizedPLPcnt']), n.mean(df['unrealizedPLPcnt']) ], index=['stddev', 'avg']).transpose()
+            df['id']  = df.index
+            df['gid'] = map(lambda x: x.split('-')[2], df.index)
+            dfg = df.groupby('gid')
+            print  dfg.mean() + dfg.std()
+            print  dfg.mean()
+            print  dfg.mean() - dfg.std()
+            print dfg.describe()
+
+            print
+            print '== Monitor UnrealizedPL and UnrealizedPL% (-trades)'
+            df = p.DataFrame(plnmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
             print df
             print
             #print p.DataFrame([n.std(df['unrealizedPLPcnt']), n.mean(df['unrealizedPLPcnt']) ], index=['stddev', 'avg']).transpose()
