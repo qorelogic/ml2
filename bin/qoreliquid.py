@@ -1892,33 +1892,27 @@ class Patterns:
             mfdf['resettablePLPcnt']      = mfdf['resettablePL'] / mfdf['balance'] * 100
             #print mfdf.sort_values(by='marginCloseoutPercent')
             #print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
+            def displayData(df):
+                print df
+                print
+                #print p.DataFrame([n.std(df['unrealizedPLPcnt']), n.mean(df['unrealizedPLPcnt']) ], index=['stddev', 'avg']).transpose()
+                df['id']  = df.index
+                df['gid'] = map(lambda x: x.split('-')[2], df.index)
+                dfg = df.groupby('gid')
+                print  dfg.mean() + dfg.std()
+                print  dfg.mean()
+                print  dfg.mean() - dfg.std()
+                print dfg.describe()
+
+            plpmdf = p.DataFrame(plpmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
+            plnmdf = p.DataFrame(plnmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
             print
             print '== Monitor UnrealizedPL and UnrealizedPL% (+trades)'
-            df = p.DataFrame(plpmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
-            print df
-            print
-            #print p.DataFrame([n.std(df['unrealizedPLPcnt']), n.mean(df['unrealizedPLPcnt']) ], index=['stddev', 'avg']).transpose()
-            df['id']  = df.index
-            df['gid'] = map(lambda x: x.split('-')[2], df.index)
-            dfg = df.groupby('gid')
-            print  dfg.mean() + dfg.std()
-            print  dfg.mean()
-            print  dfg.mean() - dfg.std()
-            print dfg.describe()
-
+            displayData(plpmdf)
             print
             print '== Monitor UnrealizedPL and UnrealizedPL% (-trades)'
-            df = p.DataFrame(plnmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
-            print df
-            print
-            #print p.DataFrame([n.std(df['unrealizedPLPcnt']), n.mean(df['unrealizedPLPcnt']) ], index=['stddev', 'avg']).transpose()
-            df['id']  = df.index
-            df['gid'] = map(lambda x: x.split('-')[2], df.index)
-            dfg = df.groupby('gid')
-            print  dfg.mean() + dfg.std()
-            print  dfg.mean()
-            print  dfg.mean() - dfg.std()
-            print dfg.describe()
+            displayData(plnmdf)
+
         #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
     def closeTrade(self, accountID, tradeID):
