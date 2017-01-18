@@ -109,12 +109,13 @@ class QoreDebug:
     
             #return str
     
-    def data(self, name, data=None, verbosity=8):
+    def data(self, data, name=None, verbosity=8):
         #if verbosity == 9:
         if verbosity == 8:
             #print data
-            if type(data) != type(None):
-                self._logging.debug(data)
+            if type(name) != type(None):
+                self._logging.debug(name)
+            self._logging.debug(data)
             #print 'maccount::'
             #print p.DataFrame(maccount.columns)
             #print maccount#.to_dict()
