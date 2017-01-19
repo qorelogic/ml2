@@ -3154,15 +3154,6 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['bid'] = instrumentCurrencyPrice['bid'].get_values()
     dfu33['ask'] = instrumentCurrencyPrice['ask'].get_values()
     dfu33['spread'] = n.abs(dfu33['bid'] - dfu33['ask'])
-    qd.data('============================================')
-    qd.data('============================================')
-    qd.data('============================================')
-    qd.data('============================================')
-    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        qd.data(dfu33.sort_values(by='diffp', ascending=False))
-    qd.data('============================================')
-    qd.data('============================================')
-    qd.data('============================================')
     try: dfu33['spreadPip'] = dfu33['spread'] / dfu33['pip']
     except: ''
     dfu33['unitsAvailable'] = netAssetValue * leverage / n.power(dfu33['quotedCurrencyPriceBid'], dfu33['pow2'])
@@ -3181,6 +3172,15 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['diffamount4amount2'] = dfu33['amount2'] - dfu33['amount4']
     #qd.data(quotedCurrencyPrice['bid'])
     #qd.data(p.DataFrame(netAssetValue * 50 * quotedCurrencyPrice['bid'].get_values()))
+    qd.data('============================================')
+    qd.data('============================================')
+    qd.data('============================================')
+    qd.data('============================================')
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        qd.data(dfu33.sort_values(by='diffp', ascending=False))
+    qd.data('============================================')
+    qd.data('============================================')
+    qd.data('============================================')
     if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             qd.data(dfu33.ix[:, 'quotedCurrencyPriceBid quotedCurrencyPriceAsk unitsAvailable diffp pow2 units exposure exposureSum allMargin amount2 amount4 amount rebalance'.split(' ')], name='dfu33')
