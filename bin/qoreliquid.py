@@ -2222,6 +2222,9 @@ def calcPl(bid, ask, price, sideBool, pairedCurrencyBid, pairedCurrencyAsk, unit
     return ( close - price ) * sideBool * (1 / pairedCurrencyClose) * units
 
 def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
+    qd = QoreDebug()
+    qd.on()
+    #qd.off()
     from numpy import zeros as n_zeros
     
     import oandapyV20
@@ -3066,6 +3069,11 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
 
 @profile
 def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
+
+    qd = QoreDebug()
+    qd.on()
+    #qd.off()
+
     dfu33 = dfu33.fillna(0)
     if int(verbose) >= 5: qd.data('#--- cw(start)')
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
