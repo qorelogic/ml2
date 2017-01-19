@@ -3150,6 +3150,7 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['pairedCurrencyPriceAsk'] = pairedCurrencyPrice['ask'].get_values()
     dfu33['bid'] = instrumentCurrencyPrice['bid'].get_values()
     dfu33['ask'] = instrumentCurrencyPrice['ask'].get_values()
+    dfu33['priceAvg'] = (dfu33['bid'] + dfu33['ask']) / 2
     dfu33['spread'] = n.abs(dfu33['bid'] - dfu33['ask'])
     try: dfu33['spreadPip'] = dfu33['spread'] / dfu33['pip']
     except: ''
@@ -3167,6 +3168,13 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['amount2'] = dfu33['allMargin'] * dfu33['diffp']
     dfu33['amount2Sum'] = n.sum(dfu33['amount2'])
     dfu33['diffamount4amount2'] = dfu33['amount2'] - dfu33['amount4']
+
+    # close = pl/units+open
+    #dfu33['stop']   =   balance * dfu33['diffp'] * leverage
+    dfu33['riskAmount'] = (balance * 1.0/100 * dfu33['diffp'])
+    dfu33['stop']       = (dfu33['riskAmount'] / dfu33['amount2'] + dfu33['priceAvg']) * dfu33['sidePolarity']
+    #dfu33['stop']     = ((balance * 1.0/100 * dfu33['diffp']) / (dfu33['allMargin'] * dfu33['diffp']))
+    #dfu33['stop']   = (balance * 1.0/100 * dfu33['diffp'])    # balance * dfu33['diffp'] * leverage
     #qd.data(quotedCurrencyPrice['bid'])
     #qd.data(p.DataFrame(netAssetValue * 50 * quotedCurrencyPrice['bid'].get_values()))
     qd.data('============================================')
