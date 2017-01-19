@@ -2475,7 +2475,11 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
             #    interactiveMode()
             try:
                 # oanda legacy
-                oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
+                try:
+                    mmstop = dfu3.ix[i, 'stop']
+                    oanda2.create_order(accid, type='market', instrument=i, side=side, units=units, stopLoss=mmstop)
+                except:
+                    oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
             except:
                 # oanda (v20) api
                 from oandapyV20 import API # the client
@@ -2493,6 +2497,14 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                         "units": vunits
                     }
                 }
+                try:
+                    mmstop = dfu3.ix[i, 'stop']
+                    orderData['order'].update({"stopLossOnFill": {
+                        "timeInForce": "GTC",
+                        "price": str(mmstop)
+                    }})
+                except Exception as e:
+                    ''
                 r = orders.OrderCreate(accid, data=orderData)
                 client.request(r)
                 #qd.data(r.response)
