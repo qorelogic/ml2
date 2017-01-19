@@ -78,30 +78,34 @@ class QoreDebug:
     def logTraceBack(self, e, limit=100):
         self._on = True
         if self._on == True:
-            self.log('')
-            self.log('=== QoreDebug::TracebackStart===============================')
+            self.log('', exception=True)
+            self.log('=== QoreDebug::TracebackStart===============================', exception=True)
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            self.log("=== exception: ===")
-            self.log(e)
-            self.log("=== traceback: ===")
+            self.log("=== exception: ===", exception=True)
+            self.log(e, exception=True)
+            self.log("=== traceback: ===", exception=True)
             
             #fp = open('/tmp/qore.dev.log', 'a')
             #traceback.print_tb(exc_traceback, limit=1, file=fp)
             tb = traceback.extract_tb(exc_traceback, limit=self.limit)
-            #self.log(tb)
-            #self.log('{0}{1}'.format('\n', p.DataFrame(tb)))
-            for i in tb: self.log(i)
-            self.log("=== print_stack: ===")
+            #self.log(tb, exception=True)
+            #self.log('{0}{1}'.format('\n', p.DataFrame(tb)), exception=True)
+            for i in tb: self.log(i, exception=True)
+            self.log("=== print_stack: ===", exception=True)
             #traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=fp)
             stack = traceback.extract_stack(limit=limit)
-            #self.log(stack)
-            #self.log('{0}{1}'.format('\n', p.DataFrame(stack)))
-            for i in stack: self.log(i)
-            self.log('=== QoreDebug::TracebackEnd ================================')
-            self.log('')
+            #self.log(stack, exception=True)
+            #self.log('{0}{1}'.format('\n', p.DataFrame(stack)), exception=True)
+            for i in stack: self.log(i, exception=True)
+            self.log('=== QoreDebug::TracebackEnd ================================', exception=True)
+            self.log('', exception=True)
             #fp.close()
 
-    def log(self, str, verbosity=8):
+    def log(self, str, verbosity=8, exception=False):
+        if exception:
+            self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.ERROR)
+        else:
+            self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
         #if verbosity == 9:
         if verbosity == 8:
             #print str
@@ -110,6 +114,7 @@ class QoreDebug:
             #return str
     
     def data(self, data, name=None, verbosity=8):
+        self._logging.basicConfig(filename='/tmp/qore.dev.data.log', level=logging.INFO)
         #if verbosity == 9:
         if verbosity == 8:
             #print data
