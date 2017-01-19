@@ -120,7 +120,10 @@ class QoreDebug:
             #print data
             if type(name) != type(None):
                 self._logging.debug(name)
-            self._logging.debug(data)
+            if type(data) == type(p.DataFrame([])):
+                self._logging.debug('\n'+str(data))
+            else:
+                self._logging.debug(data)
             #print 'maccount::'
             #print p.DataFrame(maccount.columns)
             #print maccount#.to_dict()
