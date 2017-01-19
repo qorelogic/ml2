@@ -2240,8 +2240,7 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
         currentTradesV20['side']         = map(lambda x: 'buy' if x > 0 else 'sell', currentTradesV20['initialUnits'])
         qd.data('accid 00101: %s' % accid)
         qd.data('access_token0 00101: %s' % access_token0)
-        qd.data('currentTradesV20 0010')
-        qd.data(currentTradesV20)
+        qd.data(currentTradesV20, name='currentTradesV20 0010')
     except Exception as e:
         qd.data('err: %s' % e)
         currentTradesV20 = p.DataFrame([])
@@ -2263,11 +2262,9 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
         currentTrades = p.DataFrame([])
 
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        qd.data('currentTrades:: 00101')
-        qd.data(currentTrades)
+        qd.data(currentTrades, name='currentTrades:: 00101')
         currentTrades = currentTrades.combine_first(currentTradesV20)
-        qd.data('currentTrades:: 00102')
-        qd.data(currentTrades)
+        qd.data(currentTrades, name='currentTrades:: 00102')
     
     try:
         r = accounts.AccountInstruments(accid)
@@ -2275,8 +2272,7 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
         instrumentsV20 = p.DataFrame(rv['instruments']).set_index('name')
         instrumentsV20['pip'] = n.power(10.0, instrumentsV20['pipLocation']) # convert legacy pip to v20
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            qd.data('instruments 00103a')
-            qd.data(instrumentsV20)
+            qd.data(instrumentsV20, name='instruments 00103a')
     except Exception as e:
         qd.data('err: %s' % e)
         instrumentsV20 = p.DataFrame([])
@@ -2288,10 +2284,8 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
     except:
         instruments = p.DataFrame([])
     instruments = instruments.combine_first(instrumentsV20)
-    qd.data('instruments 00103b')
-    qd.data(instruments)
-    qd.data('currentPositions 00104')
-    qd.data(currentPositions)
+    qd.data(instruments, name='instruments 00103b')
+    qd.data(currentPositions, name='currentPositions 00104')
     instruments['pip'] = p.to_numeric(instruments['pip'])
     currentPrices = oanda2.get_prices(instruments=','.join(list(currentPositions.index)))['prices']
     currentPrices = p.DataFrame(currentPrices).set_index('instrument')
@@ -2333,8 +2327,7 @@ def getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=None):
     currentTrades['pl'] = calcPl(currentTrades['bid'], currentTrades['ask'], currentTrades['price'], currentTrades['sideBool'], currentTrades['pairedCurrencyBid'], currentTrades['pairedCurrencyAsk'], currentTrades['units'])
 
     #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-    #    qd.data('currentTrades')
-    #    qd.data(currentTrades.sort_values(by='pl'))
+    #    qd.data(currentTrades.sort_values(by='pl'), name='currentTrades')
     for i in xrange(len(currentTrades)):
         currentTrades.ix[i, 'pl'] = currentTrades.ix[i, 'pl'] / 100 if currentTrades.ix[i, 'pip'] == 0.01 else currentTrades.ix[i, 'pl']
     return currentTrades
@@ -2606,8 +2599,7 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         
     currentPositions = currentPositions.combine_first(currentPositionsV20)
     
-    qd.data('currentPositions::')
-    qd.data(currentPositions)
+    qd.data(currentPositions, name='currentPositions::')
     
     qd.data('tesst-------2')
     
@@ -2621,8 +2613,7 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
     except Exception as e:
         ct = p.DataFrame([])
-    qd.data('ct')
-    qd.data(ct)
+    qd.data(ct, name='ct')
     gct = p.DataFrame([])
     try:
         gct = ct.groupby('instrument') #.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
@@ -2631,8 +2622,7 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
     except Exception as e:
         ''
     qd.data('tesst-------')
-    qd.data('gct')
-    qd.data(gct)
+    qd.data(gct, name='gct')
     
     return [currentPositions, currentTrades, ct, gct]
 
@@ -2673,8 +2663,7 @@ def getAccounts(oanda0, access_token0):
         accountsV20 = accountsV20.drop('account')
         accountsV20 = accountsV20.drop('lastTransactionID')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            qd.data('accountsV20:::')
-            qd.data(accountsV20)
+            qd.data(accountsV20, name='accountsV20:::')
     except Exception as e:
         qd.logTraceBack(e)
         qd.exception(e)
@@ -2686,10 +2675,8 @@ def getAccounts(oanda0, access_token0):
         accounts0 = accounts0.combine_first(p.DataFrame(oanda0.get_account(accounts0.ix[i, 'accountId']), index=[i]))
     accounts = accounts0.set_index('accountId')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        qd.data('accounts0::')
-        qd.data(accounts0)
-        qd.data('accounts::')
-        qd.data(accounts)
+        qd.data(accounts0, name='accounts0::')
+        qd.data(accounts, name='accounts::')
     
     try:
         accounts = accounts.combine_first(accountsV20)
@@ -2802,11 +2789,9 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             
         if int(verbose) >= 5: 
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                #qd.data('instruments:')
-                #qd.data(instruments )
+                #qd.data(instruments, name='instruments:')
                 #qd.data(currentPrices)
-                qd.data('currentTrades:')
-                qd.data(len(currentTrades))
+                qd.data(len(currentTrades), name='currentTrades:')
                 qd.data(currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('id'))#.ix[:,'instrument price side time units'.split(' ')]
                 #qd.data(gct)
                 ffsds = 'instrument side units plpips pl time'.split(' ')
@@ -2824,8 +2809,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                 qd.data(plp.ix[:, ffsds])
                 qd.data(pln.ix[:, ffsds])
 
-                qd.data('currentPositions:')
-                qd.data(currentPositions.sort_values(by='units', ascending=False))
+                qd.data(currentPositions.sort_values(by='units', ascending=False), name='currentPositions:')
 
         # get rebalance amount
         #qd.data(currentPositions)
@@ -3072,8 +3056,7 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     if int(verbose) >= 5: qd.data('#--- cw(start)')
     li = list(dfu33.sort_values(by='diffp', ascending=False).index)
     if int(verbose) >= 5: 
-        qd.data('li')
-        qd.data(li)
+        qd.data(li, name='li')
 
     df  = oq.syntheticCurrencyTable(li, homeCurrency='USD')
     sdf = p.DataFrame(df)
@@ -3096,10 +3079,8 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             qd.data(list(sdf['quotedCurrency']))
-            qd.data('sdf')
-            qd.data(sdf)
-            qd.data('res')
-            qd.data(res)
+            qd.data(sdf, name='sdf')
+            qd.data(res, name='res')
     res = res.set_index('instrument')
     #qd.data(res.ix[oq.wew(list(sdf['quotedCurrency'])), :])
     #ldf = p.DataFrame(li)
@@ -3107,25 +3088,20 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     sdf = sdf.set_index('instrument')
     if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            qd.data('dfu33')
-            qd.data(dfu33)
-            qd.data('sdf')
-            qd.data(sdf)
+            qd.data(dfu33, name='dfu33')
+            qd.data(sdf, name='sdf')
     instrumentCurrency = sdf.ix[dfu33.index, ['instrument','pow']]
     instrumentCurrency['instrument'] = dfu33.index
     if int(verbose) >= 5: 
-        qd.data('instrumentCurrency')
-        qd.data(instrumentCurrency)
+        qd.data(instrumentCurrency, name='instrumentCurrency')
         qd.data('====')
     quotedCurrency = sdf.ix[dfu33.index, ['quotedCurrency','pow']]
     if int(verbose) >= 5: 
-        qd.data('quotedCurrency')
-        qd.data(quotedCurrency)
+        qd.data(quotedCurrency, name='quotedCurrency')
         qd.data('====')
     pairedCurrency = sdf.ix[dfu33.index, ['pairedCurrency','pow']]
     if int(verbose) >= 5: 
-        qd.data('pairedCurrency')
-        qd.data(pairedCurrency)
+        qd.data(pairedCurrency, name='pairedCurrency')
         qd.data('====')
     #---
     quotedCurrencyPrice = res.ix[quotedCurrency['quotedCurrency'],['bid']].fillna(1)
@@ -3151,14 +3127,11 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     #---
     #.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
-        qd.data('quotedCurrencyPrice')
-        qd.data(quotedCurrencyPrice)#.sort_values(by='diffp', ascending=False)
+        qd.data(quotedCurrencyPrice, name='quotedCurrencyPrice')#.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
-        qd.data('pairedCurrencyPrice')
-        qd.data(pairedCurrencyPrice)#.sort_values(by='diffp', ascending=False)
+        qd.data(pairedCurrencyPrice, name='pairedCurrencyPrice')#.sort_values(by='diffp', ascending=False)
     if int(verbose) >= 5: 
-        qd.data('instrumentCurrencyPrice')
-        qd.data(instrumentCurrencyPrice)
+        qd.data(instrumentCurrencyPrice, name='instrumentCurrencyPrice')
         qd.data('====')
     #qd.data(res)
     #qd.data(sdf['quotedCurrency'])
@@ -3207,8 +3180,7 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     #qd.data(p.DataFrame(netAssetValue * 50 * quotedCurrencyPrice['bid'].get_values()))
     if int(verbose) >= 5: 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            qd.data('dfu33')
-            qd.data(dfu33.ix[:, 'quotedCurrencyPriceBid quotedCurrencyPriceAsk unitsAvailable diffp pow2 units exposure exposureSum allMargin amount2 amount4 amount rebalance'.split(' ')])
+            qd.data(dfu33.ix[:, 'quotedCurrencyPriceBid quotedCurrencyPriceAsk unitsAvailable diffp pow2 units exposure exposureSum allMargin amount2 amount4 amount rebalance'.split(' ')], name='dfu33')
     if int(verbose) >= 5:  qd.data('#--- cw(end)')
     
     return dfu33
