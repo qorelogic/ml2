@@ -31,10 +31,41 @@ class QoreDebug:
         self._on        = on
         self.stackTrace = stackTrace
         self.limit      = 100
-        self._logging = logging
+        #self._logging = logging
         self._printf    = False
-        #self._logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
-        self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
+        ##self._logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
+        logging.basicConfig(filename='/tmp/qore.dev.info.log', level=logging.INFO)
+        #self._logging.basicConfig(filename='/tmp/qore.dev.debug.log', level=logging.DEBUG)
+
+        #current_path = os.path.dirname(os.path.realpath(__file__))
+        current_path = os.path.dirname('/tmp/')
+        logger = logging.getLogger('simple_example')
+        #logger.setLevel(logging.INFO)
+        baseName = 'qore.dev'
+        #to log debug messages
+        debug_log = logging.FileHandler(os.path.join(current_path, '%s.debug.log'%baseName))
+        debug_log.setLevel(logging.DEBUG)
+        #to log errors
+        errror_log = logging.FileHandler(os.path.join(current_path, '%s.error.log'%baseName))
+        errror_log.setLevel(logging.ERROR)
+        #to log info
+        info_log = logging.FileHandler(os.path.join(current_path, '%s.info.log'%baseName))
+        info_log.setLevel(logging.INFO)
+
+        logger.addHandler(debug_log)
+        logger.addHandler(errror_log)
+        logger.addHandler(info_log)
+
+        #logger.debug('This message should go in the debug log')
+        #logger.info('and so should this message')
+        #logger.warning('and this message')
+        #logger.error('This message should go in both the debug log and the error log')
+
+        self._logging = logger
+        self._logging.debug('debug')
+        #self._logging.info('info')
+        #self._logging.warning('warning')
+        #self._logging.error('error')
         
     def on(self):
         self.debugOn()
@@ -104,10 +135,10 @@ class QoreDebug:
             #fp.close()
 
     def log(self, str, verbosity=8, exception=False):
-        if exception:
-            self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.ERROR)
-        else:
-            self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
+        #if exception:
+        #    self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.ERROR)
+        #else:
+        #    self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
         #if verbosity == 9:
         if verbosity == 8:
             #print str
@@ -123,7 +154,7 @@ class QoreDebug:
         self._printf = printf
     
     def data(self, data, name=None, verbosity=8):
-        self._logging.basicConfig(filename='/tmp/qore.dev.data.log', level=logging.INFO)
+        #self._logging.basicConfig(filename='/tmp/qore.dev.data.log', level=logging.DEBUG)
         #if verbosity == 9:
         if verbosity == 8 or self._printf == True:
             #print data
