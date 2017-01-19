@@ -24,6 +24,7 @@ def debug(str, verbosity=8):
 
         return str
 
+import datetime, time
 class QoreDebug:
     
     def __init__(self, on=False, stackTrace=False):
@@ -109,7 +110,11 @@ class QoreDebug:
         #if verbosity == 9:
         if verbosity == 8:
             #print str
-            self._logging.debug(str)
+            tstp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d-%H%M%S-%s')
+            #self._logging.debug('%s %s' % (tstp, str))
+            logging.debug('%s %s' % (tstp, str))
+            #self._logging.error('test')
+            #self._logging.debug(str)
     
             #return str
     
@@ -118,12 +123,16 @@ class QoreDebug:
         #if verbosity == 9:
         if verbosity == 8:
             #print data
+            tstp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d-%H%M%S-%s')
             if type(name) != type(None):
-                self._logging.debug(name)
+                self._logging.debug('%s %s' % (tstp, name))
+                #self._logging.debug(name)
             if type(data) == type(p.DataFrame([])):
-                self._logging.debug('\n'+str(data))
+                self._logging.debug('%s\n%s' % (tstp, data))
+                #self._logging.debug('\n'+str(data))
             else:
-                self._logging.debug(data)
+                self._logging.debug('%s %s' % (tstp, data))
+                #self._logging.debug(data)
             #print 'maccount::'
             #print p.DataFrame(maccount.columns)
             #print maccount#.to_dict()
