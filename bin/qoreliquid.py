@@ -1787,19 +1787,35 @@ class Patterns:
             mfdf['balance']               = p.to_numeric(mfdf['balance'])
             mfdf['resettablePL']          = p.to_numeric(mfdf['resettablePL'])
             mfdf['initialCapital']        = mfdf['balance'] - mfdf['resettablePL']
+            mfdf.ix['101-004-1984564-007', 'initialCapital2'] = 1000000000
+            """
+            mfdf['initialCapital2'] = p.Series({
+                '101-004-1984564-007':1000000000,
+                '101-004-1984564-001':1312.852,
+                #'101-004-1984564-00':,
+                #'101-004-1984564-00':,
+                #'101-004-1984564-00':,
+                #'101-004-1984564-00':,
+                #'101-004-1984564-00':,
+                #'101-004-1984564-00':,
+                #'101-004-1984564-00':,
+            })
+            """
             mfdf['marginCloseoutPercent'] = mfdf['marginCloseoutPercent'] * 100
             mfdf['netAssetValue']         = mfdf['balance'] + mfdf['unrealizedPL'] 
             mfdf['unrealizedPLPcnt']      = mfdf['unrealizedPL'] / mfdf['balance'] * 100
-            mfdf['resettablePLPcnt2']     = mfdf['resettablePL'] / mfdf['balance'] * 100
+            #mfdf['resettablePLPcnt2']     = mfdf['resettablePL'] / mfdf['balance'] * 100
             mfdf['resettablePLPcnt']      = mfdf['balance'] / (mfdf['balance'] - mfdf['resettablePL']) * 100 - 100
             mfdf['marginUnrealized']      = mfdf['marginCloseoutPercent'] / mfdf['unrealizedPLPcnt']
             mfdf['marginUnrealized2']     = mfdf['unrealizedPLPcnt'] / mfdf['marginCloseoutPercent']
             mfdf['netPLPcnt']             = mfdf['resettablePLPcnt'] + mfdf['unrealizedPLPcnt']
-            print mfdf.sort_values(by='marginCloseoutPercent')
-            print mfdf.sort_values(by='netPLPcnt', ascending=False)
-            print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
-            print mfdf.sort_values(by='marginUnrealized', ascending=False)
-            print mfdf.sort_values(by='unrealizedPL', ascending=False)
+            #fieldsMfdf = mfdf.columns
+            fieldsMfdf = 'balance initialCapital initialCapital2 netAssetValue unrealizedPL unrealizedPLPcnt resettablePL resettablePLPcnt netPLPcnt marginUnrealized  marginUnrealized2 marginAvailable marginCloseoutPercent'.split(' ')
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='marginCloseoutPercent')
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='netPLPcnt', ascending=False)
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='resettablePLPcnt', ascending=False)
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='marginUnrealized', ascending=False)
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='unrealizedPL', ascending=False)
             print mfdf.sort_values(by='resettablePL', ascending=False)
             #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
