@@ -135,7 +135,7 @@ try:
 except Exception as e:
     print e
 
-@profile
+#@profile
 def main(args, leverage=10, dryrun=True, verbose=False):
 
     pa = Patterns()
