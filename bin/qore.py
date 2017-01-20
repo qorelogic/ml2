@@ -31,11 +31,34 @@ class QoreDebug:
         self._on        = on
         self.stackTrace = stackTrace
         self.limit      = 100
-        self._logging = logging
+        #self._logging = logging
         self._printf    = False
         #self._logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
-        self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
+        #self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
+
+        self.setupLogger('log1', r'/tmp/log1.log')
+        self.setupLogger('log2', r'/tmp/log2.log', level=logging.DEBUG)
+        self._logging  = logging.getLogger('log1')
+        self._logging2 = logging.getLogger('log2')
+
+        #self._logging.info('Info for log 1!')
+        #self._logging2.info('Info for log 2!')
+        #self._logging.error('Oh, no! Something went wrong!')
+        #self._logging2.error('Oh, no! Something went wrong!')
+        #self._logging2.debug('debug me')
         
+    def setupLogger(self, logger_name, log_file, level=logging.INFO):
+        l = logging.getLogger(logger_name)
+        formatter = logging.Formatter(logger_name+':%(asctime)s : %(message)s')
+        fileHandler = logging.FileHandler(log_file, mode='a')
+        fileHandler.setFormatter(formatter)
+        streamHandler = logging.StreamHandler()
+        streamHandler.setFormatter(formatter)
+    
+        l.setLevel(level)
+        l.addHandler(fileHandler)
+        l.addHandler(streamHandler)    
+
     def on(self):
         self.debugOn()
         
@@ -104,17 +127,23 @@ class QoreDebug:
             #fp.close()
 
     def log(self, str, verbosity=8, exception=False):
-        if exception:
-            self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.ERROR)
-        else:
-            self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
+        self.setupLogger('log1', r'/tmp/log1.log')
+        self.setupLogger('log2', r'/tmp/log2.log', level=logging.DEBUG)
+        self._logging  = logging.getLogger('log1')
+        self._logging2 = logging.getLogger('log2')
+#        print 'test123'
+        #if exception:
+        #    self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.ERROR)
+        #else:
+        #    self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
         #if verbosity == 9:
+        self._logging.error('test34')
         if verbosity == 8:
             #print str
             tstp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d-%H%M%S-%s')
-            #self._logging.debug('%s %s' % (tstp, str))
-            logging.debug('%s %s' % (tstp, str))
-            #self._logging.error('test')
+            self._logging.info('%s %s' % (tstp, str))
+            #logging.debug('%s %s' % (tstp, str))
+#            self._logging.error('test654')
             #self._logging.debug(str)
     
             #return str
@@ -123,9 +152,12 @@ class QoreDebug:
         self._printf = printf
     
     def data(self, data, name=None, verbosity=8):
-        self._logging.basicConfig(filename='/tmp/qore.dev.data.log', level=logging.INFO)
+        self._logging  = logging.getLogger('log1')
+        self._logging2 = logging.getLogger('log2')
+        #self._logging.basicConfig(filename='/tmp/qore.dev.data.log', level=logging.INFO)
         #if verbosity == 9:
-        if verbosity == 8 or self._printf == True:
+        on = True
+        if (verbosity == 8 or self._printf == True) and on:
             #print data
             tstp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d-%H%M%S-%s')
             if type(name) != type(None):
