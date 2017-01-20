@@ -1713,7 +1713,10 @@ class Patterns:
 
         import oandapyV20.endpoints.accounts as accounts
         r = accounts.AccountList()
-        rv = self.client.request(r)
+        try:
+            rv = self.client.request(r)
+        except Exception as e:
+            qd.exception(e)
         return p.DataFrame(rv['accounts'])
         
 
@@ -1916,6 +1919,9 @@ class Patterns:
         #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
     def closeTrade(self, accountID, tradeID):
+        qd = QoreDebug()
+        qd.on()
+
         import oandapyV20.endpoints.trades as trades
         try:
             print 'closing trade: %s %s' % (accountID, tradeID)
@@ -1924,9 +1930,11 @@ class Patterns:
             self.client.request(r)
             print r.response
         except Exception as e:        
-            print e
+            qd.exception(e)
     
     def getPrices(self):
+        qd = QoreDebug()
+        qd.on()
         import oandapyV20.endpoints.pricing as pricing
         symbols  = 'AUD_CAD,AUD_CHF,AUD_HKD,AUD_JPY,AUD_NZD,AUD_SGD,AUD_USD,CAD_CHF,CAD_HKD,CAD_JPY,CAD_SGD,CHF_HKD,CHF_JPY,CHF_ZAR,EUR_AUD,EUR_CAD,EUR_CHF,EUR_DKK,EUR_GBP,EUR_HKD,EUR_HUF,EUR_JPY,EUR_NOK,EUR_NZD,EUR_PLN,EUR_SEK,EUR_SGD,EUR_TRY,EUR_USD,EUR_ZAR,GBP_AUD,GBP_CAD,GBP_CHF,GBP_HKD,GBP_JPY,GBP_NZD,GBP_PLN,GBP_SGD,GBP_USD,GBP_ZAR,HKD_JPY,NZD_CAD,NZD_CHF,NZD_HKD,NZD_JPY,NZD_SGD,NZD_USD,SGD_CHF,SGD_HKD,SGD_JPY,TRY_JPY,USD_CAD,USD_CHF,USD_CNH,USD_CZK,USD_DKK,USD_HKD,USD_HUF,USD_JPY,USD_MXN,USD_NOK,USD_PLN,USD_SEK,USD_SGD,USD_THB,USD_TRY,USD_ZAR,ZAR_JPY'
         #.split(',')
@@ -1934,7 +1942,10 @@ class Patterns:
         params = {"instruments": symbols}
         #params = {"instruments": "EUR_USD,EUR_JPY"}
         r = pricing.PricingInfo(accountID='101-004-1984564-001', params=params)
-        rv = self.client.request(r)
+        try:
+            rv = self.client.request(r)
+        except Exception as e:
+            qd.exception(e)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             instruments = p.DataFrame(r.response['prices']).set_index('instrument').transpose()
             instruments = instruments.ix['closeoutAsk closeoutBid'.split(' '), :].transpose()
@@ -2521,10 +2532,15 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                 #p.DataFrame(r.response['orderFillTransaction'])
                 
             # collect trade data
-            di = {'method':'leverageTrades[leverage:create-order]', 'account':accid, 'type':'market', 'instrument':i, 'side':side, 'units':units, 'data':json.dumps(dfu.ix[j, :].fillna(0).to_dict())}
-            mongo = mong.MongoClient()
-            mongo.ql.broker_oanda_trades.insert(di)
-            mongo.close()
+
+            try:
+                di = {'method':'leverageTrades[leverage:create-order]', 'account':accid, 'type':'market', 'instrument':i, 'side':side, 'units':units, 'data':json.dumps(dfu.ix[j, :].fillna(0).to_dict())}
+                mongo = mong.MongoClient()
+                mongo.ql.broker_oanda_trades.insert(di)
+                mongo.close()
+            except Exception as e:
+                #qd.exception(e)
+                ''
             #oandaCreateOrder(oanda2, accid, i, side, units, method='leverageTrades[leverage:create-order]', data=json.dumps(dfu.ix[j, :].fillna(0).to_dict()))
         except Exception as e:
             qd.exception(e)
@@ -2620,7 +2636,7 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         
     currentPositions = currentPositions.combine_first(currentPositionsV20)
     
-    qd.data(currentPositions, name='currentPositions::')
+    qd.data(currentPositions, name='currentPositions 0015::')
     
     qd.data('tesst-------2')
     
@@ -2628,7 +2644,6 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
         currentTrades = getCurrentTrades(oanda2, oq, accid, currentPositions, loginIndex=loginIndex)
     except Exception as e:
         qd.exception(e)
-        qd.logTraceBack(e)
         currentTrades = p.DataFrame([])
     try:
         ct = currentTrades.set_index('id').ix[:,'instrument price side sideBool units ask bid plpips pl sideS status time displayName maxTradeUnits pip'.split(' ')]
@@ -2780,8 +2795,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     netAssetValue = float(maccount['balance']) + unrealizedPl
     balance       = float(maccount['balance'])
     #oinsts = ','.join(list(dfu3.index))
-    print 'dfu3index'
-    print dfu3.index
+    qd.data(dfu3.index, name='dfu3index')
     prdf = p.DataFrame(oanda2.get_prices(instruments=','.join(list(dfu3.index)))['prices']).set_index('instrument')
     #prdf.ix[:,['instrument','bid']]
     #prdf.ix['EUR_USD','bid']
@@ -2938,12 +2952,14 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         if int(verbose) >= 5: 
             qd.data('-=-=-=-=-')
             qd.data('-=-=-=-=-')
-            qd.data('sumMarginUsed: %s' % n.sum(dfu3['marginUsed']))
+            try: qd.data('sumMarginUsed: %s' % n.sum(dfu3['marginUsed']))
+            except: ''
             qd.data('sortRebalanceList:%s' % sortRebalanceList)
             qd.data('sortby:%s' % sortby)
             qd.data('sortAscending:%s' % sortAscending)
             #qd.data(dfu3.sort_values(by='diffp', ascending=False).ix[:, f1.split(' ')])
-            qd.data(dfu3.sort_values(by=sortby, ascending=sortAscending).ix[:, f1.split(' ')])
+            try: qd.data(dfu3.sort_values(by=sortby, ascending=sortAscending).ix[:, f1.split(' ')])
+            except: ''
             print
             
             #qd.data(ct.sort_values(by=['pl'], ascending=[False]))
@@ -2974,7 +2990,8 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     except: dfu3s = dfu3.index
     for i in dfu3s:
         #qd.data(dfu3.ix[[i], :].transpose())
-        units = int(abs(dfu3.ix[i, 'rebalance']))#-1
+        try: units = int(abs(dfu3.ix[i, 'rebalance']))#-1
+        except: units = 0
         side  = 'buy' if int(dfu3.ix[i, 'rebalance']) > 0 else 'sell'
         #dfu3.ix[i, 'side']
         #dfu3.ix[i, 'side']
@@ -3017,10 +3034,15 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         poolFleetingProfits.close()
         poolLeverage.close()
         
+    print 'maccount:::'
+    #qd.data(p.DataFrame(maccount))
     #qd.data(maccount)
     try: pll[0] = pll['pls']
     except: ''
     #maccount = oanda2.get_account(accid)
+    qd.data(type(maccount), name='maccount type')
+    qd.data(maccount, name='maccount 010')
+    #qd.data(maccount.shape, name='maccount shape')
     dfa = p.DataFrame(maccount, index=[0])
     dfa = dfa.combine_first(pll.ix[:,[0]].transpose())
     dfa['netAssetValue'] = dfa['balance'] + dfa['unrealizedPl']
@@ -3037,14 +3059,23 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     ts = ts + float(ds.microsecond)/1000000
     dfa.ix[0, 'utctime'] = ts
 
-    balanceDeleveraged    = dfa.ix[0, 'balance'] + dfu3['diffpRebalancepBalance'].sum()
-    balanceDeleveragedPlp = dfa.ix[0, 'balance'] + dfa.ix[0, 'plp'] + dfu3['diffpRebalancepBalance'].sum()
+    qd = QoreDebug()
+    qd.log('testme')
+
+    try:    sumDiffpRebalancepBalance = dfu3['diffpRebalancepBalance'].sum()
+    except: sumDiffpRebalancepBalance = 0
+
+    try: dfaPlp = dfa.ix[0, 'plp']
+    except: dfaPlp = 0
+    
+    balanceDeleveraged    = dfa.ix[0, 'balance'] + sumDiffpRebalancepBalance
+    balanceDeleveragedPlp = dfa.ix[0, 'balance'] + dfaPlp + sumDiffpRebalancepBalance
 
     #li = list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
     #li = li.append('%')
 
     dfa = dfa.transpose()
-    print dfa
+    qd.data(dfa, name='dfa 545')
     accountId = str(dfa.ix['accountId', 0])
     dfa[accountId] = dfa[0]
     
