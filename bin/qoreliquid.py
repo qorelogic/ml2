@@ -3209,7 +3209,11 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     qd.data('============================================')
     qd.data('============================================')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        qd.data(dfu33.sort_values(by='diffp', ascending=False))
+        sorted_dfu33 = dfu33.sort_values(by='diffp', ascending=False)
+        qd.data(sorted_dfu33, name='dfu33::')
+        print sorted_dfu33
+        fname = '/ml.dev/bin/data/oanda/cache/patterns/patterns.dfu33.%s.csv' % time.time()
+        sorted_dfu33.to_csv(fname)
     qd.data('============================================')
     qd.data('============================================')
     qd.data('============================================')
