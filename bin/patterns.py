@@ -116,7 +116,7 @@ try:
     if int(args.verbose) >= 5:
         print 'args account:'; print args.account
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print 'acc:'; print p.DataFrame(acc)
+            qd.data(p.DataFrame(acc), name='acc::')
     try:
         if args.account == None:
             raise('account is none')
@@ -341,7 +341,12 @@ def main(args, leverage=10, dryrun=True, verbose=False):
             print 'Try a different account number'
     else:
         print 'using account 002: {0}'.format(accid)
-        dfu33 = rebalanceTrades(oq, dfu2, oanda0, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList, loginIndex=loginIndex)
+        try:
+            dfu33 = rebalanceTrades(oq, dfu2, oanda0, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList, loginIndex=loginIndex)
+        except oandapy.OandaError as e:
+            qd.exception(e)
+        except Exception as e:
+            qd.exception(e)
 
 def getDryRun(args):
     if args.live:
