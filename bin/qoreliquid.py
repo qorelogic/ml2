@@ -2476,12 +2476,15 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
             #if noInteractive == False and (noInteractiveDeleverage == False and noInteractiveLeverage == False):
             #    qd.data('ni---')
             #    interactiveMode()
+            stopLossOn = False
             try:
                 # oanda legacy
                 try:
+                    if stopLossOn == False: raise('stopLoss disabled')
                     mmstop = round(dfu3.ix[i, 'stop'], 5)
                     oanda2.create_order(accid, type='market', instrument=i, side=side, units=units, stopLoss=mmstop)
-                except:
+                except Exception as e:
+                    qd.exception(e)
                     oanda2.create_order(accid, type='market', instrument=i, side=side, units=units)
             except:
                 # oanda (v20) api
@@ -2501,6 +2504,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                     }
                 }
                 try:
+                    if stopLossOn == False: raise('stopLoss disabled v20')
                     mmstop = round(dfu3.ix[i, 'stop'], 5)
                     orderData['order'].update({"stopLossOnFill": {
                         "timeInForce": "GTC",
