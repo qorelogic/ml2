@@ -224,6 +224,11 @@ class datafeeds {
 	#	timeout => 60,
 	#	tries   => 3,
 	#}
+	exec { "pip install requests": command => "$pipbin install requests", timeout => 60, tries => 3 }
+	exec { "pip install requests[security]": command => "$pipbin install requests[security]", timeout => 60, tries => 3 }
+        # removes the security warning "A true SSLContext object is not available. This prevents urllib3 from configuring SSL appropriately and may cause certain SSL"
+	exec { "pip install upgrade requests ssl security": command => "$pipbin install --upgrade pyopenssl ndg-httpsclient pyasn1 pip", timeout => 60, tries => 3 }
+
 	exec { "pip install ipython": command => "$pipbin install ipython==4.0.3", timeout => 60, tries => 3 }
 	exec { "pip install notebook": command => "$pipbin install notebook==4.1.0", timeout => 60, tries => 3 }
 	exec { "pip install numpy": command => "$pipbin install numpy==1.9.2", timeout => 60, tries => 3 }
