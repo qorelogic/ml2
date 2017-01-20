@@ -1623,7 +1623,7 @@ def quandlGetPreMunge(c, fromCol=None, toCol=None):
 
 #import numba
 #@numba.jit(nopython=True)
-@profile
+#@profile
 def combineDF(df1, df2):
     df1 = p.DataFrame(df1)
     df2 = p.DataFrame(df2)
@@ -1636,7 +1636,7 @@ def combineDF(df1, df2):
     return df
 
 # g: python combine two dictionaries by key, source: http://stackoverflow.com/questions/5946236/how-to-merge-multiple-dicts-with-same-key
-@profile
+#@profile
 def combineDF2(df1, df2):
     ds = [df1, df2]
     df = {}
@@ -1651,7 +1651,7 @@ def combineDF2(df1, df2):
     
 #from collections import defaultdict
 # g: python combine two dictionaries by key, source: http://stackoverflow.com/questions/5946236/how-to-merge-multiple-dicts-with-same-key
-@profile
+#@profile
 def combineDF3(df1, df2):
     #df1 = {1: 2, 3: 4}
     #df2 = {1: 6, 3: 7}
@@ -2200,7 +2200,7 @@ def differentPolarity(a, b):
 def getSideBool(ser):
     return map(lambda x: 1 if x == 'buy' else -1, ser)
 
-@profile
+#@profile
 def calcPl(bid, ask, price, sideBool, pairedCurrencyBid, pairedCurrencyAsk, units):
     #pl00001 = ( ((bid+ask)/2) )
     #pl00002 = ( price )
@@ -2386,7 +2386,7 @@ def oandaCreateOrder(oanda2, accid, instrument, side, units, method=None, data=N
     except Exception as e:
         qd.exception(e)
     
-@profile
+#@profile
 def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleetingProfits, noInteractiveLeverage, noInteractiveDeleverage, verbose=False):
     qd = QoreDebug()
     qd.on()
@@ -2404,7 +2404,7 @@ def fleetingProfitsCloseTrade(oanda2, dryrun, accid, i, plp, noInteractiveFleeti
         except Exception as e:
             qd.exception(e)
 
-@profile
+#@profile
 def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLeverage, noInteractiveDeleverage, noInteractiveFleetingProfits, verbose, noInteractive, currentTrades, loginIndex=None):
     qd = QoreDebug()
     qd.on()
@@ -2662,7 +2662,7 @@ def getCurrentTradesAndPositions(oanda2, accid, oq, loginIndex=None):
     
     return [currentPositions, currentTrades, ct, gct]
 
-@profile
+#@profile
 
 def getAccounts(oanda0, access_token0):
     
@@ -3105,7 +3105,7 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     
     return dfu3
 
-@profile
+#@profile
 def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
 
     qd = QoreDebug()
