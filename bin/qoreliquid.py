@@ -1895,17 +1895,34 @@ class Patterns:
             mfdf['resettablePLPcnt']      = mfdf['resettablePL'] / mfdf['balance'] * 100
             #print mfdf.sort_values(by='marginCloseoutPercent')
             #print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
+
             def displayData(df):
                 print df
                 print
-                #print p.DataFrame([n.std(df['unrealizedPLPcnt']), n.mean(df['unrealizedPLPcnt']) ], index=['stddev', 'avg']).transpose()
+
+                dfgm = p.DataFrame([])
+
                 df['id']  = df.index
                 df['gid'] = map(lambda x: x.split('-')[2], df.index)
                 dfg = df.groupby('gid')
-                print  dfg.mean() + dfg.std()
-                print  dfg.mean()
-                print  dfg.mean() - dfg.std()
-                print dfg.describe()
+                dfgStddevUpper = dfg.mean() + dfg.std()
+                dfgStddevUpper['dfgStddevUpper'] = dfgStddevUpper['unrealizedPLPcnt']
+                dfgm = dfgm.combine_first(dfgStddevUpper)
+
+                dfgMean        = dfg.mean()
+                dfgMean['dfgMean'] = dfgMean['unrealizedPLPcnt']
+                dfgm = dfgm.combine_first(dfgMean)
+
+                dfgStddevLower = dfg.mean() - dfg.std()
+                dfgStddevLower['dfgStddevLower'] = dfgStddevLower['unrealizedPLPcnt']
+                dfgm = dfgm.combine_first(dfgStddevLower)
+
+                dfgStddev = dfg.std()
+                dfgStddev['dfgStddev'] = dfgStddev['unrealizedPLPcnt']
+                dfgm = dfgm.combine_first(dfgStddev)
+
+                print dfgm.ix[:, 'dfgStddevUpper dfgMean dfgStddevLower dfgStddev'.split(' ')]
+                #print dfg.describe()
 
             plpmdf = p.DataFrame(plpmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
             plnmdf = p.DataFrame(plnmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
