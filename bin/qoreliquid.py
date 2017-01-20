@@ -3220,14 +3220,19 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
         dfu33['exposureSum'] = n.sum(dfu33['exposure'])
     except: ''
     dfu33['allMargin'] = balance * leverage
+    dfu33['balanceMetatrader'] = 110.81
+    dfu33['leverageMetatrader'] = 500.0 / 2
+    dfu33['allMarginMetatrader'] = dfu33['balanceMetatrader'] * dfu33['leverageMetatrader']
     dfu33['pl00001'] = ( ((dfu33['bid']+dfu33['ask'])/2) ) * (1 / (dfu33['pairedCurrencyPriceBid']+dfu33['pairedCurrencyPriceAsk'])/2)   #* dfu33['pow2']
 
     dfu33['amount4'] = dfu33['unitsAvailable'] * dfu33['diffp']
     dfu33['amount4Sum'] = n.sum(dfu33['amount4'])
 
     dfu33['amount2'] = dfu33['allMargin'] * dfu33['diffp']
+    dfu33['amount2Metatrader'] = dfu33['allMarginMetatrader'] * dfu33['diffp']
     dfu33['amount2Sum'] = n.sum(dfu33['amount2'])
     dfu33['diffamount4amount2'] = dfu33['amount2'] - dfu33['amount4']
+    dfu33['lots'] = dfu33['amount2Metatrader'] / 100000.0
 
     # close = pl/units+open
     dfu33['riskAmount']          = (balance * 10.0 / 100)
@@ -3243,12 +3248,22 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     qd.data('============================================')
     qd.data('============================================')
     qd.data('============================================')
+    qtime = time.time()
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        # portfolio oanda
         sorted_dfu33 = dfu33.sort_values(by='diffp', ascending=False)
         qd.data(sorted_dfu33, name='dfu33::')
-        print sorted_dfu33
-        fname = '/ml.dev/bin/data/oanda/cache/patterns/patterns.dfu33.%s.csv' % time.time()
+        #qd.data(sorted_dfu33.ix[:,'allMarginMetatrader amount2Metatrader side lots diffp'.split(' ')], name='dfu33 metatrader::')
+        fname = '/ml.dev/bin/data/oanda/cache/patterns/patterns.dfu33.%s.csv' % qtime
         sorted_dfu33.to_csv(fname)
+
+        # portfolio metatrader
+        portfolioMetatrader = sorted_dfu33.ix[:,'balanceMetatrader leverageMetatrader allMarginMetatrader amount2Metatrader side diffp lots'.split(' ')]
+        portfolioMetatrader = portfolioMetatrader[portfolioMetatrader['diffp'] > 0]
+        qd.data(portfolioMetatrader, name='portfolioMetatrader::')
+        fname = '/ml.dev/bin/data/oanda/cache/patterns/patterns.portfolioMetatrader.%s.csv' % qtime
+        portfolioMetatrader.to_csv(fname)
+       
     qd.data('============================================')
     qd.data('============================================')
     qd.data('============================================')
