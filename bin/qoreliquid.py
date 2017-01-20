@@ -3059,13 +3059,23 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
     ts = ts + float(ds.microsecond)/1000000
     dfa.ix[0, 'utctime'] = ts
 
-    balanceDeleveraged    = dfa.ix[0, 'balance'] + dfu3['diffpRebalancepBalance'].sum()
-    balanceDeleveragedPlp = dfa.ix[0, 'balance'] + dfa.ix[0, 'plp'] + dfu3['diffpRebalancepBalance'].sum()
+    qd = QoreDebug()
+    qd.log('testme')
+
+    try:    sumDiffpRebalancepBalance = dfu3['diffpRebalancepBalance'].sum()
+    except: sumDiffpRebalancepBalance = 0
+
+    try: dfaPlp = dfa.ix[0, 'plp']
+    except: dfaPlp = 0
+    
+    balanceDeleveraged    = dfa.ix[0, 'balance'] + sumDiffpRebalancepBalance
+    balanceDeleveragedPlp = dfa.ix[0, 'balance'] + dfaPlp + sumDiffpRebalancepBalance
 
     #li = list(dfa.ix[:, 'plp plpcnt'.split(' ')].get_values()[0])
     #li = li.append('%')
 
     dfa = dfa.transpose()
+    qd.data(dfa, name='dfa 545')
     accountId = str(dfa.ix['accountId', 0])
     dfa[accountId] = dfa[0]
     
