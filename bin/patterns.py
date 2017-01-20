@@ -160,7 +160,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
     
     
     import os
-    cmd = 'ls -t /ml.dev/bin/data/oanda/cache/patterns/patterns* 2> /dev/null'
+    cmd = 'ls -t /ml.dev/bin/data/oanda/cache/patterns/patterns.dfu.* 2> /dev/null'
     fname = os.popen(cmd).read().strip().split('\n')[0]
     dfh = {}
     df = p.DataFrame()
