@@ -1975,7 +1975,7 @@ class Patterns:
             #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
 
-    def monitorAccountsProfitableTrades(self, verbose=False, closeProfitableTrades=False, account=None, closeProfitableTradesThreshold=0.69):
+    def monitorAccountsProfitableTrades(self, verbose=False, closeProfitableTrades=False, account=None, accountIndex=None, closeProfitableTradesThreshold=0.69):
 
         import oandapyV20.endpoints.accounts as accounts
         from oandapyV20.exceptions import V20Error
@@ -2037,7 +2037,8 @@ class Patterns:
                     plndfSum = plpndf.ix[:, 'unrealizedPL unrealizedPLPcnt'.split(' ')].sum().to_dict()
                     plnmdf.update({i:plndfSum})
 
-                    if closeProfitableTrades and (account == None or account == i):
+                    #if closeProfitableTrades and (account == None or account == i):
+                    if closeProfitableTrades and (account == 'all' or account == i):
                         pool = ThreadPool(processes=270)
                         for k in plpdf.index:
                             async_result = pool.apply_async(self.closeTrade, [i, k])
@@ -3472,6 +3473,17 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
             print
     
     return dfu3
+
+def computeMetraderData(dfu33, balance=None, leverage=None):
+    if balance != None:
+        dfu33['balanceMetatrader'] = balance
+    if leverage != None:
+        dfu33['leverageMetatrader'] = leverage / 2
+    dfu33['closeTradePLMetatrader'] = dfu33['balanceMetatrader'] * 0.696607168936 / 100
+    dfu33['allMarginMetatrader'] = dfu33['balanceMetatrader'] * dfu33['leverageMetatrader']
+    dfu33['amount2Metatrader'] = dfu33['allMarginMetatrader'] * dfu33['diffp']
+    dfu33['lots'] = dfu33['amount2Metatrader'] / 100000.0
+    return dfu33
 
 #@profile
 def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):

@@ -69,6 +69,48 @@ co, loginIndex, env0, access_token0, oanda0 = getConfig(args=args)
 #access_token1=co.ix[1,2]
 #oanda1 = oandapy.API(environment=env1, access_token=access_token1)
 
+try:
+    if args.accountIndex == None:
+        raise('accountIndex is none')
+    accountIndex = args.accountIndex
+    print 'accountIndex1:%s' % accountIndex
+    accountIndex = accountIndex.split(',')
+    print 'accountIndex2:%s' % accountIndex
+    for i in range(len(accountIndex)):
+        accountIndex[i] = int(accountIndex[i])
+    print 'accountIndex3:%s' % accountIndex
+    print 'accountIndex4:%s' % accountIndex
+except:
+    accountIndex = 0
+print 'accountIndex5:%s' % accountIndex
+
+try:
+    acc = getAccounts(oanda0, access_token0)
+    if int(args.verbose) >= 5:
+        print 'args account:'; print args.account
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            qd.data(p.DataFrame(acc), name='acc::')
+    try:
+        if args.account == None:
+            raise('account is none')
+        accid = str(args.account)
+    except:
+        try:
+            #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #    print acc
+            print 'accountIndex:%s' % accountIndex
+            accids = acc.ix[accountIndex, 'accountId']
+            accids = list(accids)
+            print 'accountIndex6:%s' % accountIndex
+            print 'accids:%s' % accids
+        except Exception as e:
+            qd.exception(e)
+            sys.exit()
+    if int(args.verbose) >= 1:
+        print 'using accounts: [{0}]'.format(accids)
+except Exception as e:
+    print e
+
 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
 
     if args.monitorMargin:
@@ -327,6 +369,7 @@ def main(loginIndex, args, leverage=10, dryrun=True, verbose=False):
         if int(verbose) > 5:
             print '1broker orders:'
             print dfu3
+    
     except Exception as e:
         qd.exception(e)
         print 'No'
