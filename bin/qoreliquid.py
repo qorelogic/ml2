@@ -18,9 +18,9 @@ from plotly.graph_objs import *
 
 #import os
 import datetime as dd
-from matplotlib.pyplot import plot, legend, title, show #, imshow, tight_layout
-from matplotlib.pylab import *
-from pylab import rcParams
+#from matplotlib.pyplot import plot, legend, title, show #, imshow, tight_layout
+#from matplotlib.pylab import *
+#from pylab import rcParams
 from IPython.display import display, clear_output
 import ujson as ujson
 
@@ -29,7 +29,7 @@ from qore import *
 
 import numpy as n
 import pandas as p
-import Quandl as q
+#import Quandl as q
 #import datetime as dd
 #import urllib2 as u
 #import html2text
@@ -1724,7 +1724,7 @@ class Patterns:
 
         import oandapyV20.endpoints.accounts as accounts
         from oandapyV20.exceptions import V20Error
-        from matplotlib.pylab import plot
+        #from matplotlib.pylab import plot
 
         # monitor accounts: margin closeout watcher
         p.set_option('display.float_format', lambda x: '%.3f' % x)

@@ -46,12 +46,12 @@ except: sys.path.append('/ml.dev/bin/datafeeds')
 import numpy as n
 import pandas as p
 #mport Quandl as q
-from Quandl import Quandl as q
+#from Quandl import Quandl as q
 import datetime as dd
 from qoreliquid import *
 import talib as talib
-from matplotlib import pyplot as plt
-from pylab import rcParams
+#from matplotlib import pyplot as plt
+#from pylab import rcParams
 #get_ipython().magic(u'pylab inline')
 #rcParams['figure.figsize'] = 20, 5
 
