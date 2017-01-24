@@ -1810,7 +1810,7 @@ class Patterns:
             mfdf['marginUnrealized2']     = mfdf['unrealizedPLPcnt'] / mfdf['marginCloseoutPercent']
             mfdf['netPLPcnt']             = mfdf['resettablePLPcnt'] + mfdf['unrealizedPLPcnt']
             #fieldsMfdf = mfdf.columns
-            fieldsMfdf = 'balance initialCapital initialCapital2 netAssetValue unrealizedPL unrealizedPLPcnt resettablePL resettablePLPcnt netPLPcnt marginUnrealized  marginUnrealized2 marginAvailable marginCloseoutPercent'.split(' ')
+            fieldsMfdf = 'resettablePLPcnt balance initialCapital initialCapital2 netAssetValue unrealizedPL unrealizedPLPcnt resettablePL resettablePLPcnt netPLPcnt marginUnrealized  marginUnrealized2 marginAvailable marginCloseoutPercent'.split(' ')
             print mfdf.ix[:, fieldsMfdf].sort_values(by='marginCloseoutPercent')
             print mfdf.ix[:, fieldsMfdf].sort_values(by='netPLPcnt', ascending=False)
             print mfdf.ix[:, fieldsMfdf].sort_values(by='resettablePLPcnt', ascending=False)
