@@ -1710,6 +1710,8 @@ class Patterns:
         self._accountList = self.accountList()
     
     def accountList(self):
+        qd = QoreDebug()
+        qd.on()
 
         import oandapyV20.endpoints.accounts as accounts
         r = accounts.AccountList()
