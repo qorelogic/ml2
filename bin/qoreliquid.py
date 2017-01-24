@@ -1724,7 +1724,7 @@ class Patterns:
 
         import oandapyV20.endpoints.accounts as accounts
         from oandapyV20.exceptions import V20Error
-        from matplotlib.pylab import plot
+        #from matplotlib.pylab import plot
 
         # monitor accounts: margin closeout watcher
         p.set_option('display.float_format', lambda x: '%.3f' % x)
