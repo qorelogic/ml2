@@ -1703,7 +1703,7 @@ class Patterns:
         
         from oandapyV20 import API
 
-        co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=4)
+        co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=5)
         #print 'access_token0 %s' % access_token0        
         self.client = API(access_token=access_token0)
 
