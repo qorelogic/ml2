@@ -1914,7 +1914,7 @@ class Patterns:
             #print mfdf.sort_values(by='marginCloseoutPercent')
             #print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
 
-            def displayData(df):
+            def displayData(df, name=None):
                 print df
                 print
 
@@ -1939,17 +1939,23 @@ class Patterns:
                 dfgStddev['dfgStddev'] = dfgStddev['unrealizedPLPcnt']
                 dfgm = dfgm.combine_first(dfgStddev)
 
-                print dfgm.ix[:, 'dfgStddevUpper dfgMean dfgStddevLower dfgStddev'.split(' ')]
+                fields = 'dfgStddevUpper dfgMean dfgStddevLower dfgStddev'.split(' ')
+                print dfgm.ix[:, fields]
+                # write to log
+                di = dfgm.ix[:, fields].to_dict()
+                fp = open('/mldev/bin/data/oanda/cache/monitor/%s.csv'%name, 'a')
+                fp.write(di)
+                fp.close()
                 #print dfg.describe()
 
             plpmdf = p.DataFrame(plpmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
             plnmdf = p.DataFrame(plnmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
             print
             print '== Monitor UnrealizedPL and UnrealizedPL% (+trades)'
-            displayData(plpmdf)
+            displayData(plpmdf, name='monitorAccountsProfitableTradesPLP')
             print
             print '== Monitor UnrealizedPL and UnrealizedPL% (-trades)'
-            displayData(plnmdf)
+            displayData(plnmdf, name='monitorAccountsProfitableTradesPLN')
 
         #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
