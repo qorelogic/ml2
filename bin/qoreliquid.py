@@ -1914,9 +1914,20 @@ class Patterns:
             #print mfdf.sort_values(by='marginCloseoutPercent')
             #print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
 
-            def displayData(df):
+            def displayData(df, name=None):
+                import ujson as json
+                import time
+                mtime = time.time()
+                hdir = '/mldev/bin/data/oanda/cache/monitor'
+                mkdir_p(hdir)
                 print df
                 print
+                # write to log
+                di = {'time':mtime, 'data':df.to_dict()}
+                di = json.dumps(di)
+                fp = open('%s/%s.jsonm'%(hdir, name), 'a')
+                fp.write('%s\n' % di)
+                fp.close()
 
                 dfgm = p.DataFrame([])
 
@@ -1939,17 +1950,24 @@ class Patterns:
                 dfgStddev['dfgStddev'] = dfgStddev['unrealizedPLPcnt']
                 dfgm = dfgm.combine_first(dfgStddev)
 
-                print dfgm.ix[:, 'dfgStddevUpper dfgMean dfgStddevLower dfgStddev'.split(' ')]
+                fields = 'dfgStddevUpper dfgMean dfgStddevLower dfgStddev'.split(' ')
+                print dfgm.ix[:, fields]
+                # write to log
+                di = {'time':mtime, 'data':dfgm.ix[:, fields].to_dict()}
+                di = json.dumps(di)
+                fp = open('%s/%s.stats.jsonm'%(hdir, name), 'a')
+                fp.write('%s\n' % di)
+                fp.close()
                 #print dfg.describe()
 
             plpmdf = p.DataFrame(plpmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
             plnmdf = p.DataFrame(plnmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
             print
             print '== Monitor UnrealizedPL and UnrealizedPL% (+trades)'
-            displayData(plpmdf)
+            displayData(plpmdf, name='monitorAccountsProfitableTradesPLP')
             print
             print '== Monitor UnrealizedPL and UnrealizedPL% (-trades)'
-            displayData(plnmdf)
+            displayData(plnmdf, name='monitorAccountsProfitableTradesPLN')
 
         #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
