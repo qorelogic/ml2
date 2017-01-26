@@ -1915,8 +1915,19 @@ class Patterns:
             #print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
 
             def displayData(df, name=None):
+                import ujson as json
+                import time
+                mtime = time.time()
+                hdir = '/mldev/bin/data/oanda/cache/monitor'
+                mkdir_p(hdir)
                 print df
                 print
+                # write to log
+                di = {'time':mtime, 'data':df.to_dict()}
+                di = json.dumps(di)
+                fp = open('%s/%s.jsonm'%(hdir, name), 'a')
+                fp.write('%s\n' % di)
+                fp.close()
 
                 dfgm = p.DataFrame([])
 
@@ -1942,13 +1953,10 @@ class Patterns:
                 fields = 'dfgStddevUpper dfgMean dfgStddevLower dfgStddev'.split(' ')
                 print dfgm.ix[:, fields]
                 # write to log
-                import ujson as json
-                hdir = '/mldev/bin/data/oanda/cache/monitor'
-                mkdir_p(hdir)
-                di = dfgm.ix[:, fields].to_dict()
+                di = {'time':mtime, 'data':dfgm.ix[:, fields].to_dict()}
                 di = json.dumps(di)
-                fp = open('%s/%s.csv'%(hdir, name), 'a')
-                fp.write('%s\n'%di)
+                fp = open('%s/%s.stats.jsonm'%(hdir, name), 'a')
+                fp.write('%s\n' % di)
                 fp.close()
                 #print dfg.describe()
 
