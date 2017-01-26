@@ -1708,6 +1708,8 @@ class Patterns:
         self.client = API(access_token=access_token0)
 
         self._accountList = self.accountList()
+        self.hdirMonitor = '/mldev/bin/data/oanda/cache/monitor'
+        mkdir_p(self.hdirMonitor)
     
     def accountList(self):
         qd = QoreDebug()
@@ -1820,7 +1822,7 @@ class Patterns:
             mtime = time.time()
             di = {'time':mtime, 'data':mfdf.ix[:, fieldsMfdf].to_dict()}
             di = json.dumps(di)
-            fp = open('%s/%s.jsonm' % (hdir, 'monitorAccountsMarginCloseout'), 'a')
+            fp = open('%s/%s.jsonm' % (self.hdirMonitor, 'monitorAccountsMarginCloseout'), 'a')
             fp.write('%s\n' % di)
             fp.close()
 
@@ -1930,14 +1932,12 @@ class Patterns:
                 import ujson as json
                 import time
                 mtime = time.time()
-                hdir = '/mldev/bin/data/oanda/cache/monitor'
-                mkdir_p(hdir)
                 print df
                 print
                 # write to log
                 di = {'time':mtime, 'data':df.to_dict()}
                 di = json.dumps(di)
-                fp = open('%s/%s.jsonm'%(hdir, name), 'a')
+                fp = open('%s/%s.jsonm'%(self.hdirMonitor, name), 'a')
                 fp.write('%s\n' % di)
                 fp.close()
 
@@ -1967,7 +1967,7 @@ class Patterns:
                 # write to log
                 di = {'time':mtime, 'data':dfgm.ix[:, fields].to_dict()}
                 di = json.dumps(di)
-                fp = open('%s/%s.stats.jsonm'%(hdir, name), 'a')
+                fp = open('%s/%s.stats.jsonm'%(self.hdirMonitor, name), 'a')
                 fp.write('%s\n' % di)
                 fp.close()
                 #print dfg.describe()
