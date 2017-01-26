@@ -1813,12 +1813,6 @@ class Patterns:
             mfdf['netPLPcnt']             = mfdf['resettablePLPcnt'] + mfdf['unrealizedPLPcnt']
             #fieldsMfdf = mfdf.columns
             fieldsMfdf = 'resettablePLPcnt balance initialCapital initialCapital2 netAssetValue unrealizedPL unrealizedPLPcnt resettablePL resettablePLPcnt netPLPcnt marginUnrealized  marginUnrealized2 marginAvailable marginCloseoutPercent'.split(' ')
-            print mfdf.ix[:, fieldsMfdf].sort_values(by='marginCloseoutPercent')
-            print mfdf.ix[:, fieldsMfdf].sort_values(by='netPLPcnt', ascending=False)
-            print mfdf.ix[:, fieldsMfdf].sort_values(by='resettablePLPcnt', ascending=False)
-            print mfdf.ix[:, fieldsMfdf].sort_values(by='marginUnrealized', ascending=False)
-            print mfdf.ix[:, fieldsMfdf].sort_values(by='unrealizedPL', ascending=False)
-            print mfdf.sort_values(by='resettablePL', ascending=False)
 
             # write to log
             import ujson as json
@@ -1829,6 +1823,13 @@ class Patterns:
             fp = open('%s/%s.jsonm'%(hdir, 'monitorAccountsMarginCloseout'), 'a')
             fp.write('%s\n' % di)
             fp.close()
+
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='marginCloseoutPercent')
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='netPLPcnt', ascending=False)
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='resettablePLPcnt', ascending=False)
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='marginUnrealized', ascending=False)
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='unrealizedPL', ascending=False)
+            print mfdf.sort_values(by='resettablePL', ascending=False)
 
             #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
