@@ -1942,8 +1942,10 @@ class Patterns:
                 fields = 'dfgStddevUpper dfgMean dfgStddevLower dfgStddev'.split(' ')
                 print dfgm.ix[:, fields]
                 # write to log
+                hdir = '/mldev/bin/data/oanda/cache/monitor'
+                mkdir_p(hdir)
                 di = dfgm.ix[:, fields].to_dict()
-                fp = open('/mldev/bin/data/oanda/cache/monitor/%s.csv'%name, 'a')
+                fp = open('%s/%s.csv'%(hdir, name), 'a')
                 fp.write(di)
                 fp.close()
                 #print dfg.describe()
