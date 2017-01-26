@@ -1948,7 +1948,7 @@ class Patterns:
                 di = dfgm.ix[:, fields].to_dict()
                 di = json.dumps(di)
                 fp = open('%s/%s.csv'%(hdir, name), 'a')
-                fp.write(di)
+                fp.write('%s\n'%di)
                 fp.close()
                 #print dfg.describe()
 
