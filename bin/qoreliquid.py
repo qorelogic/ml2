@@ -1820,7 +1820,7 @@ class Patterns:
             mtime = time.time()
             di = {'time':mtime, 'data':mfdf.ix[:, fieldsMfdf].to_dict()}
             di = json.dumps(di)
-            fp = open('%s/%s.jsonm'%(hdir, 'monitorAccountsMarginCloseout'), 'a')
+            fp = open('%s/%s.jsonm' % (hdir, 'monitorAccountsMarginCloseout'), 'a')
             fp.write('%s\n' % di)
             fp.close()
 
