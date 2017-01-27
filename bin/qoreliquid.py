@@ -2178,7 +2178,7 @@ class Patterns:
             #print instruments
         return instruments
 
-    def computeMetraderData(self, dfu33, balance=None, leverage=None):
+    def computePortfolioMetatrader(self, dfu33, balance=None, leverage=None):
         if balance: balance = balance
         else:       balance = 110.81
         if leverage: leverage = leverage
@@ -3473,7 +3473,8 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['amount2Sum'] = n.sum(dfu33['amount2'])
     dfu33['diffamount4amount2'] = dfu33['amount2'] - dfu33['amount4']
     
-    dfu33 = computeMetraderData(dfu33)
+    pa = Patterns()
+    dfu33 = pa.computePortfolioMetatrader(dfu33)
 
     # close = pl/units+open
     dfu33['riskAmount']          = (balance * 10.0 / 100)
