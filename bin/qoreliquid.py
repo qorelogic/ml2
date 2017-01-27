@@ -1714,6 +1714,12 @@ class Patterns:
     def __init__(self, loginIndex=5):
         
         from oandapyV20 import API
+        import ujson as j
+        import pandas as p
+        from qoreliquid import normalizeme
+        from qoreliquid import sigmoidme
+        from qoreliquid import combineDF3
+        from qoreliquid import combineDF
 
         self.qd = QoreDebug()
         self.qd.on()
