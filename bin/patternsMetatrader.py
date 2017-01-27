@@ -40,7 +40,21 @@ co
 from qoreliquid import Patterns
 pa = Patterns()
 df = p.read_csv('/mldev/bin/data/oanda/cache/patterns/patterns.portfolioMetatrader.1485150677.45.csv', index_col=[0])
-df = pa.computeMetraderData(df, balance=140.65, leverage=500)
+def usage():
+    print 'usage: <balance> <leverage>'
+try:
+    balance  = float(sys.argv[1])
+except Exception as e:
+    print e
+    usage()
+    sys.exit()
+try:
+    leverage = int(sys.argv[2])
+except Exception as e:
+    print e
+    usage()
+    sys.exit()
+df = pa.computePortfolioMetatrader(df, balance=balance, leverage=leverage)
 import numpy as n
 df['lots'] = n.round(df['lots'], 2)
 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
