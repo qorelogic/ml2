@@ -2178,6 +2178,18 @@ class Patterns:
             #print instruments
         return instruments
 
+    def computeMetraderData(self, dfu33, balance=None, leverage=None):
+        if balance: balance = balance
+        else:       balance = 110.81
+        if leverage: leverage = leverage
+        else:       leverage = 500.0
+        dfu33['balanceMetatrader'] = balance
+        dfu33['leverageMetatrader'] = leverage / 2
+        dfu33['allMarginMetatrader'] = dfu33['balanceMetatrader'] * dfu33['leverageMetatrader']
+        dfu33['amount2Metatrader'] = dfu33['allMarginMetatrader'] * dfu33['diffp']
+        dfu33['lots'] = dfu33['amount2Metatrader'] / 100000.0
+        return dfu33
+
 
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     import hashlib as hl
@@ -3452,19 +3464,16 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
         dfu33['exposureSum'] = n.sum(dfu33['exposure'])
     except: ''
     dfu33['allMargin'] = balance * leverage
-    dfu33['balanceMetatrader'] = 110.81
-    dfu33['leverageMetatrader'] = 500.0 / 2
-    dfu33['allMarginMetatrader'] = dfu33['balanceMetatrader'] * dfu33['leverageMetatrader']
     dfu33['pl00001'] = ( ((dfu33['bid']+dfu33['ask'])/2) ) * (1 / (dfu33['pairedCurrencyPriceBid']+dfu33['pairedCurrencyPriceAsk'])/2)   #* dfu33['pow2']
 
     dfu33['amount4'] = dfu33['unitsAvailable'] * dfu33['diffp']
     dfu33['amount4Sum'] = n.sum(dfu33['amount4'])
 
     dfu33['amount2'] = dfu33['allMargin'] * dfu33['diffp']
-    dfu33['amount2Metatrader'] = dfu33['allMarginMetatrader'] * dfu33['diffp']
     dfu33['amount2Sum'] = n.sum(dfu33['amount2'])
     dfu33['diffamount4amount2'] = dfu33['amount2'] - dfu33['amount4']
-    dfu33['lots'] = dfu33['amount2Metatrader'] / 100000.0
+    
+    dfu33 = computeMetraderData(dfu33)
 
     # close = pl/units+open
     dfu33['riskAmount']          = (balance * 10.0 / 100)
@@ -3485,11 +3494,11 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
         # portfolio oanda
         sorted_dfu33 = dfu33.sort_values(by='diffp', ascending=False)
         qd.data(sorted_dfu33, name='dfu33::')
-        #qd.data(sorted_dfu33.ix[:,'allMarginMetatrader amount2Metatrader side lots diffp'.split(' ')], name='dfu33 metatrader::')
         fname = '/ml.dev/bin/data/oanda/cache/patterns/patterns.dfu33.%s.csv' % qtime
         sorted_dfu33.to_csv(fname)
 
         # portfolio metatrader
+        #qd.data(sorted_dfu33.ix[:,'allMarginMetatrader amount2Metatrader side lots diffp'.split(' ')], name='dfu33 metatrader::')
         portfolioMetatrader = sorted_dfu33.ix[:,'balanceMetatrader leverageMetatrader allMarginMetatrader amount2Metatrader side diffp lots'.split(' ')]
         portfolioMetatrader = portfolioMetatrader[portfolioMetatrader['diffp'] > 0]
         qd.data(portfolioMetatrader, name='portfolioMetatrader::')
