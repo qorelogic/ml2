@@ -331,8 +331,13 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         except oandapy.OandaError as e:
             print e
             print 'Try a different account number'
+            qd.printTraceBack()
     else:
-        dfu33 = rebalanceTrades(oq, dfu2, oanda0, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
+        try:
+            dfu33 = rebalanceTrades(oq, dfu2, oanda0, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList)
+        except Exception as e:
+            qd.printTraceBack()
+            print e
 
 def getDryRun(args):
     if args.live:
