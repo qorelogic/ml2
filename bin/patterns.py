@@ -46,8 +46,8 @@ import pandas as p
 import datetime as dd
 from qoreliquid import *
 import talib as talib
-from matplotlib import pyplot as plt
-from pylab import rcParams
+#from matplotlib import pyplot as plt
+#from pylab import rcParams
 #get_ipython().magic(u'pylab inline')
 #rcParams['figure.figsize'] = 20, 5
 
