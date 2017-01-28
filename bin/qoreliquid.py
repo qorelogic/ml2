@@ -2433,8 +2433,8 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
                 qd.data(hl.md5(csvIndex).hexdigest())
                 print
                 qd.data('instrument/granularity: %s/%s' % (instrument, granularity))
-            
         
+    qd.data('start phase2')
     for i in patterns:
         if int(verbose) >= 5: qd.data('goThruPatterns(%s): %s' % (instrument, i))
         #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
@@ -2538,6 +2538,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
             qd.data('df.shape: %s' % str(df.shape))
             qd.data('dfh.shape: %s' % len(dfh))
 
+    qd.data('end phase2')
     #from numba import double
     #from numba.decorators import jit, autojit
     #goThruPatterns_numba = autojit(goThruPatterns)
