@@ -376,12 +376,14 @@ class spark {
 }
 
 class numba {
-     exec { "llvm-3.6":    command => "apt-get install llvm-3.6",        timeout => 60, tries   => 3, before  => Exec["enum34"] }
+     exec { "llvm-3.6":    command => "apt-get install llvm-3.6",        timeout => 60, tries   => 3, before  => Exec["llvm-3.6-dev"] }
+     exec { "llvm-3.6-dev": command => "apt-get install llvm-3.6-dev",    timeout => 60, tries   => 3, before  => Exec["enum34"] }
      exec { "enum34":      command => "pip     install enum34==1.1.6",   timeout => 60, tries   => 3, before  => Exec["zlib1g-dev"] }
      exec { "zlib1g-dev":  command => "apt-get install zlib1g-dev",      timeout => 60, tries   => 3, before  => Exec["libedit-dev"] }
      exec { "libedit-dev": command => "apt-get install libedit-dev",     timeout => 60, tries   => 3, before  => Exec["llvmlite"] }
-     exec { "llvmlite":    command => "pip     install llvmlite==0.8.0", timeout => 60, tries   => 3, before  => Exec["numba"] }
-     exec { "numba":       command => "pip     install numba==0.23.0",   timeout => 60, tries   => 3, before  => Exec[""] }
+     # http://stackoverflow.com/questions/29041356/how-to-point-llvm-config-environment-variable-to-the-path-for-llvm-config
+     exec { "llvmlite":    command => "LLVM_CONFIG=`which llvm-config-3.6` pip install llvmlite==0.8.0", timeout => 60, tries   => 3, before  => Exec["numba"] }
+     exec { "numba":       command => "pip     install numba==0.23.0",   timeout => 60, tries   => 3 }
 }
 
 class keys {
