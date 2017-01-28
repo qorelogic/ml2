@@ -100,6 +100,7 @@ class talib {
            before  => Exec["pip install Ta-Lib"],
 	}
 
+      exec { "pip install numpy": command => "/usr/local/bin/pip install numpy", timeout => 600, tries => 3 }
       exec { "pip install Ta-Lib": command => "/usr/local/bin/pip install Ta-Lib", timeout => 600, tries => 3, before  => Exec["swapOff"] }
 
       exec { "swapOff": command => "/mldev/bin/swapoff.sh", timeout => 600, tries => 3 }
