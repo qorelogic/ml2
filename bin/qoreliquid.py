@@ -2320,9 +2320,115 @@ class Patterns:
         return df
 
 
+@profile
+def makeDfm(patterns, dfh, instrument, dif1, dfm, verbose=False):
+    import talib
+    for i in patterns:
+        if int(verbose) >= 5: qd.data('goThruPatterns(%s): %s' % (instrument, i))
+        #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
+        #@profile
+        #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
+        ##def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
+        mode=i
+        for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
+            granularity=j
+            exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
+            #qd.data('%s: %s' % (len(dfh[instrument][granularity]), len(pnda)))
+            #df1[granularity] = pnda
+            #dfh[instrument][granularity][granularity] = pnda
+            #qd.data(dfh[instrument][granularity].ix[:,granularity])
+            #df1 = normalizeme(df1)
+            #df1 = sigmoidme(df1)
+            #df1 = tanhme(df1)
+            # original
+            #df1 = df1.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[granularity]])
+            # cythonized
+            # df1 = p.concat([df1, df2], axis=1)
+            #qd.data(dfh)
+            #nsrch = dfh[instrument][granularity].ix[:,'complete']
+            nsrch = dfh[instrument][granularity]['complete']
+            #dfh0 = dfh[instrument][granularity].ix[nsrch,[granularity]]
+
+            #dfh0_0 = dfh[instrument][granularity][granularity].ix[nsrch]
+            #qd.data('type dfh[instrument][granularity][granularity]: %s' % type(dfh[instrument][granularity][granularity]))
+            pnda = p.Series(pnda, index=nsrch.index)
+            #qd.data('type pnda: %s' % type(pnda))
+            #qd.data('shape pnda: %s' % pnda.shape)
+            #qd.data('shape nsrch: %s' % nsrch.shape)
+            #qd.data(pnda)
+            #qd.data(nsrch)
+            dfh0_0 = pnda.ix[nsrch]
+            
+            #dfh0 = p.DataFrame(dfh0_0, columns=[granularity])
+            #dfh0 = dfh0.combine_first(dfh0_0)
+            
+            #dfh0 = p.DataFrame([], index=dfh0_0.index)
+            #dfh0[granularity] = dfh0_0
+
+            #******
+            #dfh0 = p.DataFrame(dfh0_0, index=dfh0_0.index)
+            #dict(zip(df.index, df.get_values().tolist()))
+            difh0 = {granularity: dict(zip(dfh0_0.index, dfh0_0.get_values().tolist()))}
+	
+
+            #difh0 = dfh0.to_dict()
+            #qd.data(difh0)
+            #sys.exit()
+
+            #df1 = combineDF(dif1, difh0)
+            #df1 = combineDF2(dif1, difh0)
+            
+            dif1 = combineDF3(dif1, difh0)
+            
+            #df1 = combineDF(df1, dfh0)
+            #df1 = p.concat([df1, dfh0], axis=1)
+            
+            #qd.data('%s %s' % (instrument, granularity))
+            #qd.data(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [granularity]])
+            #if int(verbose) >= 5: qd.data(df1.columns)
+            #qd.data(df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')])
+            #return df1
+            #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[granularity]]
+
+
+            #qd.data('df1.shape 3: %s' % str(df1.shape))
+        #return df1#.set_index('mode')
+        try:    df1 = p.DataFrame(dif1)
+        except: df1 = p.DataFrame(dif1, index=[granularity])
+        #df1['mode'] = mode
+        #df1 = getcc(df1, dfh, oanda2, mode, instrument=instrument, update=update)
+        dfm1 = df1
+        #qd.data(dfm1.tail(3))
+        dfm1 = dfm1.ffill()
+        #qd.data(dfm1.tail(3))
+        dfm1 = dfm1.bfill()
+        if int(verbose) >= 5: qd.data(dfm1.tail(3))
+        dfm1 = dfm1.tail(1)
+        if int(verbose) >= 5: qd.data(dfm1)
+        dfm1 = dfm1.ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')]
+        if int(verbose) >= 5: qd.data(dfm1)
+        dfm1 = dfm1.transpose()
+        if int(verbose) >= 5: qd.data(dfm1)
+        #dfm1 = df1.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
+        if int(verbose) >= 5: qd.data('len df1: %s' % len(df1))
+        sed = df1.index[len(df1)-1]
+        #qd.data(sed)
+        dfm1[mode] = dfm1.ix[:, sed]
+        #return dfm1.ix[:, [mode]]
+        dfm0 = dfm1.ix[:, [mode]]
+        if int(verbose) >= 5: qd.data(dfm0)
+        #dfm  = dfm.combine_first(dfm0)
+        dfm = p.concat([dfm, dfm0], axis=1)
+        if verbose:
+            qd.data('dfm1.shape: %s' % str(dfm1.shape))
+            qd.data('dfm.shape: %s' % str(dfm.shape))
+            qd.data('dfm0.shape: %s' % str(dfm0.shape))
+            qd.data('df.shape: %s' % str(df.shape))
+            qd.data('dfh.shape: %s' % len(dfh))
+    return dfm
+
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     import hashlib as hl
-    import talib
     if int(verbose) >= 5: qd.data('df.shape 1: %s' % str(df.shape))
     dfm = p.DataFrame()
     patterns = ['CDL2CROWS',
@@ -2435,109 +2541,7 @@ def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
                 qd.data('instrument/granularity: %s/%s' % (instrument, granularity))
         
     qd.data('start phase2')
-    for i in patterns:
-        if int(verbose) >= 5: qd.data('goThruPatterns(%s): %s' % (instrument, i))
-        #dfm0 = getccc(df, dfh, oanda2, i, instrument=instrument, update=update)
-        #@profile
-        #def getccc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):    
-        ##def getcc(df, dfh, oanda2, mode, instrument='USD_JPY', update=False):
-        mode=i
-        for j in 'M1 M5 M15 M30 H1 H4 D W M'.split(' '):
-            granularity=j
-            exec("pnda = talib.%s(dfh[instrument][granularity]['openBid'].get_values(), dfh[instrument][granularity]['highBid'].get_values(), dfh[instrument][granularity]['lowBid'].get_values(), dfh[instrument][granularity]['closeBid'].get_values())" % mode)
-            #qd.data('%s: %s' % (len(dfh[instrument][granularity]), len(pnda)))
-            #df1[granularity] = pnda
-            #dfh[instrument][granularity][granularity] = pnda
-            #qd.data(dfh[instrument][granularity].ix[:,granularity])
-            #df1 = normalizeme(df1)
-            #df1 = sigmoidme(df1)
-            #df1 = tanhme(df1)
-            # original
-            #df1 = df1.combine_first(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[granularity]])
-            # cythonized
-            # df1 = p.concat([df1, df2], axis=1)
-            #qd.data(dfh)
-            #nsrch = dfh[instrument][granularity].ix[:,'complete']
-            nsrch = dfh[instrument][granularity]['complete']
-            #dfh0 = dfh[instrument][granularity].ix[nsrch,[granularity]]
-
-            #dfh0_0 = dfh[instrument][granularity][granularity].ix[nsrch]
-            #qd.data('type dfh[instrument][granularity][granularity]: %s' % type(dfh[instrument][granularity][granularity]))
-            pnda = p.Series(pnda, index=nsrch.index)
-            #qd.data('type pnda: %s' % type(pnda))
-            #qd.data('shape pnda: %s' % pnda.shape)
-            #qd.data('shape nsrch: %s' % nsrch.shape)
-            #qd.data(pnda)
-            #qd.data(nsrch)
-            dfh0_0 = pnda.ix[nsrch]
-            
-            #dfh0 = p.DataFrame(dfh0_0, columns=[granularity])
-            #dfh0 = dfh0.combine_first(dfh0_0)
-            
-            #dfh0 = p.DataFrame([], index=dfh0_0.index)
-            #dfh0[granularity] = dfh0_0
-
-            #******
-            #dfh0 = p.DataFrame(dfh0_0, index=dfh0_0.index)
-            #dict(zip(df.index, df.get_values().tolist()))
-            difh0 = {granularity: dict(zip(dfh0_0.index, dfh0_0.get_values().tolist()))}
-	
-
-            #difh0 = dfh0.to_dict()
-            #qd.data(difh0)
-            #sys.exit()
-
-            #df1 = combineDF(dif1, difh0)
-            #df1 = combineDF2(dif1, difh0)
-            
-            dif1 = combineDF3(dif1, difh0)
-            
-            #df1 = combineDF(df1, dfh0)
-            #df1 = p.concat([df1, dfh0], axis=1)
-            
-            #qd.data('%s %s' % (instrument, granularity))
-            #qd.data(dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'], [granularity]])
-            #if int(verbose) >= 5: qd.data(df1.columns)
-            #qd.data(df1.ix[:,'openBid highBid lowBid closeBid'.split(' ')])
-            #return df1
-            #return dfh[instrument][granularity].ix[dfh[instrument][granularity].ix[:,'complete'],[granularity]]
-
-
-            #qd.data('df1.shape 3: %s' % str(df1.shape))
-        #return df1#.set_index('mode')
-        try:    df1 = p.DataFrame(dif1)
-        except: df1 = p.DataFrame(dif1, index=[granularity])
-        #df1['mode'] = mode
-        #df1 = getcc(df1, dfh, oanda2, mode, instrument=instrument, update=update)
-        dfm1 = df1
-        #qd.data(dfm1.tail(3))
-        dfm1 = dfm1.ffill()
-        #qd.data(dfm1.tail(3))
-        dfm1 = dfm1.bfill()
-        if int(verbose) >= 5: qd.data(dfm1.tail(3))
-        dfm1 = dfm1.tail(1)
-        if int(verbose) >= 5: qd.data(dfm1)
-        dfm1 = dfm1.ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')]
-        if int(verbose) >= 5: qd.data(dfm1)
-        dfm1 = dfm1.transpose()
-        if int(verbose) >= 5: qd.data(dfm1)
-        #dfm1 = df1.ffill().bfill().tail(1).ix[:, 'M1 M5 M15 M30 H1 H4 D W M'.split(' ')].transpose()
-        if int(verbose) >= 5: qd.data('len df1: %s' % len(df1))
-        sed = df1.index[len(df1)-1]
-        #qd.data(sed)
-        dfm1[mode] = dfm1.ix[:, sed]
-        #return dfm1.ix[:, [mode]]
-        dfm0 = dfm1.ix[:, [mode]]
-        if int(verbose) >= 5: qd.data(dfm0)
-        #dfm  = dfm.combine_first(dfm0)
-        dfm = p.concat([dfm, dfm0], axis=1)
-        if verbose:
-            qd.data('dfm1.shape: %s' % str(dfm1.shape))
-            qd.data('dfm.shape: %s' % str(dfm.shape))
-            qd.data('dfm0.shape: %s' % str(dfm0.shape))
-            qd.data('df.shape: %s' % str(df.shape))
-            qd.data('dfh.shape: %s' % len(dfh))
-
+    dfm = makeDfm(patterns, dfh, instrument, dif1, dfm)
     qd.data('end phase2')
     #from numba import double
     #from numba.decorators import jit, autojit
