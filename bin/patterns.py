@@ -42,7 +42,7 @@ except: sys.path.append('/ml.dev/bin/datafeeds')
 import numpy as n
 import pandas as p
 #mport Quandl as q
-from Quandl import Quandl as q
+#from Quandl import Quandl as q
 import datetime as dd
 from qoreliquid import *
 import talib as talib
