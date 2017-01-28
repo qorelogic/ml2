@@ -16,6 +16,14 @@ class Simulator:
                     print 'Attempting connect:'
                     print "                     MongoDB[%s:%s]" % (host, port)
                 conn = pymongo.MongoClient(host=host, port=port)
+            except pymongo.errors.ServerSelectionTimeoutError as e:
+                port = portB
+                if verbose:
+                    print "Could not connect to MongoDB[%s:%s]: %s" % (host, port, e)
+                    print 'Attempting failover connect:'
+                    print "                     MongoDB[%s:%s]" % (host, port)
+                conn = pymongo.MongoClient(host=host, port=port)
+            #print "Connected successfully!!!"
             except Exception as e:
                 port = mongoPortB
                 if verbose:
