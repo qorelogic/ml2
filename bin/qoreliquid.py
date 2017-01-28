@@ -29,7 +29,7 @@ from qore import *
 
 import numpy as n
 import pandas as p
-import Quandl as q
+#import Quandl as q
 import datetime as dd
 import urllib2 as u
 import html2text
@@ -2155,11 +2155,11 @@ class ShapeShift(CryptoCoinBaseClass):
 # pip install -U selenium
  
 # Import the Selenium 2 namespace (aka "webdriver")
-from selenium import webdriver
-from selenium.selenium import selenium
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-from selenium.webdriver.common.action_chains import ActionChains
-import pandas as p
+#from selenium import webdriver
+#from selenium.selenium import selenium
+#from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+#from selenium.webdriver.common.action_chains import ActionChains
+#import pandas as p
 
 class Bloomberg():
     def __init__(self):
