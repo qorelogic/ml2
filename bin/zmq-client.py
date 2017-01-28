@@ -721,10 +721,10 @@ except KeyboardInterrupt as e:
 except Exception as e:
     curses.nocbreak(); stdscr.keypad(0); curses.echo()
     curses.endwin()
-    qd.logTraceBack(e)
     print 'usage: <host:port> <avg|spread|pos>'
     qd.on()
     qd.printTraceBack()
+    qd.logTraceBack(e)
     sys.exit(0)
 
 curses.nocbreak(); 
