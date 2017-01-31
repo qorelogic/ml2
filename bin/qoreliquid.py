@@ -1813,8 +1813,9 @@ class Patterns:
             mfdf['marginUnrealized']      = mfdf['marginCloseoutPercent'] / mfdf['unrealizedPLPcnt']
             mfdf['marginUnrealized2']     = mfdf['unrealizedPLPcnt'] / mfdf['marginCloseoutPercent']
             mfdf['netPLPcnt']             = mfdf['resettablePLPcnt'] + mfdf['unrealizedPLPcnt']
+            mfdf['netPLP']                = mfdf['resettablePL'] + mfdf['unrealizedPL']
             #fieldsMfdf = mfdf.columns
-            fieldsMfdf = 'resettablePLPcnt balance initialCapital initialCapital2 netAssetValue unrealizedPL unrealizedPLPcnt resettablePL resettablePLPcnt netPLPcnt marginUnrealized marginUnrealized2 marginAvailable marginCloseoutPercent'.split(' ')
+            fieldsMfdf = 'resettablePLPcnt balance initialCapital initialCapital2 netAssetValue unrealizedPL unrealizedPLPcnt resettablePL resettablePLPcnt netPLP netPLPcnt marginUnrealized marginUnrealized2 marginAvailable marginCloseoutPercent'.split(' ')
 
             # write to log
             import ujson as json
