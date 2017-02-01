@@ -1825,8 +1825,14 @@ class Patterns:
             mtime = time.time()
             di = {'time':mtime, 'data':mfdf.ix[:, fieldsMfdf].to_dict()}
             di = json.dumps(di)
+            # append to jsonm file
             fp = open('%s/%s.jsonm' % (self.hdirMonitor, 'monitorAccountsMarginCloseout'), 'a')
             fp.write('%s\n' % di)
+            fp.close()
+
+            # write to txt file
+            fp = open('%s/%s.txt' % (self.hdirMonitor, 'monitorAccountsMarginCloseout'), 'a')
+            fp.write('%s\n' % mfdf.ix[:, fieldsMfdf].sort_values(by='netPLPcnt', ascending=False))
             fp.close()
 
             print mfdf.ix[:, fieldsMfdf].sort_values(by='marginCloseoutPercent')
