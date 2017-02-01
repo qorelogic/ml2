@@ -1941,7 +1941,8 @@ class Patterns:
                 import ujson as json
                 import time
                 mtime = time.time()
-                print df.ix[:, 'unrealizedPL unrealizedPLPcnt resettablePLPcnt marginCloseoutPercent'.split(' ')]
+                df['realizedTheoreticalPLPcnt'] = df['resettablePLPcnt'] * (100 + df['unrealizedPLPcnt']) / 100
+                print df.ix[:, 'unrealizedPL unrealizedPLPcnt resettablePLPcnt realizedTheoreticalPLPcnt marginCloseoutPercent'.split(' ')]
                 print
                 # write to log
                 di = {'time':mtime, 'data':df.to_dict()}
