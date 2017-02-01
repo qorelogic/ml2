@@ -2818,20 +2818,33 @@ def getAccounts(oanda0, access_token0):
         ''
     
     # oanda api
-    accounts0 = p.DataFrame(oanda0.get_accounts()['accounts'])
-    for i in list(accounts0.index):
-        accounts0 = accounts0.combine_first(p.DataFrame(oanda0.get_account(accounts0.ix[i, 'accountId']), index=[i]))
-    accounts = accounts0.set_index('accountId')
-    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        qd.data(accounts0, name='accounts0::')
-        qd.data(accounts, name='accounts::')
+    print 'access_token0: %s' % access_token0
+    try:
+        res = oanda0.get_accounts()['accounts']
+        print 'res1234:'
+        print res
+        accounts0 = p.DataFrame(res)
+        for i in list(accounts0.index):
+            accounts0 = accounts0.combine_first(p.DataFrame(oanda0.get_account(accounts0.ix[i, 'accountId']), index=[i]))
+        accounts0 = accounts0.set_index('accountId')
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            qd.data(accounts0, name='accounts0::')
+            qd.data(accounts, name='accounts::')
+    except Exception as e:
+        qd.logTraceBack(e)
+        qd.exception(e)
     
+    accounts = p.DataFrame([])
+    try:
+        accounts = accounts.combine_first(accounts0)
+    except Exception as e:
+        qd.logTraceBack(e)
+        qd.exception(e)
     try:
         accounts = accounts.combine_first(accountsV20)
     except Exception as e:
         qd.logTraceBack(e)
         qd.exception(e)
-        ''        
     #qd.data(accounts)
     accounts['accountId'] = accounts.index
     # convert all rows in accountId column to strings (make it searchable)
@@ -2860,6 +2873,7 @@ def getConfig(loginIndex=None, args=None):
         qd.data('co::%s' % co)
         qd.data('co:type:%s' % type(co))
         qd.data('loginIndex::%s' % loginIndex)
+        print('loginIndex::%s' % loginIndex)
         qd.data('loginIndex type::%s' % type(loginIndex))
     env0=co.ix[loginIndex,1]
     access_token0=co.ix[int(loginIndex),2]
