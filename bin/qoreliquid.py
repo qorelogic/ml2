@@ -1808,7 +1808,7 @@ class Patterns:
             mfdf['marginCloseoutPercent'] = mfdf['marginCloseoutPercent'] * 100
             mfdf['netAssetValue']         = mfdf['balance'] + mfdf['unrealizedPL'] 
             mfdf['unrealizedPLPcnt']      = mfdf['unrealizedPL'] / mfdf['balance'] * 100
-            #mfdf['resettablePLPcnt2']     = mfdf['resettablePL'] / mfdf['balance'] * 100
+            #mfdf['resettablePLPcnt']     = mfdf['resettablePL'] / (mfdf['balance'] - mfdf['resettablePL']) * 100
             mfdf['resettablePLPcnt']      = mfdf['balance'] / (mfdf['balance'] - mfdf['resettablePL']) * 100 - 100
             mfdf['marginUnrealized']      = mfdf['marginCloseoutPercent'] / mfdf['unrealizedPLPcnt']
             mfdf['marginUnrealized2']     = mfdf['unrealizedPLPcnt'] / mfdf['marginCloseoutPercent']
@@ -1933,7 +1933,7 @@ class Patterns:
             mfdf['resettablePL']          = p.to_numeric(mfdf['resettablePL'])
             mfdf['marginCloseoutPercent'] = mfdf['marginCloseoutPercent'] * 100
             mfdf['unrealizedPLPcnt']      = mfdf['unrealizedPL'] / mfdf['balance'] * 100
-            mfdf['resettablePLPcnt']      = mfdf['resettablePL'] / mfdf['balance'] * 100
+            mfdf['resettablePLPcnt']      = mfdf['resettablePL'] / (mfdf['balance'] - mfdf['resettablePL']) * 100
             #print mfdf.sort_values(by='marginCloseoutPercent')
             #print mfdf.sort_values(by='resettablePLPcnt', ascending=False)
 
@@ -1941,7 +1941,7 @@ class Patterns:
                 import ujson as json
                 import time
                 mtime = time.time()
-                print df
+                print df.ix[:, 'unrealizedPL unrealizedPLPcnt resettablePLPcnt marginCloseoutPercent'.split(' ')]
                 print
                 # write to log
                 di = {'time':mtime, 'data':df.to_dict()}
@@ -1981,8 +1981,12 @@ class Patterns:
                 fp.close()
                 #print dfg.describe()
 
-            plpmdf = p.DataFrame(plpmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
-            plnmdf = p.DataFrame(plnmdf).transpose().sort_values(by='unrealizedPLPcnt', ascending=False)
+            plpmdf = p.DataFrame(plpmdf).transpose()
+            plnmdf = p.DataFrame(plnmdf).transpose()
+            plpmdf = plpmdf.combine_first(mfdf)
+            plnmdf = plnmdf.combine_first(mfdf)
+            plpmdf = plpmdf.sort_values(by='unrealizedPLPcnt', ascending=False)
+            plnmdf = plnmdf.sort_values(by='unrealizedPLPcnt', ascending=False)
             print
             print '== Monitor UnrealizedPL and UnrealizedPL% (+trades)'
             displayData(plpmdf, name='monitorAccountsProfitableTradesPLP')
