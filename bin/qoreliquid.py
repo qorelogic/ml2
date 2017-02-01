@@ -1722,7 +1722,36 @@ class Patterns:
         except Exception as e:
             qd.exception(e)
         return p.DataFrame(rv['accounts'])
+
+    def sendEmail(self, textFilename, toEmailAddress):
+        # Import smtplib for the actual sending function
+        import smtplib
         
+        # Import the email modules we'll need
+        from email.mime.text import MIMEText
+        
+        # Open a plain text file for reading.  For this example, assume that
+        # the text file contains only ASCII characters.
+        fp = open(textFilename, 'rb')
+        # Create a text/plain message
+        msg = MIMEText(fp.read())
+        fp.close()
+        
+        # me == the sender's email address
+        me = 'mailer@qoreliquid'
+        # you == the recipient's email address
+        msg['Subject'] = 'The contents of %s' % textFilename
+        msg['From'] = me
+        msg['To'] = toEmailAddress
+        
+        # Send the message via our own SMTP server, but don't include the
+        # envelope header.
+        try:
+            s = smtplib.SMTP('localhost')
+            s.sendmail(me, [toEmailAddress], msg.as_string())
+            s.quit()
+        except:
+            return
 
     def monitorAccountsMarginCloseout(self):
 
@@ -1831,9 +1860,13 @@ class Patterns:
             fp.close()
 
             # write to txt file
-            fp = open('%s/%s.txt' % (self.hdirMonitor, 'monitorAccountsMarginCloseout'), 'a')
+            fname = '%s/%s.txt' % (self.hdirMonitor, 'monitorAccountsMarginCloseout')
+            fp = open(fname, 'a')
             fp.write('%s\n' % mfdf.ix[:, fieldsMfdf].sort_values(by='netPLPcnt', ascending=False))
             fp.close()
+            
+            toEmailAddress = '???'
+            self.sendEmail(fname, toEmailAddress)
 
             print mfdf.ix[:, fieldsMfdf].sort_values(by='marginCloseoutPercent')
             print mfdf.ix[:, fieldsMfdf].sort_values(by='netPLPcnt', ascending=False)
