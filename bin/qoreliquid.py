@@ -1765,6 +1765,89 @@ class Patterns:
         except:
             return
 
+    #@profile
+    def visualizeAccounts(self):
+        import matplotlib.pylab as plt
+        
+        fn = 'monitorAccountsMarginCloseout.jsonm'
+        
+        #fn = 'monitorAccountsProfitableTradesPLP.jsonm'
+        #fn = 'monitorAccountsProfitableTradesPLP.stats.jsonm'
+        #fn = 'monitorAccountsProfitableTradesPLN.jsonm'
+        #fn = 'monitorAccountsProfitableTradesPLN.stats.jsonm'
+        
+        fp = open(self.hdirMonitor+'/'+fn)
+        fn = fp.read().split('\n')
+        fp.close()
+        accid = '101-004-1984564-012'
+        mdf = p.DataFrame()
+        dif1  = mdf.to_dict()
+        lfn = len(fn)
+        for i in range(lfn)[lfn-500:lfn]:
+            try:
+                res = j.loads(fn[i])
+                #print res['data']
+                df = p.DataFrame(res['data'])#.ix[accid, :]
+                df['id'] = df.index
+                df['ts'] = res['time']
+                df['mid'] = map(lambda x: '%s-%s' % (df.ix[x, 'ts'], df.ix[x, 'id']), df.index)
+                df = df.set_index('mid')
+                #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                #    print df
+                    #print df.to_dict()
+                df = df.transpose()
+            except:
+                ''
+            #mdf = mdf.combine_first(df)
+            dif1 = combineDF3(dif1, df.to_dict())
+            #dif1 = combineDF3(dif1, {'mid': df.to_dict()})
+            #mdf = combineDF(mdf, df)
+            if i % 100 == 0:
+                print '%s of %s [%s%s]' % (i, lfn, float(i)/lfn*100, '%') #df.to_dict()
+            #mdf = p.concat([mdf, df], axis=1)
+        
+        #try:    
+        mdf = p.DataFrame(dif1)
+        mdf = mdf.transpose()
+        #except: df1 = p.DataFrame(dif1, index=[granularity])
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print mdf
+            #mdf = mdf[mdf['id'] == accid].sort_values(by='ts')
+            #print mdf.dtypes
+            #mval = 'marginCloseoutPercent'
+            #mval = 'balance'
+            #mval = 'resettablePLPcnt'
+            #mval = 'netAssetValue'
+            mval = 'unrealizedPLPcnt'
+        
+            #mval = 'dfgMean'
+            #mval = 'dfgStddev'
+        
+            mdf = mdf.pivot('ts', 'id', mval)
+        
+            #print mdf
+            #print 
+            #dfstdev = p.DataFrame(n.std(mdf.get_values(), 0), index=mdf.columns)#.transpose()
+            #print dfstdev
+            #print mdf.dtypes
+            #mdf = mdf.ix[:,'resettablePLPcnt'.split(' ')]
+            mdf = mdf.sort_index()
+            mdf = normalizeme(mdf)
+            #mdf = sigmoidme(mdf)
+            #fields = '101-004-1984564-005 101-004-1984564-012 101-004-1984564-013'.split(' ')
+            fields = mdf.columns
+            mdf = mdf.ix[:, fields]
+        
+            #x = np.arange(len(fields))
+            #plt.axes(xticks=x, yscale='log')
+            #ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda i, loc: fields[int(i)]))
+            #plt.plot(dfstdev)
+            plt.plot(mdf)
+            plt.title(mval)
+            plt.legend(fields, 2)
+        
+            plt.show()
+    
     def monitorAccountsMarginCloseout(self):
 
         import oandapyV20.endpoints.accounts as accounts
