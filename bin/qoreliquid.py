@@ -1040,6 +1040,18 @@ This function can be called to generate a polarized target portfolio.
             df.ix[i, toCol] = df.ix[i, fromCol] * 1
     return df
 
+# show the whole dataframe (untruncated)
+def displayDataFrame(df, truncate=False):
+    if truncate == False:
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print df
+    else:
+        print df
+
+# wrapper for displayDataFrame(df, truncate=False)
+def pf(df):
+    displayDataFrame(df, truncate=False)
+
 def normalizeme(dfr, pinv=False):
     
     nmean = n.mean(dfr, axis=0)
