@@ -505,6 +505,7 @@ l    = leverage,
 f    = fleetingProfits,
 fd   = fleetingProfits [deleverage],
 fr   = fleetingProfits [reverse entry],
+cpt  = closeProfitableTrades,
 il   = infinite-loop,
 li   = live [interactive mode],
 ?, h = help,
@@ -568,6 +569,18 @@ q  = quit
                 #args.live = True
                 #args.noInteractiveFleetingProfits = True
                 dryrun = modeFleetingProfits(args, runMain=False)
+
+            if mode == 'cpt': # close profitable trades
+                from qoreliquid import Patterns
+                pa = Patterns()
+                closeProfitableTrades                  = True
+                monitorAccountsProfitableTradesVerbose = False
+                #if args.account:
+                #      account = args.account
+                #else: account= None
+                account = None
+                pa.monitorAccountsProfitableTrades(verbose=monitorAccountsProfitableTradesVerbose, closeProfitableTrades=closeProfitableTrades, account=account)
+
             if mode == 'il': # infinite-loop
                 description='infinite-loop'
                 logApplicationUsage(mode, description=description)
