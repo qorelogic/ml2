@@ -1975,6 +1975,9 @@ class Patterns:
 
     def monitorAccountsProfitableTrades(self, verbose=False, closeProfitableTrades=False, account=None):
 
+        qd = QoreDebug()
+        qd.on()
+
         import oandapyV20.endpoints.accounts as accounts
         from oandapyV20.exceptions import V20Error
         from multiprocessing.pool import ThreadPool
@@ -1987,8 +1990,7 @@ class Patterns:
         prices = self.getPrices()
         for i in self._accountList['id']:
             if verbose:
-                print '=========='
-                print i
+                qd.data(i, name='==========')
             #print 'NAV %s:' % rv['account']['NAV']
             r = accounts.AccountDetails(accountID=i)
             try:
@@ -2023,7 +2025,7 @@ class Patterns:
                     plpdf = plpdf[plpdf['profitPcnt'] > 0.1].set_index('id')
                     plpdf = plpdf.sort_values(by='profitPcnt', ascending=False)
                     if verbose:
-                        print plpdf
+                        qd.data(plpdf, name='plpdf 001')
                     plpdfSum = plpdf.ix[:, 'unrealizedPL unrealizedPLPcnt'.split(' ')].sum().to_dict()
                     plpmdf.update({i:plpdfSum})
 
@@ -2032,7 +2034,7 @@ class Patterns:
                     plpndf = plpndf[plpndf['profitPcnt'] < 0.1].set_index('id')
                     plpndf = plpndf.sort_values(by='profitPcnt', ascending=False)
                     if verbose:
-                        print plpndf
+                        qd.data(plpndf, name='plndf 002')
                     plndfSum = plpndf.ix[:, 'unrealizedPL unrealizedPLPcnt'.split(' ')].sum().to_dict()
                     plnmdf.update({i:plndfSum})
 
@@ -2116,12 +2118,13 @@ class Patterns:
             plnmdf = plnmdf.combine_first(mfdf)
             plpmdf = plpmdf.sort_values(by='unrealizedPLPcnt', ascending=False)
             plnmdf = plnmdf.sort_values(by='unrealizedPLPcnt', ascending=False)
-            print
-            print '== Monitor UnrealizedPL and UnrealizedPL% (+trades)'
-            displayData(plpmdf, name='monitorAccountsProfitableTradesPLP')
-            print
-            print '== Monitor UnrealizedPL and UnrealizedPL% (-trades)'
-            displayData(plnmdf, name='monitorAccountsProfitableTradesPLN')
+            if verbose:
+                print
+                print '== Monitor UnrealizedPL and UnrealizedPL% (+trades)'
+                displayData(plpmdf, name='monitorAccountsProfitableTradesPLP')
+                print
+                print '== Monitor UnrealizedPL and UnrealizedPL% (-trades)'
+                displayData(plnmdf, name='monitorAccountsProfitableTradesPLN')
 
         #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
@@ -2132,10 +2135,11 @@ class Patterns:
         import oandapyV20.endpoints.trades as trades
         try:
             print 'closing trade: %s %s' % (accountID, tradeID)
+            qd.data('closing trade: %s %s' % (accountID, tradeID))
             data = {}
             r = trades.TradeClose(accountID=accountID, tradeID=tradeID, data=data)
             self.client.request(r)
-            print r.response
+            qd.data(r.response, name='closeTrade:: 002')
         except Exception as e:        
             qd.exception(e)
     
