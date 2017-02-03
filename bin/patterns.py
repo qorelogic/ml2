@@ -491,10 +491,12 @@ if __name__ == "__main__":
         return dryrun
 
     while True:
+        print 'using account: {0}'.format(accid)
         print 'receiving feed..'
         if args.interactive:
             usageOptions = """
 as   = account status,
+ca   = change account,
 tr   = trades,
 po   = positions,
 a    = analyze,
@@ -516,6 +518,15 @@ q  = quit
             mode = raw_input('mode >>> ')
             if mode == 'q': # quit
                 sys.exit()
+            if mode == 'ca': # 
+                accountIndex = raw_input('accountIndex? : ')
+                try:
+                    #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    #    print acc
+                    print accountIndex
+                    accid = acc.ix[int(accountIndex), 'accountId']
+                except Exception as e:
+                    qd.exception(e)
             if mode == 'as': # 
                 args.live = False
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -577,7 +588,8 @@ q  = quit
                 #if args.account:
                 #      account = args.account
                 #else: account= None
-                account = None
+                # bind accid variable to account connecting - ca with cpt options
+                account = accid
                 pa.monitorAccountsProfitableTrades(verbose=monitorAccountsProfitableTradesVerbose, closeProfitableTrades=closeProfitableTrades, account=account)
 
             if mode == 'il': # infinite-loop
