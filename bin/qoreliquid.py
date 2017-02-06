@@ -2118,6 +2118,18 @@ class Patterns:
             plnmdf = plnmdf.combine_first(mfdf)
             plpmdf = plpmdf.sort_values(by='unrealizedPLPcnt', ascending=False)
             plnmdf = plnmdf.sort_values(by='unrealizedPLPcnt', ascending=False)
+            # close trade if above a specified threshold
+            for i in plpmdf.index:
+                if plpmdf.ix[i, 'unrealizedPLPcnt'] > 0.69:
+                    closeProfitableTrades                  = True
+                    #monitorAccountsProfitableTradesVerbose = False
+                    #if args.account:
+                    #      account = args.account
+                    #else: account= None
+                    # bind accid variable to account connecting - ca with cpt options
+                    account = i
+                    self.monitorAccountsProfitableTrades(verbose=False, closeProfitableTrades=closeProfitableTrades, account=account)
+            # print dataframes
             if verbose:
                 print
                 print '== Monitor UnrealizedPL and UnrealizedPL% (+trades)'
