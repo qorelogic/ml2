@@ -130,8 +130,7 @@ try:
         except Exception as e:
             qd.exception(e)
             sys.exit()
-    if int(args.verbose) >= 1:
-        print 'using account: {0}'.format(accid)
+    qd.data(format(accid), name='using account: {0}')
 except Exception as e:
     print e
 
@@ -175,7 +174,7 @@ def main(args, leverage=10, dryrun=True, verbose=False):
         symbols  = 'AUD_CAD,AUD_CHF,AUD_HKD,AUD_JPY,AUD_NZD,AUD_SGD,AUD_USD,CAD_CHF,CAD_HKD,CAD_JPY,CAD_SGD,CHF_HKD,CHF_JPY,CHF_ZAR,EUR_AUD,EUR_CAD,EUR_CHF,        EUR_DKK,EUR_GBP,EUR_HKD,EUR_HUF,EUR_JPY,EUR_NOK,EUR_NZD,EUR_PLN,EUR_SEK,EUR_SGD,EUR_TRY,EUR_USD,EUR_ZAR,GBP_AUD,GBP_CAD,GBP_CHF,GBP_HKD,GBP_JPY,GBP_NZD,GBP_PLN,GBP_SGD,GBP_USD,GBP_ZAR,HKD_JPY,NZD_CAD,NZD_CHF,NZD_HKD,NZD_JPY,NZD_SGD,NZD_USD,SGD_CHF,SGD_HKD,SGD_JPY,TRY_JPY,USD_CAD,USD_CHF,USD_CNH,USD_CZK,USD_DKK,USD_HKD,USD_HUF,USD_JPY,USD_MXN,USD_NOK,USD_PLN,        USD_SEK,USD_SGD,USD_THB,USD_TRY,USD_ZAR,ZAR_JPY'.split(',')
         #symbols = 'AUD_CAD,AUD_CHF,AUD_HKD,AUD_JPY,AUD_NZD,AUD_SGD,AUD_USD,CAD_CHF,CAD_HKD,CAD_JPY,CAD_SGD,CHF_HKD,CHF_JPY,CHF_ZAR,EUR_AUD,EUR_CAD,EUR_CHF,EUR_CZK,EUR_DKK,EUR_GBP,EUR_HKD,EUR_HUF,EUR_JPY,EUR_NOK,EUR_NZD,EUR_PLN,EUR_SEK,EUR_SGD,EUR_TRY,EUR_USD,EUR_ZAR,GBP_AUD,GBP_CAD,GBP_CHF,GBP_HKD,GBP_JPY,GBP_NZD,GBP_PLN,GBP_SGD,GBP_USD,GBP_ZAR,HKD_JPY,NZD_CAD,NZD_CHF,NZD_HKD,NZD_JPY,NZD_SGD,NZD_USD,SGD_CHF,SGD_HKD,SGD_JPY,TRY_JPY,USD_CAD,USD_CHF,USD_CNH,USD_CZK,USD_DKK,USD_HKD,USD_HUF,USD_JPY,USD_MXN,USD_NOK,USD_PLN,USD_SAR,USD_SEK,USD_SGD,USD_THB,USD_TRY,USD_ZAR,ZAR_JPY'.split(',')        
         #symbols = 'EUR_USD,GBP_USD,GBP_JPY,USD_CAD'.split(',')
-        print ','.join(symbols)
+        qd.data(','.join(symbols), name='symbols: ')
         dmcnt = 0                                                        # display matrix: counter
         for i in symbols:
             i = i.strip()
@@ -349,12 +348,12 @@ def main(args, leverage=10, dryrun=True, verbose=False):
             qd.exception(e)
 
 def getDryRun(args):
+    
     if args.live:
         dryrun=False
     else:
         dryrun=True
-    if int(args.verbose) >= 5:
-        print 'dryrun: %s' % dryrun
+    qd.data(dryrun, 'dryrun:')
     return dryrun
 
 
@@ -491,8 +490,7 @@ if __name__ == "__main__":
         return dryrun
 
     while True:
-        print 'using account: {0}'.format(accid)
-        print 'receiving feed..'
+        print 'account: {0}'.format(accid)
         if args.interactive:
             usageOptions = """
 as   = account status,
@@ -514,7 +512,6 @@ q  = quit
 """
             usage = 'usage: '+usageOptions
             args = parser.parse_args()
-            print usage
             mode = raw_input('mode >>> ')
             if mode == 'q': # quit
                 sys.exit()
@@ -523,7 +520,6 @@ q  = quit
                 try:
                     #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     #    print acc
-                    print accountIndex
                     accid = acc.ix[int(accountIndex), 'accountId']
                 except Exception as e:
                     qd.exception(e)
@@ -614,12 +610,11 @@ q  = quit
             if mode == '?' or mode == 'help' or mode == 'h': # help
                 print usage
                 continue
-            if int(args.verbose) >= 5:
-                print 'mode: %s' % mode
-                print 'live: %s' % args.live
-                print 'noInteractiveLeverage: %s' % args.noInteractiveLeverage
-                print 'noInteractiveDeleverage: %s' % args.noInteractiveDeleverage
-                print 'noInteractiveFleetingProfits: %s' % args.noInteractiveFleetingProfits
+            qd.data(mode, name='mode:')
+            qd.data(live, name='live:')
+            qd.data(args.noInteractiveLeverage, name='noInteractiveLeverage:')
+            qd.data(args.noInteractiveDeleverage, name='noInteractiveDeleverage:')
+            qd.data(args.noInteractiveFleetingProfits, name='noInteractiveFleetingProfits:')
 
         #if args.live:
         #    dryrun=False
