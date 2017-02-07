@@ -2748,9 +2748,7 @@ def leverageTrades(dryrun, oanda2, dfu3, accid, i, side, units, noInteractiveLev
                     qd.exception(e)
                 r = orders.OrderCreate(accid, data=orderData)
                 client.request(r)
-                #qd.data(r.response, name='leverageTrades() v20:: OrderCreate response')
-                print('leverageTrades() v20:: OrderCreate response')
-                print(r.response)
+                qd.data(r.response, name='leverageTrades() v20:: OrderCreate response')
                 #p.DataFrame(r.response['orderCreateTransaction'])
                 #p.DataFrame(r.response['orderFillTransaction'])
                 
@@ -2929,11 +2927,9 @@ def getAccounts(oanda0, access_token0):
         ''
     
     # oanda api
-    print 'access_token0: %s' % access_token0
     try:
         res = oanda0.get_accounts()['accounts']
-        print 'res1234:'
-        print res
+        qd.data(res, name='res1234:')
         accounts0 = p.DataFrame(res)
         for i in list(accounts0.index):
             accounts0 = accounts0.combine_first(p.DataFrame(oanda0.get_account(accounts0.ix[i, 'accountId']), index=[i]))
@@ -2984,7 +2980,6 @@ def getConfig(loginIndex=None, args=None):
         qd.data('co::%s' % co)
         qd.data('co:type:%s' % type(co))
         qd.data('loginIndex::%s' % loginIndex)
-        print('loginIndex::%s' % loginIndex)
         qd.data('loginIndex type::%s' % type(loginIndex))
     env0=co.ix[loginIndex,1]
     access_token0=co.ix[int(loginIndex),2]
