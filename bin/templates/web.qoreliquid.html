@@ -1,0 +1,78 @@
+
+<style type="text/css">
+img {
+    width:300px
+}
+body {
+    background-color: #000;
+    /*background: url('{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}');*/
+    color:#FFF;
+    font-family: Arial;
+}
+h1 {
+    font-size: 55px;
+}
+h2 {
+    font-size: 34px;
+}
+div#title {
+    /*background-color: #111;*/
+    margin: 34px;
+    padding: 8px;
+    border: solid 1px #333;    
+    width: 302px;
+    height: 500px;
+    border-radius: 40px;
+    opacity: 0.9;
+}
+div img {
+    color: #fff;
+    border: solid 1px #000;
+    /*opacity: 0.1;*/
+}
+img.chart {
+    width: 50%;
+    color: #fff;
+    border: solid 1px #000;
+    opacity: 0.89;
+}
+
+.parallax {
+    /* The image used */
+    background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");
+
+    /* Set a specific height */
+    height: 800px;
+
+    opacity: 0.65;
+
+    /* Create the parallax scrolling effect */
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+</style>
+
+<div class="parallax"></div>
+
+<div class="parallax" align="center">
+&nbsp
+<div id=title align="center">
+    {#<h2>how deep do you want to swim?</h2>#}    
+    {#<h2>where you wanna go?</h2>
+    <h2>how fast you wanna grow?</h2>#}
+    {#<h2>Where you want go..</h2>
+    <h2>..depends on how fast you want to grow.</h2>#}
+
+    <h1>DeepLiquid<br /><img src="{{url_for('static', filename='qoreLiquid/logos/bantu.logo.001.png')}}" /></h1>    
+
+</div>
+</div>
+
+<div class="parallax" align="center">
+    <img class="chart" src="{{url_for('static', filename='qoreLiquid/charts/sample.001.png')}}" />
+</div>
+
+    
