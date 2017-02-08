@@ -1,13 +1,18 @@
 
 <style type="text/css">
-img {
+/*img {
     width:300px
-}
-body {
-    background-color: #000;
+}*/
+body, html {
+    /*background-color: #000;*/
     /*background: url('{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}');*/
-    color:#FFF;
-    font-family: Arial;
+    /*color:#FFF;*/
+    /*font-family: Arial;*/
+
+  height: 100%;
+  margin: 0;
+  font: 400 15px/1.8 "Lato", sans-serif;
+  color: #777;
 }
 h1 {
     font-size: 55px;
@@ -15,8 +20,8 @@ h1 {
 h2 {
     font-size: 34px;
 }
-div#title {
-    /*background-color: #111;*/
+/*div#title {
+    /*background-color: #111;* /
     margin: 34px;
     padding: 8px;
     border: solid 1px #333;    
@@ -28,8 +33,8 @@ div#title {
 div img {
     color: #fff;
     border: solid 1px #000;
-    /*opacity: 0.1;*/
-}
+    /*opacity: 0.1;* /
+}*/
 img.chart {
     width: 50%;
     color: #fff;
@@ -37,42 +42,143 @@ img.chart {
     opacity: 0.89;
 }
 
-.parallax {
-    /* The image used */
+/*.parallax {
+    /* The image used * /
     background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");
 
-    /* Set a specific height */
+    /* Set a specific height * /
     height: 800px;
 
     opacity: 0.65;
 
-    /* Create the parallax scrolling effect */
+    /* Create the parallax scrolling effect * /
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}*/
+
+.caption {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    text-align: center;
+    color: #000;
+}
+
+.caption span.border {
+    background-color: #111;
+    color: #fff;
+    padding: 18px;
+    font-size: 25px;
+    letter-spacing: 10px;
+}
+
+{# source: http://www.w3schools.com/howto/tryhow_css_parallax_demo.htm #}
+.bgimg-1, .bgimg-2, .bgimg-3 {
+    /*background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");*/
+    position: relative;
+    opacity: 0.9;
     background-attachment: fixed;
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
 }
+.bgimg-1 {
+    background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");
+    /*background-image: url("img_parallax.jpg");*/
+    min-height: 100%;
+}
 
+.bgimg-2 {
+    background-image: url("{{url_for('static', filename='ui/concepts/school-of-fish/sea_swarm_fish_sealife_1280x1024_wallpaper_Wallpaper_2560x1600_www.wall321.com.jpg')}}");
+    /*background-image: url("img_parallax2.jpg");*/
+    /*min-height: 800px;*/
+    min-height: 100%;
+    top:
+}
+
+.bgimg-3 {
+    background-image: url("{{url_for('static', filename='qoreLiquid/liquidity/currentratio.jpg')}}");
+    /*background-image: url("img_parallax3.jpg");*/
+    /*min-height: 800px;*/
+    min-height: 100%;
+}
+
+.bgimg-4 {
+    background-image: url("{{url_for('static', filename='qoreLiquid/liquidity/currentratio.jpg')}}");
+    /*background-image: url("img_parallax3.jpg");*/
+    /*min-height: 800px;*/
+    min-height: 100%;
+}
+
+/* Turn off parallax scrolling for tablets and phones */
+@media only screen and (max-device-width: 1024px) {
+    .bgimg-1, .bgimg-2, .bgimg-3 {
+        background-attachment: scroll;
+    }
+}
 </style>
 
-<div class="parallax"></div>
+{#<div class="parallax"></div>#}
 
-<div class="parallax" align="center">
+
+{#<div class="parallax" align="center">#}
+
 &nbsp
 <div id=title align="center">
-    {#<h2>how deep do you want to swim?</h2>#}    
+    {#<h2>how deep do you want to swim?</h2># }
     {#<h2>where you wanna go?</h2>
     <h2>how fast you wanna grow?</h2>#}
     {#<h2>Where you want go..</h2>
-    <h2>..depends on how fast you want to grow.</h2>#}
-
-    <h1>DeepLiquid<br /><img src="{{url_for('static', filename='qoreLiquid/logos/bantu.logo.001.png')}}" /></h1>    
-
-</div>
+    <h2>..depends on how fast you need to grow.</h2>#}
+    <h1>DeepLiquid<br /><img src="{{url_for('static', filename='qoreLiquid/logos/bantu.logo.001.png')}}" /></h1>
+{#</div>#}
 </div>
 
-<div class="parallax" align="center">
+{#<div class="parallax" align="center">
     <img class="chart" src="{{url_for('static', filename='qoreLiquid/charts/sample.001.png')}}" />
+</div>#}
+
+<div class="bgimg-1">
+  <div class="caption">
+    <span class="border">SCROLL DOWN</span>
+  </div>
 </div>
 
+<div style="color: #777;background-color:white;text-align:center;padding:50px 80px;text-align: justify;">
+  <h3 style="text-align:center;">Parallax Demo</h3>
+  <p>Parallax scrolling is a web site trend where the background content is moved at a different speed than the foreground content while scrolling. Nascetur per nec posuere turpis, lectus nec libero turpis nunc at, sed posuere mollis ullamcorper libero ante lectus, blandit pellentesque a, magna turpis est sapien duis blandit dignissim. Viverra interdum mi magna mi, morbi sociis. Condimentum dui ipsum consequat morbi, curabitur aliquam pede, nullam vitae eu placerat eget et vehicula. Varius quisque non molestie dolor, nunc nisl dapibus vestibulum at, sodales tincidunt mauris ullamcorper, dapibus pulvinar, in in neque risus odio. Accumsan fringilla vulputate at quibusdam sociis eleifend, aenean maecenas vulputate, non id vehicula lorem mattis, ratione interdum sociis ornare. Suscipit proin magna cras vel, non sit platea sit, maecenas ante augue etiam maecenas, porta porttitor placerat leo.</p>
+</div>
+
+<div class="bgimg-2">
+  <div class="caption">
+    <span class="border" style="background-color:transparent;font-size:25px;color: #f7f7f7;">LESS HEIGHT</span>
+  </div>
+</div>
+
+<div style="position:relative;">
+  <div style="color:#ddd;background-color:#282E34;text-align:center;padding:50px 80px;text-align: justify;">
+    <p>Scroll up and down to really get the feeling of how Parallax Scrolling works.</p>
+  </div>
+</div>
+
+<div class="bgimg-3">
+  <div class="caption">
+    <span class="border" style="background-color:transparent;font-size:25px;color: #f7f7f7;">SCROLL UP</span>
+  </div>
+</div>
+
+<div style="position:relative;">
+  <div style="color:#ddd;background-color:#282E34;text-align:center;padding:50px 80px;text-align: justify;">
+    <p>Scroll up and down to really get the feeling of how Parallax Scrolling works.</p>
+  </div>
+</div>
+
+<div class="bgimg-1">
+  <div class="caption">
+    <span class="border">COOL!</span>
+  </div>
+</div>
     
