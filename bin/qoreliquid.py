@@ -2184,7 +2184,7 @@ class Patterns:
         if leverage: leverage = leverage
         else:       leverage = 500.0
         dfu33['balanceMetatrader'] = balance
-        dfu33['leverageMetatrader'] = leverage / 2
+        dfu33['leverageMetatrader'] = leverage
         dfu33['allMarginMetatrader'] = dfu33['balanceMetatrader'] * dfu33['leverageMetatrader']
         dfu33['amount2Metatrader'] = dfu33['allMarginMetatrader'] * dfu33['diffp']
         dfu33['lots'] = dfu33['amount2Metatrader'] / 100000.0
