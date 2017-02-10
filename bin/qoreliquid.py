@@ -1711,11 +1711,11 @@ def test_cython():
     
 class Patterns:
 
-    def __init__(self):
+    def __init__(self, loginIndex=5):
         
         from oandapyV20 import API
 
-        co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=5)
+        co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=loginIndex)
         #print 'access_token0 %s' % access_token0        
         self.client = API(access_token=access_token0)
 
