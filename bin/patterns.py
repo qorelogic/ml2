@@ -496,6 +496,7 @@ if __name__ == "__main__":
             usageOptions = """
 as   = account status,
 ca   = change account,
+ct   = change threshold,
 tr   = trades,
 po   = positions,
 a    = analyze,
@@ -522,6 +523,12 @@ q  = quit
                     #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     #    print acc
                     accid = acc.ix[int(accountIndex), 'accountId']
+                except Exception as e:
+                    qd.exception(e)
+            if mode == 'ct': #
+                closeProfitableTradesThreshold = raw_input('closeProfitableTradesThreshold? : ')
+                try:
+                    closeProfitableTradesThreshold = float(closeProfitableTradesThreshold)
                 except Exception as e:
                     qd.exception(e)
             if mode == 'as': # 
@@ -582,12 +589,16 @@ q  = quit
                 pa = Patterns()
                 closeProfitableTrades                  = True
                 monitorAccountsProfitableTradesVerbose = False
+                try:
+                    closeProfitableTradesThreshold = closeProfitableTradesThreshold
+                except:
+                    closeProfitableTradesThreshold = 0.69
                 #if args.account:
                 #      account = args.account
                 #else: account= None
                 # bind accid variable to account connecting - ca with cpt options
                 account = accid
-                pa.monitorAccountsProfitableTrades(verbose=monitorAccountsProfitableTradesVerbose, closeProfitableTrades=closeProfitableTrades, account=account)
+                pa.monitorAccountsProfitableTrades(verbose=monitorAccountsProfitableTradesVerbose, closeProfitableTrades=closeProfitableTrades, account=account, closeProfitableTradesThreshold=closeProfitableTradesThreshold)
 
             if mode == 'il': # infinite-loop
                 description='infinite-loop'
