@@ -73,13 +73,13 @@ with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'di
 
     if args.monitorMargin:
         from qoreliquid import Patterns
-        pa = Patterns()
+        pa = Patterns(loginIndex=loginIndex)
         pa.monitorAccountsMarginCloseout()
         sys.exit()
         
     if args.monitorTrades:
         from qoreliquid import Patterns
-        pa = Patterns()
+        pa = Patterns(loginIndex=loginIndex)
         if args.closeProfitableTrades:
               closeProfitableTrades = True
         else: closeProfitableTrades = False
@@ -135,9 +135,9 @@ except Exception as e:
     print e
 
 #@profile
-def main(args, leverage=10, dryrun=True, verbose=False):
+def main(loginIndex, args, leverage=10, dryrun=True, verbose=False):
 
-    pa = Patterns()
+    pa = Patterns(loginIndex=loginIndex)
 
     # In[ ]:
 
@@ -454,7 +454,7 @@ if __name__ == "__main__":
 
     """
     try:
-        main(args, leverage=leverage, dryrun=dryrun)
+        main(loginIndex, args, leverage=leverage, dryrun=dryrun)
     except Exception as e:
         qd.exception(e)
         print e
@@ -466,7 +466,7 @@ if __name__ == "__main__":
         dryrun = getDryRun(args)
         logApplicationUsage('modeAnalyze', description=description)
         if runMain:
-            main(args, leverage=leverage, dryrun=dryrun)
+            main(loginIndex, args, leverage=leverage, dryrun=dryrun)
         return dryrun
 
     def modeLeverage(args, runMain=False, description=None):
@@ -476,7 +476,7 @@ if __name__ == "__main__":
         dryrun = getDryRun(args)
         logApplicationUsage('modeLeverage', description=description)
         if runMain:
-            main(args, leverage=leverage, dryrun=dryrun)
+            main(loginIndex, args, leverage=leverage, dryrun=dryrun)
         return dryrun
 
     def modeFleetingProfits(args, runMain=False, description=None):
@@ -486,7 +486,7 @@ if __name__ == "__main__":
         dryrun = getDryRun(args)
         logApplicationUsage('modeFleetingProfits', description=description)
         if runMain:
-            main(args, leverage=leverage, dryrun=dryrun)
+            main(loginIndex, args, leverage=leverage, dryrun=dryrun)
         return dryrun
 
     while True:
@@ -585,7 +585,7 @@ q  = quit
 
             if mode == 'cpt': # close profitable trades
                 from qoreliquid import Patterns
-                pa = Patterns()
+                pa = Patterns(loginIndex=loginIndex)
                 closeProfitableTrades                  = True
                 monitorAccountsProfitableTradesVerbose = False
                 try:
@@ -658,7 +658,7 @@ q  = quit
                     dfp.plot()
                     show()
             else:
-                main(args, leverage=leverage, dryrun=dryrun)
+                main(loginIndex, args, leverage=leverage, dryrun=dryrun)
         except Exception as e:
             qd.exception(e)
             print e
