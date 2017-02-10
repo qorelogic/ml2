@@ -76,7 +76,7 @@ img.chart {
 }
 
 {# source: http://www.w3schools.com/howto/tryhow_css_parallax_demo.htm #}
-.bgimg-1, .bgimg-2, .bgimg-3 {
+.pax-1, .pax-2, .pax-3 {
     /*background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");*/
     position: relative;
     opacity: 0.9;
@@ -85,37 +85,33 @@ img.chart {
     background-repeat: no-repeat;
     background-size: cover;
 }
-.bgimg-1 {
+.pax-1 {
     background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");
-    /*background-image: url("img_parallax.jpg");*/
     min-height: 100%;
 }
 
-.bgimg-2 {
+.pax-2 {
     background-image: url("{{url_for('static', filename='ui/concepts/school-of-fish/sea_swarm_fish_sealife_1280x1024_wallpaper_Wallpaper_2560x1600_www.wall321.com.jpg')}}");
-    /*background-image: url("img_parallax2.jpg");*/
     /*min-height: 800px;*/
     min-height: 100%;
     top:
 }
 
-.bgimg-3 {
+.pax-3 {
     background-image: url("{{url_for('static', filename='qoreLiquid/liquidity/currentratio.jpg')}}");
-    /*background-image: url("img_parallax3.jpg");*/
     /*min-height: 800px;*/
     min-height: 100%;
 }
 
-.bgimg-4 {
+.pax-4 {
     background-image: url("{{url_for('static', filename='qoreLiquid/liquidity/currentratio.jpg')}}");
-    /*background-image: url("img_parallax3.jpg");*/
     /*min-height: 800px;*/
     min-height: 100%;
 }
 
 /* Turn off parallax scrolling for tablets and phones */
 @media only screen and (max-device-width: 1024px) {
-    .bgimg-1, .bgimg-2, .bgimg-3 {
+    .pax-1, .pax-2, .pax-3 {
         background-attachment: scroll;
     }
 }
@@ -141,7 +137,7 @@ img.chart {
     <img class="chart" src="{{url_for('static', filename='qoreLiquid/charts/sample.001.png')}}" />
 </div>#}
 
-<div class="bgimg-1">
+<div class="pax-1">
   <div class="caption">
     <span class="border">SCROLL DOWN</span>
   </div>
@@ -152,7 +148,7 @@ img.chart {
   <p>Parallax scrolling is a web site trend where the background content is moved at a different speed than the foreground content while scrolling. Nascetur per nec posuere turpis, lectus nec libero turpis nunc at, sed posuere mollis ullamcorper libero ante lectus, blandit pellentesque a, magna turpis est sapien duis blandit dignissim. Viverra interdum mi magna mi, morbi sociis. Condimentum dui ipsum consequat morbi, curabitur aliquam pede, nullam vitae eu placerat eget et vehicula. Varius quisque non molestie dolor, nunc nisl dapibus vestibulum at, sodales tincidunt mauris ullamcorper, dapibus pulvinar, in in neque risus odio. Accumsan fringilla vulputate at quibusdam sociis eleifend, aenean maecenas vulputate, non id vehicula lorem mattis, ratione interdum sociis ornare. Suscipit proin magna cras vel, non sit platea sit, maecenas ante augue etiam maecenas, porta porttitor placerat leo.</p>
 </div>
 
-<div class="bgimg-2">
+<div class="pax-2">
   <div class="caption">
     <span class="border" style="background-color:transparent;font-size:25px;color: #f7f7f7;">LESS HEIGHT</span>
   </div>
@@ -164,7 +160,7 @@ img.chart {
   </div>
 </div>
 
-<div class="bgimg-3">
+<div class="pax-3">
   <div class="caption">
     <span class="border" style="background-color:transparent;font-size:25px;color: #f7f7f7;">SCROLL UP</span>
   </div>
@@ -176,7 +172,7 @@ img.chart {
   </div>
 </div>
 
-<div class="bgimg-1">
+<div class="pax-1">
   <div class="caption">
     <span class="border">COOL!</span>
   </div>
