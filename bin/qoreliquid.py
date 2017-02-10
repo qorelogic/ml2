@@ -1973,7 +1973,7 @@ class Patterns:
             #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
 
-    def monitorAccountsProfitableTrades(self, verbose=False, closeProfitableTrades=False, account=None):
+    def monitorAccountsProfitableTrades(self, verbose=False, closeProfitableTrades=False, account=None, closeProfitableTradesThreshold=0.69):
 
         qd = QoreDebug()
         qd.on()
@@ -2120,7 +2120,7 @@ class Patterns:
             plnmdf = plnmdf.sort_values(by='unrealizedPLPcnt', ascending=False)
             # close trade if above a specified threshold
             for i in plpmdf.index:
-                if plpmdf.ix[i, 'unrealizedPLPcnt'] > 0.69:
+                if plpmdf.ix[i, 'unrealizedPLPcnt'] >= closeProfitableTradesThreshold:
                     closeProfitableTrades                  = True
                     #monitorAccountsProfitableTradesVerbose = False
                     #if args.account:
