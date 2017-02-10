@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 #%reload_ext autoreload
 #%autoreload 2
@@ -9,39 +8,15 @@ def defp(pt):
 defp('/ml.dev/bin')
 defp('/ml.dev/lib/oanda/oandapy')
 import oandapyV20
-import oandapyV20.endpoints.accounts as accounts
-import oandapyV20.endpoints.trades as trades
-import oandapyV20.endpoints.positions as positions
-from oandapyV20.endpoints.pricing import PricingStream
-from oandapyV20.endpoints.accounts import AccountSummary
 import pandas as p
 import oandapy
-from matplotlib import pyplot as plt
-from pylab import rcParams
-#%pylab inline
-rcParams['figure.figsize'] = 20, 5
-accountID = "101-004-1984564-001"
 co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
-loginIndex = 4
-env0=co.ix[loginIndex,1]
-access_token0=co.ix[loginIndex,2]
-oanda0 = oandapy.API(environment=env0, access_token=access_token0)
-#client = API(access_token=access_token, headers={"Content-Type": "application/json"})
-client = oandapyV20.API(access_token=access_token0)
-#client = oandapyV20.API(access_token=access_token0, environment="live")
-#client = oandapyV20.API(access_token=access_token0, environment="practice")
-#client = oandapyV20.API(access_token=access_token0)
-#client.api_url = 'https://test.com'
-co
-#for i in co[2]: print i
-
+loginIndex = 2
 
 # compute metatrader portfolio
 from qoreliquid import Patterns
-pa = Patterns()
-df = p.read_csv('/mldev/bin/data/oanda/cache/patterns/patterns.portfolioMetatrader.1485150677.45.csv', index_col=[0])
 def usage():
-    print 'usage: <balance> <leverage>'
+    print 'usage: <balance> <leverage> <patterns file>'
 try:
     balance  = float(sys.argv[1])
 except Exception as e:
@@ -54,6 +29,15 @@ except Exception as e:
     print e
     usage()
     sys.exit()
+try:
+    #fname = '/mldev/bin/data/oanda/cache/patterns/patterns.portfolioMetatrader.1485150677.45.csv'
+    fname = sys.argv[3]
+except Exception as e:
+    print e
+    usage()
+    sys.exit()
+pa = Patterns(loginIndex=loginIndex)
+df = p.read_csv(fname, index_col=[0])
 df = pa.computePortfolioMetatrader(df, balance=balance, leverage=leverage)
 import numpy as n
 df['lots'] = n.round(df['lots'], 2)
