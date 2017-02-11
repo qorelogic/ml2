@@ -2190,6 +2190,80 @@ class Patterns:
         dfu33['lots'] = dfu33['amount2Metatrader'] / 100000.0
         return dfu33
 
+    def cacheOandapyV20Request(self, r, fname, age=30000):
+        import os, time, requests
+        import ujson as j
+        
+        def makeRequest(r):
+            # read/download
+            print 'requesting..'
+            co = p.read_csv('/mldev/bin/datafeeds/config.csv', header=None)
+            loginIndex = 2
+            env0=co.ix[loginIndex,1]
+            access_token0=co.ix[loginIndex,2]
+            client = oandapyV20.API(access_token=access_token0)
+            #print client.request(r)
+            rv = client.request(r)
+            # write to cache file
+            fp = open(fname, 'w')
+            fp.write(j.dumps(rv))
+            fp.close()
+            return rv
+        
+        def cacheRequest(r):
+            print 'caching..'
+            # cache
+            fp = open(fname, 'r')
+            rv = fp.read()
+            rv = j.loads(rv)
+            fp.close()
+            return rv
+    
+        try:
+            stat = os.stat(fname)
+            if time.time() - stat.st_mtime >= age:
+                return makeRequest(r)
+            else:
+                return cacheRequest(r)
+        except:
+            return makeRequest(r)
+    
+
+    def getTransactions(self, accountID):
+        params = {
+                  #"to": 400,
+                  "to": df.ix[0,'lastTransactionID'],
+                  "from": 1
+        }
+        r = trans.TransactionIDRange(accountID=accountID, params=params)
+        client.request(r)
+        #print p.DataFrame(r.response)
+        df = p.DataFrame()
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            for i in r.response['transactions']:
+                try:
+                    #print i
+                    #print len(i)
+                    #print i.keys()
+                    #print i.values()
+                    dfi = p.DataFrame(i, index=[0])
+                    dfi['id'] = p.to_numeric(dfi['id'])
+                    #print dfi.columns
+                    #df = df.combine_first(dfi.set_index('id'))
+                    df = df.combine_first(dfi.set_index('time'))
+                except:
+                    ''
+        df['accountBalance'] = p.to_numeric(df['accountBalance'])
+        df['accountBalance'] = df['accountBalance'].bfill().ffill()
+        #print df.dtypes
+        #print df#.sort_index()
+        df = df.ix[:,'accountBalance']
+        #print df 
+        #%pylab inline
+        #df.plot()
+        df.to_csv('/mldev/bin/data/oanda/cache/transactions/transactions.%s.csv' % accountID)
+        return df
+
 
 def getc4(df, dfh, oanda2, instrument='USD_JPY', verbose=False, update=False):
     import hashlib as hl
