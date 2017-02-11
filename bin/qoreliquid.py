@@ -3129,8 +3129,11 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
         
     try:
         ffsds = 'instrument side units plpips pl time'.split(' ')
-        plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
-        pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
+        plp = ct.sort_values(by='pl', ascending=False)
+        plp = plp[plp['pl'] > 0]
+        pln = ct.sort_values(by='pl', ascending=False)
+        pln = pln[pln['pl'] < 0]
+
         pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
         if threading:
             pool = ThreadPool(processes=270)
@@ -3152,12 +3155,12 @@ def rebalanceTrades(oq, dfu3, oanda2, accid, dryrun=True, leverage=50, verbose=F
                 qd.data(len(currentTrades), name='currentTrades:')
                 qd.data(currentTrades.sort_values(by=['instrument', 'id'], ascending=[True, True]).set_index('id'))#.ix[:,'instrument price side time units'.split(' ')]
                 #qd.data(gct)
-                ffsds = 'instrument side units plpips pl time'.split(' ')
-                
-                plp = ct.sort_values(by='pl', ascending=False)[ct['pl'] > 0]
-                pln = ct.sort_values(by='pl', ascending=False)[ct['pl'] < 0]
+                #ffsds = 'instrument side units plpips pl time'.split(' ')
+                #plp = ct.sort_values(by='pl', ascending=False)
+                #plp = plp[plp['pl'] > 0]
+                #pln = ct.sort_values(by='pl', ascending=False)
+                #pln = pln[pln['pl'] < 0]
                 pll = p.DataFrame([plp.ix[:, 'pl'].sum(), pln.ix[:, 'pl'].sum()], index=['plp', 'pln'], columns=['pls'])
-
                 qd.data(pll)
                 for i in list(plp.index):
                     if dryrun == False:
