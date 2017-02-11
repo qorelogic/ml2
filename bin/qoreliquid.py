@@ -1715,6 +1715,9 @@ class Patterns:
         
         from oandapyV20 import API
 
+        self.qd = QoreDebug()
+        self.qd.on()
+
         co, loginIndex, env0, access_token0, oanda0 = getConfig(loginIndex=loginIndex)
         #print 'access_token0 %s' % access_token0        
         self.client = API(access_token=access_token0)
@@ -1722,10 +1725,8 @@ class Patterns:
         self._accountList = self.accountList()
         self.hdirMonitor = '/mldev/bin/data/oanda/cache/monitor'
         mkdir_p(self.hdirMonitor)
-    
+        
     def accountList(self):
-        qd = QoreDebug()
-        qd.on()
 
         import oandapyV20.endpoints.accounts as accounts
         r = accounts.AccountList()
@@ -1733,7 +1734,7 @@ class Patterns:
             rv = self.client.request(r)
             return p.DataFrame(rv['accounts'])
         except Exception as e:
-            qd.exception(e)
+            self.qd.exception(e)
         return p.DataFrame([])
 
     def sendEmail(self, textFilename, toEmailAddress):
@@ -1889,7 +1890,7 @@ class Patterns:
                     #print psdf
                     #print
             except V20Error as e:
-                print e
+                self.qd.exception(e)
                 """
                 print("OOPS: {:d} {:s}".format(e.code, e.msg))
                 print 'args: %s' % e.args
@@ -1904,7 +1905,7 @@ class Patterns:
                     print 'source: https://github.com/bm842/Brokers/issues/3'            
                     """
             except Exception as e:
-                print e
+                self.qd.exception(e)
     
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             mfdf = mfdf.drop('id')
@@ -1976,9 +1977,6 @@ class Patterns:
 
     def monitorAccountsProfitableTrades(self, verbose=False, closeProfitableTrades=False, account=None, closeProfitableTradesThreshold=0.69):
 
-        qd = QoreDebug()
-        qd.on()
-
         import oandapyV20.endpoints.accounts as accounts
         from oandapyV20.exceptions import V20Error
         from multiprocessing.pool import ThreadPool
@@ -1991,7 +1989,7 @@ class Patterns:
         prices = self.getPrices()
         for i in self._accountList['id']:
             if verbose:
-                qd.data(i, name='==========')
+                self.qd.data(i, name='==========')
             #print 'NAV %s:' % rv['account']['NAV']
             r = accounts.AccountDetails(accountID=i)
             try:
@@ -2026,7 +2024,7 @@ class Patterns:
                     plpdf = plpdf[plpdf['profitPcnt'] > 0.1].set_index('id')
                     plpdf = plpdf.sort_values(by='profitPcnt', ascending=False)
                     if verbose:
-                        qd.data(plpdf, name='plpdf 001')
+                        self.qd.data(plpdf, name='plpdf 001')
                     plpdfSum = plpdf.ix[:, 'unrealizedPL unrealizedPLPcnt'.split(' ')].sum().to_dict()
                     plpmdf.update({i:plpdfSum})
 
@@ -2035,7 +2033,7 @@ class Patterns:
                     plpndf = plpndf[plpndf['profitPcnt'] < 0.1].set_index('id')
                     plpndf = plpndf.sort_values(by='profitPcnt', ascending=False)
                     if verbose:
-                        qd.data(plpndf, name='plndf 002')
+                        self.qd.data(plpndf, name='plndf 002')
                     plndfSum = plpndf.ix[:, 'unrealizedPL unrealizedPLPcnt'.split(' ')].sum().to_dict()
                     plnmdf.update({i:plndfSum})
 
@@ -2051,9 +2049,9 @@ class Patterns:
                 #print json.dumps(rv['account']['positions'], indent=4)
                 #print json.dumps(rv['account']['trades'], indent=4)
             except V20Error as e:
-                print e
+                self.qd.exception(e)
             except Exception as e:
-                print e
+                self.qd.exception(e)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             mfdf = mfdf.drop('id')
             mfdf = mfdf.transpose()
@@ -2142,23 +2140,19 @@ class Patterns:
         #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
     def closeTrade(self, accountID, tradeID):
-        qd = QoreDebug()
-        qd.on()
 
         import oandapyV20.endpoints.trades as trades
         try:
             print 'closing trade: %s %s' % (accountID, tradeID)
-            qd.data('closing trade: %s %s' % (accountID, tradeID))
+            self.qd.data('closing trade: %s %s' % (accountID, tradeID))
             data = {}
             r = trades.TradeClose(accountID=accountID, tradeID=tradeID, data=data)
             self.client.request(r)
-            qd.data(r.response, name='closeTrade:: 002')
+            self.qd.data(r.response, name='closeTrade:: 002')
         except Exception as e:        
-            qd.exception(e)
+            self.qd.exception(e)
     
     def getPrices(self):
-        qd = QoreDebug()
-        qd.on()
         import oandapyV20.endpoints.pricing as pricing
         symbols  = 'AUD_CAD,AUD_CHF,AUD_HKD,AUD_JPY,AUD_NZD,AUD_SGD,AUD_USD,CAD_CHF,CAD_HKD,CAD_JPY,CAD_SGD,CHF_HKD,CHF_JPY,CHF_ZAR,EUR_AUD,EUR_CAD,EUR_CHF,EUR_DKK,EUR_GBP,EUR_HKD,EUR_HUF,EUR_JPY,EUR_NOK,EUR_NZD,EUR_PLN,EUR_SEK,EUR_SGD,EUR_TRY,EUR_USD,EUR_ZAR,GBP_AUD,GBP_CAD,GBP_CHF,GBP_HKD,GBP_JPY,GBP_NZD,GBP_PLN,GBP_SGD,GBP_USD,GBP_ZAR,HKD_JPY,NZD_CAD,NZD_CHF,NZD_HKD,NZD_JPY,NZD_SGD,NZD_USD,SGD_CHF,SGD_HKD,SGD_JPY,TRY_JPY,USD_CAD,USD_CHF,USD_CNH,USD_CZK,USD_DKK,USD_HKD,USD_HUF,USD_JPY,USD_MXN,USD_NOK,USD_PLN,USD_SEK,USD_SGD,USD_THB,USD_TRY,USD_ZAR,ZAR_JPY'
         #.split(',')
@@ -2169,7 +2163,7 @@ class Patterns:
         try:
             rv = self.client.request(r)
         except Exception as e:
-            qd.exception(e)
+            self.qd.exception(e)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             instruments = p.DataFrame(r.response['prices']).set_index('instrument').transpose()
             instruments = instruments.ix['closeoutAsk closeoutBid'.split(' '), :].transpose()

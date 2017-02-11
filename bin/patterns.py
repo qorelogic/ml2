@@ -114,7 +114,7 @@ except:
 try:
     acc = getAccounts(oanda0, access_token0)
     if int(args.verbose) >= 5:
-        print 'args account:'; print args.account
+        qd.data(args.account, name='args account:')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             qd.data(p.DataFrame(acc), name='acc::')
     try:
@@ -125,14 +125,14 @@ try:
         try:
             #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             #    print acc
-            print accountIndex
             accid = acc.ix[accountIndex, 'accountId']
         except Exception as e:
             qd.exception(e)
             sys.exit()
-    qd.data(format(accid), name='using account: {0}')
+    qd.data(accountIndex, name='accountIndex:')
+    qd.data(accid, name='using account:')
 except Exception as e:
-    print e
+    qd.exception(e)
 
 #@profile
 def main(loginIndex, args, leverage=10, dryrun=True, verbose=False):
@@ -318,7 +318,7 @@ def main(loginIndex, args, leverage=10, dryrun=True, verbose=False):
             print '1broker orders:'
             print dfu3
     except Exception as e:
-        print e
+        qd.exception(e)
         print 'No'
         print
         
@@ -457,7 +457,6 @@ if __name__ == "__main__":
         main(loginIndex, args, leverage=leverage, dryrun=dryrun)
     except Exception as e:
         qd.exception(e)
-        print e
     """
     
     def modeAnalyze(args, runMain=False, description=None):
@@ -661,6 +660,5 @@ q  = quit
                 main(loginIndex, args, leverage=leverage, dryrun=dryrun)
         except Exception as e:
             qd.exception(e)
-            print e
         if not args.interactive:
             break
