@@ -1731,9 +1731,10 @@ class Patterns:
         r = accounts.AccountList()
         try:
             rv = self.client.request(r)
+            return p.DataFrame(rv['accounts'])
         except Exception as e:
             qd.exception(e)
-        return p.DataFrame(rv['accounts'])
+        return p.DataFrame([])
 
     def sendEmail(self, textFilename, toEmailAddress):
         # Import smtplib for the actual sending function
@@ -3022,7 +3023,6 @@ def getAccounts(oanda0, access_token0):
         accounts0 = accounts0.set_index('accountId')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             qd.data(accounts0, name='accounts0::')
-            qd.data(accounts, name='accounts::')
     except Exception as e:
         qd.logTraceBack(e)
         qd.exception(e)
@@ -3044,6 +3044,7 @@ def getAccounts(oanda0, access_token0):
     accounts['accountId'] = n.array(accounts['accountId'], dtype=n.str)
     accounts['id'] = range(len(accounts.index))
     accounts = accounts.set_index('id')
+    qd.data(accounts, name='accounts::')
     return accounts
 
 def getConfig(loginIndex=None, args=None):
