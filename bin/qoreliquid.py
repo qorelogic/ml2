@@ -2182,7 +2182,15 @@ class Patterns:
         dfu33['leverageMetatrader'] = leverage
         dfu33['allMarginMetatrader'] = dfu33['balanceMetatrader'] * dfu33['leverageMetatrader']
         dfu33['amount2Metatrader'] = dfu33['allMarginMetatrader'] * dfu33['diffp']
-        dfu33['lots'] = dfu33['amount2Metatrader'] / 100000.0
+        dfu33['lots']      = n.round(dfu33['amount2Metatrader'] / 100000.0, 2)
+        dfu33['lotsEtoro'] = n.round(dfu33['amount2Metatrader'] / 25, 2)
+        
+        # rebalance for etoro
+        dfu33['diffp'] = p.to_numeric(dfu33['diffp'])
+        dfu33 = dfu33[dfu33['diffp'] >= 0.06].copy()
+        dfu33['lotsEtoro2'] = dfu33['lotsEtoro'] / n.sum(dfu33['diffp'])
+        self.qd.data(n.sum(dfu33['diffp']), name="sum diffp")
+        self.qd.data(n.sum(dfu33['lotsEtoro']), name="sum lotsEtoro")
         return dfu33
 
     def cacheOandapyV20Request(self, r, fname, age=30000):
@@ -3566,6 +3574,7 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
         qd.data(sorted_dfu33, name='dfu33::')
         fname = '/ml.dev/bin/data/oanda/cache/patterns/patterns.dfu33.%s.csv' % qtime
         sorted_dfu33.to_csv(fname)
+        print 'Saved to pattern file: %s' % fname
 
         # portfolio metatrader
         #qd.data(sorted_dfu33.ix[:,'allMarginMetatrader amount2Metatrader side lots diffp'.split(' ')], name='dfu33 metatrader::')
@@ -3574,6 +3583,7 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
         qd.data(portfolioMetatrader, name='portfolioMetatrader::')
         fname = '/ml.dev/bin/data/oanda/cache/patterns/patterns.portfolioMetatrader.%s.csv' % qtime
         portfolioMetatrader.to_csv(fname)
+        print 'Saved to metatrader pattern file: %s' % fname
        
     qd.data('============================================')
     qd.data('============================================')
