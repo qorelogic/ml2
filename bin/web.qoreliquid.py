@@ -86,11 +86,17 @@ def accounts():
         
     return 'test'
 
-if __name__ == '__main__':
-    #if args.web:        
+def serv(port=8080):
     host = '0.0.0.0'
-    port = 8080
-    print 'listening[host=%s, port=%s]' % (host, port)
+    #print 'attempting on[host=%s, port=%s]' % (host, port)
     app.config['DEBUG'] = True
     app.run(host=host, port=port)
+    print 'listening[host=%s, port=%s]' % (host, port)
     sys.exit()
+
+if __name__ == '__main__':
+    #if args.web:
+    try:
+        serv()
+    except:
+        serv(8081)
