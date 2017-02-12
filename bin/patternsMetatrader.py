@@ -9,6 +9,7 @@ defp('/ml.dev/bin')
 defp('/ml.dev/lib/oanda/oandapy')
 import oandapyV20
 import pandas as p
+import numpy as n
 import oandapy
 
 from qoreliquid import Patterns
@@ -41,11 +42,11 @@ def main():
         sys.exit()
     pa = Patterns(loginIndex=loginIndex)
     df = p.read_csv(fname, index_col=[0])
-    df = pa.computePortfolioMetatrader(df, balance=balance, leverage=leverage)
-    import numpy as n
+    df = pa.computePortfolioMetatrader(df, balance=balance, leverage=leverage, method='etoro')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        df.ix[:, 'side lots lotsEtoro lotsEtoro2 balanceMetatrader leverageMetatrader allMarginMetatrader amount2Metatrader closeTradePLMetatrader side diffp lots'.split(' ')]
+        df = df.ix[:, 'side lots lotsEtoro minimumLeverageEtoro unitsEtoro balanceMetatrader leverageMetatrader allMarginMetatrader amount2Metatrader closeTradePLMetatrader side diffp lots'.split(' ')]
         #df = df.sort_index()
         df = df.sort_values(by='diffp', ascending=False)
         print df
+        
 main()

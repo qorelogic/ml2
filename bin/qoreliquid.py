@@ -2173,7 +2173,7 @@ class Patterns:
             #print instruments
         return instruments
 
-    def computePortfolioMetatrader(self, dfu33, balance=None, leverage=None):
+    def computePortfolioMetatrader(self, dfu33, balance=None, leverage=None, method="metatrader"):
         if balance: balance = balance
         else:       balance = 110.81
         if leverage: leverage = leverage
@@ -2183,14 +2183,27 @@ class Patterns:
         dfu33['allMarginMetatrader'] = dfu33['balanceMetatrader'] * dfu33['leverageMetatrader']
         dfu33['amount2Metatrader'] = dfu33['allMarginMetatrader'] * dfu33['diffp']
         dfu33['lots']      = n.round(dfu33['amount2Metatrader'] / 100000.0, 2)
-        dfu33['lotsEtoro'] = n.round(dfu33['amount2Metatrader'] / 25, 2)
-        
+
         # rebalance for etoro
-        dfu33['diffp'] = p.to_numeric(dfu33['diffp'])
-        dfu33 = dfu33[dfu33['diffp'] >= 0.06].copy()
-        dfu33['lotsEtoro2'] = dfu33['lotsEtoro'] / n.sum(dfu33['diffp'])
-        self.qd.data(n.sum(dfu33['diffp']), name="sum diffp")
-        self.qd.data(n.sum(dfu33['lotsEtoro']), name="sum lotsEtoro")
+        if method == "etoro":
+            dfu33['diffp'] = p.to_numeric(dfu33['diffp'])
+            dfu33['leverageEtoro'] = 25
+            dfu33['maxLeverageEtoro'] = n.round(dfu33['amount2Metatrader'] / dfu33['leverageEtoro'], 2)
+            
+            li = n.array([1,2,5,10,25,50,100,200,400])
+            for i in dfu33['maxLeverageEtoro'].index:
+                try:    dfu33.ix[i, 'minimumLeverageEtoro'] =  n.max(li[li < dfu33.ix[i, 'maxLeverageEtoro']])
+                except: ''
+            dfu33['lotsEtoro'] = n.round(dfu33['amount2Metatrader'] / dfu33['minimumLeverageEtoro'], 2)
+            dfu33['unitsEtoro'] = n.round(dfu33['minimumLeverageEtoro'] * dfu33['lotsEtoro'], 2)
+            dfu33_etoro = dfu33[dfu33['diffp'] >= 0.06].copy()
+            self.qd.printf(True)
+            self.qd.data('            sum diffp: %s' % n.sum(dfu33['diffp']))
+            self.qd.data('        sum lotsEtoro: %s' % n.sum(dfu33['lotsEtoro']))
+            self.qd.data('       sum unitsEtoro: %s' % n.sum(dfu33['unitsEtoro']))
+            self.qd.data('sum amount2Metatrader: %s' % n.sum(dfu33['amount2Metatrader']))
+            self.qd.data('   balance * leverage: %s' % (balance * leverage))
+            self.qd.printf(False)
         return dfu33
 
     def cacheOandapyV20Request(self, r, fname, age=30000):
