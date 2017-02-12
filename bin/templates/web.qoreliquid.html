@@ -1,8 +1,12 @@
-
+{#
+how deep would you dive?
+.. to see them swim
+#}<html>
+<head>
 <style type="text/css">
-/*img {
+{#img {
     width:300px
-}*/
+}#}
 body, html {
     /*background-color: #000;*/
     /*background: url('{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}');*/
@@ -20,29 +24,29 @@ h1 {
 h2 {
     font-size: 34px;
 }
-/*div#title {
-    /*background-color: #111;* /
-    margin: 34px;
+div#title {
+    /*background-color: #111;*/
+    {#margin: 34px;
     padding: 8px;
-    border: solid 1px #333;    
+    border: solid 1px #333;
     width: 302px;
-    height: 500px;
+    height: 500px;#}
     border-radius: 40px;
     opacity: 0.9;
 }
 div img {
     color: #fff;
-    border: solid 1px #000;
-    /*opacity: 0.1;* /
-}*/
+    /*border: solid 1px #000;
+    opacity: 0.1;*/
+}
 img.chart {
     width: 50%;
     color: #fff;
-    border: solid 1px #000;
+    {#border: solid 1px #000;#}
     opacity: 0.89;
 }
 
-/*.parallax {
+{#.parallax {
     /* The image used * /
     background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");
 
@@ -56,7 +60,7 @@ img.chart {
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
-}*/
+}#}
 
 .caption {
     position: absolute;
@@ -73,63 +77,73 @@ img.chart {
     padding: 18px;
     font-size: 25px;
     letter-spacing: 10px;
+    border-radius: 24px !important;
 }
 
 {# source: http://www.w3schools.com/howto/tryhow_css_parallax_demo.htm #}
-.pax-1, .pax-2, .pax-3 {
+.pax-1, .pax-1a, .pax-2, .pax-3, .pax-4  {
     /*background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");*/
     position: relative;
-    opacity: 0.9;
+    opacity: 0.99;
     background-attachment: fixed;
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
 }
 .pax-1 {
-    background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");
+    background-image: url("{{url_for('static', filename='ui/concepts/scuba/best_freediving_locations_readers_choice_2017_homepage_slider.jpg')}}");
+    min-height: 100%;
+}
+
+.pax-1a {
+    background-image: url("{{url_for('static', filename='ui/concepts/school-of-fish/P_Il_FishSchool-02.jpg')}}");
     min-height: 100%;
 }
 
 .pax-2 {
-    background-image: url("{{url_for('static', filename='ui/concepts/school-of-fish/sea_swarm_fish_sealife_1280x1024_wallpaper_Wallpaper_2560x1600_www.wall321.com.jpg')}}");
+    /*background-image: url("{{url_for('static', filename='ui/concepts/school-of-fish/sea_swarm_fish_sealife_1280x1024_wallpaper_Wallpaper_2560x1600_www.wall321.com.jpg')}}");*/
+    background-image: url("{{url_for('static', filename='qoreLiquid/liquidity/currentratio.jpg')}}");
     /*min-height: 800px;*/
     min-height: 100%;
     top:
 }
 
 .pax-3 {
-    background-image: url("{{url_for('static', filename='qoreLiquid/liquidity/currentratio.jpg')}}");
+    background-image: url("{{url_for('static', filename='qoreLiquid/liquidity/for-institutions-etf-volume-liquidity_x.jpg')}}");
     /*min-height: 800px;*/
     min-height: 100%;
 }
 
 .pax-4 {
-    background-image: url("{{url_for('static', filename='qoreLiquid/liquidity/currentratio.jpg')}}");
+    background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");
     /*min-height: 800px;*/
     min-height: 100%;
 }
 
 /* Turn off parallax scrolling for tablets and phones */
 @media only screen and (max-device-width: 1024px) {
-    .pax-1, .pax-2, .pax-3 {
+    .pax-1, .pax-1a, .pax-2, .pax-3, .pax-4 {
         background-attachment: scroll;
     }
 }
 </style>
-
+</head>
+<body>
 {#<div class="parallax"></div>#}
-
-
 {#<div class="parallax" align="center">#}
-
 &nbsp
 <div id=title align="center">
-    {#<h2>how deep do you want to swim?</h2># }
     {#<h2>where you wanna go?</h2>
-    <h2>how fast you wanna grow?</h2>#}
-    {#<h2>Where you want go..</h2>
-    <h2>..depends on how fast you need to grow.</h2>#}
-    <h1>DeepLiquid<br /><img src="{{url_for('static', filename='qoreLiquid/logos/bantu.logo.001.png')}}" /></h1>
+    <h2>how fast you wanna grow?</h2># }
+#}
+<img style="
+height: 30px;
+float: left;
+top: -30px;
+position: relative;
+left: 4px;
+opacity: 0.55;
+" src="{{url_for('static', filename='qoreLiquid/logos/bantu.logo.002.png')}}" />
 {#</div>#}
 </div>
 
@@ -139,42 +153,76 @@ img.chart {
 
 <div class="pax-1">
   <div class="caption">
-    <span class="border">SCROLL DOWN</span>
+    <span class="border">
+        {#<h2>#}how deep would you dive?{#</h2>#}
+        {#SCROLL DOWN#}
+    </span>
   </div>
 </div>
 
-<div style="color: #777;background-color:white;text-align:center;padding:50px 80px;text-align: justify;">
-  <h3 style="text-align:center;">Parallax Demo</h3>
-  <p>Parallax scrolling is a web site trend where the background content is moved at a different speed than the foreground content while scrolling. Nascetur per nec posuere turpis, lectus nec libero turpis nunc at, sed posuere mollis ullamcorper libero ante lectus, blandit pellentesque a, magna turpis est sapien duis blandit dignissim. Viverra interdum mi magna mi, morbi sociis. Condimentum dui ipsum consequat morbi, curabitur aliquam pede, nullam vitae eu placerat eget et vehicula. Varius quisque non molestie dolor, nunc nisl dapibus vestibulum at, sodales tincidunt mauris ullamcorper, dapibus pulvinar, in in neque risus odio. Accumsan fringilla vulputate at quibusdam sociis eleifend, aenean maecenas vulputate, non id vehicula lorem mattis, ratione interdum sociis ornare. Suscipit proin magna cras vel, non sit platea sit, maecenas ante augue etiam maecenas, porta porttitor placerat leo.</p>
+<div style="color: #777;background-color:#282E34;text-align:center;padding:50px 80px;text-align: justify;">
+  {#<h3 style="text-align:center;">Parallax Demo</h3>
+  <p>Parallax scrolling is a web site trend where the background content is moved at a different speed than the foreground content while scrolling. Nascetur per nec posuere turpis, lectus nec libero turpis nunc at, sed posuere mollis ullamcorper libero ante lectus, blandit pellentesque a, magna turpis est sapien duis blandit dignissim. Viverra interdum mi magna mi, morbi sociis. Condimentum dui ipsum consequat morbi, curabitur aliquam pede, nullam vitae eu placerat eget et vehicula. Varius quisque non molestie dolor, nunc nisl dapibus vestibulum at, sodales tincidunt mauris ullamcorper, dapibus pulvinar, in in neque risus odio. Accumsan fringilla vulputate at quibusdam sociis eleifend, aenean maecenas vulputate, non id vehicula lorem mattis, ratione interdum sociis ornare. Suscipit proin magna cras vel, non sit platea sit, maecenas ante augue etiam maecenas, porta porttitor placerat leo.</p>#}
+</div>
+
+<div class="pax-1a">
+  <div class="caption">
+    <span class="border">
+        {#<h2>#}..to see them swim{#</h2>#}
+        {#SCROLL DOWN#}
+    </span>
+  </div>
+</div>
+
+<div style="color: #777;background-color:#282E34;text-align:center;padding:50px 80px;text-align: justify;">
+  {#<h3 style="text-align:center;">Parallax Demo</h3>
+  <p>Parallax scrolling is a web site trend where the background content is moved at a different speed than the foreground content while scrolling. Nascetur per nec posuere turpis, lectus nec libero turpis nunc at, sed posuere mollis ullamcorper libero ante lectus, blandit pellentesque a, magna turpis est sapien duis blandit dignissim. Viverra interdum mi magna mi, morbi sociis. Condimentum dui ipsum consequat morbi, curabitur aliquam pede, nullam vitae eu placerat eget et vehicula. Varius quisque non molestie dolor, nunc nisl dapibus vestibulum at, sodales tincidunt mauris ullamcorper, dapibus pulvinar, in in neque risus odio. Accumsan fringilla vulputate at quibusdam sociis eleifend, aenean maecenas vulputate, non id vehicula lorem mattis, ratione interdum sociis ornare. Suscipit proin magna cras vel, non sit platea sit, maecenas ante augue etiam maecenas, porta porttitor placerat leo.</p>#}
 </div>
 
 <div class="pax-2">
   <div class="caption">
-    <span class="border" style="background-color:transparent;font-size:25px;color: #f7f7f7;">LESS HEIGHT</span>
+    <span class="border" style="background-color:transparent;font-size:25px;color: #f7f7f7;">
+    <h2>Where you need to go..</h2>
+    {#LESS HEIGHT#}
+    </span>
   </div>
 </div>
 
 <div style="position:relative;">
   <div style="color:#ddd;background-color:#282E34;text-align:center;padding:50px 80px;text-align: justify;">
-    <p>Scroll up and down to really get the feeling of how Parallax Scrolling works.</p>
+    {#<p>Scroll up and down to really get the feeling of how Parallax Scrolling works.</p>#}
   </div>
 </div>
 
 <div class="pax-3">
   <div class="caption">
-    <span class="border" style="background-color:transparent;font-size:25px;color: #f7f7f7;">SCROLL UP</span>
+    <span class="border" style="background-color:transparent;font-size:25px;color: #fff;">
+    <h2>..depends on how fast you want to grow</h2>
+    {#SCROLL UP#}
+    </span>
   </div>
 </div>
 
 <div style="position:relative;">
   <div style="color:#ddd;background-color:#282E34;text-align:center;padding:50px 80px;text-align: justify;">
-    <p>Scroll up and down to really get the feeling of how Parallax Scrolling works.</p>
+    {#<p>Scroll up and down to really get the feeling of how Parallax Scrolling works.</p>#}
+    <img class="chart" src="{{url_for('static', filename='qoreLiquid/charts/sample.001.png')}}" />
   </div>
 </div>
 
-<div class="pax-1">
+<div class="pax-4">
   <div class="caption">
-    <span class="border">COOL!</span>
+    <span class="border">
+    {#<h1>#}DeepLiquid<br /><img src="{{url_for('static', filename='qoreLiquid/logos/bantu.logo.001.png')}}" />{#</h1>#}
+    {#COOL!#}
+    </span>
   </div>
 </div>
-    
+
+{#<div style="position:relative;">
+  <div style="color:#ddd;background-color:#282E34;text-align:center;padding:50px 80px;text-align: justify;">
+    <p>Scroll up and down to really get the feeling of how Parallax Scrolling works.</p>
+  </div>
+</div>#}
+</body>
+</html>
