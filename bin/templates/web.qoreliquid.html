@@ -18,12 +18,15 @@ body, html {
   font: 400 15px/1.8 "Lato", sans-serif;
   color: #777;
 }
+
 h1 {
     font-size: 55px;
 }
+
 h2 {
     font-size: 34px;
 }
+
 div#title {
     /*background-color: #111;*/
     {#margin: 34px;
@@ -34,33 +37,19 @@ div#title {
     border-radius: 40px;
     opacity: 0.9;
 }
+
 div img {
     color: #fff;
     /*border: solid 1px #000;
     opacity: 0.1;*/
 }
+
 img.chart {
     width: 50%;
     color: #fff;
     {#border: solid 1px #000;#}
     opacity: 0.89;
 }
-
-{#.parallax {
-    /* The image used * /
-    background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");
-
-    /* Set a specific height * /
-    height: 800px;
-
-    opacity: 0.65;
-
-    /* Create the parallax scrolling effect * /
-    background-attachment: fixed;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-}#}
 
 .caption {
     position: absolute;
@@ -83,14 +72,24 @@ img.chart {
 
 {# source: http://www.w3schools.com/howto/tryhow_css_parallax_demo.htm #}
 .pax-1, .pax-1a, .pax-2, .pax-3, .pax-4  {
+    /* The image used */
     /*background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");*/
-    position: relative;
+    background-image: url("{{url_for('static', filename='qoreLiquid/earth/wallpaper-1146827.jpg')}}");
+
+    {# Set a specific height #}
+    {#height: 800px;#}
+
     opacity: 0.99;
+
+    position: relative;
+
+    {# Create the parallax scrolling effect #}
     background-attachment: fixed;
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
 }
+
 .pax-1 {
     background-image: url("{{url_for('static', filename='ui/concepts/scuba/best_freediving_locations_readers_choice_2017_homepage_slider.jpg')}}");
     min-height: 100%;
@@ -106,7 +105,7 @@ img.chart {
     background-image: url("{{url_for('static', filename='qoreLiquid/liquidity/currentratio.jpg')}}");
     /*min-height: 800px;*/
     min-height: 100%;
-    top:
+    /*top:*/
 }
 
 .pax-3 {
@@ -121,42 +120,93 @@ img.chart {
     min-height: 100%;
 }
 
-/* Turn off parallax scrolling for tablets and phones */
+{# Turn off parallax scrolling for tablets and phones #}
 @media only screen and (max-device-width: 1024px) {
     .pax-1, .pax-1a, .pax-2, .pax-3, .pax-4 {
         background-attachment: scroll;
     }
 }
+
 </style>
 </head>
 <body>
 
-{#<div class="parallax"></div>#}
-{#<div class="parallax" align="center">#}
-&nbsp
-<div id=title align="center">
-    {#<h2>where you wanna go?</h2>
-    <h2>how fast you wanna grow?</h2># }
+{#
+<style>
+{# menu # }
+a[id= "nav1"]:target ~ #main article.article { -webkit-transform: translateY(     0px ); transform: translateY(     0px ); }
+a[id= "nav2"]:target ~ #main article.article { -webkit-transform: translateY(  -500px ); transform: translateY(  -500px ); }
+a[id= "nav3"]:target ~ #main article.article { -webkit-transform: translateY( -1000px ); transform: translateY( -1000px ); }
+header   { position: fixed; z-index: 10; }
+.article { width: 100%; height: 600px; z-index:0; -webkit-transform: translateZ( 0 ); transform: translateZ( 0 ); 
+           -webkit-transition: -webkit-transform 0.55s ease-in-out; transition: transform 0.55s ease-in-out; -webkit-backface-visibility: hidden;
+           backface-visibility: hidden; }
+.article p { font-family: sans-serif; font-size: 86px; font-size: 5rem;
+             position:relative; line-height: 300px; text-align: center; margin: 0; }
+{# end menu # }
+</style>
+<a id="nav1"></a>
+<a id="nav2"></a>
+<a id="nav3"></a>
+<header class="nav">
+    <nav>
+        <ul>
+            <li><a href="#nav1">Home</a> </li>
+            <li><a href="#nav2">About</a></li>
+            <li><a href="#nav3">Contact</a></li>
+        </ul>
+    </nav>
+</header>
+<section id="main">
+    <article class="article" id="nav1"><p>Big Tech Ideas Page3</p></article>
+    <article class="article" id="nav2"><p>Big Tech Ideas Page3</p></article>
+    <article class="article" id="contacto"><p>Big Tech Ideas Page3</p></article>
+</section>
 #}
-<img style="
-height: 30px;
-float: left;
-top: -30px;
-position: relative;
-left: 4px;
-opacity: 0.55;
-" src="{{url_for('static', filename='qoreLiquid/logos/bantu.logo.002.png')}}" />
-{#</div>#}
+
+{#
+<style>
+{# menu # }
+{#/*a[id= "nav1"]:target ~ #main article.article { -webkit-transform: translateY(     0px ); transform: translateY(     0px ); }*/# }
+a[id= "nav1"]:target ~ .pax-1                { -webkit-transform: translateY( -1000px ); transform: translateY( -1000px ); }
+a[id= "nav2"]:target ~ #main article.article { -webkit-transform: translateY(  -500px ); transform: translateY(  -500px ); }
+a[id= "nav3"]:target ~ #main article.article { -webkit-transform: translateY( -1000px ); transform: translateY( -1000px ); }
+header   { position: fixed; z-index: 10; }
+.article { width: 100%; height: 600px; z-index:0; -webkit-transform: translateZ( 0 ); transform: translateZ( 0 ); 
+           -webkit-transition: -webkit-transform 0.55s ease-in-out; transition: transform 0.55s ease-in-out; -webkit-backface-visibility: hidden;
+           backface-visibility: hidden; }
+.article p { font-family: sans-serif; font-size: 86px; font-size: 5rem;
+             position:relative; line-height: 300px; text-align: center; margin: 0; }
+{# end menu # }
+.logow {
+}
+</style>
+#}
+<div id=title align="center">
+<img style="height: 30px;
+    float: left;
+    top: -30px;
+    position: relative;
+    left: 4px;
+    opacity: 0.55;
+    z-index: 1000;" src="{{url_for('static', filename='qoreLiquid/logos/bantu.logo.002.png')}}" />
 </div>
 
 {#<div class="parallax" align="center">
     <img class="chart" src="{{url_for('static', filename='qoreLiquid/charts/sample.001.png')}}" />
 </div>#}
 
+
+<style>
+.nav1 {
+color: #fff;
+text-decoration: none;
+}
+</style>
 <div class="pax-1">
   <div class="caption">
-    <span class="border">
-        {#<h2>#}how deep would you dive?{#</h2>#}
+    <span class="border" class="article" id="nav1">
+        {#<h2>#}<a class="nav1" href="#nav1">how deep would you dive?</a>{#</h2>#}
         {#SCROLL DOWN#}
     </span>
   </div>
@@ -184,7 +234,7 @@ opacity: 0.55;
 <div class="pax-2">
   <div class="caption">
     <span class="border" style="background-color:transparent;font-size:25px;color: #f7f7f7;">
-    <h2>Where you need to go..</h2>
+    <h2>where you need to go..</h2>
     {#LESS HEIGHT#}
     </span>
   </div>
@@ -226,5 +276,6 @@ opacity: 0.55;
     <p>Scroll up and down to really get the feeling of how Parallax Scrolling works.</p>
   </div>
 </div>#}
+
 </body>
 </html>
