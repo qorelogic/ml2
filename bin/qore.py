@@ -32,6 +32,7 @@ class QoreDebug:
         self.stackTrace = stackTrace
         self.limit      = 100
         self._logging = logging
+        self._printf    = False
         #self._logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-10s) %(message)s')
         self._logging.basicConfig(filename='/tmp/qore.dev.log', level=logging.DEBUG)
         
@@ -118,21 +119,36 @@ class QoreDebug:
     
             #return str
     
+    def printf(self, printf):
+        self._printf = printf
+    
     def data(self, data, name=None, verbosity=8):
         self._logging.basicConfig(filename='/tmp/qore.dev.data.log', level=logging.INFO)
         #if verbosity == 9:
-        if verbosity == 8:
+        if verbosity == 8 or self._printf == True:
             #print data
             tstp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d-%H%M%S-%s')
             if type(name) != type(None):
-                self._logging.debug('%s %s' % (tstp, name))
-                #self._logging.debug(name)
+                strr = '%s %s' % (tstp, name)
+                if self._printf == True:
+                    print strr
+                else:
+                    self._logging.debug(strr)
+                    #self._logging.debug(name)
             if type(data) == type(p.DataFrame([])):
-                self._logging.debug('%s\n%s' % (tstp, data))
-                #self._logging.debug('\n'+str(data))
+                strr = '%s\n%s' % (tstp, data)
+                if self._printf == True:
+                    print strr
+                else:
+                    self._logging.debug(strr)
+                    #self._logging.debug('\n'+str(data))
             else:
-                self._logging.debug('%s %s' % (tstp, data))
-                #self._logging.debug(data)
+                strr = '%s %s' % (tstp, data)
+                if self._printf == True:
+                    print strr
+                else:
+                    self._logging.debug(strr)
+                    #self._logging.debug(data)
             #print 'maccount::'
             #print p.DataFrame(maccount.columns)
             #print maccount#.to_dict()
