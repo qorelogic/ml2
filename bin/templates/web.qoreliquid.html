@@ -1,5 +1,77 @@
 <html>
 <head>
+<script src="{{url_for('static', filename='jquery-3.1.1.min.js')}}" ></script>
+<script>
+
+var slide = 0;
+kup = function() {
+    if (slide > 0) { slide--; }
+    var st = (window.innerHeight + 98) * slide;
+    $('html, body').animate({ scrollTop: st }, 987, function() {
+        console.log('window.scrollY:'+window.scrollY+' '+' window.scrollX:'+window.scrollX);
+        console.log('window.slide:'+slide);
+    });
+    console.log('window.scrollY:'+window.scrollY+' '+' window.scrollX:'+window.scrollX);
+}
+kdown = function() {
+    /*$('html, body').animate(function() { scrollTop: 200px; }, 1000);*/
+    slide++;
+    var st = (window.innerHeight + 98) * slide;
+    $('html, body').animate({ scrollTop: st }, 987, function() {
+        console.log('window.scrollY:'+window.scrollY+' '+' window.scrollX:'+window.scrollX);
+        console.log('window.slide:'+slide);
+    });
+    console.log('window.scrollY:'+window.scrollY+' '+' window.scrollX:'+window.scrollX);
+}
+
+$('document').ready(function() {
+
+    $('#nav1').click(function() {
+        kdown();
+    });
+
+    $('body').keydown(function(e) {
+        //alert(e.keyCode);
+        if (e.keyCode == 32) { // space
+            console.log(e.keyCode);
+            kdown();
+        }
+        if (e.keyCode == 33) { // pageup
+            console.log(e.keyCode);
+            kup();
+        }
+        if (e.keyCode == 34) { // pagedown
+            console.log(e.keyCode);
+            kdown();
+        }
+        if (e.keyCode == 35) { // end
+            console.log(e.keyCode);
+            kdown();
+        }
+        if (e.keyCode == 36) { // home
+            console.log(e.keyCode);
+            kup();
+        }
+        if (e.keyCode == 37) { // keyleft
+            console.log(e.keyCode);
+            kup();
+        }
+        if (e.keyCode == 39) { // keyright
+            console.log(e.keyCode);
+            kdown();
+        }
+        if (e.keyCode == 38) { // keyup
+            console.log(e.keyCode);
+            kup();
+        }
+        if (e.keyCode == 40) { // keydown
+            console.log(e.keyCode);
+            kdown();
+        }
+    });
+});
+
+</script>
 <style type="text/css">
 {#img {
     width:300px
