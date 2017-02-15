@@ -38,6 +38,7 @@ def main():
         # auto select patterns file
         cmd = 'ls -t /ml.dev/bin/data/oanda/cache/patterns/patterns.portfolioMetatrader.* 2> /dev/null'
         fname = os.popen(cmd).read().strip().split('\n')[0]
+        print 'Reading from: %s' % fname
     except Exception as e:
         print e
         usage()
