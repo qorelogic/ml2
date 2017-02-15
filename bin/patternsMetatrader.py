@@ -11,6 +11,7 @@ import oandapyV20
 import pandas as p
 import numpy as n
 import oandapy
+import os
 
 from qoreliquid import Patterns
 @profile
@@ -20,7 +21,7 @@ def main():
     
     # compute metatrader portfolio
     def usage():
-        print 'usage: <balance> <leverage> <patterns file>'
+        print 'usage: <balance> <leverage>'
     try:
         balance  = float(sys.argv[1])
     except Exception as e:
@@ -34,8 +35,9 @@ def main():
         usage()
         sys.exit()
     try:
-        #fname = '/mldev/bin/data/oanda/cache/patterns/patterns.portfolioMetatrader.1485150677.45.csv'
-        fname = sys.argv[3]
+        # auto select patterns file
+        cmd = 'ls -t /ml.dev/bin/data/oanda/cache/patterns/patterns.portfolioMetatrader.* 2> /dev/null'
+        fname = os.popen(cmd).read().strip().split('\n')[0]
     except Exception as e:
         print e
         usage()
