@@ -1,4 +1,12 @@
 
+import argparse
+parser = argparse.ArgumentParser()
+#parser.add_argument("-v", '--verbose', help="turn on verbosity")
+parser.add_argument("-p", '--populate', help="Populate CSV file", action="store_true")
+parser.add_argument("-f", '--fname', help="Read Keyword Planner CSV export file")
+
+args = parser.parse_args()
+
 #%reload_ext autoreload
 #%autoreload 2
 import sys
@@ -14,15 +22,19 @@ import numpy as n
 
 usage = '<keyword planner filename>'
 
-try:
-    fname = sys.argv[1]
-except:
-    print usage
-    sys.exit()
-
-seo = SEO()
-try:
-	seo.populateAllintitle(fname)
-except KeyboardInterrupt as e:
-	''
-
+if __name__ == "__main__":
+    
+    try:
+        fname = args.fname
+    except:
+        print usage
+        sys.exit()
+    
+    seo = SEO()
+    try:
+        if args.populate:
+            seo.populateAllintitle(fname)
+        if args.fname:
+            seo.visualizeRank()
+    except KeyboardInterrupt as e:
+        ''
