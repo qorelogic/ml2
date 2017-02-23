@@ -4,6 +4,8 @@ import pandas as p
 
 class SEO:
     
+    fnameProxies = '/mldev/lib/DataPipeline/data/proxies_numbeo.csv'
+    
     def __init__(self):
         ''
 
@@ -117,10 +119,9 @@ class SEO:
     def flagServer(self, host, port, method=None, boolean=True):
 
         print 'flagging server: %s:%s %s[%s]' % (host, port, method, boolean)
-        fname = '/mldev/lib/DataPipeline/proxies_numbeo.csv'
-        px = p.read_csv(fname, index_col=0)
+        px = p.read_csv(self.fnameProxies, index_col=0)
         if not px.index.is_monotonic_increasing:
-            px = p.read_csv(fname)
+            px = p.read_csv(self.fnameProxies)
         #print px
 
         rpx = px[px['host']   == host]
@@ -128,7 +129,7 @@ class SEO:
         bid = rpx.index[0]
         px.ix[bid, method] = boolean
         px[method] = px[method].fillna(False)
-        px.to_csv(fname)
+        px.to_csv(self.fnameProxies)
         """
         if method == 'blocked_google.com':
             # set the blocked server
@@ -137,7 +138,7 @@ class SEO:
             bid = rpx.index[0]
             px.ix[bid, method] = boolean
             px[method] = px[method].fillna(False)
-            px.to_csv(fname)
+            px.to_csv(self.fnameProxies)
 
         if method == 'authorizationRequired':
             # authorization required
@@ -146,7 +147,7 @@ class SEO:
             bid = rpx.index[0]
             px.ix[bid, method] = boolean
             px[method] = px[method].fillna(False)
-            px.to_csv(fname)
+            px.to_csv(self.fnameProxies)
         """
 
         return px
@@ -165,15 +166,17 @@ class SEO:
 
     def proxyServers(self, random=True, num=10):
         import random as rr
-        fname = '/mldev/lib/DataPipeline/proxies_numbeo.csv'
-        px = p.read_csv(fname, index_col=0)
+        px = p.read_csv(self.fnameProxies, index_col=0)
         if not px.index.is_monotonic_increasing:
-            px = p.read_csv(fname)
+            px = p.read_csv(self.fnameProxies)
         #print px
         
-        px = px[px['blocked_google.com']      == False]
-        px = px[px['authorizationRequired']   == False]
-        px = px[px['cannot_connect_to_proxy'] == False]
+        try: px = px[px['blocked_google.com']      == False]
+        except: ''
+        try: px = px[px['authorizationRequired']   == False]
+        except: ''
+        try: px = px[px['cannot_connect_to_proxy'] == False]
+        except: ''
         px = px[px['ssl']                     == False]
 
         px = px.sort_values(by=['reliability', 'latency'], ascending=[False, True]).head(num).ix[:, 'host port'.split(' ')]
