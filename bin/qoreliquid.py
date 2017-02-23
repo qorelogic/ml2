@@ -2196,8 +2196,19 @@ class Patterns:
                 except: ''
             dfu33['lotsEtoro'] = n.round(dfu33['amount2Metatrader'] / dfu33['minimumLeverageEtoro'], 2)
             dfu33['unitsEtoro'] = n.round(dfu33['minimumLeverageEtoro'] * dfu33['lotsEtoro'], 2)
+
+            lotsEtoroRT = 0
+            for i in dfu33['lotsEtoro'].index:
+                lotsEtoroRT += float(dfu33.ix[i, 'lotsEtoro'])
+                if lotsEtoroRT <= balance:
+                    try:
+                        dfu33.ix[i, 'lotsEtoroRT']  = lotsEtoroRT
+                        dfu33.ix[i, 'lotsEtoroRT2'] = dfu33.ix[i, 'lotsEtoro']
+                    except: ''
+
             dfu33_etoro = dfu33[dfu33['diffp'] >= 0.06].copy()
             self.qd.printf(True)
+            self.qd.data('              balance: %s' % n.sum(dfu33['balance']))
             self.qd.data('            sum diffp: %s' % n.sum(dfu33['diffp']))
             self.qd.data('        sum lotsEtoro: %s' % n.sum(dfu33['lotsEtoro']))
             self.qd.data('       sum unitsEtoro: %s' % n.sum(dfu33['unitsEtoro']))
