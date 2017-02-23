@@ -47,7 +47,7 @@ def main():
     df = p.read_csv(fname, index_col=[0])
     df = pa.computePortfolioMetatrader(df, balance=balance, leverage=leverage, method='etoro')
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        df = df.ix[:, 'side lots lotsEtoro minimumLeverageEtoro unitsEtoro balanceMetatrader leverageMetatrader allMarginMetatrader amount2Metatrader closeTradePLMetatrader side diffp lots'.split(' ')]
+        df = df.ix[:, 'side lots lotsEtoro lotsEtoroRT lotsEtoroRT2 minimumLeverageEtoro unitsEtoro balanceMetatrader leverageMetatrader allMarginMetatrader amount2Metatrader closeTradePLMetatrader side diffp lots'.split(' ')]
         #df = df.sort_index()
         df = df.sort_values(by='diffp', ascending=False)
         print df
