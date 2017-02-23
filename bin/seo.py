@@ -259,3 +259,46 @@ class SEO:
         print df.dtypes
         #print df
     
+    def visualizeRank(self):
+        import seaborn as ses
+        import matplotlib.pylab as plt
+        from pylab import rcParams
+        from qoreliquid import normalizeme
+        from qoreliquid import sigmoidme
+        from qoreliquid import pf
+        #%pylab inline
+        rcParams['figure.figsize'] = 20, 5
+        #fname = '/opt/data/seo/cheap-flights_Keyword Planner 2017-02-18 at 22-31-30.2.csv'
+        fname = '/opt/data/seo/robo-advisor_Keyword Planner 2017-02-23 at 13-02-39.csv'
+        #fname = '/opt/data/seo/betterment_Keyword Planner 2017-02-23 at 13-06-28.2.csv'
+        csv = p.read_csv(fname, index_col=0)
+        if not csv.index.is_monotonic_increasing:
+            csv = p.read_csv(fname)
+        #csv['allintitle'] = csv['allintitle'].fillna(0)
+        #csv[csv['allintitle'] > 0]
+        print len(csv.index)
+        pcsv = csv.sort_values(by='allintitle', ascending=False)
+        def mapit(st):
+            st = st.replace('K', '000')
+            st = st.replace('M', '000000')
+            #return float(st)
+            return st
+    
+        pcsv['Monthly Searches'] = map(lambda x: mapit(x.split(' ')[2]), pcsv['Avg. Monthly Searches (exact match only)'])
+        pcsv['Keyword Count'] = map(lambda x: len(x.split(' ')), pcsv['Keyword'])
+        pcsv['Monthly Searches'] = p.to_numeric(pcsv['Monthly Searches'])
+        pcsv = pcsv[pcsv['allintitle'] < 30]
+        pcsv = pcsv[pcsv['allintitle'] > 10]
+        pcsv = pcsv[pcsv['Keyword Count'] > 1]
+        pcsv['rank'] = pcsv['Monthly Searches'] / pcsv['allintitle']
+        pcsv['rankN'] = normalizeme(pcsv['rank'])
+        pcsv['rankN'] = sigmoidme(pcsv['rank'])
+    
+        #print pcsv.dtypes
+        pcsv = pcsv.ix[:, ['Ad group','Keyword','Keyword Count','Currency','Suggested bid','Avg. Monthly Searches (exact match only)','Monthly Searches','Competition','Suggested Bid','allintitle', 'rank', 'rankN']]
+        pcsv = pcsv.sort_values(by='rank', ascending=False)
+        print pf(pcsv.head(10))
+        plt.scatter(pcsv['Suggested bid'], pcsv['rank'])
+        plt.xlabel('Suggested bid')
+        plt.ylabel('rank')
+        plt.show()
