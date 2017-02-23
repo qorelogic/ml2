@@ -2208,7 +2208,7 @@ class Patterns:
 
             dfu33_etoro = dfu33[dfu33['diffp'] >= 0.06].copy()
             self.qd.printf(True)
-            self.qd.data('              balance: %s' % balance
+            self.qd.data('              balance: %s' % balance)
             self.qd.data('            sum diffp: %s' % n.sum(dfu33['diffp']))
             self.qd.data('        sum lotsEtoro: %s' % n.sum(dfu33['lotsEtoro']))
             self.qd.data('       sum unitsEtoro: %s' % n.sum(dfu33['unitsEtoro']))
