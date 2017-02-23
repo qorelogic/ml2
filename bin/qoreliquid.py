@@ -3565,9 +3565,6 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['amount2'] = dfu33['allMargin'] * dfu33['diffp']
     dfu33['amount2Sum'] = n.sum(dfu33['amount2'])
     dfu33['diffamount4amount2'] = dfu33['amount2'] - dfu33['amount4']
-    
-    pa = Patterns()
-    dfu33 = pa.computePortfolioMetatrader(dfu33)
 
     # close = pl/units+open
     dfu33['riskAmount']          = (balance * 10.0 / 100)
@@ -3592,6 +3589,10 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
         sorted_dfu33.to_csv(fname)
         print 'Saved to pattern file: %s' % fname
 
+        pa = Patterns()
+        dfu33 = pa.computePortfolioMetatrader(dfu33)
+        sorted_dfu33 = dfu33.sort_values(by='diffp', ascending=False)
+        
         # portfolio metatrader
         #qd.data(sorted_dfu33.ix[:,'allMarginMetatrader amount2Metatrader side lots diffp'.split(' ')], name='dfu33 metatrader::')
         portfolioMetatrader = sorted_dfu33.ix[:,'balanceMetatrader leverageMetatrader allMarginMetatrader amount2Metatrader side diffp lots'.split(' ')]
