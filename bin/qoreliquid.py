@@ -2200,6 +2200,7 @@ class Patterns:
                 dfu33['lotsEtoro'] = n.round(dfu33['amount2Metatrader'] / dfu33['minimumLeverageEtoro'], 2)
                 dfu33['unitsEtoro'] = n.round(dfu33['minimumLeverageEtoro'] * dfu33['lotsEtoro'], 2)
             # ---======
+            return dfu33
         
         dfu33 = calcLots(dfu33, method)
 
