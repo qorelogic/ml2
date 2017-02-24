@@ -2206,7 +2206,7 @@ class Patterns:
                         dfu33.ix[i, 'lotsEtoroRT2'] = dfu33.ix[i, 'lotsEtoro']
                     except: ''
             dfu33['lotsEtoroRT2']     = dfu33['lotsEtoroRT2'].fillna(0)
-            dfu33['boolLotsEtoroRT2'] = dfu33[dfu33['lotsEtoroRT2'] > 0]
+            dfu33['boolLotsEtoroRT2'] = dfu33['lotsEtoroRT2'] > 0
             dfu33['diffpLotsEtoro']   = dfu33.ix[list(dfu33['boolLotsEtoroRT2']), 'diffp']
 
             dfu33_etoro = dfu33[dfu33['diffp'] >= 0.06].copy()
@@ -2214,6 +2214,7 @@ class Patterns:
             self.qd.data('              balance: %s' % balance)
             self.qd.data('     sum lotsEtoroRT2: %s' % n.sum(dfu33['lotsEtoroRT2']))
             self.qd.data('            sum diffp: %s' % n.sum(dfu33['diffp']))
+            self.qd.data('   sum diffpLotsEtoro: %s' % n.sum(dfu33['diffpLotsEtoro']))
             self.qd.data('        sum lotsEtoro: %s' % n.sum(dfu33['lotsEtoro']))
             self.qd.data('       sum unitsEtoro: %s' % n.sum(dfu33['unitsEtoro']))
             self.qd.data('sum amount2Metatrader: %s' % n.sum(dfu33['amount2Metatrader']))
