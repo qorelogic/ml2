@@ -2180,23 +2180,30 @@ class Patterns:
         else:       leverage = 500.0
         dfu33['balanceMetatrader'] = balance
         dfu33['leverageMetatrader'] = leverage
-        dfu33['allMarginMetatrader'] = dfu33['balanceMetatrader'] * dfu33['leverageMetatrader']
-        dfu33['amount2Metatrader'] = dfu33['allMarginMetatrader'] * dfu33['diffp']
-        dfu33['lots']      = n.round(dfu33['amount2Metatrader'] / 100000.0, 2)
+        
+        def calcLots(dfu33, method):
+            # ---======
+            dfu33['allMarginMetatrader'] = dfu33['balanceMetatrader'] * dfu33['leverageMetatrader']
+            dfu33['amount2Metatrader'] = dfu33['allMarginMetatrader'] * dfu33['diffp']
+            dfu33['lots']      = n.round(dfu33['amount2Metatrader'] / 100000.0, 2)
+    
+            # rebalance for etoro
+            if method == "etoro":
+                dfu33['diffp'] = p.to_numeric(dfu33['diffp'])
+                dfu33['leverageEtoro'] = 25
+                dfu33['maxLeverageEtoro'] = n.round(dfu33['amount2Metatrader'] / dfu33['leverageEtoro'], 2)
+                
+                li = n.array([1,2,5,10,25,50,100,200,400])
+                for i in dfu33['maxLeverageEtoro'].index:
+                    try:    dfu33.ix[i, 'minimumLeverageEtoro'] =  n.max(li[li < dfu33.ix[i, 'maxLeverageEtoro']])
+                    except: ''
+                dfu33['lotsEtoro'] = n.round(dfu33['amount2Metatrader'] / dfu33['minimumLeverageEtoro'], 2)
+                dfu33['unitsEtoro'] = n.round(dfu33['minimumLeverageEtoro'] * dfu33['lotsEtoro'], 2)
+            # ---======
+        
+        dfu33 = calcLots(dfu33, method)
 
-        # rebalance for etoro
         if method == "etoro":
-            dfu33['diffp'] = p.to_numeric(dfu33['diffp'])
-            dfu33['leverageEtoro'] = 25
-            dfu33['maxLeverageEtoro'] = n.round(dfu33['amount2Metatrader'] / dfu33['leverageEtoro'], 2)
-            
-            li = n.array([1,2,5,10,25,50,100,200,400])
-            for i in dfu33['maxLeverageEtoro'].index:
-                try:    dfu33.ix[i, 'minimumLeverageEtoro'] =  n.max(li[li < dfu33.ix[i, 'maxLeverageEtoro']])
-                except: ''
-            dfu33['lotsEtoro'] = n.round(dfu33['amount2Metatrader'] / dfu33['minimumLeverageEtoro'], 2)
-            dfu33['unitsEtoro'] = n.round(dfu33['minimumLeverageEtoro'] * dfu33['lotsEtoro'], 2)
-
             lotsEtoroRT = 0
             for i in dfu33['lotsEtoro'].index:
                 if lotsEtoroRT + float(dfu33.ix[i, 'lotsEtoro']) <= balance:
@@ -2208,9 +2215,10 @@ class Patterns:
             dfu33['lotsEtoroRT2']     = dfu33['lotsEtoroRT2'].fillna(0)
             dfu33['boolLotsEtoroRT2'] = dfu33['lotsEtoroRT2'] > 0
             dfu33['diffpLotsEtoro']   = dfu33.ix[list(dfu33['boolLotsEtoroRT2']), 'diffp']
-            dfu33['diffpLotsEtoro']   = dfu33['diffpLotsEtoro'] / n.sum(dfu33['diffpLotsEtoro'])
+            dfu33['diffp']            = dfu33['diffpLotsEtoro'] / n.sum(dfu33['diffpLotsEtoro'])
             
             dfu33 = dfu33[dfu33['boolLotsEtoroRT2'] == True]
+            dfu33 = calcLots(dfu33, method)
             
             dfu33_etoro = dfu33[dfu33['diffp'] >= 0.06].copy()
             self.qd.printf(True)
