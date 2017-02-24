@@ -2221,13 +2221,15 @@ class Patterns:
             
             dfu33 = dfu33[dfu33['_boolLotsEtoroRT2'] == True]
             dfu33 = calcLots(dfu33, method)
+
+            dfu33['_minimumLeverageEtoro2'] = dfu33['unitsEtoro'] / n.sum(dfu33['lotsEtoro'])
             
             dfu33_etoro = dfu33[dfu33['diffp'] >= 0.06].copy()
             self.qd.printf(True)
             self.qd.data('              balance: %s' % balance)
-            self.qd.data('    sum _lotsEtoroRT2: %s' % n.sum(dfu33['_lotsEtoroRT2']))
+            #self.qd.data('    sum _lotsEtoroRT2: %s' % n.sum(dfu33['_lotsEtoroRT2']))
             self.qd.data('            sum diffp: %s' % n.sum(dfu33['diffp']))
-            self.qd.data('  sum _diffpLotsEtoro: %s' % n.sum(dfu33['_diffpLotsEtoro']))
+            #self.qd.data('  sum _diffpLotsEtoro: %s' % n.sum(dfu33['_diffpLotsEtoro']))
             self.qd.data('        sum lotsEtoro: %s' % n.sum(dfu33['lotsEtoro']))
             self.qd.data('       sum unitsEtoro: %s' % n.sum(dfu33['unitsEtoro']))
             self.qd.data('sum amount2Metatrader: %s' % n.sum(dfu33['amount2Metatrader']))
