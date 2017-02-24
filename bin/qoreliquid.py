@@ -2199,8 +2199,10 @@ class Patterns:
 
             lotsEtoroRT = 0
             for i in dfu33['lotsEtoro'].index:
-                lotsEtoroRT += float(dfu33.ix[i, 'lotsEtoro'])
-                if lotsEtoroRT <= balance:
+                #lotsEtoroRT += float(dfu33.ix[i, 'lotsEtoro'])
+                #if lotsEtoroRT <= balance:
+                if lotsEtoroRT + float(dfu33.ix[i, 'lotsEtoro']) <= balance:
+                    lotsEtoroRT += float(dfu33.ix[i, 'lotsEtoro'])
                     try:
                         dfu33.ix[i, 'lotsEtoroRT']  = lotsEtoroRT
                         dfu33.ix[i, 'lotsEtoroRT2'] = dfu33.ix[i, 'lotsEtoro']
@@ -2209,6 +2211,7 @@ class Patterns:
             dfu33_etoro = dfu33[dfu33['diffp'] >= 0.06].copy()
             self.qd.printf(True)
             self.qd.data('              balance: %s' % balance)
+            self.qd.data('      sum lotsEtoroRT: %s' % n.sum(dfu33['lotsEtoroRT']))
             self.qd.data('            sum diffp: %s' % n.sum(dfu33['diffp']))
             self.qd.data('        sum lotsEtoro: %s' % n.sum(dfu33['lotsEtoro']))
             self.qd.data('       sum unitsEtoro: %s' % n.sum(dfu33['unitsEtoro']))
