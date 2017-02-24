@@ -2182,6 +2182,7 @@ class Patterns:
         dfu33['leverageMetatrader'] = leverage
         
         def calcLots(dfu33, method):
+            dfu33 = dfu33.copy()
             # ---======
             dfu33['allMarginMetatrader'] = dfu33['balanceMetatrader'] * dfu33['leverageMetatrader']
             dfu33['amount2Metatrader'] = dfu33['allMarginMetatrader'] * dfu33['diffp']
