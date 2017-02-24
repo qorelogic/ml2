@@ -2205,28 +2205,28 @@ class Patterns:
         dfu33 = calcLots(dfu33, method)
 
         if method == "etoro":
-            lotsEtoroRT = 0
+            _lotsEtoroRT = 0
             for i in dfu33['lotsEtoro'].index:
-                if lotsEtoroRT + float(dfu33.ix[i, 'lotsEtoro']) <= balance:
-                    lotsEtoroRT += float(dfu33.ix[i, 'lotsEtoro'])
+                if _lotsEtoroRT + float(dfu33.ix[i, 'lotsEtoro']) <= balance:
+                    _lotsEtoroRT += float(dfu33.ix[i, 'lotsEtoro'])
                     try:
-                        dfu33.ix[i, 'lotsEtoroRT']  = lotsEtoroRT
-                        dfu33.ix[i, 'lotsEtoroRT2'] = dfu33.ix[i, 'lotsEtoro']
+                        dfu33.ix[i, '_lotsEtoroRT']  = _lotsEtoroRT
+                        dfu33.ix[i, '_lotsEtoroRT2'] = dfu33.ix[i, 'lotsEtoro']
                     except: ''
-            dfu33['lotsEtoroRT2']     = dfu33['lotsEtoroRT2'].fillna(0)
-            dfu33['boolLotsEtoroRT2'] = dfu33['lotsEtoroRT2'] > 0
-            dfu33['diffpLotsEtoro']   = dfu33.ix[list(dfu33['boolLotsEtoroRT2']), 'diffp']
-            dfu33['diffp']            = dfu33['diffpLotsEtoro'] / n.sum(dfu33['diffpLotsEtoro'])
+            dfu33['_lotsEtoroRT2']     = dfu33['_lotsEtoroRT2'].fillna(0)
+            dfu33['_boolLotsEtoroRT2'] = dfu33['_lotsEtoroRT2'] > 0
+            dfu33['_diffpLotsEtoro']   = dfu33.ix[list(dfu33['_boolLotsEtoroRT2']), 'diffp']
+            dfu33['diffp']             = dfu33['_diffpLotsEtoro'] / n.sum(dfu33['_diffpLotsEtoro'])
             
-            dfu33 = dfu33[dfu33['boolLotsEtoroRT2'] == True]
+            dfu33 = dfu33[dfu33['_boolLotsEtoroRT2'] == True]
             dfu33 = calcLots(dfu33, method)
             
             dfu33_etoro = dfu33[dfu33['diffp'] >= 0.06].copy()
             self.qd.printf(True)
             self.qd.data('              balance: %s' % balance)
-            self.qd.data('     sum lotsEtoroRT2: %s' % n.sum(dfu33['lotsEtoroRT2']))
+            self.qd.data('    sum _lotsEtoroRT2: %s' % n.sum(dfu33['_lotsEtoroRT2']))
             self.qd.data('            sum diffp: %s' % n.sum(dfu33['diffp']))
-            self.qd.data('   sum diffpLotsEtoro: %s' % n.sum(dfu33['diffpLotsEtoro']))
+            self.qd.data('  sum _diffpLotsEtoro: %s' % n.sum(dfu33['_diffpLotsEtoro']))
             self.qd.data('        sum lotsEtoro: %s' % n.sum(dfu33['lotsEtoro']))
             self.qd.data('       sum unitsEtoro: %s' % n.sum(dfu33['unitsEtoro']))
             self.qd.data('sum amount2Metatrader: %s' % n.sum(dfu33['amount2Metatrader']))
