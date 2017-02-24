@@ -2208,6 +2208,7 @@ class Patterns:
             dfu33['lotsEtoroRT2']     = dfu33['lotsEtoroRT2'].fillna(0)
             dfu33['boolLotsEtoroRT2'] = dfu33['lotsEtoroRT2'] > 0
             dfu33['diffpLotsEtoro']   = dfu33.ix[list(dfu33['boolLotsEtoroRT2']), 'diffp']
+            dfu33['diffpLotsEtoro']   = dfu33['diffpLotsEtoro'] / n.sum(dfu33['diffpLotsEtoro'])
             
             dfu33 = dfu33[dfu33['boolLotsEtoroRT2'] == True]
             
