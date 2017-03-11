@@ -350,6 +350,73 @@ assert prepTestDataFrame(df) == ['a', 'buy', 1, 'b', 'sell', 2, 'c', 'sell', 3]
     return forAssertion
 
 
+class XPath:
+    ## xpath class ##
+    def fixNewlines(self, item, field, kw='\n'):
+        try:
+            li = item[field]
+            li = p.DataFrame(li)
+            #srch = li[li[0] == kw]
+            srch = li[p.Series(map(lambda x: True if x.strip() == kw.strip() else False, li[0]), index=li.index)]
+            #print srch
+            for i in list(srch.index):
+                li = li.drop(i)
+            li[0] = map(lambda x: x.strip(), li[0])
+            li[0] = map(lambda x: x.replace(kw, ''), li[0])
+            #print li
+            item[field] = list(li[0])
+        except Exception as e:
+            #print e
+            ''
+        return item
+    
+    def fixItemsearchReplace(self, item, field, regex, replace):
+        import re
+        try:
+            li = item[field]
+            li = p.DataFrame(li)
+            li[0] = map(lambda x: x.strip(), li[0])
+            li[0] = map(lambda x: re.sub(re.compile(regex), replace, x), li[0])
+            #print li
+            item[field] = list(li[0])
+        except Exception as e:
+            #print e
+            ''
+        return item
+    
+    """
+    xcols = {
+        'host'   : '//div/div//table//tr//td[1]/text()',
+        'port'   : '//div/div//table//tr//td[2]/text()',
+        'anon'   : '//div/div//table//tr//td[4]/text()',
+        'speed'  : '//div/div//table//tr//td[5]/text()',
+        'check'  : '//div/div//table//tr//td[6]/text()',
+    }
+    """
+    def xpath2df(self, url, xcols):
+        import requests as req
+        from lxml import html
+        res = req.get(url)
+        tree = html.fromstring(res.text)
+        #print res.text
+        xresd = {}
+        for i in range(len(xcols.keys())):
+            xk = xcols.keys()
+            xv = xcols.values()
+            xresd.update({xk[i]:tree.xpath(xv[i])})
+        return xresd
+    ## end xpath class ##
+
+    def x2(self, url, xpath):
+        import requests as req
+        from lxml import html
+        res = req.get(url)
+        tree = html.fromstring(res.text)
+        #print res.text
+        xresd = {}
+        xresd.update({'name':tree.xpath(xpath)})
+        return xresd
+    
 class QoreScrapy:
     def makeItems(self, df, itemClass):
         items = []
