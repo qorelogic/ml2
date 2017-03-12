@@ -438,6 +438,144 @@ class QoreScrapy:
                 print ct
         return items
 
+from pandas_finance import Equity
+#import pandas_finance as pf
+import ujson as js
+class DataPipeline:
+    
+    def __init__(self):
+        self.z = ZZZ()
+        self.z.initServer()
+    
+    #@profile
+    def getEquity(self, i, fname, returnDataframe=False):
+        aapl = Equity(i)
+        #print p.DataFrame(aapl)
+        #aapl
+        #res = {}
+        res = {'symbol': i, 'annual_dividend': '', 'dividend_yield': '', 'price': ''}
+        try:    res.update({'annual_dividend': aapl.annual_dividend})
+        except: ''
+        try:    res.update({'dividend_yield' : aapl.dividend_yield})
+        except: ''
+        try:    res.update({'price'          : aapl.price})
+        except: ''
+        try:    res.update({'options'        : aapl.options})
+        except: ''
+        #    #aapl.hist_vol(30)
+        #    #aapl.rolling_hist_vol(30)
+        #except: ''
+        jres = js.dumps(res)
+        self.z.send(jres)
+        #res = p.DataFrame(res, index=[i])
+        #print res
+        #df = df.combine_first(res)
+        #df.to_csv(fname)
+        #return df
+    
+    def receiveEquity(self, num):
+        print 'receiveEquity()'
+        self.z.initClient()
+        import ujson as js
+        df = p.DataFrame()
+        i = 0
+        while True:
+            data = self.z.socketClient.recv(0)
+            data = js.loads(data.replace('tester ', ''))
+            #print data
+            dfm = p.DataFrame(data, index=[data['symbol']])
+            df = df.combine_first(dfm)
+            if i == num-1:
+                #print 'breaking out'
+                print df.sort_values(by='dividend_yield', ascending=False)
+                print
+                break
+            i += 1
+        return df
+
+    def populateTickers(self, live, num=10):
+        import pandas as p
+        #ti = 'AAPL T FB PG'.split(' ')
+        df = p.DataFrame()
+        tdf = p.read_csv('/ml.dev/lib/DataPipeline/tickers_numbeo.csv')
+        tdf = tdf[tdf['exchange'] == 'NYSE'].sort_values(by='symbol')
+        fname = 'tickers-fundamentals.csv'
+            
+        if live == 1:
+            from multiprocessing.pool import ThreadPool
+            pool = ThreadPool(processes=20)
+            async_result = pool.apply_async(self.receiveEquity, [num])
+            #import threading            
+            #t = threading.Thread(target=self.receiveEquity, args=[num])
+            #t.daemon = False
+            #t.start()
+            for i in list(tdf['symbol'])[0:num]:
+            #    print i
+            #for i in ti:
+                #print i
+                #print 't: %s' % i
+
+                async_result = pool.apply_async(self.getEquity, [i, fname, False])
+                #async_result = pool.map_async(t3, [i])
+                #async_result = pool.imap_unordered(t3, [i])
+                #return_val   = async_result.get()
+                #print return_val[0]
+
+                #t = threading.Thread(target=self.getEquity, args=[i, fname, False])
+                #t.daemon = False
+                #t.start()
+                #print
+                #df = getEquity(i, True)
+            pool.close()
+        #self.z.socket.close()
+
+        if live == 0:
+            df = p.read_csv(fname)
+
+        return df
+
+import zmq
+class ZZZ:
+    
+    def __init__(self):
+        self.ctx = zmq.Context()
+        
+    def initServer(self):
+        # server
+        self.socketServer = self.ctx.socket(zmq.PUB)
+        url = 'tcp://*:3343'
+        #try:
+        self.socketServer.bind(url)
+        #except Exception as e:
+        #    print e
+    
+    def initClient(self):
+        # client
+        self.socketClient = self.ctx.socket(zmq.SUB)
+        url = 'tcp://localhost:3343'
+        self.socketClient.connect(url)
+        self.socketClient.setsockopt(zmq.SUBSCRIBE, 'tester')
+
+    def sendm(self):
+        for i in range(10000):
+            self.socketServer.send('%s %s' % ('tester', randint(1,10000000)))
+
+    def send(self, txt):
+        self.socketServer.send('%s %s' % ('tester', txt))
+
+    def receive(self):
+        while True:
+            print self.socketClient.recv(0)
+
+    def t3(self, tn):
+        import time as tt
+        self.send(tn)
+        #tt.sleep(n.random.randint(5))
+        #print 'p: %s' % tn
+        tt.sleep(tn)
+        return 'r: %s' % tn
+
+
 
 def babysitTrades2(qq, acc):
     #acc = qq.oq.oanda2.get_account(qq.oq.aid)
