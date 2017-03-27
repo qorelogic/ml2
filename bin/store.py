@@ -31,13 +31,35 @@ import ujson    as uj
 
 class AMZ:
 
-    def xpath2dataframe(self, xpath, txt):
+    def xpath2dataframe(self, xpath, txt, columns=None, replace=[]):
         tree = html.fromstring(txt)
-        xres = tree.xpath(xpath)
-        df = p.DataFrame(xres, columns=[0])
+        #xres = tree.xpath(xpath)
+        xres = []
+        try:
+            xres.append(tree.xpath(xpath))
+        except:
+            for i in xpath:
+                xres.append(tree.xpath(i))
+        #print xres
+        #df = p.DataFrame(xres, columns=[0])
+        #print len(xres)
+        #print xres
+        #print columns
+        df = p.DataFrame(xres, index=columns).transpose()
+        #df = p.DataFrame(xres, index=list(range(0,len(xres)))).transpose()
+        #df = p.DataFrame({0:xres,1:xres}, index=[0,1]).transpose()
+        if len(replace) == 2:
+            try:
+                for i in df.columns:
+                    df[i] = map(lambda x: x.replace(replace[0], replace[1]).strip(), df[i])
+            except Exception as e:
+                print e
         return df
 
     def __init__(self):
+        ''
+        
+    def init(self):
         level = 0
         msleep = 3
         domain = 'amazon.com'
@@ -130,5 +152,68 @@ class AMZ:
                 print df
                 df.to_csv('/opt/data/amz-best-sellers.csv')
 
+    def updatecsv(self, fname, df):
+        try:
+            canonicalAsinsDF = p.read_csv(fname, index_col=0)
+        except:
+            canonicalAsinsDF = p.DataFrame([])
+        canonicalAsinsDF = canonicalAsinsDF.combine_first(df)
+        canonicalAsinsDF.to_csv(fname, encoding='utf-8')
+        return canonicalAsinsDF
+
 if __name__ == "__main__":
     a = AMZ()
+
+    domain = 'amazon.com'
+    ilevel = 5
+    df     = p.read_csv('/opt/data/amz-best-sellers.all.csv', index_col=0)
+    
+    for i in range(len(df['0'][0:ilevel])): #for i in df[0][0:level]:
+        url = 'https://www.%s/Best-Sellers-%s' % (domain, df['0'][i])
+        print url
+        res = req.get(url) #, proxies=proxies) #res = req.get(i) #, proxies=proxies)
+        xps = [
+            '//*[@id="zg_centerListWrapper"]/div/div[2]/div/a/div[2]/text()',
+            '//div/div[2]/div/div[1]/a[1]/i/span/text()',
+            '//div/div[2]/div/div[2]/span[1]/span[1]/text()',
+            '//*[@id="zg_centerListWrapper"]/div/div[2]/div/div[1]/a[2]/text()',
+            '//*[@id="zg_centerListWrapper"]/div/div[2]/div/div[1]/a[2]/@href',
+            '//*[@id="zg_centerListWrapper"]/div/div[2]/div/a/div[1]/img/@src',
+            '//*[@id="zg_centerListWrapper"]/div/div[2]/div/a/@href',
+        ]
+        cols = [
+            'name',
+            'stars',
+            'cost',
+            'reviews',
+            'asin',
+            'img',
+            'url',
+        ]
+        dfi = a.xpath2dataframe(xps, res.text, columns=cols, replace=['\n',''])
+        dfi2 = a.xpath2dataframe([
+            '//link[@rel="canonical"]/@href',
+        ], res.text, replace=['\n',''])
+        canonical = list(dfi2[0])[0]
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print dfi
+        print '----------------------------------------------------------------'
+        dfi['canonical'] = (map(lambda x: x.replace('https://www.amazon.com/',''), [canonical] * len(dfi.index)))
+        dfi['stars']     = p.to_numeric(map(lambda x: x.replace(' out of 5 stars',''), dfi['stars']))
+        dfi['cost']      = p.to_numeric(map(lambda x: x.replace('$',''), dfi['cost']))
+        dfi['reviews']   = p.to_numeric(map(lambda x: x.replace(',',''), dfi['reviews']))
+        dfi['asin']      = (map(lambda x: x.replace('/product-reviews/',''), dfi['asin']))
+        dfi['asinUrl']   = (map(lambda x: 'https://www.amazon.com%s'%(x), dfi['asin']))
+        dfi['url']       = (map(lambda x: 'https://www.amazon.com%s'%(x), dfi['url']))
+        for i in range(len(dfi.index)):
+            dfi.ix[i, 'canonicalAsin'] = '%s-%s' % (dfi.ix[i, 'canonical'], dfi.ix[i, 'asin'])
+        dfi = dfi.set_index('canonicalAsin')
+        dfi = a.updatecsv('/opt/data/amz-canonicalasins-detail.csv', dfi)
+
+        canonicalAsinsDF = a.updatecsv('/opt/data/amz-canonicalasins.csv', p.DataFrame({canonical: [list(dfi['asin'])]}, index=['asin']).transpose())
+        print canonicalAsinsDF
+
+        print dfi.dtypes
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print dfi
+        print '=================================================='
