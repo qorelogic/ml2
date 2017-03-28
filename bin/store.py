@@ -32,6 +32,10 @@ In [74]: li.insert(2, 'a')
 #//*[@id="zg_centerListWrapper"]/div[2]/div[2]/div/a/div[1]/img
 #//*[@id="zg_left_col1"]/div[1]/div[2]/div/div[2]
 
+from qore import QoreDebug
+qd = QoreDebug()
+qd.on()
+
 import re
 import requests as req
 import time     as tt
