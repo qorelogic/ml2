@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+import argparse
+# source: https://docs.python.org/2/howto/argparse.html
+parser = argparse.ArgumentParser()
+parser.add_argument("-ca", '--canonicalAsins', help="web scrapes trending asin data from amazon. prints asin data along with relevant metrics, urls and descriptions", action="store_true")
+parser.add_argument("-cad", '--canonicalAsinsDetail', help="prints a list of trending asins along with relevant metrics", action="store_true")
+parser.add_argument("-l", '--limit', help="tail limit")
+parser.add_argument("-s", '--sort', help="sort")
+parser.add_argument("-d", '--descending', help="descending", action="store_true")
+args = parser.parse_args()
+
 """
 In [69]: li = 'amz'
 In [70]: li = list(li)
@@ -298,16 +308,35 @@ class AMZ:
             #    print dfi
             print '=================================================='
 
+    def setArgs(self, args):
+
+        self.args = args
+
+        try:    self.limit = int(args.limit)
+        except: self.limit = 10
+    
+        try:    self.sort = (args.sort)
+        except: self.sort = 'reviews'
+        
+        print args
+        
     def canonicalAsinsDetail(self):
         dfli = p.read_csv('/opt/data/amz-canonicalasins-detail.csv', index_col=0)
         dfli['dp'] = map(lambda x: 'https://www.amazon.com/dp/%s' % x, dfli['asin'])
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print dfi
-        print '=================================================='
+            print dfli.ix[:,'asin productReviews stars cost reviews dp'.split(' ')].sort_values(by=self.sort, ascending=not self.args.descending).tail(self.limit)
+            #print dfli.dtypes
 
 if __name__ == "__main__":
 
     a = AMZ()
     a.setArgs(args)
-    a.canonicalAsins()
-    a.canonicalAsinsDetail()
+
+    # web scrapes trending asin data from amazon
+    # prints asin data along with relevant metrics, urls and descriptions
+    if args.canonicalAsins:
+        a.canonicalAsins()
+        
+    # prints a list of trending asins along with relevant metrics
+    if args.canonicalAsinsDetail:
+        a.canonicalAsinsDetail()
