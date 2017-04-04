@@ -3,11 +3,14 @@
 import argparse
 # source: https://docs.python.org/2/howto/argparse.html
 parser = argparse.ArgumentParser()
-parser.add_argument("-ca", '--canonicalAsins', help="web scrapes trending asin data from amazon. prints asin data along with relevant metrics, urls and descriptions", action="store_true")
-parser.add_argument("-cad", '--canonicalAsinsDetail', help="prints a list of trending asins along with relevant metrics", action="store_true")
-parser.add_argument("-l", '--limit', help="tail limit")
-parser.add_argument("-s", '--sort', help="sort")
-parser.add_argument("-d", '--descending', help="descending", action="store_true")
+parser.add_argument("-ca",   '--canonicalAsins',                  help="web scrapes trending asin data from amazon. prints asin data along with relevant metrics, urls and descriptions", action="store_true")
+parser.add_argument("-cad",  '--canonicalAsinsDetail',            help="prints a list of trending asins along with relevant metrics", action="store_true")
+parser.add_argument("-all",  '--bestSellersAll',                  help="converts best sellers mjson list to expanded csv file", action="store_true")
+parser.add_argument("-cadm", '--canonicalAsinsDetailMetrics',     help="web scrapes relevant metrics for asins", action="store_true")
+parser.add_argument("-l",    '--limit',                           help="tail limit")
+parser.add_argument("-s",    '--sort',                            help="sort")
+parser.add_argument("-d",    '--descending',                      help="descending", action="store_true")
+parser.add_argument("-ci",   '--createInventory',                 help="createInventory", action="store_true")
 args = parser.parse_args()
 
 """
@@ -216,10 +219,74 @@ class AMZ:
         dfi[field]      = p.to_numeric(dfi[field])
         return dfi[field]
 
+    def bestSellersAll(self):
+        qd = QoreDebug()
+        qd.on()
+        qd.stackTraceOn()
+        fname = '/opt/data/amz-best-sellers.all.csv'
+        df = p.read_csv('/opt/data/amz-best-sellers.csv', index_col=0)
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print df.sort_index()
+            
+        li = []
+            
+        #print
+        for i in range(len(df['1'])):
+            #print '---------'
+            #print df['0'][i]
+            li.append(df['0'][i])
+            try:
+                dfi = uj.loads(df['1'][i])
+                dfi = p.DataFrame(dfi)
+                dfi['index'] = p.to_numeric(dfi.index)
+                dfi = dfi.set_index('index')
+                #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                #    print dfi.sort_index()
+                for j in range(len(dfi['1'])):
+                    #print '   ------'
+                    #print '   %s' % dfi['0'][j]
+                    li.append(dfi['0'][j])
+                    jtxt = dfi['1'][j]
+                    try:
+                        dfj = uj.loads(jtxt)
+                        dfj = p.DataFrame(dfj)
+                        dfj['index'] = p.to_numeric(dfj.index)
+                        dfj = dfj.set_index('index')
+                        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                        #    print dfj.sort_index()
+                        for k in range(len(dfj['1'])):
+                            #print '      ---'
+                            #print '      %s' % dfj['0'][k]
+                            li.append(dfj['0'][k])
+                            dfk = uj.loads(dfj['1'][k])
+                            dfk = p.DataFrame(dfk)
+                            dfk['index'] = p.to_numeric(dfk.index)
+                            dfk = dfk.set_index('index')
+                            #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                            #    print dfk.sort_index()
+                    except Exception as e:
+                        #print e
+                        ''
+                    #print
+                #print
+            except Exception as e:
+                #qd.printTraceBack()
+                ''
+            #print
+        
+        dfli = p.DataFrame(li)
+        print dfli
+        #for i in dfli.index:
+        #    print dfli.ix[i, :][0]
+        dfli.to_csv(fname, encoding='utf-8')
+        print 'saved to: %s' % fname
+
+
     def canonicalAsins(self):
         domain = 'amazon.com'
         df     = p.read_csv('/opt/data/amz-best-sellers.all.csv', index_col=0)
         ilevel = 10
+        crawlTime = tt.time()
         #ilevel = len(df)
     
         for i in range(len(df['0'][0:ilevel])): #for i in df[0][0:level]:
@@ -289,6 +356,7 @@ class AMZ:
             dfi['asin']      = (map(lambda x: x.replace('/product-reviews/',''), dfi['asin']))
             dfi['asinUrl']   = (map(lambda x: 'https://www.amazon.com%s'%(x), dfi['asin']))
             dfi['url']       = (map(lambda x: 'https://www.amazon.com%s'%(x), dfi['url']))
+            dfi['crawlTime'] = crawlTime
             for i in range(len(dfi.index)):
                 dfi.ix[i, 'canonicalAsin'] = '%s-%s' % (dfi.ix[i, 'canonical'], dfi.ix[i, 'asin'])
     
@@ -303,6 +371,7 @@ class AMZ:
             dfij = dfij.reset_index()
             #print dfij
             dfij.to_json('/opt/data/amz-canonicalasins-detail.json')
+            
     
             canonicalAsinsDF = self.updatecsv('/opt/data/amz-canonicalasins.csv', p.DataFrame({canonical: [list(dfi['asin'])]}, index=['asin']).transpose())
             canonicalAsinsDF.to_json('/opt/data/amz-canonicalasins.json')
@@ -319,17 +388,83 @@ class AMZ:
         try:    self.limit = int(args.limit)
         except: self.limit = 10
     
-        try:    self.sort = (args.sort)
+        try:
+            self.sort = (args.sort)
+            if self.sort == None:
+                raise
         except: self.sort = 'reviews'
         
         print args
         
-    def canonicalAsinsDetail(self):
+    def canonicalAsinsDetail(self, limit=None, sort=None):
+        if limit != None:
+            self.limit = limit
+        if sort != None:
+            self.sort = sort
         dfli = p.read_csv('/opt/data/amz-canonicalasins-detail.csv', index_col=0)
         dfli['dp'] = map(lambda x: 'https://www.amazon.com/dp/%s' % x, dfli['asin'])
+        dfli['timeNow'] = tt.time()
+        dfli['timeDiff'] = dfli['timeNow'] - dfli['crawlTime']
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print dfli.ix[:,'asin productReviews stars cost reviews dp'.split(' ')].sort_values(by=self.sort, ascending=not self.args.descending).tail(self.limit)
+            print dfli.ix[:,'asin productReviews stars cost reviews dp crawlTime timeDiff'.split(' ')].sort_values(by=self.sort, ascending=not self.args.descending).tail(self.limit)
             #print dfli.dtypes
+
+    def canonicalAsinsDetailMetrics(self):
+
+        from seo import SEO
+
+        dfli = p.read_csv('/opt/data/amz-canonicalasins-detail.csv', index_col=0)
+        dfli['dp'] = map(lambda x: 'https://www.amazon.com/dp/%s' % x, dfli['asin'])
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print dfli.ix[:,'asin productReviews stars cost reviews dp'.split(' ')].sort_values(by='reviews')
+        #for i in dfli['0']:
+            #print 'https://www.amazon.com/Best-Sellers-%s' % i
+        
+        seo = SEO()
+        di = {}
+        mdf = p.DataFrame()
+        for i in dfli.index:
+            print dfli.ix[i, 'dp']
+            px = seo.proxyServers(True, 10)
+            proxy = '%s://%s:%s'%(px['schema'], px['host'], px['port'])
+            print 'proxy:%s' % proxy
+            proxies = {
+                #'http': 'http://217.76.204.197:8080',
+                #'http': 'http://128.199.169.17:80',
+                # http://stackoverflow.com/questions/30286293/make-requests-using-python-over-tor        
+                'http': proxy,
+                #'http': 'http://127.0.0.1:8118',
+                #'http': 'socks5://localhost:9050',
+                #'https': 'socks5://localhost:9050',
+            }
+            res = req.get(dfli.ix[i, 'dp'], proxies=proxies)
+            tree = html.fromstring(res.text)
+            #xres = tree.xpath('//tr[3]/td/span/span[1]/text()')
+            xres = tree.xpath('//li[@id="SalesRank"]/text()')
+            xres = map(lambda x: x.replace('\n', '').strip(), xres)
+            try:
+                #print xres[1]
+                #print xres
+                reg = re.match(re.compile(r'#([\d]+) in (.*?) \(.*'), xres[1]).groups()
+                #print reg
+                #print reg[0]
+                di.update({'asin': dfli.ix[i, 'dp']})
+                di.update({'abr': reg[0]})
+                di.update({'in': reg[1]})
+                mdf = mdf.combine_first(p.DataFrame(di, index=[dfli.ix[i, 'asin']]))
+            except Exception as e:
+                print e
+                print res.text
+            break
+        #print di
+        print mdf
+        mdf = self.updatecsv('/opt/data/amz-canonicalasins-detail-metrics.csv', mdf)
+        return mdf
+    
+    # TODO: write implementation
+    def createInventory(self):
+        self.canonicalAsinsDetail(20, 'stars')
+        ''
 
 if __name__ == "__main__":
 
@@ -344,3 +479,14 @@ if __name__ == "__main__":
     # prints a list of trending asins along with relevant metrics
     if args.canonicalAsinsDetail:
         a.canonicalAsinsDetail()
+
+    # Extract more asin relevant metrics
+    if args.canonicalAsinsDetailMetrics:
+        a.canonicalAsinsDetailMetrics()
+
+    # create inventory
+    if args.createInventory:
+        a.createInventory()
+
+    if args.bestSellersAll:
+        a.bestSellersAll()
