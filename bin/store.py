@@ -279,16 +279,17 @@ class AMZ:
         #for i in dfli.index:
         #    print dfli.ix[i, :][0]
         dfli.to_csv(fname, encoding='utf-8')
-        print 'saved to: %s' % fname
+        print 'Saved to: %s' % fname
 
 
     def canonicalAsins(self):
         domain = 'amazon.com'
         df     = p.read_csv('/opt/data/amz-best-sellers.all.csv', index_col=0)
-        ilevel = 10
+        level = 0
         crawlTime = tt.time()
         #ilevel = len(df)
     
+        ilevel = len(df['0']) if level == 0 else level
         for i in range(len(df['0'][0:ilevel])): #for i in df[0][0:level]:
             url = 'https://www.%s/Best-Sellers-%s' % (domain, df['0'][i])
             print url
@@ -296,7 +297,8 @@ class AMZ:
             xps = [
                 '//*[@id="zg_centerListWrapper"]/div/div[2]/div/a/div[2]/text()',
                 '//div[2:21]/div[2]/div/div[1]/a[1]/i/span/text()',
-                '//div[2:21]/div[2]/div/div[2]/span[1]/span[1]/text()',
+                #'//div[2:21]/div[2]/div/div[2]/span[1]/span/text()', # 1
+                '//div[2:21]/div[2]/div/div[2]/span/text()', # 2
                 '//*[@id="zg_centerListWrapper"]/div[2:21]/div[2]/div/div[1]/a[2]/text()',
                 '//*[@id="zg_centerListWrapper"]/div[2:21]/div[2]/div/div[1]/a[2]/@href',
                 '//*[@id="zg_centerListWrapper"]/div/div[2]/div/a/div[1]/img/@src',
@@ -315,71 +317,82 @@ class AMZ:
             dfi2 = self.xpath2dataframe([
                 '//link[@rel="canonical"]/@href',
             ], res.text, replace=['\n',''])
-            canonical = list(dfi2[0])[0]
-            dfi['canonical'] = (map(lambda x: x.replace('https://www.amazon.com/',''), [canonical] * len(dfi.index)))
-    
-            """
-            for i in dfi.index:
-                try: dfi.ix[i,'stars'] = dfi.ix[i,'stars'].replace(' out of 5 stars','')
-                except Exception as e:
-                    print e
-                    dfi.ix[i,'stars'] = 0
-            dfi['stars']      = p.to_numeric(dfi['stars'])
-            """
-            dfi['stars']     = p.to_numeric(map(lambda x: x.replace(' out of 5 stars',''), dfi['stars']))
-    
-            """
-            for i in dfi.index:
-                try: 
-                    dfi.ix[i,'cost'] = dfi.ix[i,'cost'].replace('$','')
-                    dfi.ix[i,'cost'] = dfi.ix[i,'cost'].replace(',','')
-                except Exception as e:
-                    print e
-                    dfi.ix[i,'cost'] = 0
-            dfi['cost']      = p.to_numeric(dfi['cost'])
-            """
-            dfi['cost']      = self.we23(dfi, 'cost', [['$',''],[',','']])
-            #dfi['cost']      = p.to_numeric(map(lambda x: x.replace('$',''), dfi['cost']))
-    
-            """
-            for i in dfi.index:
+            try:
+                canonical = list(dfi2[0])[0]
+                # xpath debug
+                #print res.text
+                #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                #    print dfi
+                dfi['canonical'] = (map(lambda x: x.replace('https://www.amazon.com/',''), [canonical] * len(dfi.index)))
+        
+                """
+                for i in dfi.index:
+                    try: dfi.ix[i,'stars'] = dfi.ix[i,'stars'].replace(' out of 5 stars','')
+                    except Exception as e:
+                        print e
+                        dfi.ix[i,'stars'] = 0
+                dfi['stars']      = p.to_numeric(dfi['stars'])
+                """
+                dfi['stars']     = p.to_numeric(map(lambda x: x.replace(' out of 5 stars',''), dfi['stars']))
+        
+                """
+                for i in dfi.index:
+                    try: 
+                        dfi.ix[i,'cost'] = dfi.ix[i,'cost'].replace('$','')
+                        dfi.ix[i,'cost'] = dfi.ix[i,'cost'].replace(',','')
+                    except Exception as e:
+                        print e
+                        dfi.ix[i,'cost'] = 0
+                dfi['cost']      = p.to_numeric(dfi['cost'])
+                """
                 try:
-                    dfi.ix[i,'reviews'] = dfi.ix[i,'reviews'].replace(',','')
-                except Exception as e:
-                    print e
-                    dfi.ix[i,'reviews'] = 0
-            dfi['reviews']      = p.to_numeric(dfi['reviews'])
-            """
-            dfi['reviews']   = p.to_numeric(map(lambda x: x.replace(',',''), dfi['reviews']))
-    
-            dfi['productReviews'] = dfi['asin']
-            dfi['asin']      = (map(lambda x: x.replace('/product-reviews/',''), dfi['asin']))
-            dfi['asinUrl']   = (map(lambda x: 'https://www.amazon.com%s'%(x), dfi['asin']))
-            dfi['url']       = (map(lambda x: 'https://www.amazon.com%s'%(x), dfi['url']))
-            dfi['crawlTime'] = crawlTime
-            for i in range(len(dfi.index)):
-                dfi.ix[i, 'canonicalAsin'] = '%s-%s' % (dfi.ix[i, 'canonical'], dfi.ix[i, 'asin'])
-    
-            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                print dfi
-            print '----------------------------------------------------------------'
-            dfi = dfi.set_index('canonicalAsin')
-            dfi = self.updatecsv('/opt/data/amz-canonicalasins-detail.csv', dfi)
-            #print list(dfi.index)
-            #print list(dfi.columns)
-            dfij = dfi.ix[p.unique(dfi.index), :]
-            dfij = dfij.reset_index()
-            #print dfij
-            dfij.to_json('/opt/data/amz-canonicalasins-detail.json')
-            
-    
-            canonicalAsinsDF = self.updatecsv('/opt/data/amz-canonicalasins.csv', p.DataFrame({canonical: [list(dfi['asin'])]}, index=['asin']).transpose())
-            canonicalAsinsDF.to_json('/opt/data/amz-canonicalasins.json')
-            #print canonicalAsinsDF
-    
-            #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            #    print dfi
-            print '=================================================='
+                    dfi['cost']      = self.we23(dfi, 'cost', [['$',''],[',','']])
+                except:
+                    ''
+                #dfi['cost']      = p.to_numeric(map(lambda x: x.replace('$',''), dfi['cost']))
+        
+                """
+                for i in dfi.index:
+                    try:
+                        dfi.ix[i,'reviews'] = dfi.ix[i,'reviews'].replace(',','')
+                    except Exception as e:
+                        print e
+                        dfi.ix[i,'reviews'] = 0
+                dfi['reviews']      = p.to_numeric(dfi['reviews'])
+                """
+                dfi['reviews']   = p.to_numeric(map(lambda x: x.replace(',',''), dfi['reviews']))
+        
+                dfi['productReviews'] = dfi['asin']
+                dfi['asin']      = (map(lambda x: x.replace('/product-reviews/',''), dfi['asin']))
+                dfi['asinUrl']   = (map(lambda x: 'https://www.amazon.com/dp/%s'%(x), dfi['asin']))
+                dfi['url']       = (map(lambda x: 'https://www.amazon.com/%s'%(x), dfi['url']))
+                dfi['crawlTime'] = crawlTime
+                for i in range(len(dfi.index)):
+                    dfi.ix[i, 'canonicalAsin'] = '%s-%s' % (dfi.ix[i, 'canonical'], dfi.ix[i, 'asin'])
+        
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    #print dfi
+                    print dfi.ix[:, 'name cost stars reviews asin asinUrl'.split(' ')]
+                print '----------------------------------------------------------------'
+                dfi = dfi.set_index('canonicalAsin')
+                dfi = self.updatecsv('/opt/data/amz-canonicalasins-detail.csv', dfi)
+                #print list(dfi.index)
+                #print list(dfi.columns)
+                dfij = dfi.ix[p.unique(dfi.index), :]
+                dfij = dfij.reset_index()
+                #print dfij
+                dfij.to_json('/opt/data/amz-canonicalasins-detail.json')
+                
+        
+                canonicalAsinsDF = self.updatecsv('/opt/data/amz-canonicalasins.csv', p.DataFrame({canonical: [list(dfi['asin'])]}, index=['asin']).transpose())
+                canonicalAsinsDF.to_json('/opt/data/amz-canonicalasins.json')
+                #print canonicalAsinsDF
+        
+                #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                #    print dfi
+                print '=================================================='
+            except Exception as e:
+                ''
 
     def setArgs(self, args):
 
