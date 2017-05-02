@@ -410,6 +410,8 @@ class AMZ:
         print args
         
     def canonicalAsinsDetail(self, limit=None, sort=None):
+        import numpy as n
+        import re
         if limit != None:
             self.limit = limit
         if sort != None:
@@ -418,9 +420,44 @@ class AMZ:
         dfli['dp'] = map(lambda x: 'https://www.amazon.com/dp/%s' % x, dfli['asin'])
         dfli['timeNow'] = tt.time()
         dfli['timeDiff'] = dfli['timeNow'] - dfli['crawlTime']
-        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print dfli.ix[:,'asin productReviews stars cost reviews dp crawlTime timeDiff'.split(' ')].sort_values(by=self.sort, ascending=not self.args.descending).tail(self.limit)
-            #print dfli.dtypes
+        #dfli['cost'] = p.to_numeric(dfli['cost'])
+        #dfli['cost'] = map(lambda x: max(x.replace('-', '').split(' ')), dfli['cost'])
+        dfli = dfli.sort_values(by=self.sort, ascending=not self.args.descending)
+        dfli = dfli.tail(self.limit)
+
+        dfliCost = n.array(dfli['cost'])
+        for i in xrange(len(dfliCost)):
+            try:
+                #dfli['cost'][i]
+                #li = dfli.loc[i, 'cost']
+                #li = dfli.ix[i, 'cost']
+                #li = dfli['cost'][i]
+                li = dfliCost[i]
+                
+                li = li.replace('-', '')
+                li = re.sub(re.compile(r'[\s]+'), ' ', li)
+                #print 'preli: %s' % li
+                li = li.split(' ')
+                #print 'lipossplit: %s' % li
+                li = n.array(li, dtype=n.float)
+                #print 'liposnaaray: %s' % li
+                #print 'maxli: %s' % n.max(li)
+                dfliCost[i] = n.max(li)
+            except Exception as e:
+                #print e
+                ''
+            #print 'i: %s' % i
+        dfli['cost'] = dfliCost
+        dfli['cost'] = dfli['cost'].fillna(0)
+        
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 10000000):
+            df = dfli.ix[:,'asin productReviews stars cost reviews dp crawlTime timeDiff'.split(' ')].sort_values(by=self.sort, ascending=not self.args.descending)
+            print 'limit: %s' % self.limit
+            print 'len: %s' % len(df.index)
+            print df
+            #print df.head(50)
+            #print df['cost']
+            print dfli.dtypes
 
     def canonicalAsinsDetailMetrics(self):
 
