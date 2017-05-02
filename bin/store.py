@@ -3,9 +3,10 @@
 import argparse
 # source: https://docs.python.org/2/howto/argparse.html
 parser = argparse.ArgumentParser()
-parser.add_argument("-ca",   '--canonicalAsins',                  help="web scrapes trending asin data from amazon. prints asin data along with relevant metrics, urls and descriptions", action="store_true")
+parser.add_argument('-1', "-in",  '--init',                             help="1 - converts best sellers mjson list to expanded csv file", action="store_true")
+parser.add_argument('-2', "-all",  '--bestSellersAll',                  help="2 - converts best sellers mjson list to expanded csv file", action="store_true")
+parser.add_argument('-3', "-ca",   '--canonicalAsins',                  help="3 - web scrapes trending asin data from amazon. prints asin data along with relevant metrics, urls and descriptions", action="store_true")
 parser.add_argument("-cad",  '--canonicalAsinsDetail',            help="prints a list of trending asins along with relevant metrics", action="store_true")
-parser.add_argument("-all",  '--bestSellersAll',                  help="converts best sellers mjson list to expanded csv file", action="store_true")
 parser.add_argument("-cadm", '--canonicalAsinsDetailMetrics',     help="web scrapes relevant metrics for asins", action="store_true")
 parser.add_argument("-l",    '--limit',                           help="tail limit")
 parser.add_argument("-s",    '--sort',                            help="sort")
@@ -454,10 +455,13 @@ class AMZ:
             df = dfli.ix[:,'asin productReviews stars cost reviews dp crawlTime timeDiff'.split(' ')].sort_values(by=self.sort, ascending=not self.args.descending)
             print 'limit: %s' % self.limit
             print 'len: %s' % len(df.index)
-            print df
+            #print df
+            print df.ix[:, 'asin cost stars reviews crawlTime'.split(' ')]
             #print df.head(50)
             #print df['cost']
-            print dfli.dtypes
+            #print dfli.dtypes
+            #gdf = df.groupby('crawlTime')
+            #print gdf.describe()
 
     def canonicalAsinsDetailMetrics(self):
 
@@ -520,6 +524,9 @@ if __name__ == "__main__":
 
     a = AMZ()
     a.setArgs(args)
+
+    if args.init:
+        a.init()
 
     # web scrapes trending asin data from amazon
     # prints asin data along with relevant metrics, urls and descriptions
