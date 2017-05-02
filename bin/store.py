@@ -279,7 +279,7 @@ class AMZ:
         #for i in dfli.index:
         #    print dfli.ix[i, :][0]
         dfli.to_csv(fname, encoding='utf-8')
-        print 'saved to: %s' % fname
+        print 'Saved to: %s' % fname
 
 
     def canonicalAsins(self):
@@ -321,8 +321,8 @@ class AMZ:
                 canonical = list(dfi2[0])[0]
                 # xpath debug
                 #print res.text
-                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                    print dfi
+                #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                #    print dfi
                 dfi['canonical'] = (map(lambda x: x.replace('https://www.amazon.com/',''), [canonical] * len(dfi.index)))
         
                 """
@@ -364,14 +364,15 @@ class AMZ:
         
                 dfi['productReviews'] = dfi['asin']
                 dfi['asin']      = (map(lambda x: x.replace('/product-reviews/',''), dfi['asin']))
-                dfi['asinUrl']   = (map(lambda x: 'https://www.amazon.com%s'%(x), dfi['asin']))
-                dfi['url']       = (map(lambda x: 'https://www.amazon.com%s'%(x), dfi['url']))
+                dfi['asinUrl']   = (map(lambda x: 'https://www.amazon.com/dp/%s'%(x), dfi['asin']))
+                dfi['url']       = (map(lambda x: 'https://www.amazon.com/%s'%(x), dfi['url']))
                 dfi['crawlTime'] = crawlTime
                 for i in range(len(dfi.index)):
                     dfi.ix[i, 'canonicalAsin'] = '%s-%s' % (dfi.ix[i, 'canonical'], dfi.ix[i, 'asin'])
         
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                    print dfi
+                    #print dfi
+                    print dfi.ix[:, 'name cost stars reviews asin asinUrl'.split(' ')]
                 print '----------------------------------------------------------------'
                 dfi = dfi.set_index('canonicalAsin')
                 dfi = self.updatecsv('/opt/data/amz-canonicalasins-detail.csv', dfi)
