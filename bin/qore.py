@@ -438,8 +438,6 @@ class QoreScrapy:
                 print ct
         return items
 
-from pandas_finance import Equity
-#import pandas_finance as pf
 import ujson as js
 class DataPipeline:
     
@@ -449,6 +447,8 @@ class DataPipeline:
     
     #@profile
     def getEquity(self, i, fname, returnDataframe=False):
+        #import pandas_finance as pf
+        from pandas_finance import Equity
         aapl = Equity(i)
         #print p.DataFrame(aapl)
         #aapl
