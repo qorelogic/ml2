@@ -367,6 +367,44 @@ def getDryRun(args):
     return dryrun
 
 
+def plotTransactionHistory(acc, oaoa):
+    th = oaoa.get_transaction_history(acc)
+    df = p.DataFrame()
+    for i in th['transactions']:
+        df = df.combine_first(p.DataFrame(i, index=[i['id']]).transpose())           
+    df = df.transpose()
+    #print df
+    plot(df.ix[:,'accountBalance'].ffill()); show()
+
+def modeAnalyze(args, runMain=False, description=None):
+    args.analyze = True
+    args.live = False
+    dryrun = getDryRun(args)
+    logApplicationUsage('modeAnalyze', description=description)
+    if runMain:
+        main(loginIndex, args, leverage=leverage, dryrun=dryrun)
+    return dryrun
+
+def modeLeverage(args, runMain=False, description=None):
+    # fleetingProfits mode
+    args.live = True
+    args.noInteractiveLeverage = True
+    dryrun = getDryRun(args)
+    logApplicationUsage('modeLeverage', description=description)
+    if runMain:
+        main(loginIndex, args, leverage=leverage, dryrun=dryrun)
+    return dryrun
+
+def modeFleetingProfits(args, runMain=False, description=None):
+    # fleetingProfits mode
+    args.live = True
+    args.noInteractiveFleetingProfits = True
+    dryrun = getDryRun(args)
+    logApplicationUsage('modeFleetingProfits', description=description)
+    if runMain:
+        main(loginIndex, args, leverage=leverage, dryrun=dryrun)
+    return dryrun
+
 import flask
 import ujson as json
 
@@ -453,15 +491,6 @@ if __name__ == "__main__":
     else:
         account='558788'
 
-    def plotTransactionHistory(acc, oaoa):
-        th = oaoa.get_transaction_history(acc)
-        df = p.DataFrame()
-        for i in th['transactions']:
-            df = df.combine_first(p.DataFrame(i, index=[i['id']]).transpose())           
-        df = df.transpose()
-        #print df
-        plot(df.ix[:,'accountBalance'].ffill()); show()
-
     """
     try:
         main(loginIndex, args, leverage=leverage, dryrun=dryrun)
@@ -469,35 +498,6 @@ if __name__ == "__main__":
         qd.exception(e)
     """
     
-    def modeAnalyze(args, runMain=False, description=None):
-        args.analyze = True
-        args.live = False
-        dryrun = getDryRun(args)
-        logApplicationUsage('modeAnalyze', description=description)
-        if runMain:
-            main(loginIndex, args, leverage=leverage, dryrun=dryrun)
-        return dryrun
-
-    def modeLeverage(args, runMain=False, description=None):
-        # fleetingProfits mode
-        args.live = True
-        args.noInteractiveLeverage = True
-        dryrun = getDryRun(args)
-        logApplicationUsage('modeLeverage', description=description)
-        if runMain:
-            main(loginIndex, args, leverage=leverage, dryrun=dryrun)
-        return dryrun
-
-    def modeFleetingProfits(args, runMain=False, description=None):
-        # fleetingProfits mode
-        args.live = True
-        args.noInteractiveFleetingProfits = True
-        dryrun = getDryRun(args)
-        logApplicationUsage('modeFleetingProfits', description=description)
-        if runMain:
-            main(loginIndex, args, leverage=leverage, dryrun=dryrun)
-        return dryrun
-
     while True:
         print 'account: {0}'.format(accid)
         if args.interactive:
