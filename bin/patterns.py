@@ -137,6 +137,7 @@ except Exception as e:
 #@profile
 def main(loginIndex, args, leverage=10, dryrun=True, verbose=False):
 
+    #print 'main() accid: %s' % (accid)
     pa = Patterns(loginIndex=loginIndex)
 
     # In[ ]:
@@ -348,13 +349,14 @@ def main(loginIndex, args, leverage=10, dryrun=True, verbose=False):
             qd.exception(e)
             print 'Try a different account number'
     else:
-        print 'using account 002: {0}'.format(accid)
-        try:
-            dfu33 = rebalanceTrades(oq, dfu2, oanda0, accid, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList, loginIndex=loginIndex)
-        except oandapy.OandaError as e:
-            qd.exception(e)
-        except Exception as e:
-            qd.exception(e)
+        for i in accid:
+            print 'using account 002: {0}'.format(i)
+            try:
+                dfu33 = rebalanceTrades(oq, dfu2, oanda0, i, dryrun=dryrun, leverage=leverage, verbose=verbose, noInteractive=noInteractive, noInteractiveLeverage=noInteractiveLeverage, noInteractiveDeleverage=noInteractiveDeleverage, noInteractiveFleetingProfits=noInteractiveFleetingProfits, threading=threading, sortRebalanceList=sortRebalanceList, loginIndex=loginIndex)
+            except oandapy.OandaError as e:
+                qd.exception(e)
+            except Exception as e:
+                qd.exception(e)
 
 def getDryRun(args):
     
@@ -403,6 +405,22 @@ def modeFleetingProfits(args, runMain=False, description=None):
     if runMain:
         main(loginIndex, args, leverage=leverage, dryrun=dryrun)
     return dryrun
+
+def changeAccount():
+    accountIndex = raw_input('accountIndex? : ')
+    # accountIndex to list
+    accountIndex = accountIndex.split(' ')
+    accountIndex = list(n.array(accountIndex, dtype=n.int))
+    try:
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print acc
+        #accid = acc.ix[int(accountIndex), 'accountId']
+        accid = acc.ix[accountIndex, 'accountId']
+        accid = list(accid)
+        #print 'changeAccount() accid: %s' % accid
+        return accid
+    except Exception as e:
+        qd.exception(e)
 
 import flask
 import ujson as json
@@ -519,19 +537,14 @@ li   = live [interactive mode],
 ?, h = help,
 q  = quit
 """
+
             usage = 'usage: '+usageOptions
             args = parser.parse_args()
             mode = raw_input('mode >>> ')
             if mode == 'q': # quit
                 sys.exit()
             if mode == 'ca': # 
-                accountIndex = raw_input('accountIndex? : ')
-                try:
-                    #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                    #    print acc
-                    accid = acc.ix[int(accountIndex), 'accountId']
-                except Exception as e:
-                    qd.exception(e)
+                accid = changeAccount()
             if mode == 'ct': #
                 closeProfitableTradesThreshold = raw_input('closeProfitableTradesThreshold? : ')
                 try:
@@ -665,7 +678,7 @@ q  = quit
                     dfp = dfii.ix[:,['Balance','Time (UTC)']].set_index('Time (UTC)')
                     dfp.plot()
                     show()
-            else:
+            elif mode != 'ca':
                 main(loginIndex, args, leverage=leverage, dryrun=dryrun)
         except Exception as e:
             qd.exception(e)
