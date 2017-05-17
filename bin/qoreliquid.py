@@ -1943,7 +1943,10 @@ class Patterns:
             mfdf['resettablePLLossGainPcnt'] = 100 / (100 + mfdf['resettablePLPcnt']) * 100 - 100
             mfdf['unrealizedPLLossGainPcnt'] = 100 / (100 + mfdf['unrealizedPLPcnt']) * 100 - 100
             #fieldsMfdf = mfdf.columns
-            fieldsMfdf = 'resettablePLPcnt resettablePLLossGainPcnt balance initialCapital initialCapital2 netAssetValue unrealizedPL unrealizedPLPcnt unrealizedPLLossGainPcnt resettablePL resettablePLPcnt netPLP netPLPcnt marginUnrealized marginUnrealized2 marginAvailable marginCloseoutPercent'.split(' ')
+            if self.minimal == True:
+                fieldsMfdf = 'resettablePLPcnt balance initialCapital unrealizedPLPcnt unrealizedPLLossGainPcnt resettablePL resettablePLPcnt netPLP netPLPcnt marginUnrealized marginUnrealized2 marginCloseoutPercent'.split(' ')
+            else:
+                fieldsMfdf = 'resettablePLPcnt resettablePLLossGainPcnt balance initialCapital initialCapital2 netAssetValue unrealizedPL unrealizedPLPcnt unrealizedPLLossGainPcnt resettablePL resettablePLPcnt netPLP netPLPcnt marginUnrealized marginUnrealized2 marginAvailable marginCloseoutPercent'.split(' ')
 
             # write to log
             import ujson as json
