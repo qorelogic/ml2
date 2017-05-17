@@ -4,6 +4,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", '--verbose', help="turn on verbosity")
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-min", '--minimal', help="list minimal", action="store_true")
 parser.add_argument("-mm", '--monitorMargin', help="list logins", action="store_true")
 parser.add_argument("-mt", '--monitorTrades', help="list logins", action="store_true")
 parser.add_argument("-mtv", '--monitorAccountsProfitableTradesVerbose', help="list logins", action="store_true")
@@ -74,6 +75,8 @@ with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'di
     if args.monitorMargin:
         from qoreliquid import Patterns
         pa = Patterns(loginIndex=loginIndex)
+        if args.minimal:
+            pa.minimal = True
         pa.monitorAccountsMarginCloseout()
         sys.exit()
         
