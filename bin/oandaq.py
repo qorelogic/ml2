@@ -195,18 +195,22 @@ class OandaQ:
         return ddt
 
     @staticmethod
-    def _timestampToDatetime(tst):
+    def _timestampToDatetime(tst, utc=False):
         import datetime as dd
-        return dd.datetime.fromtimestamp(tst)
+        if utc:
+            import pytz
+            return dd.datetime.fromtimestamp(tst, tz=pytz.utc)
+        else:
+            return dd.datetime.fromtimestamp(tst)
     @staticmethod
-    def timestampToDatetime_S(tst):
+    def timestampToDatetime_S(tst, utc=False):
         #self.qd._getMethod()
 
-        try:    ddt = OandaQ._timestampToDatetime(tst)
+        try:    ddt = OandaQ._timestampToDatetime(tst, utc=utc)
         except Exception as e:
-            print e
+            #print e
             ddt = []
-            for i in tst: ddt.append(OandaQ._timestampToDatetime(i))                
+            for i in tst: ddt.append(OandaQ._timestampToDatetime(i, utc=utc))
         return ddt
         
     """
