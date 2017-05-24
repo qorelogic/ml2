@@ -54,7 +54,9 @@ def main():
         sys.exit()
     pa = Patterns(loginIndex=loginIndex)
     df = p.read_csv(fname, index_col=[0])
-    df = pa.computePortfolioMetatrader(df, balance=balance, leverage=leverage, method='etoro')
+    if args.minimal: verbosity = 1
+    else:            verbosity = 9
+    df = pa.computePortfolioMetatrader(df, balance=balance, leverage=leverage, method='etoro', verbosity=verbosity)
     with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         if args.minimal:
             fields = 'side lots lotsEtoro minimumLeverageEtoro unitsEtoro amount2Metatrader side diffp lots'.split(' ')
