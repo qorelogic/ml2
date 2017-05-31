@@ -13,8 +13,8 @@ from oandaq import OandaQ
 
 #from pandas import read_csv as p_read_csv
 
-import plotly.plotly as py
-from plotly.graph_objs import *
+#import plotly.plotly as py
+#from plotly.graph_objs import *
 
 #import os
 import datetime as dd
