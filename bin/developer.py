@@ -19,11 +19,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-on", '--on',   help="go live    and turn on",         action="store_true")
 parser.add_argument("-off", '--off', help="go offline and turn off", action="store_true")
 parser.add_argument("-l", '--list', help="go offline and turn off", action="store_true")
+parser.add_argument("-p", '--project', help="set the project name")
 args = parser.parse_args()
 
 #tab = CronTab(user='www',fake_tab='True')
 tab = CronTab(user='qore')
-cmd = '/mldev/bin/logDeveloper.sh'
+if args.project:
+    cmd = '/mldev/bin/logDeveloper.sh %s' %  args.project
+
+def usage():
+    print 'usage: [-on|-off] -p <project name>'
 
 def developerLogOff():
     # delete crontable
@@ -44,12 +49,15 @@ def developerLogOn():
     tab.write()
     #print tab.render()
 
-if args.on:
-    developerLogOff()
-    developerLogOn()
-
-if args.off:
-    developerLogOff()
-
-if args.list:
-    print tab.render()
+if args.project:
+    if args.on:
+        developerLogOff()
+        developerLogOn()
+    
+    if args.off:
+        developerLogOff()
+    
+    if args.list:
+        print tab.render()
+else:
+    usage()
