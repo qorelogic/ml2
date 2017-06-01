@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+# source: https://docs.python.org/2/howto/argparse.html
+import argparse
+parser = argparse.ArgumentParser()
+#parser.add_argument("-v", '--verbose', help="turn on verbosity")
+parser.add_argument("-p", '--project', help="set the project name")
+args = parser.parse_args()
+
 from qore import mkdir_p
 import time, sys, os
 import gtk
@@ -16,6 +23,9 @@ import gtk
 #os.environ['DISPLAY'] = ":0.0"
 
 # faster alternatives: http://stackoverflow.com/questions/3586046/fastest-way-to-take-a-screenshot-with-python-on-windows
+
+def usage():
+    print 'usage: -p <project name>'
 
 # source: http://stackoverflow.com/questions/69645/take-a-screenshot-via-a-python-script-linux
 def takeScreenshot(fname, verbose=False):
@@ -49,7 +59,7 @@ def projectLog(projectName):
         developer = os.environ['USER']
         print developer
         developer = developer.lower().replace(' ', '_')
-        hdir = '/mldev/screenshots/developerLogs/screen/{0}'.format(developer)
+        hdir = '/mldev/screenshots/developerLogs/screen/{0}/{1}'.format(projectName, developer)
         mkdir_p(hdir)
         fname = "{0}/{1}-screenshot-{3}-{2}.png".format(hdir, projectName, int(ts), developer)
         #time.strptime('%Y',)
@@ -57,4 +67,8 @@ def projectLog(projectName):
         takeScreenshot(fname)
     except Exception as e:
         print e
-projectLog('liquid')
+
+if args.project:
+    projectLog(args.project)
+else:
+    usage()
