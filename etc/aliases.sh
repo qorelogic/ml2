@@ -145,6 +145,15 @@ alias sc='scrapy'
 	git stash && .gpull && git stash pop stash@{0}
 }
 
+.gfetch-setUpstreamTo() {
+    if [ "$1" == "" ] || [ "$2" == "" ] || [ "$3" == "" ]; then
+        echo "usage: <remote> <branch> <upstream>"
+    else
+        git fetch $1 $2:$2
+        git branch --set-upstream-to=$3 $2
+    fi
+}
+
 .gsweepPullPush() {
 	nsleep=0
         for i in `git branch | cut -c 3-`; do
