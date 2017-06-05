@@ -1944,7 +1944,7 @@ class Patterns:
             mfdf['unrealizedPLLossGainPcnt'] = 100 / (100 + mfdf['unrealizedPLPcnt']) * 100 - 100
             #fieldsMfdf = mfdf.columns
             if self.minimal == True:
-                fieldsMfdf = 'resettablePLPcnt balance initialCapital unrealizedPLPcnt unrealizedPLLossGainPcnt resettablePL resettablePLPcnt netPLP netPLPcnt marginUnrealized marginUnrealized2 marginCloseoutPercent'.split(' ')
+                fieldsMfdf = 'resettablePLPcnt balance initialCapital unrealizedPLPcnt unrealizedPLLossGainPcnt resettablePL netPLP netPLPcnt marginUnrealized marginUnrealized2 marginCloseoutPercent'.split(' ')
             else:
                 fieldsMfdf = 'resettablePLPcnt resettablePLLossGainPcnt balance initialCapital initialCapital2 netAssetValue unrealizedPL unrealizedPLPcnt unrealizedPLLossGainPcnt resettablePL resettablePLPcnt netPLP netPLPcnt marginUnrealized marginUnrealized2 marginAvailable marginCloseoutPercent'.split(' ')
 
@@ -1967,13 +1967,14 @@ class Patterns:
             
             toEmailAddress = '???'
             self.sendEmail(fname, toEmailAddress)
-
-            print mfdf.ix[:, fieldsMfdf].sort_values(by='marginCloseoutPercent')
-            print mfdf.ix[:, fieldsMfdf].sort_values(by='netPLPcnt', ascending=False)
-            print mfdf.ix[:, fieldsMfdf].sort_values(by='resettablePLPcnt', ascending=False)
-            print mfdf.ix[:, fieldsMfdf].sort_values(by='marginUnrealized', ascending=False)
-            print mfdf.ix[:, fieldsMfdf].sort_values(by='unrealizedPL', ascending=False)
-            print mfdf.sort_values(by='resettablePL', ascending=False)
+            
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='marginCloseoutPercent', ascending=True).rename_axis({'marginCloseoutPercent':'marginCloseoutPercent[^]'}, axis='columns')
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='netPLPcnt',             ascending=False).rename_axis({'netPLPcnt':'netPLPcnt[v]'},                        axis='columns')
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='resettablePLPcnt',      ascending=False).rename_axis({'resettablePLPcnt':'resettablePLPcnt[v]'},          axis='columns')
+            print mfdf.ix[:, fieldsMfdf].sort_values(by='marginUnrealized',      ascending=False).rename_axis({'marginUnrealized':'marginUnrealized[v]'},          axis='columns')
+            if self.minimal == False:
+                print mfdf.ix[:, fieldsMfdf].sort_values(by='unrealizedPL', ascending=False).rename_axis({'unrealizedPL':'unrealizedPL[v]'}, axis='columns')
+                print mfdf.ix[:, fieldsMfdf].sort_values(by='resettablePL', ascending=False).rename_axis({'resettablePL':'resettablePL^'}, axis='columns')
 
             #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
@@ -2074,7 +2075,7 @@ class Patterns:
                 import time
                 mtime = time.time()
                 df['realizedTheoreticalPLPcnt'] = df['resettablePLPcnt'] * (100 + df['unrealizedPLPcnt']) / 100
-                print df.ix[:, 'unrealizedPL unrealizedPLPcnt resettablePLPcnt realizedTheoreticalPLPcnt marginCloseoutPercent'.split(' ')]
+                print df.ix[:, 'unrealizedPL unrealizedPLPcnt resettablePLPcnt realizedTheoreticalPLPcnt marginCloseoutPercent'.split(' ')].rename_axis({'unrealizedPLPcnt':'unrealizedPLPcnt[v]'}, axis='columns')
                 print
                 # write to log
                 di = {'time':mtime, 'data':df.to_dict()}
