@@ -74,10 +74,13 @@ with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'di
 
     if args.monitorMargin:
         from qoreliquid import Patterns
+        import time
         pa = Patterns(loginIndex=loginIndex)
         if args.minimal:
             pa.minimal = True
-        pa.monitorAccountsMarginCloseout()
+        while True:
+            pa.monitorAccountsMarginCloseout()
+            time.sleep(5)
         sys.exit()
         
     if args.monitorTrades:
@@ -92,7 +95,9 @@ with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'di
         if args.account:
               account = args.account
         else: account= None
-        pa.monitorAccountsProfitableTrades(verbose=monitorAccountsProfitableTradesVerbose, closeProfitableTrades=closeProfitableTrades, account=account)
+        while True:
+            pa.monitorAccountsProfitableTrades(verbose=monitorAccountsProfitableTradesVerbose, closeProfitableTrades=closeProfitableTrades, account=account)
+            time.sleep(5)
         sys.exit()        
 
     if args.listLogins:
