@@ -2137,9 +2137,9 @@ class Patterns:
                 print
                 print '== Monitor UnrealizedPL and UnrealizedPL% (+trades)'
                 displayData(plpmdf, name='monitorAccountsProfitableTradesPLP')
-                print
-                print '== Monitor UnrealizedPL and UnrealizedPL% (-trades)'
-                displayData(plnmdf, name='monitorAccountsProfitableTradesPLN')
+                #print
+                #print '== Monitor UnrealizedPL and UnrealizedPL% (-trades)'
+                #displayData(plnmdf, name='monitorAccountsProfitableTradesPLN')
 
         #plot(mfdf.ix['101-004-1984564-001 101-004-1984564-002 101-004-1984564-003 101-004-1984564-004 101-004-1984564-005 101-004-1984564-008 101-004-1984564-009'.split(' '),'marginCloseoutPercent'])    
 
