@@ -1953,11 +1953,14 @@ class Patterns:
             import time
             mtime = time.time()
             di = {'time':mtime, 'data':mfdf.ix[:, fieldsMfdf].to_dict()}
-            di = json.dumps(di)
-            # append to jsonm file
-            fp = open('%s/%s.jsonm' % (self.hdirMonitor, 'monitorAccountsMarginCloseout'), 'a')
-            fp.write('%s\n' % di)
-            fp.close()
+            try:
+                di = json.dumps(di)
+                # append to jsonm file
+                fp = open('%s/%s.jsonm' % (self.hdirMonitor, 'monitorAccountsMarginCloseout'), 'a')
+                fp.write('%s\n' % di)
+                fp.close()
+            except:
+                ''
 
             # write to txt file
             fname = '%s/%s.txt' % (self.hdirMonitor, 'monitorAccountsMarginCloseout')
@@ -2001,7 +2004,7 @@ class Patterns:
                 #print float(rv['account']['marginCloseoutPercent']) * 100
                 with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                     #print '===='             
-                    mmdf = p.DataFrame(rv).ix['marginCloseoutPercent balance marginAvailable unrealizedPL resettablePL'.split(' '),'account']#.transpose()
+                    mmdf = p.DataFrame(rv).ix['marginCloseoutPercent balance marginAvailable unrealizedPL resettablePL profitPcnt'.split(' '),'account']#.transpose()
                     mmdf['id'] = i
                     mmdf = p.DataFrame(mmdf)
                     mmdf[i] = mmdf['account']
@@ -2025,7 +2028,8 @@ class Patterns:
                     
                     # positive trades
                     plpdf = apdf[apdf['unrealizedPL'] > 0]
-                    plpdf = plpdf[plpdf['profitPcnt'] > 0.1].set_index('id')
+                    #plpdf = plpdf[plpdf['profitPcnt'] > 0.1]
+                    plpdf = plpdf.set_index('id')
                     plpdf = plpdf.sort_values(by='profitPcnt', ascending=False)
                     if verbose:
                         self.qd.data(plpdf, name='plpdf 001')
@@ -2075,7 +2079,7 @@ class Patterns:
                 import time
                 mtime = time.time()
                 df['realizedTheoreticalPLPcnt'] = df['resettablePLPcnt'] * (100 + df['unrealizedPLPcnt']) / 100
-                print df.ix[:, 'unrealizedPL unrealizedPLPcnt resettablePLPcnt realizedTheoreticalPLPcnt marginCloseoutPercent'.split(' ')].rename_axis({'unrealizedPLPcnt':'unrealizedPLPcnt[v]'}, axis='columns')
+                print df.ix[:, 'unrealizedPL unrealizedPLPcnt profitPcnt resettablePLPcnt realizedTheoreticalPLPcnt marginCloseoutPercent'.split(' ')].rename_axis({'unrealizedPLPcnt':'unrealizedPLPcnt[v]'}, axis='columns')
                 print
                 # write to log
                 di = {'time':mtime, 'data':df.to_dict()}
