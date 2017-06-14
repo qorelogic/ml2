@@ -19,6 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-on", '--on',   help="go live    and turn on",         action="store_true")
 parser.add_argument("-off", '--off', help="go offline and turn off", action="store_true")
 parser.add_argument("-l", '--list', help="go offline and turn off", action="store_true")
+parser.add_argument("-v", '--view', help="go offline and turn off", action="store_true")
 parser.add_argument("-p", '--project', help="set the project name")
 args = parser.parse_args()
 
@@ -49,6 +50,22 @@ def developerLogOn():
     tab.write()
     #print tab.render()
 
+def viewList():
+    cmd = 'ls /mldev/screenshots/developerLogs/screen/%s/qore/' % args.project
+    #cmd = 'ls /'
+    import subprocess as sp
+    import pandas as p
+    import datetime as dd
+    li = sp.check_output(cmd.split(' ')).split('\n')
+    df = p.DataFrame(li)
+    df.ix[0:len(df.index)-2,1] = map(lambda x: x.split('-')[3].split('.')[0], df.ix[0:len(df.index)-2,0])
+    df[1] = p.to_numeric(df[1])
+    df.ix[0:len(df.index)-2,2] = map(lambda x: dd.datetime.fromtimestamp(x).strftime('%Y%m%d-%H%M%S'), df.ix[0:len(df.index)-2,1])
+    df = df.sort_values(by=1)
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #print df.dtypes
+        print df#.tail(10)
+
 if args.project:
     if args.on:
         developerLogOff()
@@ -59,5 +76,8 @@ if args.project:
     
     if args.list:
         print tab.render()
+        
+    if args.view:
+        viewList()
 else:
     usage()
