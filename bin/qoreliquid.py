@@ -2083,11 +2083,14 @@ class Patterns:
                 print
                 # write to log
                 di = {'time':mtime, 'data':df.to_dict()}
-                di = json.dumps(di)
-                fp = open('%s/%s.jsonm'%(self.hdirMonitor, name), 'a')
-                fp.write('%s\n' % di)
-                fp.close()
-
+                try:
+                    di = json.dumps(di)
+                    fp = open('%s/%s.jsonm'%(self.hdirMonitor, name), 'a')
+                    fp.write('%s\n' % di)
+                    fp.close()
+                except OverflowError as e:
+                    # OverflowError: Invalid Nan value when encoding double
+                    print e
                 dfgm = p.DataFrame([])
 
                 df['id']  = df.index
