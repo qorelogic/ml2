@@ -79,8 +79,12 @@ with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'di
         if args.minimal:
             pa.minimal = True
         while True:
-            pa.monitorAccountsMarginCloseout()
-            time.sleep(5)
+            try:
+                pa.monitorAccountsMarginCloseout()
+                time.sleep(5)
+            except KeyboardInterrupt as e:
+                print e
+                sys.exit()
         sys.exit()
         
     if args.monitorTrades:
@@ -96,8 +100,12 @@ with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'di
               account = args.account
         else: account= None
         while True:
-            pa.monitorAccountsProfitableTrades(verbose=monitorAccountsProfitableTradesVerbose, closeProfitableTrades=closeProfitableTrades, account=account)
-            time.sleep(5)
+            try:
+                pa.monitorAccountsProfitableTrades(verbose=monitorAccountsProfitableTradesVerbose, closeProfitableTrades=closeProfitableTrades, account=account)
+                time.sleep(5)
+            except KeyboardInterrupt as e:
+                print e
+                sys.exit()
         sys.exit()        
 
     if args.listLogins:
