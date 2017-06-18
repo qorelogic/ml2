@@ -113,6 +113,7 @@ alias .gici="git -a -m " # switch commit
 alias .gidb="git -a -m " # delete branch
 alias .gswitch="git remote set-url origin " # svn switch equivalent
 alias .gch="git checkout -m " # switch merge to given branch
+alias .gchp="git checkout -m - " # switch merge to previous branch
 alias .gx="git checkout -m " # switch merge to given branch
 
 alias sc='scrapy'
@@ -312,6 +313,19 @@ alias .gstl="git stash list "
 alias .gc="git commit "
 alias .gca="git commit --amend"
 alias .gcp="git cherry-pick "
+.gcpbatch() {
+	for i in `echo "$@"`; do
+		#echo $i;
+		git log --oneline -n 1 $i
+		#ans=`read 'ansss'`
+		echo -n "cherry-pick $i? (y/n): "
+                read ans
+                echo "res: $ans"
+		if [ "$ans" == "y" ]; then
+			.gcp $i
+		fi
+	done
+}
 
 alias .gacpush='.ga && .gc && .gpush'
 
