@@ -41,6 +41,9 @@ alias sq='sudo su qore'
 #alias ipn='ipython notebook --pylab=inline' # deprecated
 alias ipn='ipython notebook'
 
+# enlightenment aliases
+alias eff="enlightenment_filemanager "
+
 #source: http://blackwinter.de/misc/etc/bash_aliases
 alias al="alias | /bin/grep --color -F"
 
