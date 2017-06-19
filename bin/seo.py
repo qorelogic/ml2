@@ -196,10 +196,10 @@ class SEO:
         else:
             return px    
 
-    def populateAllintitle(self):
+    def populateAllintitle(self, fname):
         import pandas as p
         #fname = '/opt/data/seo/cheap-flights_Keyword Planner 2017-02-18 at 22-27-36.csv'
-        fname = '/opt/data/seo/cheap-flights_Keyword Planner 2017-02-18 at 22-31-30.3.csv'
+        #fname = '/opt/data/seo/cheap-flights_Keyword Planner 2017-02-18 at 22-31-30.3.csv'
         #fname = '/opt/data/seo/cheap-flights_Keyword Planner 2017-02-19 at 00-25-52.csv'
     
         csv = p.read_csv(fname, index_col=0)
@@ -231,8 +231,8 @@ class SEO:
         #except:
         for i in lcsv[0:50]:
             allintitle = self.allInTitle(i)
-            print 
-            print allintitle
+            #print 
+            #print allintitle
             try:
                 allintitle = allintitle['allintitleResults']
                 print '%s: %s' % (i, allintitle)
@@ -244,7 +244,9 @@ class SEO:
         
                 bid = csv[csv['Keyword'] == i].index[0]
                 csv.ix[bid, 'allintitle'] = allintitle
-                csv
+                #print csv.ix[bid, :]
+                print len(csv.index)
+                #print csv.columns
                 csv.to_csv(fname)
             except:
                 ''

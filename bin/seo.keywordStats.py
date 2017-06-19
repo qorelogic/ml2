@@ -12,9 +12,17 @@ from seo import SEO
 import pandas as p
 import numpy as n
 
+usage = '<keyword planner filename>'
+
+try:
+    fname = sys.argv[1]
+except:
+    print usage
+    sys.exit()
+
 seo = SEO()
 try:
-	seo.populateAllintitle()
+	seo.populateAllintitle(fname)
 except KeyboardInterrupt as e:
 	''
 
