@@ -2173,7 +2173,7 @@ class Patterns:
             #print instruments
         return instruments
 
-    def computePortfolioMetatrader(self, dfu33, balance=None, leverage=None):
+    def computePortfolioMetatrader(self, dfu33, balance=None, leverage=None, method="metatrader"):
         if balance: balance = balance
         else:       balance = 110.81
         if leverage: leverage = leverage
@@ -2182,7 +2182,47 @@ class Patterns:
         dfu33['leverageMetatrader'] = leverage
         dfu33['allMarginMetatrader'] = dfu33['balanceMetatrader'] * dfu33['leverageMetatrader']
         dfu33['amount2Metatrader'] = dfu33['allMarginMetatrader'] * dfu33['diffp']
-        dfu33['lots'] = dfu33['amount2Metatrader'] / 100000.0
+        dfu33['lots']      = n.round(dfu33['amount2Metatrader'] / 100000.0, 2)
+
+        # rebalance for etoro
+        if method == "etoro":
+            dfu33['diffp'] = p.to_numeric(dfu33['diffp'])
+            dfu33['leverageEtoro'] = 25
+            dfu33['maxLeverageEtoro'] = n.round(dfu33['amount2Metatrader'] / dfu33['leverageEtoro'], 2)
+            
+            li = n.array([1,2,5,10,25,50,100,200,400])
+            for i in dfu33['maxLeverageEtoro'].index:
+                try:    dfu33.ix[i, 'minimumLeverageEtoro'] =  n.max(li[li < dfu33.ix[i, 'maxLeverageEtoro']])
+                except: ''
+            dfu33['lotsEtoro'] = n.round(dfu33['amount2Metatrader'] / dfu33['minimumLeverageEtoro'], 2)
+            dfu33['unitsEtoro'] = n.round(dfu33['minimumLeverageEtoro'] * dfu33['lotsEtoro'], 2)
+
+            lotsEtoroRT = 0
+            for i in dfu33['lotsEtoro'].index:
+                if lotsEtoroRT + float(dfu33.ix[i, 'lotsEtoro']) <= balance:
+                    lotsEtoroRT += float(dfu33.ix[i, 'lotsEtoro'])
+                    try:
+                        dfu33.ix[i, 'lotsEtoroRT']  = lotsEtoroRT
+                        dfu33.ix[i, 'lotsEtoroRT2'] = dfu33.ix[i, 'lotsEtoro']
+                    except: ''
+            dfu33['lotsEtoroRT2']     = dfu33['lotsEtoroRT2'].fillna(0)
+            dfu33['boolLotsEtoroRT2'] = dfu33['lotsEtoroRT2'] > 0
+            dfu33['diffpLotsEtoro']   = dfu33.ix[list(dfu33['boolLotsEtoroRT2']), 'diffp']
+            dfu33['diffpLotsEtoro']   = dfu33['diffpLotsEtoro'] / n.sum(dfu33['diffpLotsEtoro'])
+            
+            dfu33 = dfu33[dfu33['boolLotsEtoroRT2'] == True]
+            
+            dfu33_etoro = dfu33[dfu33['diffp'] >= 0.06].copy()
+            self.qd.printf(True)
+            self.qd.data('              balance: %s' % balance)
+            self.qd.data('     sum lotsEtoroRT2: %s' % n.sum(dfu33['lotsEtoroRT2']))
+            self.qd.data('            sum diffp: %s' % n.sum(dfu33['diffp']))
+            self.qd.data('   sum diffpLotsEtoro: %s' % n.sum(dfu33['diffpLotsEtoro']))
+            self.qd.data('        sum lotsEtoro: %s' % n.sum(dfu33['lotsEtoro']))
+            self.qd.data('       sum unitsEtoro: %s' % n.sum(dfu33['unitsEtoro']))
+            self.qd.data('sum amount2Metatrader: %s' % n.sum(dfu33['amount2Metatrader']))
+            self.qd.data('   balance * leverage: %s' % (balance * leverage))
+            self.qd.printf(False)
         return dfu33
 
     def cacheOandapyV20Request(self, r, fname, age=30000):
@@ -3544,9 +3584,6 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
     dfu33['amount2'] = dfu33['allMargin'] * dfu33['diffp']
     dfu33['amount2Sum'] = n.sum(dfu33['amount2'])
     dfu33['diffamount4amount2'] = dfu33['amount2'] - dfu33['amount4']
-    
-    pa = Patterns()
-    dfu33 = pa.computePortfolioMetatrader(dfu33)
 
     # close = pl/units+open
     dfu33['riskAmount']          = (balance * 10.0 / 100)
@@ -3569,14 +3606,20 @@ def cw(dfu33, oanda2, oq, accid, maccount, leverage=50, verbose=False):
         qd.data(sorted_dfu33, name='dfu33::')
         fname = '/ml.dev/bin/data/oanda/cache/patterns/patterns.dfu33.%s.csv' % qtime
         sorted_dfu33.to_csv(fname)
+        print 'Saved to pattern file: %s' % fname
 
+        pa = Patterns()
+        dfu33m = pa.computePortfolioMetatrader(dfu33)
+        sorted_dfu33m = dfu33m.sort_values(by='diffp', ascending=False)
+        
         # portfolio metatrader
-        #qd.data(sorted_dfu33.ix[:,'allMarginMetatrader amount2Metatrader side lots diffp'.split(' ')], name='dfu33 metatrader::')
-        portfolioMetatrader = sorted_dfu33.ix[:,'balanceMetatrader leverageMetatrader allMarginMetatrader amount2Metatrader side diffp lots'.split(' ')]
+        #qd.data(sorted_dfu33m.ix[:,'allMarginMetatrader amount2Metatrader side lots diffp'.split(' ')], name='dfu33 metatrader::')
+        portfolioMetatrader = sorted_dfu33m.ix[:,'balanceMetatrader leverageMetatrader allMarginMetatrader amount2Metatrader side diffp lots'.split(' ')]
         portfolioMetatrader = portfolioMetatrader[portfolioMetatrader['diffp'] > 0]
         qd.data(portfolioMetatrader, name='portfolioMetatrader::')
         fname = '/ml.dev/bin/data/oanda/cache/patterns/patterns.portfolioMetatrader.%s.csv' % qtime
         portfolioMetatrader.to_csv(fname)
+        print 'Saved to metatrader pattern file: %s' % fname
        
     qd.data('============================================')
     qd.data('============================================')
