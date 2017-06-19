@@ -306,7 +306,9 @@ grin() {
 	if [ "$1" == "" ]; then
 	echo "usage: <number of commuits>"
 	else
-	git rebase -i HEAD~$1
+	#git rebase -i HEAD~$1
+	#git rebase -i -v HEAD~$1
+	git rebase -i --stat HEAD~$1
 	fi
 }
 alias .grin="grin "
