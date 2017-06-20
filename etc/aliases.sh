@@ -107,11 +107,11 @@ alias .wipe.pass32="wipe -rfqQ32 "
 alias .dubs="du -bscm  "
 #alias g="git" # just a git alias
 alias .gis="git status" # show status
-alias .gb="git branch -vv --color | less -SR" # list branches
-alias .gba="git branch -a -vv --color | less -SR" # list branches
+alias .gb="git branch -vv --color | less -SR"; alias gb=".gb" # list branches
+alias .gba="git branch -a -vv --color | less -SR"; alias gba=".gba" # list branches
 alias .gib="git branch -v " # list branches
 alias .gch="git checkout" # switch to branch
-alias .gic="git checkout" # switch to branch
+alias .gch="git checkout"; alias gch=".gch" # switch to branch
 alias .gici="git -a -m " # switch commit
 alias .gidb="git -a -m " # delete branch
 alias .gswitch="git remote set-url origin " # svn switch equivalent
@@ -280,7 +280,7 @@ alias gloa=".glo --all"
 alias glo2=".glo2"
 alias glo2a=".glo2 --all"
 alias lo=".glo"
-alias loa="gloa"
+alias loa="gloa"; alias llo="loa"; 
 alias lo2=".glo2"
 alias lo2a="glo2a"
 # list git tag annotation messages
@@ -290,7 +290,7 @@ alias .gtpull="git fetch origin --tags"
 alias .gtpush="git push origin --tags"
 alias .gci=".gb && sleep 0 && git commit -m "
 alias .gcini="git commit -m "
-alias .ga="git add -i "
+alias .ga="git add -i "; alias ga=".ga "
 alias .grh="git reset --hard "
 .grhi() {
   if [ "$1" == "" ]; then
@@ -327,7 +327,7 @@ alias .grin="grin "
 alias .gra="git commit --amend"
 alias .grc="git rebase --continue"
 alias .gstl="git stash list "
-alias .gc="git commit "
+alias .gc="git commit "; alias gc=".gc "
 alias .gca="git commit --amend"
 alias .gcp="git cherry-pick "
 .gcpbatch() {
