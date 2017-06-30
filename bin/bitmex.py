@@ -118,6 +118,86 @@ def currencyCube(r=None,tf=None, c=None,d=None, index=None, columns=None, rdf=No
         ''
     return {'data':rdf, 'index':index, 'columns':columns}
 
+import hashlib as hl
+import hmac
+import urllib
+import httplib
+import ujson as uj
+
+class Liqui:
+    
+    def __init__(self, key, secret):
+        self.key    = key
+        self.secret = secret
+
+    def signHMAC512(self, params):
+        #p1 = {'a':'1', 'b':'2'}
+        #p1 = params
+        #p1.update({'nonce':str(1)})
+        #li = []
+        #for i in zip(p1.keys(), p1.values()):
+        #    li.append('='.join(i))
+        #p1p = '&'.join(li)
+        #ahash = hm.sha512(p1p)
+        #return ahash.hexdigest()
+        H = hmac.new(self.secret, digestmod=hl.sha512)
+        #params = urllib.urlencode(params)
+        H.update(params)
+        return H.hexdigest()
+
+    #def getResponse():
+    
+    def getInfo(self):
+
+        #params = {'key':key, 'secret':secret}
+        params = {'method':'getInfo',
+                 'nonce':str(1)}
+        params = urllib.urlencode(params)
+
+        headers = {'Content-type': 'application/x-www-form-urlencoded',
+                  'Key':           self.key,
+                  'Sign':          self.signHMAC512(params)}
+
+        #print params
+        #print headers
+
+        conn = httplib.HTTPSConnection('api.liqui.io')
+        conn.request('POST', '/tapi', params, headers)
+        response = conn.getresponse()
+        #print response.status
+        #print response.reason
+        data = uj.load(response)
+        #print data
+
+        df = p.DataFrame(data['return'])#.transpose()
+        #pf(df)
+        return df
+
+    def tradeHistory(self):
+
+        params = {'method':'TradeHistory',
+                 'nonce':str(1)}
+        params = urllib.urlencode(params)
+
+        headers = {'Content-type': 'application/x-www-form-urlencoded',
+                  'Key':           self.key,
+                  'Sign':          self.signHMAC512(params)}
+
+        #print params
+        #print headers
+
+        conn = httplib.HTTPSConnection('api.liqui.io')
+        conn.request('POST', '/tapi', params, headers)
+        response = conn.getresponse()
+        #print response.status
+        #print response.reason
+        data = uj.load(response)
+        #print data
+
+        df = p.DataFrame(data['return'])#.transpose()
+        #pf(df)
+        return df.transpose()
+
 
 if __name__ == "__main__":
 
