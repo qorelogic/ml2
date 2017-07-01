@@ -160,8 +160,10 @@ class Exchange:
     def requestAuthenticated(self, method=None, url=None, params={}, requestType='POST'):
         if method:
             params.update({'method':method})
-        #nonce = str(1)
-        nonce = str(int(time.time() * 1000))
+        if self.exchange == 'liqui':
+            nonce = str(1)
+        if self.exchange == 'bittrex':
+            nonce = str(int(time.time() * 1000))
         params.update({'nonce':nonce})
         params = urllib.urlencode(params)
 
@@ -183,7 +185,7 @@ class Exchange:
             print response.msg
             print response.status
             print response.reason
-            print response.read()
+            #print res
 
             #print dir(response)
 
@@ -195,6 +197,10 @@ class Exchange:
 
         try:
             data = uj.load(response)
+        except Exception as e:
+            #print e
+            data = uj.loads(response.read())
+        try:
             if self.debug:
                 print data
             return data
@@ -241,12 +247,31 @@ class Bittrex(Exchange):
     def getInfo(self):
         data = self.requestAuthenticated(url='%s/account/getbalances?apikey=%s&nonce=1' % (self.apiMethod, self.key), requestType='GET')
         try:
+            df = p.DataFrame(data['result'])#.transpose()
+            #pf(df)
+            return df
+        except:
+            ''
+
+    def getCurrencies(self):
+        data = self.requestAuthenticated(url='%s/public/getcurrencies?apikey=%s&nonce=1' % (self.apiMethod, self.key), requestType='GET')
+        try:
+            df = p.DataFrame(data['result'])#.transpose()
+            #pf(df)
+            return df
+        except:
+            ''
+
+    def getDepositAddress(self, currency): # currency=BTC
+        data = self.requestAuthenticated(url='%s/account/getdepositaddress?apikey=%s&currency=%s&nonce=1' % (self.apiMethod, self.key, currency), requestType='GET')
+        try:
             print data
             df = p.DataFrame(data['result'])#.transpose()
             #pf(df)
             return df
         except:
             ''
+
 
 
 if __name__ == "__main__":
