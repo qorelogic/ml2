@@ -126,7 +126,16 @@ import ujson as uj
 
 class Exchange:
 
-    def signHMAC512(self, params):
+    def __init__(self, key, secret, exchange):
+        self.debug = False
+        self.key    = key.strip()
+        self.secret = secret.strip()
+        self.exchange = exchange.strip()
+
+    def debugon(self):
+        self.debug = True
+
+    def signHMAC512(self, params=None, msg=None):
         #p1 = {'a':'1', 'b':'2'}
         #p1 = params
         #p1.update({'nonce':str(1)})
@@ -136,30 +145,32 @@ class Exchange:
         #p1p = '&'.join(li)
         #ahash = hm.sha512(p1p)
         #return ahash.hexdigest()
-        H = hmac.new(self.secret, digestmod=hl.sha512)
-        #params = urllib.urlencode(params)
-        H.update(params)
-        return H.hexdigest()
+        if self.exchange == 'liqui':
+            H = hmac.new(self.secret, digestmod=hl.sha512)
+            #params = urllib.urlencode(params)
+            H.update(params)
+            return H.hexdigest()
+        if self.exchange == 'bittrex':
+            H = hmac.new(self.secret.encode(), msg.encode(), hl.sha512)
+            #print 'msg: %s' % msg
+            return H.hexdigest()
 
     #def getResponse():
     
     def requestAuthenticated(self, method=None, url=None, params={}, requestType='POST'):
         if method:
             params.update({'method':method})
-        params.update({'nonce':str(1)})
+        #nonce = str(1)
+        nonce = str(int(time.time() * 1000))
+        params.update({'nonce':nonce})
         params = urllib.urlencode(params)
 
-        headers = {'Content-type': 'application/x-www-form-urlencoded',
-                  'Key':           self.key,
-                  'Sign':          self.signHMAC512(params)}
-        """
-        if method != None:
-            url = method
-        print 'url:%s' % url
-        conn = httplib.HTTPSConnection(self.apiServer)
-        conn.request(requestType, url, params, headers)
-        response = conn.getresponse()
-        """
+        if self.exchange == 'liqui':
+            headers = {'Content-type': 'application/x-www-form-urlencoded',
+                      'Key':  self.key,
+                      'Sign': self.signHMAC512(params=params)}
+        if self.exchange == 'bittrex':
+            headers = {'apisign': self.signHMAC512(msg='https://bittrex.com' + url)}
 
         conn = httplib.HTTPSConnection(self.apiServer)
         if url:
@@ -168,28 +179,12 @@ class Exchange:
             conn.request(requestType, self.apiMethod, params, headers)
         response = conn.getresponse()
 
-        print response.msg
-        print response.status
-        print response.reason
-        print response.read()
-
-        #print dir(response)
-
-        print 'params:'
-        print params
-        print
-        print 'headers:'
-        print headers
-
-        try:
-            data = uj.load(response)
-            #print data
-            return data
-        except Exception as e:
+        if self.debug:
             print response.msg
             print response.status
             print response.reason
             print response.read()
+
             #print dir(response)
 
             print 'params:'
@@ -198,14 +193,19 @@ class Exchange:
             print 'headers:'
             print headers
 
+        try:
+            data = uj.load(response)
+            if self.debug:
+                print data
+            return data
+        except Exception as e:
             print
             print e
 
 class Liqui(Exchange):
     
     def __init__(self, key, secret):
-        self.key    = key
-        self.secret = secret
+        Exchange.__init__(self, key, secret, exchange='liqui')
         self.apiServer = 'api.liqui.io'
         self.apiMethod = '/tapi'
 
@@ -234,17 +234,20 @@ class Liqui(Exchange):
 class Bittrex(Exchange):
 
     def __init__(self, key, secret):
-        self.key    = key
-        self.secret = secret
+        Exchange.__init__(self, key, secret, exchange='bittrex')
         self.apiServer = 'bittrex.com' # https://bittrex.com/api/v1.1/account/getbalances?apikey=apikey
         self.apiMethod = '/api/v1.1'
 
     def getInfo(self):
-        #import drest
-        data = self.requestAuthenticated(url='/api/v1.1/account/getbalances', requestType='GET')
-        df = p.DataFrame(data['return'])#.transpose()
-        #pf(df)
-        return df
+        data = self.requestAuthenticated(url='%s/account/getbalances?apikey=%s&nonce=1' % (self.apiMethod, self.key), requestType='GET')
+        try:
+            print data
+            df = p.DataFrame(data['result'])#.transpose()
+            #pf(df)
+            return df
+        except:
+            ''
+
 
 if __name__ == "__main__":
 
