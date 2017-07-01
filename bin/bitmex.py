@@ -147,10 +147,8 @@ class Liqui:
 
     #def getResponse():
     
-    def getInfo(self):
-
-        #params = {'key':key, 'secret':secret}
-        params = {'method':'getInfo',
+    def requestAuthenticated(self, method):
+        params = {'method':method,
                  'nonce':str(1)}
         params = urllib.urlencode(params)
 
@@ -168,36 +166,19 @@ class Liqui:
         #print response.reason
         data = uj.load(response)
         #print data
+        return data
 
+    def getInfo(self):
+        data = self.requestAuthenticated('getInfo')
         df = p.DataFrame(data['return'])#.transpose()
         #pf(df)
         return df
 
     def tradeHistory(self):
-
-        params = {'method':'TradeHistory',
-                 'nonce':str(1)}
-        params = urllib.urlencode(params)
-
-        headers = {'Content-type': 'application/x-www-form-urlencoded',
-                  'Key':           self.key,
-                  'Sign':          self.signHMAC512(params)}
-
-        #print params
-        #print headers
-
-        conn = httplib.HTTPSConnection('api.liqui.io')
-        conn.request('POST', '/tapi', params, headers)
-        response = conn.getresponse()
-        #print response.status
-        #print response.reason
-        data = uj.load(response)
-        #print data
-
+        data = self.requestAuthenticated('TradeHistory')
         df = p.DataFrame(data['return'])#.transpose()
         #pf(df)
         return df.transpose()
-
 
 if __name__ == "__main__":
 
