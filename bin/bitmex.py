@@ -124,11 +124,7 @@ import urllib
 import httplib
 import ujson as uj
 
-class Liqui:
-    
-    def __init__(self, key, secret):
-        self.key    = key
-        self.secret = secret
+class Exchange:
 
     def signHMAC512(self, params):
         #p1 = {'a':'1', 'b':'2'}
@@ -147,26 +143,71 @@ class Liqui:
 
     #def getResponse():
     
-    def requestAuthenticated(self, method, params={}):
-        params.update({'method':method})
+    def requestAuthenticated(self, method=None, url=None, params={}, requestType='POST'):
+        if method:
+            params.update({'method':method})
         params.update({'nonce':str(1)})
         params = urllib.urlencode(params)
 
         headers = {'Content-type': 'application/x-www-form-urlencoded',
                   'Key':           self.key,
                   'Sign':          self.signHMAC512(params)}
-
-        #print params
-        #print headers
-
-        conn = httplib.HTTPSConnection('api.liqui.io')
-        conn.request('POST', '/tapi', params, headers)
+        """
+        if method != None:
+            url = method
+        print 'url:%s' % url
+        conn = httplib.HTTPSConnection(self.apiServer)
+        conn.request(requestType, url, params, headers)
         response = conn.getresponse()
-        #print response.status
-        #print response.reason
-        data = uj.load(response)
-        #print data
-        return data
+        """
+
+        conn = httplib.HTTPSConnection(self.apiServer)
+        if url:
+            conn.request(requestType, url, params, headers)
+        else:
+            conn.request(requestType, self.apiMethod, params, headers)
+        response = conn.getresponse()
+
+        print response.msg
+        print response.status
+        print response.reason
+        print response.read()
+
+        #print dir(response)
+
+        print 'params:'
+        print params
+        print
+        print 'headers:'
+        print headers
+
+        try:
+            data = uj.load(response)
+            #print data
+            return data
+        except Exception as e:
+            print response.msg
+            print response.status
+            print response.reason
+            print response.read()
+            #print dir(response)
+
+            print 'params:'
+            print params
+            print
+            print 'headers:'
+            print headers
+
+            print
+            print e
+
+class Liqui(Exchange):
+    
+    def __init__(self, key, secret):
+        self.key    = key
+        self.secret = secret
+        self.apiServer = 'api.liqui.io'
+        self.apiMethod = '/tapi'
 
     def getInfo(self):
         data = self.requestAuthenticated('getInfo')
@@ -179,6 +220,31 @@ class Liqui:
         df = p.DataFrame(data['return'])#.transpose()
         #pf(df)
         return df.transpose()
+
+    def trade(self, pair=None, mtype=None, rate=None, amount=None):
+        params =   {'pair':pair,
+                    'type':mtype,
+                    'rate':rate,
+                    'amount':amount}
+        data = self.requestAuthenticated('Trade', params)
+        df = p.DataFrame(data['return'])#.transpose()
+        #pf(df)
+        return df.transpose()
+
+class Bittrex(Exchange):
+
+    def __init__(self, key, secret):
+        self.key    = key
+        self.secret = secret
+        self.apiServer = 'bittrex.com' # https://bittrex.com/api/v1.1/account/getbalances?apikey=apikey
+        self.apiMethod = '/api/v1.1'
+
+    def getInfo(self):
+        #import drest
+        data = self.requestAuthenticated(url='/api/v1.1/account/getbalances', requestType='GET')
+        df = p.DataFrame(data['return'])#.transpose()
+        #pf(df)
+        return df
 
 if __name__ == "__main__":
 
