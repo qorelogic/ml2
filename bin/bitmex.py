@@ -147,9 +147,9 @@ class Liqui:
 
     #def getResponse():
     
-    def requestAuthenticated(self, method):
-        params = {'method':method,
-                 'nonce':str(1)}
+    def requestAuthenticated(self, method, params={}):
+        params.update({'method':method})
+        params.update({'nonce':str(1)})
         params = urllib.urlencode(params)
 
         headers = {'Content-type': 'application/x-www-form-urlencoded',
