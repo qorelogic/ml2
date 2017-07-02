@@ -266,14 +266,26 @@ class Bittrex(Exchange):
     def getDepositAddress(self, currency): # currency=BTC
         data = self.requestAuthenticated(url='%s/account/getdepositaddress?apikey=%s&currency=%s&nonce=1' % (self.apiMethod, self.key, currency), requestType='GET')
         try:
-            print data
             df = p.DataFrame(data['result'])#.transpose()
-            #pf(df)
             return df
         except:
             ''
 
+    def getMarketSummaries(self):
+        data = self.requestAuthenticated(url='%s/public/getmarketsummaries?apikey=%s&nonce=1' % (self.apiMethod, self.key), requestType='GET')
+        try:
+            df = p.DataFrame(data['result'])#.transpose()
+            return df
+        except:
+            ''
 
+    def getMarkets(self):
+        data = self.requestAuthenticated(url='%s/public/getmarkets?apikey=%s&nonce=1' % (self.apiMethod, self.key), requestType='GET')
+        try:
+            df = p.DataFrame(data['result'])#.transpose()
+            return df
+        except:
+            ''
 
 if __name__ == "__main__":
 
