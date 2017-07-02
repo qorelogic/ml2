@@ -61,6 +61,8 @@ import oandapy
 #import oandapyV20.endpoints.trades as trades
 import oandapyV20.endpoints.accounts as accounts
 
+from bitmex import *
+
 qd = QoreDebug()
 qd.on()
 
@@ -173,14 +175,18 @@ def main(loginIndex, args, leverage=10, dryrun=True, verbose=False):
     # In[ ]:
     
     
-    
-    
     import os
     cmd = 'ls -t /ml.dev/bin/data/oanda/cache/patterns/patterns.dfu.* 2> /dev/null'
     fname = os.popen(cmd).read().strip().split('\n')[0]
     dfh = {}
     df = p.DataFrame()
     if args.analyze:
+        # bittrex
+        #print liq.signHMAC512(params)
+        o = Bittrex('34fa3c1160d246e0a3f968040f4eb999', 'bd443220f548460cb09e6af82f3705b5')
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        li = o.getMarkets()
+        li = list(li['MarketName'])
         logApplicationUsage('analyze', description='analyze')
         dfu = p.DataFrame()
         if threading:
@@ -194,7 +200,8 @@ def main(loginIndex, args, leverage=10, dryrun=True, verbose=False):
         # etoro symbols
         #symbols = "AUDCAD AUDCHF AUDJPY AUDNZD AUDUSD CADCHF CADJPY CHFHUF CHFJPY EURAUD EURCAD EURCHF EURGBP EURHUF EURJPY EURNOK EURNZD EURPLN EURSEK EURUSD GBPAUD GBPCAD GBPCHF GBPHUF GBPJPY GBPNZD GBPUSD NOKSEK NZDCAD NZDCHF NZDJPY NZDUSD USDCAD USDCHF USDCNH USDHKD USDHUF USDJPY USDMXN USDNOK USDPLN USDRUB USDSEK USDSGD USDTRY USDZAR ZARJPY".split(' ')
         #symbols = "AUD_CAD AUD_CHF AUD_JPY AUD_NZD AUD_USD CAD_CHF CAD_JPY CHF_HUF CHF_JPY EUR_AUD EUR_CAD EUR_CHF EUR_GBP EUR_HUF EUR_JPY EUR_NOK EUR_NZD EUR_PLN EUR_SEK EUR_USD GBP_AUD GBP_CAD GBP_CHF GBP_HUF GBP_JPY GBP_NZD GBP_USD NOK_SEK NZD_CAD NZD_CHF NZD_JPY NZD_USD USD_CAD USD_CHF USD_CNH USD_HKD USD_HUF USD_JPY USD_MXN USD_NOK USD_PLN USD_RUB USD_SEK USD_SGD USD_TRY USD_ZAR ZAR_JPY".split(' ')
-        symbols = "AUD_CAD AUD_CHF AUD_JPY AUD_NZD AUD_USD CAD_CHF CAD_JPY CHF_JPY EUR_AUD EUR_CAD EUR_CHF EUR_GBP EUR_HUF EUR_JPY EUR_NOK EUR_NZD EUR_PLN EUR_SEK EUR_USD GBP_AUD GBP_CAD GBP_CHF GBP_JPY GBP_NZD GBP_USD NZD_CAD NZD_CHF NZD_JPY NZD_USD USD_CAD USD_CHF USD_CNH USD_HKD USD_HUF USD_JPY USD_MXN USD_NOK USD_PLN USD_SEK USD_SGD USD_TRY USD_ZAR ZAR_JPY".split(' ')
+        #symbols = "AUD_CAD AUD_CHF AUD_JPY AUD_NZD AUD_USD CAD_CHF CAD_JPY CHF_JPY EUR_AUD EUR_CAD EUR_CHF EUR_GBP EUR_HUF EUR_JPY EUR_NOK EUR_NZD EUR_PLN EUR_SEK EUR_USD GBP_AUD GBP_CAD GBP_CHF GBP_JPY GBP_NZD GBP_USD NZD_CAD NZD_CHF NZD_JPY NZD_USD USD_CAD USD_CHF USD_CNH USD_HKD USD_HUF USD_JPY USD_MXN USD_NOK USD_PLN USD_SEK USD_SGD USD_TRY USD_ZAR ZAR_JPY".split(' ')
+        symbols = li
         qd.data(','.join(symbols), name='symbols: ')
         dmcnt = 0                                                        # display matrix: counter
         for i in symbols:
