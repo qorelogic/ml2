@@ -160,18 +160,25 @@ alias sc='scrapy'
 
 .gsweepPullPush() {
 	nsleep=0
+		if [ "$1" == "" ]; then
+			echo ".gsweepPullPush <remote>"
+		else
+			gremote="$1"
         for i in `git branch | cut -c 3-`; do
 		echo '';
-		echo '================================================================================';
-		git checkout $i;
+		echo "== git checkout $i =============================================================";
+		#git checkout $i;
 		sleep $nsleep;
-		echo '--------------------------------------------------------------------------------';
-		.gpull;
+		echo "-- git pull $gremote $i:$i -----------------------------------------------------------";
+		#.gpull;
+		#git pull $gremote $i:$i
 		sleep $nsleep;
-		echo '--------------------------------------------------------------------------------';
-		.gpush;
+		echo "-- git push $gremote $i:$i -----------------------------------------------------------";
+		#.gpush;
+		git push $gremote $i:$i
 		sleep $nsleep;
-	done
+		done
+		fi
 }
 
 .grebaseWaterfall() {
