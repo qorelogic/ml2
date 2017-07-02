@@ -11,73 +11,82 @@ from oandaq import OandaQ
 import numpy as n
 import calendar, datetime, time
 
-def makeTimeseriesTimestampRange(timestamp=None, period=14400, bars=50):
-    #print '---'
-    #print 'timestamp:%s' % timestamp
-    #print 'period:%s' % period
-    #print 'bars:%s' % bars
-    if timestamp == None:
-        #tss = int(time.time())
-        tss = time.time()
-        timestamp = int(tss)
-    else:
-        tss = timestamp
-    tsd = datetime.datetime.fromtimestamp(tss)
-    tss = calendar.timegm([tsd.year,tsd.month,tsd.day,0,0,0,0,0,0])
-    divisible = 60 * 60 * 24.0 / period
-    a = list(n.arange(tss-period*(bars-1),tss+1, period))
-    b = list(n.arange(tss, tss+period * (divisible+1), period, dtype=n.int))[1:]
-    adf = p.DataFrame(a)
-    adf['date2'] = OandaQ.timestampToDatetime_S(adf[0], utc=True)
-    adf['date3'] = map(lambda x: timestamp-x, adf[0])
-    bdf = p.DataFrame(b)
-    adf = adf.set_index(0)
-    bdf['date2'] = OandaQ.timestampToDatetime_S(bdf[0], utc=True)
-    bdf['date3'] = map(lambda x: timestamp-x, bdf[0])
-    bdf = bdf.set_index(0)
-    cdf = adf.combine_first(bdf)
-    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-        #print adf
-        #print bdf
-        #print cdf
-        d2 = cdf[cdf['date3'] >= 0]
-        #print d2
-    c = a + b
-    #print c
-    #print len(c)-10
-    #d = c[len(c)-bars+0:len(c)]
-    d = list(d2.index[len(d2.index)-bars+0:len(d2.index)])
-    #print d
-    return {'start':d[0], 'end':d[len(d)-1], 'range':d, 'timestamp':timestamp, 'bars':bars, 'period':period}
+import hashlib as hl
+import hmac
+import urllib
+import httplib
+import ujson as uj
 
-def getPoloniexHistorical(symbol='BTC_XMR', period=14400, start=1405699200, end=9999999999, bars=15):
-    import time,calendar
-    ts = time.time()
-    #print ts
-    tsd = datetime.datetime.fromtimestamp(ts)
-    #print tsd
-    tss = calendar.timegm([tsd.year,tsd.month,tsd.day,0,0,0,0,0,0])
-    start = tss
-    
-    #start = start - period
-    oq = OandaQ()
-    # doc: https://poloniex.com/support/api/
-    tms = makeTimeseriesTimestampRange(timestamp=int(ts), period=period, bars=bars)
-    start = tms['start']
-    end = tms['end']
-    url = 'https://poloniex.com/public?command=returnChartData&currencyPair=%s&start=%s&end=%s&period=%s' % (symbol, start, end, period)
-    res = req.get(url)
-    #res.text
-    li = js.loads(res.text)
-    df = p.DataFrame(li)
-    df['date2'] = oq.timestampToDatetime_S(df['date'], utc=True)
-    with p.option_context('display.max_rows', 40, 'display.max_columns', 4000, 'display.width', 1000000):
-        #print df.head(5)
-        #print df.tail(5)
-        #print df
-        #print len(df.index)
-        ''
-    return df
+
+def makeTimeseriesTimestampRange(timestamp=None, period=14400, bars=50):
+        #print '---'
+        #print 'timestamp:%s' % timestamp
+        #print 'period:%s' % period
+        #print 'bars:%s' % bars
+        if timestamp == None:
+            #tss = int(time.time())
+            tss = time.time()
+            timestamp = int(tss)
+        else:
+            tss = timestamp
+        tsd = datetime.datetime.fromtimestamp(tss)
+        tss = calendar.timegm([tsd.year,tsd.month,tsd.day,0,0,0,0,0,0])
+        divisible = 60 * 60 * 24.0 / period
+        a = list(n.arange(tss-period*(bars-1),tss+1, period))
+        b = list(n.arange(tss, tss+period * (divisible+1), period, dtype=n.int))[1:]
+        adf = p.DataFrame(a)
+        adf['date2'] = OandaQ.timestampToDatetime_S(adf[0], utc=True)
+        adf['date3'] = map(lambda x: timestamp-x, adf[0])
+        bdf = p.DataFrame(b)
+        adf = adf.set_index(0)
+        bdf['date2'] = OandaQ.timestampToDatetime_S(bdf[0], utc=True)
+        bdf['date3'] = map(lambda x: timestamp-x, bdf[0])
+        bdf = bdf.set_index(0)
+        cdf = adf.combine_first(bdf)
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print adf
+            #print bdf
+            #print cdf
+            d2 = cdf[cdf['date3'] >= 0]
+            #print d2
+        c = a + b
+        #print c
+        #print len(c)-10
+        #d = c[len(c)-bars+0:len(c)]
+        d = list(d2.index[len(d2.index)-bars+0:len(d2.index)])
+        #print d
+        return {'start':d[0], 'end':d[len(d)-1], 'range':d, 'timestamp':timestamp, 'bars':bars, 'period':period}
+
+class Poloniex:
+
+    def getPoloniexHistorical(self, symbol='BTC_XMR', period=14400, start=1405699200, end=9999999999, bars=15):
+        import time,calendar
+        ts = time.time()
+        #print ts
+        tsd = datetime.datetime.fromtimestamp(ts)
+        #print tsd
+        tss = calendar.timegm([tsd.year,tsd.month,tsd.day,0,0,0,0,0,0])
+        start = tss
+        
+        #start = start - period
+        oq = OandaQ()
+        # doc: https://poloniex.com/support/api/
+        tms = makeTimeseriesTimestampRange(timestamp=int(ts), period=period, bars=bars)
+        start = tms['start']
+        end = tms['end']
+        url = 'https://poloniex.com/public?command=returnChartData&currencyPair=%s&start=%s&end=%s&period=%s' % (symbol, start, end, period)
+        res = req.get(url)
+        #res.text
+        li = js.loads(res.text)
+        df = p.DataFrame(li)
+        df['date2'] = oq.timestampToDatetime_S(df['date'], utc=True)
+        with p.option_context('display.max_rows', 40, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print df.head(5)
+            #print df.tail(5)
+            #print df
+            #print len(df.index)
+            ''
+        return df
 
 def currencyCube(r=None,tf=None, c=None,d=None, index=None, columns=None, rdf=None):
     #r = 550 #rows history
@@ -117,12 +126,6 @@ def currencyCube(r=None,tf=None, c=None,d=None, index=None, columns=None, rdf=No
         #print p.DataFrame(rdf[39,:,:].T).transpose().head(5)
         ''
     return {'data':rdf, 'index':index, 'columns':columns}
-
-import hashlib as hl
-import hmac
-import urllib
-import httplib
-import ujson as uj
 
 class Exchange:
 
@@ -248,7 +251,6 @@ class Bittrex(Exchange):
         data = self.requestAuthenticated(url='%s/account/getbalances?apikey=%s&nonce=1' % (self.apiMethod, self.key), requestType='GET')
         try:
             df = p.DataFrame(data['result'])#.transpose()
-            #pf(df)
             return df
         except:
             ''
@@ -257,7 +259,6 @@ class Bittrex(Exchange):
         data = self.requestAuthenticated(url='%s/public/getcurrencies?apikey=%s&nonce=1' % (self.apiMethod, self.key), requestType='GET')
         try:
             df = p.DataFrame(data['result'])#.transpose()
-            #pf(df)
             return df
         except:
             ''
