@@ -2923,7 +2923,13 @@ def logApplicationUsage(mode, description=None, data=None):
     if description: di.update({'description':description})
     if data:        di.update({'data':data})
     mongo = mong.MongoClient()
-    mongo.ql.application_usage_patterns.insert(di)
+    try:
+        mongo.ql.application_usage_patterns.insert(di)
+    #except Exception as e:
+    except mong.errors.ServerSelectionTimeoutError as e:
+        print 'mongodb is not reachable'
+        print e
+        sys.exit()
     mongo.close()
 
 def getSyntheticCurrencyTable(oanda2, oq, instruments):
