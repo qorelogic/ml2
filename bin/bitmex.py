@@ -88,6 +88,42 @@ class Poloniex:
             ''
         return df
 
+    def viewHistoricalPricePoloniex(self):
+        from matplotlib import pyplot as plt
+        from pylab import rcParams
+        import seaborn as sns
+        sns.set()
+        #%pylab inline
+        rcParams['figure.figsize'] = 30, 5
+        df = pl.getPoloniexHistorical(symbol='BTC_ETC', period=86400, bars=300)
+        df.ix[:, 'open high low close'.split(' ')].plot()
+        #df = pl.getPoloniexHistorical(symbol='BTC_ETC', period=240)
+        #df.ix[:, 'open high low close'.split(' ')].plot()
+        plt.show()
+    
+    def viewChartsPoloniex(self):
+        btc = 'DASH ETH FCT GNO LTC XMR REP XRP ZEC'.split(' ')
+        periods = '1 5 15 30 60 240 14400'.split(' ')
+        periods = [300, 900, 1800, 7200, 14400, 86400]
+        #periods = [1, 5, 15, 30, 60, 3600, 14400, 86400]
+        print periods
+        from matplotlib import pyplot as plt
+        from pylab import rcParams
+        import seaborn as sns
+        sns.set()
+        #%pylab inline
+        rcParams['figure.figsize'] = 30, 5
+        btc_usd = 2400
+        for i in btc:
+            print i
+            df = pl.getPoloniexHistorical(symbol='BTC_%s' % i, period=300, bars=300)
+            mdfp = df.ix[:, 'open high low close'.split(' ')]
+            mdfp = mdfp.ix[:, :] * btc_usd
+            print mdfp.head(10)
+            mdfp.plot()
+            plt.show()
+            print '====='
+
 def currencyCube(r=None,tf=None, c=None,d=None, index=None, columns=None, rdf=None):
     #r = 550 #rows history
     #c = 40   #columns currencypairs
@@ -176,42 +212,6 @@ def currencyChartOverlay():
     plt.legend(lss)
     plt.show()
 
-def viewHistoricalPricePoloniex():
-    from matplotlib import pyplot as plt
-    from pylab import rcParams
-    import seaborn as sns
-    sns.set()
-    #%pylab inline
-    rcParams['figure.figsize'] = 30, 5
-    df = pl.getPoloniexHistorical(symbol='BTC_ETC', period=86400, bars=300)
-    df.ix[:, 'open high low close'.split(' ')].plot()
-    #df = pl.getPoloniexHistorical(symbol='BTC_ETC', period=240)
-    #df.ix[:, 'open high low close'.split(' ')].plot()
-    plt.show()
-
-def viewChartsPoloniex():
-    btc = 'DASH ETH FCT GNO LTC XMR REP XRP ZEC'.split(' ')
-    periods = '1 5 15 30 60 240 14400'.split(' ')
-    periods = [300, 900, 1800, 7200, 14400, 86400]
-    #periods = [1, 5, 15, 30, 60, 3600, 14400, 86400]
-    print periods
-    from matplotlib import pyplot as plt
-    from pylab import rcParams
-    import seaborn as sns
-    sns.set()
-    #%pylab inline
-    rcParams['figure.figsize'] = 30, 5
-    btc_usd = 2400
-    for i in btc:
-        print i
-        df = pl.getPoloniexHistorical(symbol='BTC_%s' % i, period=300, bars=300)
-        mdfp = df.ix[:, 'open high low close'.split(' ')]
-        mdfp = mdfp.ix[:, :] * btc_usd
-        print mdfp.head(10)
-        mdfp.plot()
-        plt.show()
-        print '====='
-
 def instrumentIndecesBitmex():
     # bitmex
     import drest
@@ -254,7 +254,7 @@ class CoinMarketCap:
         dfc = dfc.set_index('symbol')
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         #    print dfc
-        self.df = dfc
+        self.dfc = dfc
         return dfc
     
     def getExchanges(self, coin):
@@ -273,6 +273,49 @@ class CoinMarketCap:
         #print df.transpose()
         df = df.transpose()
         return df
+
+    def parseCoinMarketCap(self):
+        # coinmarketcap create portfolio
+        # goes thru all coins on coinmarketcap
+        import pandas as p
+        cmc = CoinMarketCap()
+        dfxs = p.DataFrame(); 
+        try:
+            self.dfc
+        except Exception as e:
+            #print e
+            self.tickers()
+        for i in self.dfc['id']: print i; dfxs = dfxs.combine_first(cmc.getExchanges(i))
+        #print dfxs.fillna(0)
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print df
+            print 
+            print 'list most frequent exchanges:'
+            mostFrequentExchanges = p.DataFrame(dfxs.fillna(0).sum()).sort_values(by=0, ascending=False)
+            mostFrequentExchanges['indx'] = range(len(mostFrequentExchanges.index), 0, -1)
+    
+            pdfxs = dfxs.ix[:, list(mostFrequentExchanges.index[0:5])].fillna(0)
+            pdfxs = dfxs[dfxs.fillna(0).transpose().sum() > 0].fillna(0)
+            tradableCoins = pdfxs.ix[:, list(mostFrequentExchanges.index[0:10])][pdfxs > 0].fillna(0)
+    
+            print mostFrequentExchanges
+    
+            print 
+            print 'list tradableCoins:'
+            a1 = mostFrequentExchanges.ix[tradableCoins.columns, 'indx'].get_values()
+            b1 = tradableCoins.get_values()
+            c1 = b1 * a1
+            tradableCoins.ix[:,:] = c1
+            tradableCoins['exchangeId'] = n.max(c1, 1)
+            print tradableCoins
+            #print tradableCoins.transpose()
+    
+            print 
+            print 'list coins that trade on most exchanges:'
+            print p.DataFrame(dfxs.fillna(0).transpose().sum()).sort_values(by=0, ascending=False)
+        #print pdfxs#.transpose()
+        #df.index
+        #df = df.combine_first(getExchanges('1337'))
 
 class TokenMarket:
     
