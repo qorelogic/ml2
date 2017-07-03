@@ -127,6 +127,398 @@ def currencyCube(r=None,tf=None, c=None,d=None, index=None, columns=None, rdf=No
         ''
     return {'data':rdf, 'index':index, 'columns':columns}
 
+def getCurrencies():
+    # all currencies
+
+    #$x('//table[@id="marketBTC"]//td[2]/text()')
+    btc = ["XRP", "STR", "ETH", "LTC", "ETC", "XMR", "DGB", "DASH", "FCT", "DOGE", "BTS", "XEM", "GNO", "SC", "GNT", "ZEC", "STEEM", "MAID", "PASC", "SYS", "LSK", "CLAM", "STRAT", "DCR", "XCP", "REP", "NXT", "POT", "FLDC", "VTC", "NAV", "PINK", "ARDR", "GAME", "BCN", "BURST", "VRC", "BELA", "AMP", "SJCX", "LBC", "XBC", "PPC", "XVC", "GRC", "NAUT", "BTM", "OMNI", "BCY", "EXP", "EMC2", "SBD", "NOTE", "HUC", "VIA", "BLK", "NMC", "XPM", "RIC", "NXC", "RADS", "NEOS", "FLO", "BTCD"]
+    #$x('//table[@id="marketETH"]//td[2]/text()')
+    eth = ["GNO", "ETC", "GNT", "ZEC", "REP", "STEEM", "LSK"]
+    #$x('//table[@id="marketXMR"]//td[2]/text()')
+    xmr = ["LTC", "ZEC", "DASH", "NXT", "MAID", "BCN", "BTCD", "BLK"]
+    #$x('//table[@id="marketUSDT"]//td[2]/text()')
+    usdt = ["BTC", "XRP", "STR", "LTC", "ETH", "ETC", "XMR", "DASH", "ZEC", "NXT", "REP"]
+
+    #df = getPoloniexHistorical('BTC_XMR')
+
+    lss = []
+    #btc = 'ETH BURST XMR SC'.split(' ')
+    for i in range(len(btc)):
+        lss.append('BTC_%s' % btc[i])
+    #lss = ['BTC_ETC', 'BTC_ETH']
+    #print lss
+    return lss
+
+def currencyChartOverlay():
+    from qoreliquid import normalizeme
+    from qoreliquid import sigmoidme
+    import matplotlib.pylab as plt
+    mdf = p.DataFrame()
+    for i in lss[0:5]:
+        try:
+            print i
+            df = pl.getPoloniexHistorical(symbol=i, period=14400, bars=300)
+            sdf = df.set_index('date').ix[:, 'close'.split(' ')]
+            sdf[i] = sdf['close']
+            sdf = sdf[[i]]
+            sdf = sdf.ffill().bfill()
+            mdf = mdf.combine_first(sdf)
+        except KeyboardInterrupt as e:
+            break
+            print e
+    mdf = normalizeme(mdf)
+    #mdf.ffill().bfill()
+    #print mdf
+    #sdf.plot()
+    import seaborn as sns
+    sns.set()
+    plt.plot(mdf)
+    plt.legend(lss)
+    plt.show()
+
+def viewHistoricalPricePoloniex():
+    from matplotlib import pyplot as plt
+    from pylab import rcParams
+    import seaborn as sns
+    sns.set()
+    #%pylab inline
+    rcParams['figure.figsize'] = 30, 5
+    df = pl.getPoloniexHistorical(symbol='BTC_ETC', period=86400, bars=300)
+    df.ix[:, 'open high low close'.split(' ')].plot()
+    #df = pl.getPoloniexHistorical(symbol='BTC_ETC', period=240)
+    #df.ix[:, 'open high low close'.split(' ')].plot()
+    plt.show()
+
+def viewChartsPoloniex():
+    btc = 'DASH ETH FCT GNO LTC XMR REP XRP ZEC'.split(' ')
+    periods = '1 5 15 30 60 240 14400'.split(' ')
+    periods = [300, 900, 1800, 7200, 14400, 86400]
+    #periods = [1, 5, 15, 30, 60, 3600, 14400, 86400]
+    print periods
+    from matplotlib import pyplot as plt
+    from pylab import rcParams
+    import seaborn as sns
+    sns.set()
+    #%pylab inline
+    rcParams['figure.figsize'] = 30, 5
+    btc_usd = 2400
+    for i in btc:
+        print i
+        df = pl.getPoloniexHistorical(symbol='BTC_%s' % i, period=300, bars=300)
+        mdfp = df.ix[:, 'open high low close'.split(' ')]
+        mdfp = mdfp.ix[:, :] * btc_usd
+        print mdfp.head(10)
+        mdfp.plot()
+        plt.show()
+        print '====='
+
+def instrumentIndecesBitmex():
+    # bitmex
+    import drest
+    #api = drest.API('http://socket.coincap.io/')
+    api = drest.API('https://www.bitmex.com/api/v1')
+    #response = api.make_request('GET', '/trade?count=100&reverse=false')
+    #response = api.make_request('GET', '/instrument')
+    response = api.make_request('GET', '/instrument/indices')
+    #print response.data
+
+    df = p.DataFrame(response.data)#.transpose()
+    #pf(df)
+    return df
+
+# cypto api 
+exchangePriority = {
+'Bittrex':3,
+'Cryptopia':1,
+'Novaexchange':2,
+'Poloniex':5,
+'YoBit':4
+}
+
+class CoinMarketCap:
+    
+    def  __init__(self):
+        from qore import XPath
+        self.xp = XPath()
+        pass
+
+    def tickers(self):
+        import drest
+        api = drest.API('http://api.coinmarketcap.com/')
+        response = api.make_request('GET', '/v1/ticker/')
+        res = response.data
+    
+        c = '24h_volume_usd available_supply id last_updated market_cap_usd name percent_change_1h percent_change_24h percent_change_7d price_btc price_usd rank symbol total_supply'.split(' ')    
+    
+        dfc = p.DataFrame(res)
+        dfc = dfc.set_index('symbol')
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print dfc
+        self.df = dfc
+        return dfc
+    
+    def getExchanges(self, coin):
+        xresd = self.xp.xpath2df('http://coinmarketcap.com/currencies/%s/' % coin, {
+            'source'       : '//tbody/tr/td[2]/a/text()',
+            'pair'         : '//tbody/tr/td[3]/a/text()',
+            'volume_24h'   : '//tbody/tr/td[4]/span/text()',
+            'price'        : '//tbody/tr/td[5]/span/text()',
+            'volume_pcnt'  : '//tbody/tr/td[6]/text()',
+            'updated'      : '//tbody/tr/td[7]/text()',
+        })
+        df = p.DataFrame(xresd)
+        df = p.DataFrame(df['source'].drop_duplicates())
+        df[coin] = 1
+        df = df.set_index('source')
+        #print df.transpose()
+        df = df.transpose()
+        return df
+
+class TokenMarket:
+    
+    def  __init__(self):
+        import pandas as p
+        import numpy as n
+        from qore import XPath
+        import pandas as p
+        self.xp = XPath()
+        self.allAssetsICOsBlockchain = p.DataFrame()
+        pass
+
+    def allAssetsBlockchainTokenMarket(self):
+    
+        #def tokenmarket():
+        #"""
+        import re
+        xresd = self.xp.xpath2df('https://tokenmarket.net/blockchain/all-assets', {
+            'name'       : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[1]/a/text()',
+            'href'       : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[1]/a/@href',
+            #'status'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[3]/span/text()',
+            'symbol'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[5]/text()',
+            'description': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[6]/text()',
+            #'hot': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[2]/text()',        
+        })
+        #print xresd
+        #"""
+        df = p.DataFrame(xresd)
+        li = 'name href symbol description'.split()
+        for i in li:
+            df[i] = map(lambda x: x.strip(), df[i])
+        #df['href'] = map(lambda x: x.replace('https://tokenmarket.net/blockchain/ethereum/assets/', ''), df['href'])
+        df['type'] = map(lambda x: re.sub(re.compile(r'https.*?\/blockchain\/(.*?)\/.*'), '\\1', x), df['href'])
+        #df['tmid'] = map(lambda x: re.sub(re.compile(r'https.*\/assets\/(.*?)\/'), '\\1', x), df['href'])
+        #df = p.DataFrame(df['name'].drop_duplicates())
+        #df[coin] = 1
+        #df = df.set_index('name')
+        #print df.transpose()
+        df = df#.transpose()
+        #return df
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print df
+            #print df#.sort_values(by='type')
+            pass
+        self.allAssetsICOsBlockchain = df
+        return self.allAssetsICOsBlockchain
+    
+    def tokenICOsTokenMarket(self):
+        
+        import re
+        self.dfp = self.allAssetsICOsBlockchain
+        nn = 66
+        lili = self.dfp.index#[nn:nn+5]
+        for i in lili[0:5]:
+    
+            url = '%s' % self.dfp.ix[self.dfp.index[i], 'href'] 
+            print '%s %s' % (i, url)
+            #"""
+            xresd = self.xp.xpath2df(url, {
+                'name'       : '//*[@id="page-wrapper"]/main/div[2]/div[3]/div[1]/h1/text()[2]',
+                'symbol'     : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/table[1]//tr[1]/td/text()',
+                'trading'    : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/table[1]//tr[2]/td/span/text()[2]',
+                'links-website'    : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[1]/td/a/@href',
+                'links-blog'       : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[2]/td/a/@href',
+                'links-whitepaper' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[3]/td/a/@href',
+                'links-facebook'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[4]/td/a/@href',
+                'links-twitter'    : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[5]/td/a/@href',
+                'links-linkedin'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[6]/td/a/@href',
+                'links-slack'      : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[7]/td/a/@href',
+                'links-telegram'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[8]/td/a/@href',
+                'links-github'     : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[9]/td/a/@href',
+                'domain-score'     : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/table[2]//tr[1]/td/text()[1]',
+                'backlinks'        : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/table[2]//tr[2]/td/text()[1]',
+                'github-starredby' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[1]/td/text()',
+                'github-watchings' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[2]/td/text()',
+                'github-contributors' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[2]/td/text()',
+                'github-forks'        : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[3]/td/text()',
+                'github-commits'      : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[4]/td/text()',
+                'github-openIssues'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[5]/td/text()',
+            })
+            #"""
+            #print xresd
+            xresdlen = {}
+            for j in xresd:
+                xresdlen[j] = len(xresd[j])
+            xresdlen = p.DataFrame(xresdlen, index=['len']).transpose()
+            xresdlen['max'] = n.max(xresdlen['len'])
+            xresdlen['diff'] = xresdlen['max'] - xresdlen['len']
+            #print xresdlen
+            #print xresd
+            for j in xrange(len(xresdlen['diff'])):
+                try:
+                    #print '%s %s' % (j, xresdlen['diff'][j])
+                    if xresdlen['diff'][j] > 0:
+                        #print j
+                        #xresdlen = xresdlen.drop(xresdlen.index[j])
+                        xresd.pop(xresdlen.index[j])
+                        #print p.DataFrame(xresd)
+                except:
+                    ''
+            #print xresdlen
+            #print xresd
+            dftm = p.DataFrame(xresd, index=[i])
+            li = 'name backlinks domain-score github-starredby github-commits github-contributors github-forks github-openIssues github-watchings'.split()    
+            #backlinks domain-score
+            #links-blog links-facebook links-github links-twitter links-website links-whitepaper name symbol trading    
+            for j in li:
+                try:    dftm[j] = map(lambda x: x.strip(), dftm[j])
+                except: ''
+            self.dfp = self.dfp.combine_first(dftm)
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                #print dftm#.transpose()
+                #print dftm.transpose()
+                ''
+            #break
+
+
+    def underTheRadarTokens(self):
+        # TokenMarket [UnderTheRadar Tokens]
+        dfp = self.allAssetsICOsBlockchain
+        #self.dfp.to_csv('tokenmarket.csv', encoding='utf8')
+        fi = 'name symbol trading type backlinks domain-score links-blog links-facebook links-github links-twitter links-website links-whitepaper github-starredby github-commits github-contributors github-forks github-openIssues github-watchings'
+        li = 'backlinks domain-score github-starredby github-commits github-contributors github-forks github-openIssues github-watchings'.split(' ')
+        dfp = dfp.fillna(0)
+        for i in li:
+            try: dfp[i] = p.to_numeric(dfp[i])
+            except Exception as e: 
+                #print '%s %s' % (i,e)
+                ''
+        #print dfp.dtypes
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            dfm = dfp.ix[:, fi.split()].sort_values(by='github-starredby').set_index('symbol')
+            #print dfm
+            ''
+            df1 = self.allAssetsICOsBlockchain.set_index('name')
+            df1['symbol'] = self.allAssetsICOsBlockchain.index
+            dfm = dfm.set_index('name').combine_first(df1)
+            #print ' '.join(list(dfm.columns))
+            ff = '24h_volume_usd available_supply backlinks domain-score github-commits github-contributors github-forks github-openIssues github-starredby github-watchings id last_updated links-blog links-facebook links-github links-twitter links-website links-whitepaper market_cap_usd name percent_change_1h percent_change_24h percent_change_7d price_btc price_usd rank total_supply trading type'
+            ff = 'symbol 24h_volume_usd available_supply backlinks domain-score github-commits github-contributors github-forks github-openIssues github-starredby github-watchings id last_updated market_cap_usd name percent_change_1h percent_change_24h percent_change_7d price_btc price_usd rank total_supply trading type'
+            ff = 'X3 X X2 symbol backlinks domain-score github-commits github-contributors github-forks github-openIssues github-starredby github-watchings id  links-github type'
+            def numerix(arr):
+                arr = map(lambda x: 0 if x == 'None' else x, arr)
+                arr = p.to_numeric(arr)
+                return arr    
+            dfm['github-commits'] = numerix(dfm['github-commits'])
+            dfm['github-contributors'] = numerix(dfm['github-contributors'])
+            dfm['github-forks'] = numerix(dfm['github-forks'])
+            dfm['github-openIssues'] = numerix(dfm['github-openIssues'])
+            #"""
+            def div0( a, b ):
+                "#"" ignore / 0, div0( [-1, 0, 1], 0 ) -> [0, 0, 0] "#""
+                with n.errstate(divide='ignore', invalid='ignore'):
+                    #c = n.true_divide( a, b )
+                    #c[ ~ n.isfinite( c )] = 0  # -inf inf NaN
+                    #c = n.true_divide(a,b)
+                    #c = n.divide(a, b, out=n.zeros_like(a), where=b!=0)
+                    #c[c == n.inf] = 0
+                    #c = n.nan_to_num(c)
+                    return c
+            #dfm['X'] = div0(dfm['github-commits'].get_values(), dfm['github-contributors'].get_values())
+            #"""
+            dfm['X'] = dfm['github-commits'].get_values() / dfm['github-contributors'].get_values()
+            dfm['X2'] = dfm['github-openIssues'].get_values() / dfm['github-forks'].get_values()
+            dfm['X3'] = dfm['X2'].get_values() / dfm['X'].get_values()    
+            #sortby='github-commits'
+            sortby='X3'
+            #print dfm.dtypes
+            dfr = dfm
+            for i in dfr[dfr['github-commits'] == 10].index: dfr = dfr.drop(i)
+            dfr = dfr.ix[:,ff.split(' ')].fillna(0).sort_values(by=sortby, ascending=False)
+            #print dfr
+            ff = 'X3 weight' # to publish
+            dfr = dfm.ix[:,ff.split(' ')].fillna(0).sort_values(by=sortby, ascending=False)
+            for i in dfr[dfr['X3'] == n.inf].index: dfr = dfr.drop(i)
+            dfr['potentialPortfolioWeight'] = dfr['X3'] / dfr['X3'].head(20).sum()
+    
+            import datetime, time
+    
+            # UnderTheRadar Suggestions
+            print '== UnderTheRadar::tokens [%s]' % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d')
+            print '====================================='
+            print
+            print '== OpenSource Token Suggestions:'
+            print '== FutureTokens  [Untradable::pre&postICO]'
+            print
+            print dfr.ix[:,['potentialPortfolioWeight']].head(20)
+            print
+            print 'note: Some tokens are pre-ICO, therefore not yet on the market.'
+            print '      They are, however, worth looking into.'
+    
+            #dfr2 = dfr.ix[:,['potentialPortfolioWeight']].head(20)
+            #dfr2['name'] = dfr2.index
+            #print dfr2.ix[:,'name potentialPortfolioWeight'.split()].get_values()
+            #print ",".join(dfr2.get_values())
+    
+            print
+            print
+            print
+            print '== Closed Source Token Suggestions:'
+            print '== FutureTokens  [Untradable::pre&postICO]'
+            print
+            print '   [Stay tuned]'
+            print
+    
+            print '== PresentTokens [Untradable::pre&postICO]'
+            print
+            print '   [Stay tuned]'
+            print
+            #print df
+            #print dfp
+            #print df#.ix[:, 'id'].sort_index()
+            #print dfp.ix[:, 'name symbol'.split(' ')].sort_values(by='symbol')
+        #print dfp.ix[:, fi.split()].sort_values(by='github-starredby')']
+            #24h_volume_usd available_supply backlinks domain-score github-commits github-contributors github-forks github-openIssues github-starredby github-watchings id last_updated links-blog links-facebook links-github links-twitter links-website links-whitepaper market_cap_usd name percent_change_1h percent_change_24h percent_change_7d price_btc price_usd rank total_supply trading type
+        #print dfp.ix[:, fi.split()].sort_values(by='github-starredby')
+
+    def tokenmarket(self):
+        dfp = self.allAssetsICOsBlockchain
+        #"""
+        import re
+        xresd = self.xp.xpath2df('https://tokenmarket.net/blockchain/all-assets', {
+            'name'       : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[1]/a/text()',
+            'href'       : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[1]/a/@href',
+            #'status'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[3]/span/text()',
+            'symbol'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[5]/text()',
+            'description': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[6]/text()',
+            #'hot': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[2]/text()',        
+        })
+        #print xresd
+        #"""
+        df = p.DataFrame(xresd)
+        li = 'name href symbol description'.split()
+        for i in li:
+            df[i] = map(lambda x: x.strip(), df[i])
+        #df['href'] = map(lambda x: x.replace('https://tokenmarket.net/blockchain/ethereum/assets/', ''), df['href'])
+        df['href'] = map(lambda x: re.sub(re.compile(r'https.*\/assets\/'), '', x), df['href'])
+        #df = p.DataFrame(df['name'].drop_duplicates())
+        #df[coin] = 1
+        #df = df.set_index('name')
+        #print df.transpose()
+        df = df#.transpose()
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print df
+        return df
+
 class Exchange:
 
     def __init__(self, key, secret, exchange):
