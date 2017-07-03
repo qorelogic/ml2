@@ -240,8 +240,17 @@ class CoinMarketCap:
     def  __init__(self):
         from qore import XPath
         self.xp = XPath()
+        # cypto api 
+        self.exchangePriority = {
+            'Bittrex':3,
+            'Cryptopia':1,
+            'Novaexchange':2,
+            'Poloniex':5,
+            'YoBit':4
+        }
         pass
 
+    #@profile
     def tickers(self):
         import drest
         api = drest.API('http://api.coinmarketcap.com/')
@@ -257,6 +266,7 @@ class CoinMarketCap:
         self.dfc = dfc
         return dfc
     
+    #@profile
     def getExchanges(self, coin):
         xresd = self.xp.xpath2df('http://coinmarketcap.com/currencies/%s/' % coin, {
             'source'       : '//tbody/tr/td[2]/a/text()',
@@ -274,18 +284,29 @@ class CoinMarketCap:
         df = df.transpose()
         return df
 
+    #@profile
+    def check(self, checkTradableCoins=False):
+        try: self.dfc
+        except Exception as e:
+            #print e
+            self.tickers()
+        
+        if checkTradableCoins:
+            try: self.tradableCoins
+            except Exception as e:
+                #print e
+                self.parseCoinMarketCap()
+        
     def parseCoinMarketCap(self):
         # coinmarketcap create portfolio
         # goes thru all coins on coinmarketcap
         import pandas as p
         cmc = CoinMarketCap()
-        dfxs = p.DataFrame(); 
-        try:
-            self.dfc
-        except Exception as e:
-            #print e
-            self.tickers()
-        for i in self.dfc['id']: print i; dfxs = dfxs.combine_first(cmc.getExchanges(i))
+        dfxs = p.DataFrame();
+        self.check()
+        for i in self.dfc['id'][0:10]:
+            print i;
+            dfxs = dfxs.combine_first(cmc.getExchanges(i))            
         #print dfxs.fillna(0)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             #print df
@@ -316,6 +337,99 @@ class CoinMarketCap:
         #print pdfxs#.transpose()
         #df.index
         #df = df.combine_first(getExchanges('1337'))
+        self.tradableCoins = tradableCoins
+
+    #@profile
+    def getTradableCoins(self, bal=165.11):
+
+        self.check(checkTradableCoins=True)
+        
+        df = self.dfc
+        c = '24h_volume_usd available_supply id market_cap_usd name percent_change_24h percent_change_7d price_btc price_usd rank symbol total_supply'.split(' ')
+        #print c
+        #print df.dtypes
+    
+        # convert to numeric
+        for i in c:
+            try:    df[i] = p.to_numeric(df[i])
+            except: ''
+    
+        # filter idea sourced from:
+        # https://www.youtube.com/watch?v=JF3eXDbzmg0 @ 15:01
+        df = df[df['price_usd'] <= 0.1]
+        df = df[df['24h_volume_usd'] >= 100000]
+        try:
+            df = df.drop('FEDS')
+        except:
+            ''
+    
+        df = df.ix[:, c]
+        df = df.sort_values(by='24h_volume_usd', ascending=False)
+        df = df.sort_values(by='percent_change_24h', ascending=False)
+    
+        # portfolio        
+        df['portPcnt'] = df['price_usd'] / df['price_usd'].sum() * 1
+        #df['portPcntPinv'] = 1 - df['portPcnt']
+        df['portPcntPinv'] = 1 / df['portPcnt']
+        df['portPcntPinv2'] = df['portPcntPinv'] / df['portPcntPinv'].sum() * 100
+        df['portAmount'] = df['portPcntPinv2'] * bal / 100
+        df['portAmount_usd'] = df['portPcntPinv2'] * bal / 100
+        df['portAmount_units'] = df['portAmount_usd'] / df['price_usd']
+    
+        c = '24h_volume_usd id market_cap_usd name percent_change_24h percent_change_7d price_btc price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')    
+        c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')    
+        c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')
+        df = df.sort_values(by='portPcntPinv2', ascending=False)
+    
+        # tradableCoins2
+        tradableCoins = self.tradableCoins
+        #print list(tradableCoins.index)
+        tradableCoins2 = df.set_index('id').ix[list(tradableCoins.index), c]
+        tradableCoins2 = tradableCoins2.combine_first(tradableCoins)
+        tradableCoins2 = tradableCoins2[tradableCoins2['portAmount_units'] > 0].sort_values(by='portAmount_units', ascending=False)
+    
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print '            bal: %s' % bal
+            print '   price_usdSUM: %s' % df['price_usd'].sum()
+            print '    portPcntSUM: %s' % df['portPcnt'].sum()
+            print 'portPcntPinvSUM: %s' % df['portPcntPinv'].sum()
+            print 'portAmount_usdSUM: %s' % tradableCoins2['portAmount_usd'].sum()
+            try:
+                print 'portAmount_usd_YoBit_SUM: %s' % tradableCoins2[tradableCoins2['YoBit'] == 1]['portAmount_usd'].sum()
+            except:
+                ''
+    
+            #tradableCoins2['Poloniex'] = tradableCoins2['Poloniex'] - tradableCoins2['YoBit']
+            #print tradableCoins2[tradableCoins2['YoBit'] == 1]
+            print tradableCoins
+            print tradableCoins2
+    
+            #print df
+            #print df.ix[:, c]
+    
+        #df = p.DataFrame(response.data)#.transpose()
+        #pf(df)
+        #df    print list(tradableCoins.index)
+        self.tradableCoins  = tradableCoins
+        self.tradableCoins2 = tradableCoins2
+        self.df = df
+
+    #@profile
+    def generatePortfolio(self):
+        try:
+            self.df
+        except:
+            self.getTradableCoins()
+        df = self.df
+        df = df.sort_values(by='portPcntPinv2', ascending=False)
+        for i in df.index[0:10]: df = df.combine_first(self.getExchanges(i))
+        c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
+        c = 'name price_usd portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print df.fillna('').ix[:, c].sort_values(by='portAmount_usd', ascending=False)
+        #print xresd
+        #print p.DataFrame(xresd)
+        return df
 
 class TokenMarket:
     
@@ -738,7 +852,7 @@ if __name__ == "__main__":
     pf(df)
     """
 
-    nu = 150
+    #nu = 150
     """
     print makeTimeseriesTimestampRange(bars=nu)
     print makeTimeseriesTimestampRange(bars=nu, period=86400)
@@ -752,5 +866,13 @@ if __name__ == "__main__":
     print makeTimeseriesTimestampRange(timestamp=1495209642, period=900, bars=nu)
     print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)
     """
-    print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)['range']
+    #print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)['range']
+    
+    #%reload_ext autoreload
+    #%autoreload 2
+    from bitmex import *
+    cmc = CoinMarketCap()
+    #cmc.getTradableCoins()
+    portfolio = cmc.generatePortfolio()
+
 
