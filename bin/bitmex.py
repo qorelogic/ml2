@@ -353,10 +353,10 @@ class CoinMarketCap:
             mostFrequentExchanges['indx'] = range(len(mostFrequentExchanges.index), 0, -1)
             pdfxs = dfxs.ix[:, list(mostFrequentExchanges.index[0:5])].fillna(0)
             pdfxs = dfxs[dfxs.fillna(0).transpose().sum() > 0].fillna(0)
-            tradableCoins = pdfxs.ix[:, list(mostFrequentExchanges.index[0:10])][pdfxs > 0].fillna(0)
+            tradableCoins = pdfxs.ix[:, list(mostFrequentExchanges.index)][pdfxs > 0]
     
             a1 = mostFrequentExchanges.ix[tradableCoins.columns, 'indx'].get_values()
-            b1 = tradableCoins.get_values()
+            b1 = tradableCoins.fillna(0).get_values()
             c1 = b1 * a1
             tradableCoins.ix[:,:] = c1
             tradableCoins['exchangeId'] = n.max(c1, 1)
@@ -415,13 +415,13 @@ class CoinMarketCap:
         except:
             self.getTradableCoins()
         df = self.df
-        # portfolio        
-        df['portPcnt'] = df['price_usd'] / df['price_usd'].sum() * 1
-        #df['portPcntPinv'] = 1 - df['portPcnt']
-        df['portPcntPinv'] = 1 / df['portPcnt']
-        df['portPcntPinv2'] = df['portPcntPinv'] / df['portPcntPinv'].sum() * 100
-        df['portAmount'] = df['portPcntPinv2'] * bal / 100
-        df['portAmount_usd'] = df['portPcntPinv2'] * bal / 100
+        # portfolio
+        df['portPcnt']         =      df['price_usd'] / df['price_usd'].sum() * 1
+        #df['portPcntPinv']     =   1 - df['portPcnt']
+        df['portPcntPinv']     =   1 / df['portPcnt']
+        df['portPcntPinv2']    =   df['portPcntPinv'] / df['portPcntPinv'].sum() * 100
+        df['portAmount']       =  df['portPcntPinv2'] * bal / 100
+        df['portAmount_usd']   =  df['portPcntPinv2'] * bal / 100
         df['portAmount_units'] = df['portAmount_usd'] / df['price_usd']
     
         c = '24h_volume_usd id market_cap_usd name percent_change_24h percent_change_7d price_btc price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')    
@@ -469,7 +469,7 @@ class CoinMarketCap:
             df = df.combine_first(dfe)
         """
         c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
-        c = 'name price_usd portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
+        #c = 'name price_usd portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print df.fillna('').ix[:, c].sort_values(by='portAmount_usd', ascending=False)
         #print xresd
