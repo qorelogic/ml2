@@ -353,7 +353,7 @@ class CoinMarketCap:
             mostFrequentExchanges = p.DataFrame(dfxs.fillna(0).sum()).sort_values(by=0, ascending=False)
             mostFrequentExchanges['indx'] = range(len(mostFrequentExchanges.index), 0, -1)
             pdfxs = dfxs.ix[:, list(mostFrequentExchanges.index[0:5])].fillna(0)
-            pdfxs = dfxs[dfxs.fillna(0).transpose().sum() > 0].fillna(0)
+            pdfxs = dfxs[dfxs.fillna(0).transpose().sum() > 0]#.fillna(0)
             tradableCoins = pdfxs.ix[:, list(mostFrequentExchanges.index)][pdfxs > 0]
     
             a1 = mostFrequentExchanges.ix[tradableCoins.columns, 'indx'].get_values()
@@ -427,6 +427,8 @@ class CoinMarketCap:
         df['portAmount']       =  df['portPcntPinv2'] * bal / 100
         df['portAmount_usd']   =  df['portPcntPinv2'] * bal / 100
         df['portAmount_units'] = df['portAmount_usd'] / df['price_usd']
+        df['at'] = df['available_supply'] / df['total_supply']
+        df['mv'] = df['24h_volume_usd'] / df['market_cap_usd']
     
         c = '24h_volume_usd id market_cap_usd name percent_change_24h percent_change_7d price_btc price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')    
         c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')    
@@ -476,11 +478,10 @@ class CoinMarketCap:
             print dfe
             df = df.combine_first(dfe)
         """
-        c = 'symbol exchangeId 24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
+        c = 'symbol exchangeId 24h_volume_usd name available_supply total_supply at mv market_cap_usd percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
         #c = 'name price_usd portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            #sb = '24h_volume_usd'
-            sb = 'portAmount_usd'
+            sb = '24h_volume_usd portAmount_usd mv market_cap_usd'.split(' ')[3]
             dfv = df.fillna(0).ix[:, c].sort_values(by=sb, ascending=False)
             dfv = dfv[dfv['24h_volume_usd'] > 0]
             print dfv
