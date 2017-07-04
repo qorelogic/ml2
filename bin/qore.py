@@ -393,10 +393,17 @@ class XPath:
         'check'  : '//div/div//table//tr//td[6]/text()',
     }
     """
+    #@profile
     def xpath2df(self, url, xcols):
-        import requests as req
         from lxml import html
-        res = req.get(url)
+        # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
+        import requests as req, requests_cache
+        requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=3600*24)
+        try:
+            res = req.get(url)
+        except Exception as e:
+            print e
+            sys.exit()
         tree = html.fromstring(res.text)
         #print res.text
         xresd = {}
