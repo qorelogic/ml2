@@ -127,6 +127,21 @@ try: sys.path.index('/ml.dev/bin/datafeeds')
 except: sys.path.append('/ml.dev/bin/datafeeds')
 #--------------------------
 
+#"""
+import argparse
+# source: https://docs.python.org/2/howto/argparse.html
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", '--verbose', help="turn on verbosity")
+parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
+args = parser.parse_args()
+
+import sys
+try: sys.path.index('/ml.dev/bin/datafeeds')
+except: sys.path.append('/ml.dev/bin/datafeeds')
+#"""
+
 import pandas as p
 import numpy as n
 from qoreliquid import pf
@@ -568,6 +583,17 @@ class CoinMarketCap:
             pm.model = self.portfolioModelSelect
         pm.modelCoinMarketCap(df, bal=bal)
 
+        c = '24h_volume_usd id market_cap_usd name percent_change_24h percent_change_7d price_btc price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')
+
+        # portfolio        
+        df['portPcnt'] = df['price_usd'] / df['price_usd'].sum() * 1
+        #df['portPcntPinv'] = 1 - df['portPcnt']
+        df['portPcntPinv'] = 1 / df['portPcnt']
+        df['portPcntPinv2'] = df['portPcntPinv'] / df['portPcntPinv'].sum() * 100
+        df['portAmount'] = df['portPcntPinv2'] * bal / 100
+        df['portAmount_usd'] = df['portPcntPinv2'] * bal / 100
+        df['portAmount_units'] = df['portAmount_usd'] / df['price_usd']
+    
         c = '24h_volume_usd id market_cap_usd name percent_change_24h percent_change_7d price_btc price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')
         c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')
 
