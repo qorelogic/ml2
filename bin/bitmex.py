@@ -7,12 +7,15 @@ parser.add_argument("-v", '--verbose', help="turn on verbosity")
 parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-sk", '--parseCoinMarketCapSkipTo', help="parseCoinMrketCap skipTo")
+
 args = parser.parse_args()
 
 import sys
 try: sys.path.index('/ml.dev/bin/datafeeds')
 except: sys.path.append('/ml.dev/bin/datafeeds')
 #"""
+#--------------------------
 
 import pandas as p
 import numpy as n
@@ -263,6 +266,7 @@ class CoinMarketCap:
             'Poloniex':5,
             'YoBit':4
         }
+        self.parseCoinMarketCapSkipTo = 0
         pass
 
     #@profile
@@ -323,7 +327,8 @@ class CoinMarketCap:
         self.check()
         for i, v in enumerate(self.dfc['id']):#[0:20]:
             print '%s: %s' % (i, v);
-            dfxs = dfxs.combine_first(self.getExchanges(v))
+            if i >= self.parseCoinMarketCapSkipTo:
+                dfxs = dfxs.combine_first(self.getExchanges(v))
         #print dfxs.fillna(0)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             mostFrequentExchanges = p.DataFrame(dfxs.fillna(0).sum()).sort_values(by=0, ascending=False)
@@ -898,6 +903,8 @@ if __name__ == "__main__":
     #cmc.getTradableCoins()
     if args.parse:
         cmc.parseCoinMarketCap(verbose=True)
+    if args.parseCoinMarketCapSkipTo:
+        cmc.parseCoinMarketCapSkipTo = int(args.parseCoinMarketCapSkipTo)
     if args.portfolio:
         portfolio = cmc.generatePortfolio()
 
