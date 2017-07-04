@@ -1,4 +1,19 @@
 
+#"""
+import argparse
+# source: https://docs.python.org/2/howto/argparse.html
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", '--verbose', help="turn on verbosity")
+parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
+parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
+args = parser.parse_args()
+
+import sys
+try: sys.path.index('/ml.dev/bin/datafeeds')
+except: sys.path.append('/ml.dev/bin/datafeeds')
+#"""
+
 import pandas as p
 import numpy as n
 from qoreliquid import pf
@@ -268,7 +283,9 @@ class CoinMarketCap:
     
     #@profile
     def getExchanges(self, coin):
-        xresd = self.xp.xpath2df('http://coinmarketcap.com/currencies/%s/' % coin, {
+        url = 'http://coinmarketcap.com/currencies/%s/' % coin
+        #print 'getExchanges: %s' % url
+        xresd = self.xp.xpath2df(url, {
             'source'       : '//tbody/tr/td[2]/a/text()',
             'pair'         : '//tbody/tr/td[3]/a/text()',
             'volume_24h'   : '//tbody/tr/td[4]/span/text()',
@@ -297,50 +314,49 @@ class CoinMarketCap:
                 #print e
                 self.parseCoinMarketCap()
         
-    def parseCoinMarketCap(self):
+    #@profile
+    def parseCoinMarketCap(self, verbose=False):
         # coinmarketcap create portfolio
         # goes thru all coins on coinmarketcap
         import pandas as p
-        cmc = CoinMarketCap()
         dfxs = p.DataFrame();
         self.check()
-        for i in self.dfc['id'][0:10]:
-            print i;
-            dfxs = dfxs.combine_first(cmc.getExchanges(i))            
+        for i, v in enumerate(self.dfc['id']):#[0:20]:
+            print '%s: %s' % (i, v);
+            dfxs = dfxs.combine_first(self.getExchanges(v))
         #print dfxs.fillna(0)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            #print df
-            print 
-            print 'list most frequent exchanges:'
             mostFrequentExchanges = p.DataFrame(dfxs.fillna(0).sum()).sort_values(by=0, ascending=False)
             mostFrequentExchanges['indx'] = range(len(mostFrequentExchanges.index), 0, -1)
-    
             pdfxs = dfxs.ix[:, list(mostFrequentExchanges.index[0:5])].fillna(0)
             pdfxs = dfxs[dfxs.fillna(0).transpose().sum() > 0].fillna(0)
             tradableCoins = pdfxs.ix[:, list(mostFrequentExchanges.index[0:10])][pdfxs > 0].fillna(0)
     
-            print mostFrequentExchanges
-    
-            print 
-            print 'list tradableCoins:'
             a1 = mostFrequentExchanges.ix[tradableCoins.columns, 'indx'].get_values()
             b1 = tradableCoins.get_values()
             c1 = b1 * a1
             tradableCoins.ix[:,:] = c1
             tradableCoins['exchangeId'] = n.max(c1, 1)
-            print tradableCoins
-            #print tradableCoins.transpose()
-    
-            print 
-            print 'list coins that trade on most exchanges:'
-            print p.DataFrame(dfxs.fillna(0).transpose().sum()).sort_values(by=0, ascending=False)
-        #print pdfxs#.transpose()
+
+            if verbose:
+                #print df
+                print
+                print 'list most frequent exchanges:'
+                print mostFrequentExchanges
+                print 
+                print 'list tradableCoins:'
+                print tradableCoins
+                #print tradableCoins.transpose()
+                print 
+                print 'list coins that trade on most exchanges:'
+                print p.DataFrame(dfxs.fillna(0).transpose().sum()).sort_values(by=0, ascending=False)
+                #print pdfxs#.transpose()
         #df.index
         #df = df.combine_first(getExchanges('1337'))
         self.tradableCoins = tradableCoins
 
     #@profile
-    def getTradableCoins(self, bal=165.11):
+    def getTradableCoins(self):
 
         self.check(checkTradableCoins=True)
         
@@ -367,6 +383,15 @@ class CoinMarketCap:
         df = df.sort_values(by='24h_volume_usd', ascending=False)
         df = df.sort_values(by='percent_change_24h', ascending=False)
     
+        self.df = df
+
+    #@profile
+    def generatePortfolio(self, bal=165.11):
+        try:
+            self.df
+        except:
+            self.getTradableCoins()
+        df = self.df
         # portfolio        
         df['portPcnt'] = df['price_usd'] / df['price_usd'].sum() * 1
         #df['portPcntPinv'] = 1 - df['portPcnt']
@@ -412,23 +437,21 @@ class CoinMarketCap:
         #df    print list(tradableCoins.index)
         self.tradableCoins  = tradableCoins
         self.tradableCoins2 = tradableCoins2
-        self.df = df
 
-    #@profile
-    def generatePortfolio(self):
-        try:
-            self.df
-        except:
-            self.getTradableCoins()
-        df = self.df
         df = df.sort_values(by='portPcntPinv2', ascending=False)
-        for i in df.index[0:10]: df = df.combine_first(self.getExchanges(i))
+        """
+        for i in df.index[0:10]:
+            dfe = self.getExchanges(i)
+            print dfe
+            df = df.combine_first(dfe)
+        """
         c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
         c = 'name price_usd portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print df.fillna('').ix[:, c].sort_values(by='portAmount_usd', ascending=False)
         #print xresd
         #print p.DataFrame(xresd)
+        self.df = df
         return df
 
 class TokenMarket:
@@ -865,14 +888,18 @@ if __name__ == "__main__":
     print makeTimeseriesTimestampRange(timestamp=1495209642, period=1800, bars=nu)
     print makeTimeseriesTimestampRange(timestamp=1495209642, period=900, bars=nu)
     print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)
-    """
     #print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)['range']
+    """
     
     #%reload_ext autoreload
     #%autoreload 2
     from bitmex import *
     cmc = CoinMarketCap()
     #cmc.getTradableCoins()
-    portfolio = cmc.generatePortfolio()
+    if args.parse:
+        cmc.parseCoinMarketCap(verbose=True)
+    if args.portfolio:
+        portfolio = cmc.generatePortfolio()
+
 
 
