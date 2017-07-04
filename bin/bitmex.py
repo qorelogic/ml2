@@ -253,6 +253,27 @@ exchangePriority = {
 'YoBit':4
 }
 
+def apiRequest(baseurl, query, method='GET'):
+    #import drest
+    #api = drest.API(baseurl)
+    #response = api.make_request(method, query)
+    #res = response.data
+
+    #import drest
+    import ujson as uj
+    # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
+    import requests as req, requests_cache
+    requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=3600*24)
+    #baseurl = 'http://api.coinmarketcap.com/'
+    #method  = '/v1/ticker/'
+    #api = drest.API(baseurl)
+    #response = api.make_request(method, query)
+    #res = response.data
+    resp = req.get('%s%s' % (baseurl, query))
+    res = resp.text
+    res = uj.loads(res)
+    return res
+
 class CoinMarketCap:
     
     def  __init__(self):
@@ -271,10 +292,7 @@ class CoinMarketCap:
 
     #@profile
     def tickers(self):
-        import drest
-        api = drest.API('http://api.coinmarketcap.com/')
-        response = api.make_request('GET', '/v1/ticker/')
-        res = response.data
+        res = apiRequest('http://api.coinmarketcap.com/', '/v1/ticker/')
     
         c = '24h_volume_usd available_supply id last_updated market_cap_usd name percent_change_1h percent_change_24h percent_change_7d price_btc price_usd rank symbol total_supply'.split(' ')    
     
