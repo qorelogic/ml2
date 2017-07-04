@@ -8,6 +8,7 @@ parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="
 parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
 parser.add_argument("-sk", '--parseCoinMarketCapSkipTo', help="parseCoinMrketCap skipTo")
+parser.add_argument("-b", '--balance', help="parseCoinMrketCap skipTo")
 
 args = parser.parse_args()
 
@@ -416,9 +417,12 @@ class CoinMarketCap:
             self.getTradableCoins()
         df = self.df
         # portfolio
-        df['portPcnt']         =      df['price_usd'] / df['price_usd'].sum() * 1
+
+        #df['portPcnt']         =      df['price_usd'] / df['price_usd'].sum() * 1
+        #df['portPcnt']         =      (df['24h_volume_usd'] / df['price_usd']) / ((df['24h_volume_usd'] / df['price_usd'])).sum() * 1
+        df['portPcnt']         =      (df['price_usd'] / df['24h_volume_usd']) / (df['price_usd'] / df['24h_volume_usd']).sum() * 1
         #df['portPcntPinv']     =   1 - df['portPcnt']
-        df['portPcntPinv']     =   1 / df['portPcnt']
+        df['portPcntPinv']     =   1 / df['portPcnt'] # df['portPcnt']
         df['portPcntPinv2']    =   df['portPcntPinv'] / df['portPcntPinv'].sum() * 100
         df['portAmount']       =  df['portPcntPinv2'] * bal / 100
         df['portAmount_usd']   =  df['portPcntPinv2'] * bal / 100
@@ -439,9 +443,10 @@ class CoinMarketCap:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print '            bal: %s' % bal
             print '   price_usdSUM: %s' % df['price_usd'].sum()
-            print '    portPcntSUM: %s' % df['portPcnt'].sum()
+            print '    portPcntSUM: %s [assert =1]' % df['portPcnt'].sum()
             print 'portPcntPinvSUM: %s' % df['portPcntPinv'].sum()
             print 'portAmount_usdSUM: %s' % tradableCoins2['portAmount_usd'].sum()
+            print 'portAmount_unitsSUM: %s' % df['portAmount_units'].sum()
             try:
                 print 'portAmount_usd_YoBit_SUM: %s' % tradableCoins2[tradableCoins2['YoBit'] == 1]['portAmount_usd'].sum()
             except:
@@ -449,8 +454,8 @@ class CoinMarketCap:
     
             #tradableCoins2['Poloniex'] = tradableCoins2['Poloniex'] - tradableCoins2['YoBit']
             #print tradableCoins2[tradableCoins2['YoBit'] == 1]
-            print tradableCoins
-            print tradableCoins2
+            #print tradableCoins
+            #print tradableCoins2
     
             #print df
             #print df.ix[:, c]
@@ -462,16 +467,23 @@ class CoinMarketCap:
         self.tradableCoins2 = tradableCoins2
 
         df = df.sort_values(by='portPcntPinv2', ascending=False)
+        df['symbol'] = df.index
+        df = df.set_index('id')
+        df = tradableCoins.combine_first(df)
         """
         for i in df.index[0:10]:
             dfe = self.getExchanges(i)
             print dfe
             df = df.combine_first(dfe)
         """
-        c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
+        c = 'symbol exchangeId 24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
         #c = 'name price_usd portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print df.fillna('').ix[:, c].sort_values(by='portAmount_usd', ascending=False)
+            #sb = '24h_volume_usd'
+            sb = 'portAmount_usd'
+            dfv = df.fillna(0).ix[:, c].sort_values(by=sb, ascending=False)
+            dfv = dfv[dfv['24h_volume_usd'] > 0]
+            print dfv
         #print xresd
         #print p.DataFrame(xresd)
         self.df = df
@@ -923,8 +935,13 @@ if __name__ == "__main__":
         cmc.parseCoinMarketCap(verbose=True)
     if args.parseCoinMarketCapSkipTo:
         cmc.parseCoinMarketCapSkipTo = int(args.parseCoinMarketCapSkipTo)
+    if args.balance:
+        balance = float(args.balance)
+    else:
+        balance = 230
     if args.portfolio:
-        portfolio = cmc.generatePortfolio()
+        portfolio = cmc.generatePortfolio(bal=balance)
+
 
 
 
