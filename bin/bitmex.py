@@ -416,25 +416,13 @@ class CoinMarketCap:
         except:
             self.getTradableCoins()
         df = self.df
-        # portfolio
 
-        #df['portPcnt']         =      df['price_usd'] / df['price_usd'].sum() * 1
-        #df['portPcnt']         =      (df['24h_volume_usd'] / df['price_usd']) / ((df['24h_volume_usd'] / df['price_usd'])).sum() * 1
-        df['portPcnt']         =      (df['price_usd'] / df['24h_volume_usd']) / (df['price_usd'] / df['24h_volume_usd']).sum() * 1
-        #df['portPcntPinv']     =   1 - df['portPcnt']
-        df['portPcntPinv']     =   1 / df['portPcnt'] # df['portPcnt']
-        df['portPcntPinv2']    =   df['portPcntPinv'] / df['portPcntPinv'].sum() * 100
-        df['portAmount']       =  df['portPcntPinv2'] * bal / 100
-        df['portAmount_usd']   =  df['portPcntPinv2'] * bal / 100
-        df['portAmount_units'] = df['portAmount_usd'] / df['price_usd']
-        df['at'] = df['available_supply'] / df['total_supply']
-        df['mv'] = df['24h_volume_usd'] / df['market_cap_usd']
-    
-        c = '24h_volume_usd id market_cap_usd name percent_change_24h percent_change_7d price_btc price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')    
-        c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')    
+        pm = PortfolioModeler()
+        pm.modelCoinMarketCap(df, bal=bal)
+
+        c = '24h_volume_usd id market_cap_usd name percent_change_24h percent_change_7d price_btc price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')
         c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')
-        df = df.sort_values(by='portPcntPinv2', ascending=False)
-    
+
         # tradableCoins2
         tradableCoins = self.tradableCoins
         #print list(tradableCoins.index)
@@ -489,6 +477,33 @@ class CoinMarketCap:
         #print p.DataFrame(xresd)
         self.df = df
         return df
+
+class PortfolioModeler:
+    
+    def __init__(self):
+        self.version = 'v0.0.1'
+
+    def modelCoinMarketCap(self, df, bal=100):
+        ### ----------------------------------------------------------------------------
+        # portfolio model
+        ### ----------------------------------------------------------------------------
+        c = '24h_volume_usd id market_cap_usd name percent_change_24h percent_change_7d price_btc price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')
+        c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')
+        #df['portPcnt']         =      df['price_usd'] / df['price_usd'].sum() * 1
+        #df['portPcnt']         =      (df['24h_volume_usd'] / df['price_usd']) / ((df['24h_volume_usd'] / df['price_usd'])).sum() * 1
+        df['portPcnt']         =      (df['price_usd'] / df['24h_volume_usd']) / (df['price_usd'] / df['24h_volume_usd']).sum() * 1
+        #df['portPcntPinv']     =   1 - df['portPcnt']
+        df['portPcntPinv']     =   1 / df['portPcnt'] # df['portPcnt']
+        df['portPcntPinv2']    =   df['portPcntPinv'] / df['portPcntPinv'].sum() * 100
+        df['portAmount']       =  df['portPcntPinv2'] * bal / 100
+        df['portAmount_usd']   =  df['portPcntPinv2'] * bal / 100
+        df['portAmount_units'] = df['portAmount_usd'] / df['price_usd']
+        df['at'] = df['available_supply'] / df['total_supply']
+        df['mv'] = df['24h_volume_usd'] / df['market_cap_usd']
+        ### ----------------------------------------------------------------------------
+
+        df = df.sort_values(by='portPcntPinv2', ascending=False)
+        #return
 
 class TokenMarket:
     
