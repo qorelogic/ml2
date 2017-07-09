@@ -392,13 +392,52 @@ class XPath:
         'speed'  : '//div/div//table//tr//td[5]/text()',
         'check'  : '//div/div//table//tr//td[6]/text()',
     }
+
+#--Sample xpath2df() Implementation-------------------
+from qore import XPath
+xp = XPath()
+#v++
+di = {}
+c=1
+di.update({'x%s'%c:'//*[@id="dev-table"]//tr/td[%s]/b/text()'%c}); c=c+1
+di.update({'x%s'%c:'//*[@id="dev-table"]//tr/td[%s]/b/text()'%c}); c=c+1
+di.update({'x%s'%c:'//*[@id="dev-table"]//tr/td[%s]/text()'%c}); c=c+1
+di.update({'x%s'%c:'//*[@id="dev-table"]//tr/td[%s]/text()'%c}); c=c+1
+di.update({'x%s'%c:'//*[@id="dev-table"]//tr/td[%s]/text()'%c}); c=c+1
+di.update({'x%s'%c:'//*[@id="dev-table"]//tr/td[%s]/text()'%c}); c=c+1
+di.update({'x%s'%c:'//*[@id="dev-table"]//tr/td[%s]/text()'%c}); c=c+1
+di.update({'x%s'%c:'//*[@id="dev-table"]//tr/td[%s]/b/text()'%c}); c=c+1
+#print di
+xresd = xp.xpath2df('http://mininghwcomparison.com/list/index.php?brand=both', di)
+df = p.DataFrame()
+for i in xresd.keys():
+    #print p.DataFrame(xresd[i])
+    #print '%s: %s' % (i, len(xresd[i]))
+    df = df.combine_first(p.DataFrame(xresd[i], columns=[i]))
+#print xresd
+#df = p.DataFrame(xresd)
+#print df
+#df = df.convert_objects(convert_numeric=True)
+print df.dtypes
+import qgrid as qg
+qg.show_grid(df)
+#import dfgui # https://github.com/bluenote10/PandasDataFrameGUI
+#dfgui.show(df)
+#---------------------
+
+    # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
+    import requests, requests_cache
+    requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=3600)
+    for i in range(10):
+        print i
+        requests.get('http://httpbin.org/delay/1')
     """
     #@profile
-    def xpath2df(self, url, xcols):
+    def xpath2df(self, url, xcols, expire=3600*24):
         from lxml import html
         # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
         import requests as req, requests_cache
-        requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=3600*24)
+        requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=expire)
         try:
             res = req.get(url)
         except Exception as e:
