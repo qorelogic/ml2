@@ -1,21 +1,7 @@
 
-#"""
-import argparse
-# source: https://docs.python.org/2/howto/argparse.html
-parser = argparse.ArgumentParser()
-parser.add_argument("-v", '--verbose', help="turn on verbosity")
-parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
-parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
-parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
-parser.add_argument("-sk", '--parseCoinMarketCapSkipTo', help="parseCoinMrketCap skipTo")
-parser.add_argument("-b", '--balance', help="parseCoinMrketCap skipTo")
-
-args = parser.parse_args()
-
 import sys
 try: sys.path.index('/ml.dev/bin/datafeeds')
 except: sys.path.append('/ml.dev/bin/datafeeds')
-#"""
 #--------------------------
 
 import pandas as p
@@ -245,15 +231,6 @@ def instrumentIndecesBitmex():
     #pf(df)
     return df
 
-# cypto api 
-exchangePriority = {
-'Bittrex':3,
-'Cryptopia':1,
-'Novaexchange':2,
-'Poloniex':5,
-'YoBit':4
-}
-
 def apiRequest(baseurl, query, method='GET'):
     #import drest
     #api = drest.API(baseurl)
@@ -286,13 +263,21 @@ class CoinMarketCap:
             'Cryptopia':1,
             'Novaexchange':2,
             'Poloniex':5,
-            'YoBit':4
+            'YoBit':4,
+            'Livecoin':6,
+            'Liqui':7,
+            'HitBTC':8,
+            'EtherDelta':9,
         }
         self.parseCoinMarketCapSkipTo = 0
         pass
 
     #@profile
     def tickers(self):
+        #import drest
+        #api = drest.API('http://api.coinmarketcap.com/')
+        #response = api.make_request('GET', '/v1/ticker/')
+        #res = response.data
         res = apiRequest('http://api.coinmarketcap.com/', '/v1/ticker/')
     
         c = '24h_volume_usd available_supply id last_updated market_cap_usd name percent_change_1h percent_change_24h percent_change_7d price_btc price_usd rank symbol total_supply'.split(' ')    
@@ -344,10 +329,15 @@ class CoinMarketCap:
         import pandas as p
         dfxs = p.DataFrame();
         self.check()
-        for i, v in enumerate(self.dfc['id']):#[0:20]:
-            print '%s: %s' % (i, v);
-            if i >= self.parseCoinMarketCapSkipTo:
-                dfxs = dfxs.combine_first(self.getExchanges(v))
+        fname = '/tmp/exchanges.csv'
+        try:
+            dfxs = p.read_csv(fname, index_col=0)
+        except:
+            for i, v in enumerate(self.dfc['id']):#[0:20]:
+                print '%s: %s' % (i, v);
+                if i >= self.parseCoinMarketCapSkipTo:
+                    dfxs = dfxs.combine_first(self.getExchanges(v))
+            dfxs.to_csv(fname)
         #print dfxs.fillna(0)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             mostFrequentExchanges = p.DataFrame(dfxs.fillna(0).sum()).sort_values(by=0, ascending=False)
@@ -466,13 +456,18 @@ class CoinMarketCap:
             print dfe
             df = df.combine_first(dfe)
         """
-        c = 'symbol exchangeId 24h_volume_usd name available_supply total_supply at mv market_cap_usd percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
+        fc = ' '.join(self.exchangePriority.keys())
+        c = ('symbol exchangeId 24h_volume_usd name available_supply total_supply at mv market_cap_usd percent_change_24h percent_change_7d price_usd price_btc portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units %s'%fc).split(' ')
         #c = 'name price_usd portPcntPinv2 portAmount_usd portAmount_units Poloniex YoBit'.split(' ')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            sb = '24h_volume_usd portAmount_usd mv market_cap_usd'.split(' ')[3]
+            sb = '24h_volume_usd portAmount_usd mv market_cap_usd'.split(' ')[1]
             dfv = df.fillna(0).ix[:, c].sort_values(by=sb, ascending=False)
             dfv = dfv[dfv['24h_volume_usd'] > 0]
             print dfv
+            try:
+                import dfgui # https://github.com/bluenote10/PandasDataFrameGUI
+                dfgui.show(dfv)
+            except: ''
         #print xresd
         #print p.DataFrame(xresd)
         self.df = df
@@ -912,6 +907,19 @@ class Bittrex(Exchange):
 
 if __name__ == "__main__":
 
+    import argparse
+    # source: https://docs.python.org/2/howto/argparse.html
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", '--verbose', help="turn on verbosity")
+    parser.add_argument("-lm", '--listPortfolioModels', help="", action="store_true")
+    parser.add_argument("-pm", '--setPortfolioModel', help="")
+    parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
+    parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
+    parser.add_argument("-sk", '--parseCoinMarketCapSkipTo', help="parseCoinMrketCap skipTo")
+    parser.add_argument("-b", '--balance', help="parseCoinMrketCap skipTo")
+    
+    args = parser.parse_args()
+    
     """
     # bitmex
     import drest
@@ -947,6 +955,12 @@ if __name__ == "__main__":
     from bitmex import *
     cmc = CoinMarketCap()
     #cmc.getTradableCoins()
+    if args.listPortfolioModels:
+        pm = PortfolioModeler()
+        pm.listModels()
+        sys.exit()
+    if args.setPortfolioModel:
+        cmc.portfolioModelSelect = int(args.setPortfolioModel)
     if args.parse:
         cmc.parseCoinMarketCap(verbose=True)
     if args.parseCoinMarketCapSkipTo:
