@@ -270,6 +270,7 @@ class CoinMarketCap:
             'EtherDelta':9,
         }
         self.parseCoinMarketCapSkipTo = 0
+        self.portfolioModelSelect = None
         pass
 
     #@profile
@@ -408,6 +409,8 @@ class CoinMarketCap:
         df = self.df
 
         pm = PortfolioModeler()
+        if self.portfolioModelSelect:
+            pm.model = self.portfolioModelSelect
         pm.modelCoinMarketCap(df, bal=bal)
 
         c = '24h_volume_usd id market_cap_usd name percent_change_24h percent_change_7d price_btc price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')
@@ -421,6 +424,7 @@ class CoinMarketCap:
         tradableCoins2 = tradableCoins2[tradableCoins2['portAmount_units'] > 0].sort_values(by='portAmount_units', ascending=False)
     
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print '            PortfolioModeler: %s' % pm.version
             print '            bal: %s' % bal
             print '   price_usdSUM: %s' % df['price_usd'].sum()
             print '    portPcntSUM: %s [assert =1]' % df['portPcnt'].sum()
@@ -477,16 +481,42 @@ class PortfolioModeler:
     
     def __init__(self):
         self.version = 'v0.0.1'
+        self.models = {
+            1: 'Q001aa',
+            2: 'Q001a',
+            3: 'Q001',
+        }
+        self.model   = None
+    
+    def listModels(self):
+        for i in self.models.keys():
+            print '\t%s: %s' % (i, self.models[i])
+
+    def setModel(self, select=None):
+        if self.model == None:
+            print 'models:'
+            for i in self.models.keys():
+                print '\t%s: %s' % (i, self.models[i])
+            try:
+                self.model = int(raw_input('model: '))
+                self.model = self.models[self.model]
+            except KeyboardInterrupt as e:
+                sys.exit('')
 
     def modelCoinMarketCap(self, df, bal=100):
         ### ----------------------------------------------------------------------------
         # portfolio model
         ### ----------------------------------------------------------------------------
+        self.setModel()
         c = '24h_volume_usd id market_cap_usd name percent_change_24h percent_change_7d price_btc price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')
         c = '24h_volume_usd name percent_change_24h percent_change_7d price_usd portPcnt portPcntPinv portPcntPinv2 portAmount_usd portAmount_units'.split(' ')
-        #df['portPcnt']         =      df['price_usd'] / df['price_usd'].sum() * 1
-        #df['portPcnt']         =      (df['24h_volume_usd'] / df['price_usd']) / ((df['24h_volume_usd'] / df['price_usd'])).sum() * 1
-        df['portPcnt']         =      (df['price_usd'] / df['24h_volume_usd']) / (df['price_usd'] / df['24h_volume_usd']).sum() * 1
+        if self.model == 'Q001aa':
+            df['portPcnt']         =      df['price_usd'] / df['price_usd'].sum() * 1
+        if self.model == 'Q001a':
+            df['portPcnt']         =      (df['24h_volume_usd'] / df['price_usd']) / ((df['24h_volume_usd'] / df['price_usd'])).sum() * 1
+        if self.model == 'Q001':
+            df['price_per_24h_volume_usd'] = df['price_usd'] / df['24h_volume_usd']
+            df['portPcnt']                 = df['price_per_24h_volume_usd'] / df['price_per_24h_volume_usd'].sum() * 1
         #df['portPcntPinv']     =   1 - df['portPcnt']
         df['portPcntPinv']     =   1 / df['portPcnt'] # df['portPcnt']
         df['portPcntPinv2']    =   df['portPcntPinv'] / df['portPcntPinv'].sum() * 100
