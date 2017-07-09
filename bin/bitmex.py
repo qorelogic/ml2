@@ -241,7 +241,7 @@ def apiRequest(baseurl, query, method='GET'):
     import ujson as uj
     # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
     import requests as req, requests_cache
-    requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=3600*24)
+    requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=3600*24*365)
     #baseurl = 'http://api.coinmarketcap.com/'
     #method  = '/v1/ticker/'
     #api = drest.API(baseurl)
@@ -578,7 +578,7 @@ class TokenMarket:
                 'github-forks'        : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[3]/td/text()',
                 'github-commits'      : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[4]/td/text()',
                 'github-openIssues'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[5]/td/text()',
-            })
+            }, expire=1)
             #"""
             #print xresd
             xresdlen = {}
