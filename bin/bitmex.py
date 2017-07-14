@@ -1321,9 +1321,3 @@ if __name__ == "__main__":
     
     if args.research02:
         modelPortfolio()
-        
-        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-
-
-
-
