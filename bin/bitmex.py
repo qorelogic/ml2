@@ -956,6 +956,7 @@ def getTicker(symbol):
     #print res.transpose()
     return res
 
+#@profile
 def getAdressInfoEthplorer(ethaddr, verbose=None):
     
     if type(ethaddr) == type(''):
@@ -1020,9 +1021,206 @@ def getAdressInfoEthplorer(ethaddr, verbose=None):
             print
             print '==='
             print ethaddr
+            dfp = modelPortfolio()
+            dfp['symbolCode'] = map(lambda x: x.split('/')[0], dfp.index)
+            dfp = dfp.set_index('symbolCode')
+            mdf0 = mdf0.combine_first(dfp)
+            mdf0 = genPortfolio(mdf0)
+            mdf0 = mdf0.fillna(0)
+            # rebalance portfolio
+            mdf0['balanceDiff'] = mdf0['portUnits'] - mdf0['balance']
             print mdf0
             print '---'
             print mdf0['balance_usd'].sum()
+
+def genPortfolio(df, balance='balance_usd'):
+    ethusd  = 198.73
+    df['portWeight'] = n.log(df['t3'])/n.log(2)
+    df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
+    df['balance_usd2'] = df[balance].sum()
+    df['portUsd']      = df['balance_usd2'] * df['portPcnt'] / 100
+    df['portUnits']    = df['portUsd'] / ethusd / df['avg']
+    return df
+
+def modelPortfolio():
+    cv = """PPT/ETH 	777607 	0.01575 	0.01600
+MCAP/ETH 	52915 	0.01450 	0.02100
+VERI/ETH 	3849 	0.64000 	0.64430
+WINGS/ETH 	885 	0.00030 	0.00230
+DICE/ETH 	12970 	0.01911 	0.01990
+PAY/ETH 	65816 	0.00351 	0.00369
+XRL/ETH 	468137 	0.00049 	0.00055
+ADX/ETH 	155769 	0.00091 	0.00105
+FUN/ETH 	1893068 	0.00007 	0.00008
+SNT/ETH 	412285 	0.00013 	0.00014
+MBRS/ETH 	162543 	0.00013 	0.00025
+OMG/ETH 	11059 	0.00230 	0.00350
+EOS/ETH 	2750 	0.00823 	0.00899
+PLU/ETH 	627 	0.03799 	0.04500
+GOOD/ETH 	2286538 	0.00000 	0.00001
+EDG/ETH 	4320 	0.00210 	0.00290
+E4ROW/ETH 	10052 	0.00065 	0.00099
+ICE/ETH 	1743 	0.00480 	0.00480
+HMQ/ETH 	11695 	0.00047 	0.00070
+NET/ETH 	1082 	0.00500 	0.00572
+PLBT/ETH 	296 	0.01510 	0.04300
+BAT/ETH 	5104 	0.00040 	0.00049
+BNT/ETH 	236 	0.00950 	0.01115
+ETB/ETH 	599 	0.00350 	0.00650
+ADT/ETH 	5397 	0.00005 	0.00037
+ANT/ETH 	116 	0.00600 	0.01244
+ICN/ETH 	60 	0.01100 	0.01439
+MGO/ETH 	299 	0.00212 	0.00698
+REP/ETH 	3 	0.01100 	0.19000
+1ST/ETH 	165 	0.00250 	0.00680
+PTOY/ETH 	1000 	0.00051 	0.00199
+NMR/ETH 	2 	0.11000 	0.15750
+GNO/ETH 	1 	0.41007 	1.79000
+BCAP/ETH 	20 	0.00002 	0.04000
+TIME/ETH 	1 	0.00090 	0.40000
+NEWB/ETH 	2166 	0.00002 	0.00003
+MTL/ETH 	1 	0.01500 	0.03200
+STORJ/ETH 	10 	0.00200 	0.00367
+VSM/ETH 	2 	0.00350 	0.00799
+GNTW/ETH 	2 		0.00235
+ARC/ETH 	0 	0.00444 	0.01300
+GNTM/ETH 	0 		
+NXC/ETH 	0 	0.00001 	0.00400
+MLN/ETH 	0 	0.16000 	0.40000
+SNGLS/ETH 	0 	0.00046 	0.00150
+MKR/ETH 	0 	0.30000 	1.19321
+DGD/ETH 	0 	0.00500 	0.49720
+SWT/ETH 	0 	0.00220 	0.01899
+VSL/ETH 	0 	0.00051 	0.08000
+HKG/ETH 	0 	0.00001 	0.00500
+XAUR/ETH 	0 	0.00001 	0.29999
+GUP/ETH 	0 	0.00012 	
+RLC/ETH 	0 	0.00022 	0.00720
+ETB-OLD/ETH 	0 	0.00128 	0.10000
+TRST/ETH 	0 	0.00025 	0.00490
+TAAS/ETH 	0 	0.00800 	0.01500
+LUN/ETH 	0 	0.00120 	0.08500
+TKN/ETH 	0 	0.00300 	0.00780
+MYST/ETH 	0 	0.00222 	0.00800
+CFI/ETH 	0 	0.00041 	0.00062
+QRL/ETH 	0 	0.00030 	
+SONM/ETH 	0 	0.00011 	0.00032
+DRP/ETH 	0 	0.00050 	
+BET/ETH 	0 	0.00002 	
+BNB/ETH 	0 	0.00030 	0.00300
+ETH/USD.DC 	0 		
+ETH/BTC.DC 	0 		"""
+    cv = """PPT/ETH 	917552 	0.01600 	0.01600
+MCAP/ETH 	52178 	0.01205 	0.02100
+VERI/ETH 	4817 	0.60000 	0.61000
+WINGS/ETH 	5661 	0.00031 	0.00160
+XRL/ETH 	575830 	0.00051 	0.00060
+DICE/ETH 	13083 	0.01810 	0.02090
+PAY/ETH 	53709 	0.00333 	0.00350
+ADX/ETH 	158925 	0.00090 	0.00095
+FUN/ETH 	1138648 	0.00007 	0.00007
+SNT/ETH 	418337 	0.00013 	0.00014
+MBRS/ETH 	175021 	0.00014 	0.00028
+OMG/ETH 	11039 	0.00230 	0.00320
+EOS/ETH 	3054 	0.00728 	0.00810
+PLU/ETH 	468 	0.03900 	0.04998
+ICE/ETH 	2431 	0.00480 	0.00550
+GOOD/ETH 	2158022 	0.00000 	0.00001
+HMQ/ETH 	13989 	0.00050 	0.00067
+E4ROW/ETH 	8503 	0.00065 	0.00099
+NET/ETH 	1501 	0.00500 	0.00572
+PLBT/ETH 	364 	0.00800 	0.03999
+ETB/ETH 	679 	0.00350 	0.00949
+BNT/ETH 	195 	0.01010 	0.01115
+BAT/ETH 	2560 	0.00040 	0.00053
+FUCK/ETH 	80469 	0.00001 	0.00002
+ANT/ETH 	148 	0.00510 	0.01244
+MGO/ETH 	299 	0.00211 	0.00693
+STORJ/ETH 	210 	0.00200 	0.00367
+ICN/ETH 	44 	0.00310 	0.01432
+REP/ETH 	3 	0.01100 	0.19000
+1ST/ETH 	165 	0.00670 	0.0067032386945
+CFI/ETH 	1495 	0.00037 	0.00055
+GNO/ETH 	1 	0.41006 	1.79000
+VSM/ETH 	21 	0.00350 	0.00799
+EDG/ETH 	185 	0.00061 	0.00290
+NMR/ETH 	2 	0.15750 	0.15750
+GNTW/ETH 	102 		0.00235
+TIME/ETH 	1 	0.00090 	0.40000
+BTH/ETH 	2 	0.00250 	0.02230
+NEWB/ETH 	2166 	0.00002 	0.00003
+PTOY/ETH 	56 	0.00051 	0.00199
+MTL/ETH 	1 	0.01001 	0.03200
+ARC/ETH 	0 	0.00444 	0.01300
+GNTM/ETH 	0 		
+NXC/ETH 	0 	0.00001 	0.10000
+MLN/ETH 	0 	0.16000 	0.40000
+SNGLS/ETH 	0 	0.00045 	0.00150
+MKR/ETH 	0 	0.30000 	1.19321
+DGD/ETH 	0 	0.00500 	0.49720
+SWT/ETH 	0 	0.00220 	0.01899
+VSL/ETH 	0 	0.00051 	0.08000
+HKG/ETH 	0 	0.00001 	0.00500
+XAUR/ETH 	0 	0.00001 	0.29999
+GUP/ETH 	0 	0.00012 	
+RLC/ETH 	0 	0.00022 	0.00720
+ETB-OLD/ETH 	0 	0.00128 	0.10000
+TRST/ETH 	0 	0.00016 	0.00490
+TAAS/ETH 	0 	0.00160 	0.01500
+LUN/ETH 	0 	0.00120 	0.08500
+TKN/ETH 	0 	0.00012 	0.00780
+BCAP/ETH 	0 	0.00002 	0.04000
+MYST/ETH 	0 	0.00222 	0.00800
+QRL/ETH 	0 	0.00030 	
+SONM/ETH 	0 	0.00011 	0.00032
+ADT/ETH 	0 	0.00005 	0.00037
+DRP/ETH 	0 	0.00050 	
+BET/ETH 	0 	0.00002 	
+BNB/ETH 	0 	0.00001 	0.00300
+ETH/USD.DC 	0 		
+ETH/BTC.DC 	0 	"""
+    df = cv.split('\n')
+    df = map(lambda x: x.split('\t'), df)        
+    df = p.DataFrame(df, columns='symbol volume bid offer'.split(' '))
+    df = df.convert_objects(convert_numeric=True)
+    df['avg'] = (df['bid'] + df['offer']) / 2
+    df['t1'] = (df['volume'] / df['avg'])
+    df['t2'] = (df['volume'] * df['avg'])
+    df['t3'] = (df['t1'] * df['t2'])
+    
+    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        import matplotlib.pylab as plt
+        from qoreliquid import normalizeme, sigmoidme
+        df = df.set_index('symbol').fillna(0)
+        df = df[df['bid']   > 0.0001]
+        df = df[df['offer'] > 0.0001]
+        num = 5
+        dfst1 = df.sort_values(by='t1', ascending=False).head(num)
+        #dfst1 = genPortfolio(dfst1)
+        dfst2 = df.sort_values(by='t2', ascending=False).head(num)
+        #dfst2 = genPortfolio(dfst2)
+        dfst3 = df.sort_values(by='t3', ascending=False).head(num)
+        #dfst3 = genPortfolio(dfst3)
+        #print dfst1
+        #print dfst2
+        #print dfst3
+        #df['t3'] = normalizeme(df['t3'])
+        #df['t3'] = sigmoidme(df['t3'])
+        plt.plot(dfst3['t3'].get_values())
+        plt.xlabel(dfst3.index)
+        plt.yscale('log')
+        #plt.show()
+    #import qgrid
+    #qgrid.show_grid(df)
+    #from IPython.display import display
+    #grid = qgrid.QGridWidget(df=df)
+    #display(grid)
+
+    #print df.dtypes
+
+    return dfst3            
+    
+
 
 if __name__ == "__main__":
 
@@ -1122,181 +1320,9 @@ if __name__ == "__main__":
         print df1
     
     if args.research02:
-        cv = """PPT/ETH 	777607 	0.01575 	0.01600
-MCAP/ETH 	52915 	0.01450 	0.02100
-VERI/ETH 	3849 	0.64000 	0.64430
-WINGS/ETH 	885 	0.00030 	0.00230
-DICE/ETH 	12970 	0.01911 	0.01990
-PAY/ETH 	65816 	0.00351 	0.00369
-XRL/ETH 	468137 	0.00049 	0.00055
-ADX/ETH 	155769 	0.00091 	0.00105
-FUN/ETH 	1893068 	0.00007 	0.00008
-SNT/ETH 	412285 	0.00013 	0.00014
-MBRS/ETH 	162543 	0.00013 	0.00025
-OMG/ETH 	11059 	0.00230 	0.00350
-EOS/ETH 	2750 	0.00823 	0.00899
-PLU/ETH 	627 	0.03799 	0.04500
-GOOD/ETH 	2286538 	0.00000 	0.00001
-EDG/ETH 	4320 	0.00210 	0.00290
-E4ROW/ETH 	10052 	0.00065 	0.00099
-ICE/ETH 	1743 	0.00480 	0.00480
-HMQ/ETH 	11695 	0.00047 	0.00070
-NET/ETH 	1082 	0.00500 	0.00572
-PLBT/ETH 	296 	0.01510 	0.04300
-BAT/ETH 	5104 	0.00040 	0.00049
-BNT/ETH 	236 	0.00950 	0.01115
-ETB/ETH 	599 	0.00350 	0.00650
-ADT/ETH 	5397 	0.00005 	0.00037
-ANT/ETH 	116 	0.00600 	0.01244
-ICN/ETH 	60 	0.01100 	0.01439
-MGO/ETH 	299 	0.00212 	0.00698
-REP/ETH 	3 	0.01100 	0.19000
-1ST/ETH 	165 	0.00250 	0.00680
-PTOY/ETH 	1000 	0.00051 	0.00199
-NMR/ETH 	2 	0.11000 	0.15750
-GNO/ETH 	1 	0.41007 	1.79000
-BCAP/ETH 	20 	0.00002 	0.04000
-TIME/ETH 	1 	0.00090 	0.40000
-NEWB/ETH 	2166 	0.00002 	0.00003
-MTL/ETH 	1 	0.01500 	0.03200
-STORJ/ETH 	10 	0.00200 	0.00367
-VSM/ETH 	2 	0.00350 	0.00799
-GNTW/ETH 	2 		0.00235
-ARC/ETH 	0 	0.00444 	0.01300
-GNTM/ETH 	0 		
-NXC/ETH 	0 	0.00001 	0.00400
-MLN/ETH 	0 	0.16000 	0.40000
-SNGLS/ETH 	0 	0.00046 	0.00150
-MKR/ETH 	0 	0.30000 	1.19321
-DGD/ETH 	0 	0.00500 	0.49720
-SWT/ETH 	0 	0.00220 	0.01899
-VSL/ETH 	0 	0.00051 	0.08000
-HKG/ETH 	0 	0.00001 	0.00500
-XAUR/ETH 	0 	0.00001 	0.29999
-GUP/ETH 	0 	0.00012 	
-RLC/ETH 	0 	0.00022 	0.00720
-ETB-OLD/ETH 	0 	0.00128 	0.10000
-TRST/ETH 	0 	0.00025 	0.00490
-TAAS/ETH 	0 	0.00800 	0.01500
-LUN/ETH 	0 	0.00120 	0.08500
-TKN/ETH 	0 	0.00300 	0.00780
-MYST/ETH 	0 	0.00222 	0.00800
-CFI/ETH 	0 	0.00041 	0.00062
-QRL/ETH 	0 	0.00030 	
-SONM/ETH 	0 	0.00011 	0.00032
-DRP/ETH 	0 	0.00050 	
-BET/ETH 	0 	0.00002 	
-BNB/ETH 	0 	0.00030 	0.00300
-ETH/USD.DC 	0 		
-ETH/BTC.DC 	0 		"""
-        cv = """PPT/ETH 	917552 	0.01600 	0.01600
-MCAP/ETH 	52178 	0.01205 	0.02100
-VERI/ETH 	4817 	0.60000 	0.61000
-WINGS/ETH 	5661 	0.00031 	0.00160
-XRL/ETH 	575830 	0.00051 	0.00060
-DICE/ETH 	13083 	0.01810 	0.02090
-PAY/ETH 	53709 	0.00333 	0.00350
-ADX/ETH 	158925 	0.00090 	0.00095
-FUN/ETH 	1138648 	0.00007 	0.00007
-SNT/ETH 	418337 	0.00013 	0.00014
-MBRS/ETH 	175021 	0.00014 	0.00028
-OMG/ETH 	11039 	0.00230 	0.00320
-EOS/ETH 	3054 	0.00728 	0.00810
-PLU/ETH 	468 	0.03900 	0.04998
-ICE/ETH 	2431 	0.00480 	0.00550
-GOOD/ETH 	2158022 	0.00000 	0.00001
-HMQ/ETH 	13989 	0.00050 	0.00067
-E4ROW/ETH 	8503 	0.00065 	0.00099
-NET/ETH 	1501 	0.00500 	0.00572
-PLBT/ETH 	364 	0.00800 	0.03999
-ETB/ETH 	679 	0.00350 	0.00949
-BNT/ETH 	195 	0.01010 	0.01115
-BAT/ETH 	2560 	0.00040 	0.00053
-FUCK/ETH 	80469 	0.00001 	0.00002
-ANT/ETH 	148 	0.00510 	0.01244
-MGO/ETH 	299 	0.00211 	0.00693
-STORJ/ETH 	210 	0.00200 	0.00367
-ICN/ETH 	44 	0.00310 	0.01432
-REP/ETH 	3 	0.01100 	0.19000
-1ST/ETH 	165 	0.00670 	0.00670
-CFI/ETH 	1495 	0.00037 	0.00055
-GNO/ETH 	1 	0.41006 	1.79000
-VSM/ETH 	21 	0.00350 	0.00799
-EDG/ETH 	185 	0.00061 	0.00290
-NMR/ETH 	2 	0.15750 	0.15750
-GNTW/ETH 	102 		0.00235
-TIME/ETH 	1 	0.00090 	0.40000
-BTH/ETH 	2 	0.00250 	0.02230
-NEWB/ETH 	2166 	0.00002 	0.00003
-PTOY/ETH 	56 	0.00051 	0.00199
-MTL/ETH 	1 	0.01001 	0.03200
-ARC/ETH 	0 	0.00444 	0.01300
-GNTM/ETH 	0 		
-NXC/ETH 	0 	0.00001 	0.10000
-MLN/ETH 	0 	0.16000 	0.40000
-SNGLS/ETH 	0 	0.00045 	0.00150
-MKR/ETH 	0 	0.30000 	1.19321
-DGD/ETH 	0 	0.00500 	0.49720
-SWT/ETH 	0 	0.00220 	0.01899
-VSL/ETH 	0 	0.00051 	0.08000
-HKG/ETH 	0 	0.00001 	0.00500
-XAUR/ETH 	0 	0.00001 	0.29999
-GUP/ETH 	0 	0.00012 	
-RLC/ETH 	0 	0.00022 	0.00720
-ETB-OLD/ETH 	0 	0.00128 	0.10000
-TRST/ETH 	0 	0.00016 	0.00490
-TAAS/ETH 	0 	0.00160 	0.01500
-LUN/ETH 	0 	0.00120 	0.08500
-TKN/ETH 	0 	0.00012 	0.00780
-BCAP/ETH 	0 	0.00002 	0.04000
-MYST/ETH 	0 	0.00222 	0.00800
-QRL/ETH 	0 	0.00030 	
-SONM/ETH 	0 	0.00011 	0.00032
-ADT/ETH 	0 	0.00005 	0.00037
-DRP/ETH 	0 	0.00050 	
-BET/ETH 	0 	0.00002 	
-BNB/ETH 	0 	0.00001 	0.00300
-ETH/USD.DC 	0 		
-ETH/BTC.DC 	0 	"""
-        df = cv.split('\n')
-        df = map(lambda x: x.split('\t'), df)        
-        df = p.DataFrame(df, columns='symbol volume bid offer'.split(' '))
-        df = df.convert_objects(convert_numeric=True)
-        df['avg'] = (df['bid'] + df['offer']) / 2
-        df['t1'] = (df['volume'] / df['avg'])
-        df['t2'] = (df['volume'] * df['avg'])
-        df['t3'] = (df['t1'] * df['t2'])
+        modelPortfolio()
+        
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-            import matplotlib.pylab as plt
-            from qoreliquid import normalizeme, sigmoidme
-            df = df.set_index('symbol').fillna(0)
-            df = df[df['bid']   > 0]
-            df = df[df['offer'] > 0]
-            num = 5
-            def genPortfolio(df):
-                df['portWeight'] = n.log(df['t3'])/n.log(2)
-                df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
-                return df
-            dfst1 = df.sort_values(by='t1', ascending=False).head(num)
-            dfst1 = genPortfolio(dfst1)
-            dfst2 = df.sort_values(by='t2', ascending=False).head(num)
-            dfst2 = genPortfolio(dfst2)
-            dfst3 = df.sort_values(by='t3', ascending=False).head(num)
-            dfst3 = genPortfolio(dfst3)
-            print dfst1
-            print dfst2
-            print dfst3
-            #df['t3'] = normalizeme(df['t3'])
-            #df['t3'] = sigmoidme(df['t3'])
-            plt.plot(dfst3['t3'].get_values())
-            plt.xlabel(dfst3.index)
-            plt.yscale('log')
-            #plt.show()
-        #import qgrid
-        #qgrid.show_grid(df)
-        #from IPython.display import display
-        #grid = qgrid.QGridWidget(df=df)
-        #display(grid)
 
 
 
