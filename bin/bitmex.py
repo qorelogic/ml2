@@ -231,7 +231,7 @@ def instrumentIndecesBitmex():
     #pf(df)
     return df
 
-def apiRequest(baseurl, query, method='GET'):
+def apiRequest(baseurl, query, method='GET', noCache=False):
     #import drest
     #api = drest.API(baseurl)
     #response = api.make_request(method, query)
@@ -239,9 +239,17 @@ def apiRequest(baseurl, query, method='GET'):
 
     #import drest
     import ujson as uj
-    # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
     import requests as req, requests_cache
-    requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=3600*24*365)
+
+    if noCache == False:
+        expire_after = 3600 * 24 * 365
+        # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
+        requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=expire_after)
+    else:
+        requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=1)
+    #else:
+    #    expire_after = 1
+
     #baseurl = 'http://api.coinmarketcap.com/'
     #method  = '/v1/ticker/'
     #api = drest.API(baseurl)
@@ -399,6 +407,7 @@ class CoinMarketCap:
         df = df.sort_values(by='percent_change_24h', ascending=False)
     
         self.df = df
+        return df
 
     #@profile
     def generatePortfolio(self, bal=165.11):
@@ -935,6 +944,69 @@ class Bittrex(Exchange):
         except:
             ''
 
+def getTicker(symbol):
+    res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker')#, noCache=True)
+    df = p.DataFrame(res)
+    df = df.loc[:, 'symbol id'.split()].set_index('symbol')
+    #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+    #    print df
+    ticker = df.loc[symbol, 'id']
+    res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=True)
+    res = p.DataFrame(res)
+    #print res.transpose()
+    return res
+
+def getAdressInfoEthplorer(ethaddr, verbose=None):
+    #res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/')
+    res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ethaddr, noCache=True)
+    #res = apiRequest('https://api.ethplorer.io', '/getTokenInfo/0xff71cb760666ab06aa73f34995b42dd4b85ea07b?apiKey=freekey')
+    res1 = p.DataFrame(res['ETH'], index=['ETH']).transpose()
+    #res2 = p.DataFrame(res['tokens'], index=['tokens'])#.transpose()
+    print '============================================================'
+    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        if verbose:
+            print p.DataFrame(res['tokens'][0])
+        print res1
+    mdf = p.DataFrame([])
+    for i in res['tokens']:
+        #print i
+        df = p.DataFrame(i)#.transpose()
+        decimals = float(df.loc['decimals', 'tokenInfo'])
+        balance  = float(df.loc['address', 'balance']) / n.power(10, decimals)
+        df['balance']  = map(lambda x: float(x) / n.power(10, decimals), df['balance'])
+        df['totalIn']  = map(lambda x: float(x) / n.power(10, decimals), df['totalIn'])
+        df['totalOut'] = map(lambda x: float(x) / n.power(10, decimals), df['totalOut'])
+        symbol = df.loc['symbol', 'tokenInfo']
+        df1    = getTicker(symbol).set_index('symbol').transpose()
+        df1['tokenInfo'] = df1[df1.columns[0]]
+        df = df.combine_first(df.loc[:, ['tokenInfo']].combine_first(df1.loc[:, ['tokenInfo']]))
+        try:    df.loc['24h_volume_marketcap_ratio', 'tokenInfo'] = float(df.loc['24h_volume_usd', 'tokenInfo']) / float(df.loc['market_cap_usd', 'tokenInfo']) * 100
+        except: ''
+        df.loc['balance', 'tokenInfo']     = balance
+        df.loc['balance_usd', 'tokenInfo'] = float(df.loc['price_usd', 'tokenInfo']) * balance
+        df.loc[:, 'balance totalIn totalOut'.split(' ')]  = balance
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print '---'
+            #print df1.columns
+            #print df1
+            #print type(df1)
+            #print '---'
+            #print df.dtypes
+            #print df1
+            #print df.loc[:, ['tokenInfo']]
+            #print df1
+            if verbose:
+                print df.loc[:, 'tokenInfo'.split(' ')]#.transpose()
+            else:
+                mdf = mdf.combine_first(df.loc['symbol 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol'))
+            #print
+        #res2 = p.DataFrame(res['tokens'])#.transpose()
+    if not verbose:
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            print mdf
+    #['tokenInfo']
+    #print res2
+
 if __name__ == "__main__":
 
     import argparse
@@ -947,6 +1019,10 @@ if __name__ == "__main__":
     parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
     parser.add_argument("-sk", '--parseCoinMarketCapSkipTo', help="parseCoinMrketCap skipTo")
     parser.add_argument("-b", '--balance', help="parseCoinMrketCap skipTo")
+    parser.add_argument("-tm", '--tokenmarket', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-r01", '--research01', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-r02", '--research02', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-r03", '--research03', help="parseCoinMrketCap skipTo", action="store_true")
     
     args = parser.parse_args()
     
@@ -1001,6 +1077,188 @@ if __name__ == "__main__":
         balance = 230
     if args.portfolio:
         portfolio = cmc.generatePortfolio(bal=balance)
+    if args.tokenmarket:
+        #%reload_ext autoreload
+        #%autoreload 2
+        from bitmex import TokenMarket
+        # TokenMarket
+        tm = TokenMarket()
+        df = tm.allAssetsBlockchainTokenMarket()
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print tm.allAssetsICOsBlockchain
+        # TokenMarket
+        tm.tokenICOsTokenMarket()
+        tm.underTheRadarTokens()
+    
+    if args.research01:
+        eth1_1 = '0x38a4Ff00C207cBD78aB34b6dDd1b8754E4498508'
+        eth1_2 = '0xc73D7e4a40D4513eC7D114f521eA59DF607a7613'
+        eth2_1 = '0xc978D12413CbC4ec37763944c57EF0100a4c15cf' #eth2 0
+        eth2_2 = '0x2c8f659d57971449eb627FB78530Fc61867c4E50' #eth2 1
+        #ethaddress1 = '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae'
+        getAdressInfoEthplorer(eth1_1, args.verbose)
+        getAdressInfoEthplorer(eth1_2, args.verbose)
+        getAdressInfoEthplorer(eth2_1, args.verbose)
+        getAdressInfoEthplorer(eth2_2, args.verbose)
+        #print getTicker('bitcoin')    
+
+    if args.research03:
+        
+        df1 = getTicker('PPT').set_index('symbol').transpose()
+        print df1
+    
+    if args.research02:
+        cv = """PPT/ETH 	777607 	0.01575 	0.01600
+MCAP/ETH 	52915 	0.01450 	0.02100
+VERI/ETH 	3849 	0.64000 	0.64430
+WINGS/ETH 	885 	0.00030 	0.00230
+DICE/ETH 	12970 	0.01911 	0.01990
+PAY/ETH 	65816 	0.00351 	0.00369
+XRL/ETH 	468137 	0.00049 	0.00055
+ADX/ETH 	155769 	0.00091 	0.00105
+FUN/ETH 	1893068 	0.00007 	0.00008
+SNT/ETH 	412285 	0.00013 	0.00014
+MBRS/ETH 	162543 	0.00013 	0.00025
+OMG/ETH 	11059 	0.00230 	0.00350
+EOS/ETH 	2750 	0.00823 	0.00899
+PLU/ETH 	627 	0.03799 	0.04500
+GOOD/ETH 	2286538 	0.00000 	0.00001
+EDG/ETH 	4320 	0.00210 	0.00290
+E4ROW/ETH 	10052 	0.00065 	0.00099
+ICE/ETH 	1743 	0.00480 	0.00480
+HMQ/ETH 	11695 	0.00047 	0.00070
+NET/ETH 	1082 	0.00500 	0.00572
+PLBT/ETH 	296 	0.01510 	0.04300
+BAT/ETH 	5104 	0.00040 	0.00049
+BNT/ETH 	236 	0.00950 	0.01115
+ETB/ETH 	599 	0.00350 	0.00650
+ADT/ETH 	5397 	0.00005 	0.00037
+ANT/ETH 	116 	0.00600 	0.01244
+ICN/ETH 	60 	0.01100 	0.01439
+MGO/ETH 	299 	0.00212 	0.00698
+REP/ETH 	3 	0.01100 	0.19000
+1ST/ETH 	165 	0.00250 	0.00680
+PTOY/ETH 	1000 	0.00051 	0.00199
+NMR/ETH 	2 	0.11000 	0.15750
+GNO/ETH 	1 	0.41007 	1.79000
+BCAP/ETH 	20 	0.00002 	0.04000
+TIME/ETH 	1 	0.00090 	0.40000
+NEWB/ETH 	2166 	0.00002 	0.00003
+MTL/ETH 	1 	0.01500 	0.03200
+STORJ/ETH 	10 	0.00200 	0.00367
+VSM/ETH 	2 	0.00350 	0.00799
+GNTW/ETH 	2 		0.00235
+ARC/ETH 	0 	0.00444 	0.01300
+GNTM/ETH 	0 		
+NXC/ETH 	0 	0.00001 	0.00400
+MLN/ETH 	0 	0.16000 	0.40000
+SNGLS/ETH 	0 	0.00046 	0.00150
+MKR/ETH 	0 	0.30000 	1.19321
+DGD/ETH 	0 	0.00500 	0.49720
+SWT/ETH 	0 	0.00220 	0.01899
+VSL/ETH 	0 	0.00051 	0.08000
+HKG/ETH 	0 	0.00001 	0.00500
+XAUR/ETH 	0 	0.00001 	0.29999
+GUP/ETH 	0 	0.00012 	
+RLC/ETH 	0 	0.00022 	0.00720
+ETB-OLD/ETH 	0 	0.00128 	0.10000
+TRST/ETH 	0 	0.00025 	0.00490
+TAAS/ETH 	0 	0.00800 	0.01500
+LUN/ETH 	0 	0.00120 	0.08500
+TKN/ETH 	0 	0.00300 	0.00780
+MYST/ETH 	0 	0.00222 	0.00800
+CFI/ETH 	0 	0.00041 	0.00062
+QRL/ETH 	0 	0.00030 	
+SONM/ETH 	0 	0.00011 	0.00032
+DRP/ETH 	0 	0.00050 	
+BET/ETH 	0 	0.00002 	
+BNB/ETH 	0 	0.00030 	0.00300
+ETH/USD.DC 	0 		
+ETH/BTC.DC 	0 		"""
+        cv = """PPT/ETH 	865757 	0.01510 	0.01590
+MCAP/ETH 	52867 	0.01450 	0.02100
+VERI/ETH 	4278 	0.58700 	0.59299
+WINGS/ETH 	5661 	0.00030 	0.00263
+XRL/ETH 	564563 	0.00048 	0.00076
+DICE/ETH 	11179 	0.02000 	0.02150
+PAY/ETH 	54364 	0.00350 	0.00340
+ADX/ETH 	162524 	0.00092 	0.00104
+FUN/ETH 	1549585 	0.00007 	0.00008
+SNT/ETH 	420052 	0.00013 	0.00014
+PLU/ETH 	865 	0.03800 	0.04500
+MBRS/ETH 	168521 	0.00014 	0.00028
+OMG/ETH 	11059 	0.00230 	0.00320
+EOS/ETH 	3122 	0.00728 	0.00767
+ICE/ETH 	2724 	0.00480 	0.00550
+GOOD/ETH 	2171654 	0.00000 	0.00001
+HMQ/ETH 	16500 	0.00050 	0.00069
+E4ROW/ETH 	9660 	0.00065 	0.00099
+EDG/ETH 	3705 	0.00061 	0.00290
+ETB/ETH 	1177 	0.00350 	0.00950
+NET/ETH 	1202 	0.00500 	0.00572
+PLBT/ETH 	364 	0.00800 	0.04150
+BNT/ETH 	213 	0.01010 	0.01115
+BAT/ETH 	2560 	0.00040 	0.00053
+FUCK/ETH 	74970 	0.00001 	0.00002
+ANT/ETH 	118 	0.00510 	0.01244
+ICN/ETH 	59 	0.00500 	0.01439
+MGO/ETH 	299 	0.00211 	0.00697
+STORJ/ETH 	210 	0.00200 	0.00367
+REP/ETH 	3 	0.01100 	0.19000
+1ST/ETH 	165 	0.00250 	0.00670
+CFI/ETH 	1495 	0.00037 	0.00062
+NMR/ETH 	2 	0.11000 	0.15750
+GNO/ETH 	1 	0.41006 	1.79000
+TIME/ETH 	1 	0.00090 	0.40000
+BTH/ETH 	2 	0.00250 	0.02230
+NEWB/ETH 	2166 	0.00002 	0.00003
+MTL/ETH 	1 	0.01001 	0.03200
+PTOY/ETH 	50 	0.00051 	0.00199
+VSM/ETH 	2 	0.00350 	0.00799
+GNTW/ETH 	2 		0.00235
+ARC/ETH 	0 	0.00444 	0.01300
+GNTM/ETH 	0 		
+NXC/ETH 	0 	0.00001 	0.00400
+MLN/ETH 	0 	0.16000 	0.40000
+SNGLS/ETH 	0 	0.00045 	0.00150
+MKR/ETH 	0 	0.30000 	1.19321
+DGD/ETH 	0 	0.00500 	0.49720
+SWT/ETH 	0 	0.00220 	0.01899
+VSL/ETH 	0 	0.00051 	0.08000
+HKG/ETH 	0 	0.00001 	0.00500
+XAUR/ETH 	0 	0.00001 	0.29999
+GUP/ETH 	0 	0.00012 	
+RLC/ETH 	0 	0.00022 	0.00720
+ETB-OLD/ETH 	0 	0.00128 	0.10000
+TRST/ETH 	0 	0.00016 	0.00490
+TAAS/ETH 	0 	0.00160 	0.01500
+LUN/ETH 	0 	0.00120 	0.08500
+TKN/ETH 	0 	0.00012 	0.00780
+BCAP/ETH 	0 	0.00002 	0.04000
+MYST/ETH 	0 	0.00222 	0.00800
+QRL/ETH 	0 	0.00030 	
+SONM/ETH 	0 	0.00011 	0.00032
+ADT/ETH 	0 	0.00005 	0.00037
+DRP/ETH 	0 	0.00050 	
+BET/ETH 	0 	0.00002 	
+BNB/ETH 	0 	0.00001 	0.00300
+ETH/USD.DC 	0 		
+ETH/BTC.DC 	0 		"""
+        df = cv.split('\n')
+        df = map(lambda x: x.split('\t'), df)        
+        df = p.DataFrame(df, columns='symbol volume bid offer'.split(' '))
+        df = df.convert_objects(convert_numeric=True)
+        df['avg'] = (df['bid'] + df['offer']) / 2
+        df['t1'] = (df['volume'] / df['avg'])
+        df['t2'] = (df['volume'] * df['avg'])
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            print df.sort_values(by='t1', ascending=False).head(20)
+            print df.sort_values(by='t2', ascending=False).head(20)
+        #import qgrid
+        #qgrid.show_grid(df)
+        #from IPython.display import display
+        #grid = qgrid.QGridWidget(df=df)
+        #display(grid)
 
 
 
