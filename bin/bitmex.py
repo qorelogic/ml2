@@ -1103,7 +1103,6 @@ if __name__ == "__main__":
         #print getTicker('bitcoin')    
 
     if args.research03:
-        
         df1 = getTicker('PPT').set_index('symbol').transpose()
         print df1
     
@@ -1175,50 +1174,50 @@ BET/ETH 	0 	0.00002
 BNB/ETH 	0 	0.00030 	0.00300
 ETH/USD.DC 	0 		
 ETH/BTC.DC 	0 		"""
-        cv = """PPT/ETH 	865757 	0.01510 	0.01590
-MCAP/ETH 	52867 	0.01450 	0.02100
-VERI/ETH 	4278 	0.58700 	0.59299
-WINGS/ETH 	5661 	0.00030 	0.00263
-XRL/ETH 	564563 	0.00048 	0.00076
-DICE/ETH 	11179 	0.02000 	0.02150
-PAY/ETH 	54364 	0.00350 	0.00340
-ADX/ETH 	162524 	0.00092 	0.00104
-FUN/ETH 	1549585 	0.00007 	0.00008
-SNT/ETH 	420052 	0.00013 	0.00014
-PLU/ETH 	865 	0.03800 	0.04500
-MBRS/ETH 	168521 	0.00014 	0.00028
-OMG/ETH 	11059 	0.00230 	0.00320
-EOS/ETH 	3122 	0.00728 	0.00767
-ICE/ETH 	2724 	0.00480 	0.00550
-GOOD/ETH 	2171654 	0.00000 	0.00001
-HMQ/ETH 	16500 	0.00050 	0.00069
-E4ROW/ETH 	9660 	0.00065 	0.00099
-EDG/ETH 	3705 	0.00061 	0.00290
-ETB/ETH 	1177 	0.00350 	0.00950
-NET/ETH 	1202 	0.00500 	0.00572
-PLBT/ETH 	364 	0.00800 	0.04150
-BNT/ETH 	213 	0.01010 	0.01115
+        cv = """PPT/ETH 	917552 	0.01600 	0.01600
+MCAP/ETH 	52178 	0.01205 	0.02100
+VERI/ETH 	4817 	0.60000 	0.61000
+WINGS/ETH 	5661 	0.00031 	0.00160
+XRL/ETH 	575830 	0.00051 	0.00060
+DICE/ETH 	13083 	0.01810 	0.02090
+PAY/ETH 	53709 	0.00333 	0.00350
+ADX/ETH 	158925 	0.00090 	0.00095
+FUN/ETH 	1138648 	0.00007 	0.00007
+SNT/ETH 	418337 	0.00013 	0.00014
+MBRS/ETH 	175021 	0.00014 	0.00028
+OMG/ETH 	11039 	0.00230 	0.00320
+EOS/ETH 	3054 	0.00728 	0.00810
+PLU/ETH 	468 	0.03900 	0.04998
+ICE/ETH 	2431 	0.00480 	0.00550
+GOOD/ETH 	2158022 	0.00000 	0.00001
+HMQ/ETH 	13989 	0.00050 	0.00067
+E4ROW/ETH 	8503 	0.00065 	0.00099
+NET/ETH 	1501 	0.00500 	0.00572
+PLBT/ETH 	364 	0.00800 	0.03999
+ETB/ETH 	679 	0.00350 	0.00949
+BNT/ETH 	195 	0.01010 	0.01115
 BAT/ETH 	2560 	0.00040 	0.00053
-FUCK/ETH 	74970 	0.00001 	0.00002
-ANT/ETH 	118 	0.00510 	0.01244
-ICN/ETH 	59 	0.00500 	0.01439
-MGO/ETH 	299 	0.00211 	0.00697
+FUCK/ETH 	80469 	0.00001 	0.00002
+ANT/ETH 	148 	0.00510 	0.01244
+MGO/ETH 	299 	0.00211 	0.00693
 STORJ/ETH 	210 	0.00200 	0.00367
+ICN/ETH 	44 	0.00310 	0.01432
 REP/ETH 	3 	0.01100 	0.19000
-1ST/ETH 	165 	0.00250 	0.00670
-CFI/ETH 	1495 	0.00037 	0.00062
-NMR/ETH 	2 	0.11000 	0.15750
+1ST/ETH 	165 	0.00670 	0.00670
+CFI/ETH 	1495 	0.00037 	0.00055
 GNO/ETH 	1 	0.41006 	1.79000
+VSM/ETH 	21 	0.00350 	0.00799
+EDG/ETH 	185 	0.00061 	0.00290
+NMR/ETH 	2 	0.15750 	0.15750
+GNTW/ETH 	102 		0.00235
 TIME/ETH 	1 	0.00090 	0.40000
 BTH/ETH 	2 	0.00250 	0.02230
 NEWB/ETH 	2166 	0.00002 	0.00003
+PTOY/ETH 	56 	0.00051 	0.00199
 MTL/ETH 	1 	0.01001 	0.03200
-PTOY/ETH 	50 	0.00051 	0.00199
-VSM/ETH 	2 	0.00350 	0.00799
-GNTW/ETH 	2 		0.00235
 ARC/ETH 	0 	0.00444 	0.01300
 GNTM/ETH 	0 		
-NXC/ETH 	0 	0.00001 	0.00400
+NXC/ETH 	0 	0.00001 	0.10000
 MLN/ETH 	0 	0.16000 	0.40000
 SNGLS/ETH 	0 	0.00045 	0.00150
 MKR/ETH 	0 	0.30000 	1.19321
@@ -1243,7 +1242,7 @@ DRP/ETH 	0 	0.00050
 BET/ETH 	0 	0.00002 	
 BNB/ETH 	0 	0.00001 	0.00300
 ETH/USD.DC 	0 		
-ETH/BTC.DC 	0 		"""
+ETH/BTC.DC 	0 	"""
         df = cv.split('\n')
         df = map(lambda x: x.split('\t'), df)        
         df = p.DataFrame(df, columns='symbol volume bid offer'.split(' '))
@@ -1251,9 +1250,33 @@ ETH/BTC.DC 	0 		"""
         df['avg'] = (df['bid'] + df['offer']) / 2
         df['t1'] = (df['volume'] / df['avg'])
         df['t2'] = (df['volume'] * df['avg'])
+        df['t3'] = (df['t1'] * df['t2'])
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-            print df.sort_values(by='t1', ascending=False).head(20)
-            print df.sort_values(by='t2', ascending=False).head(20)
+            import matplotlib.pylab as plt
+            from qoreliquid import normalizeme, sigmoidme
+            df = df.set_index('symbol').fillna(0)
+            df = df[df['bid']   > 0]
+            df = df[df['offer'] > 0]
+            num = 5
+            def genPortfolio(df):
+                df['portWeight'] = n.log(df['t3'])/n.log(2)
+                df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
+                return df
+            dfst1 = df.sort_values(by='t1', ascending=False).head(num)
+            dfst1 = genPortfolio(dfst1)
+            dfst2 = df.sort_values(by='t2', ascending=False).head(num)
+            dfst2 = genPortfolio(dfst2)
+            dfst3 = df.sort_values(by='t3', ascending=False).head(num)
+            dfst3 = genPortfolio(dfst3)
+            print dfst1
+            print dfst2
+            print dfst3
+            #df['t3'] = normalizeme(df['t3'])
+            #df['t3'] = sigmoidme(df['t3'])
+            plt.plot(dfst3['t3'].get_values())
+            plt.xlabel(dfst3.index)
+            plt.yscale('log')
+            #plt.show()
         #import qgrid
         #qgrid.show_grid(df)
         #from IPython.display import display
