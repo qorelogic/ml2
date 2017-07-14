@@ -957,55 +957,72 @@ def getTicker(symbol):
     return res
 
 def getAdressInfoEthplorer(ethaddr, verbose=None):
-    #res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/')
-    res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ethaddr, noCache=True)
-    #res = apiRequest('https://api.ethplorer.io', '/getTokenInfo/0xff71cb760666ab06aa73f34995b42dd4b85ea07b?apiKey=freekey')
-    res1 = p.DataFrame(res['ETH'], index=['ETH']).transpose()
-    #res2 = p.DataFrame(res['tokens'], index=['tokens'])#.transpose()
-    print '============================================================'
-    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-        if verbose:
-            print p.DataFrame(res['tokens'][0])
-        print res1
-    mdf = p.DataFrame([])
-    for i in res['tokens']:
-        #print i
-        df = p.DataFrame(i)#.transpose()
-        decimals = float(df.loc['decimals', 'tokenInfo'])
-        balance  = float(df.loc['address', 'balance']) / n.power(10, decimals)
-        df['balance']  = map(lambda x: float(x) / n.power(10, decimals), df['balance'])
-        df['totalIn']  = map(lambda x: float(x) / n.power(10, decimals), df['totalIn'])
-        df['totalOut'] = map(lambda x: float(x) / n.power(10, decimals), df['totalOut'])
-        symbol = df.loc['symbol', 'tokenInfo']
-        df1    = getTicker(symbol).set_index('symbol').transpose()
-        df1['tokenInfo'] = df1[df1.columns[0]]
-        df = df.combine_first(df.loc[:, ['tokenInfo']].combine_first(df1.loc[:, ['tokenInfo']]))
-        try:    df.loc['24h_volume_marketcap_ratio', 'tokenInfo'] = float(df.loc['24h_volume_usd', 'tokenInfo']) / float(df.loc['market_cap_usd', 'tokenInfo']) * 100
-        except: ''
-        df.loc['balance', 'tokenInfo']     = balance
-        df.loc['balance_usd', 'tokenInfo'] = float(df.loc['price_usd', 'tokenInfo']) * balance
-        df.loc[:, 'balance totalIn totalOut'.split(' ')]  = balance
+    
+    if type(ethaddr) == type(''):
+        ethaddr = ethaddr.split(' ')
+    
+    mdf0 = p.DataFrame([])
+    for ea in ethaddr:
+        #res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/')
+        res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=True)
+        #res = apiRequest('https://api.ethplorer.io', '/getTokenInfo/0xff71cb760666ab06aa73f34995b42dd4b85ea07b?apiKey=freekey')
+        res1 = p.DataFrame(res['ETH'], index=['ETH']).transpose()
+        #res2 = p.DataFrame(res['tokens'], index=['tokens'])#.transpose()
+        print '============================================================'
+        print ea
+        print '---'
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-            #print '---'
-            #print df1.columns
-            #print df1
-            #print type(df1)
-            #print '---'
-            #print df.dtypes
-            #print df1
-            #print df.loc[:, ['tokenInfo']]
-            #print df1
             if verbose:
-                print df.loc[:, 'tokenInfo'.split(' ')]#.transpose()
-            else:
-                mdf = mdf.combine_first(df.loc['symbol 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol'))
-            #print
-        #res2 = p.DataFrame(res['tokens'])#.transpose()
+                print p.DataFrame(res['tokens'][0])
+            print res1
+        mdf = p.DataFrame([])
+        for i in res['tokens']:
+            #print i
+            df = p.DataFrame(i)#.transpose()
+            decimals = float(df.loc['decimals', 'tokenInfo'])
+            balance  = float(df.loc['address', 'balance']) / n.power(10, decimals)
+            df['balance']  = map(lambda x: float(x) / n.power(10, decimals), df['balance'])
+            df['totalIn']  = map(lambda x: float(x) / n.power(10, decimals), df['totalIn'])
+            df['totalOut'] = map(lambda x: float(x) / n.power(10, decimals), df['totalOut'])
+            symbol = df.loc['symbol', 'tokenInfo']
+            df1    = getTicker(symbol).set_index('symbol').transpose()
+            df1['tokenInfo'] = df1[df1.columns[0]]
+            df = df.combine_first(df.loc[:, ['tokenInfo']].combine_first(df1.loc[:, ['tokenInfo']]))
+            try:    df.loc['24h_volume_marketcap_ratio', 'tokenInfo'] = float(df.loc['24h_volume_usd', 'tokenInfo']) / float(df.loc['market_cap_usd', 'tokenInfo']) * 100
+            except: ''
+            df.loc['balance', 'tokenInfo']     = balance
+            df.loc['balance_usd', 'tokenInfo'] = float(df.loc['price_usd', 'tokenInfo']) * balance
+            df.loc[:, 'balance totalIn totalOut'.split(' ')]  = balance
+            with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+                #print '---'
+                #print df1.columns
+                #print df1
+                #print type(df1)
+                #print '---'
+                #print df.dtypes
+                #print df1
+                #print df.loc[:, ['tokenInfo']]
+                #print df1
+                if verbose:
+                    print df.loc[:, 'tokenInfo'.split(' ')]#.transpose()
+                else:
+                    mdf = mdf.combine_first(df.loc['symbol 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol'))
+                #print
+            #res2 = p.DataFrame(res['tokens'])#.transpose()
+        #if not verbose:
+        #    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        #        print mdf
+        mdf0 = mdf0.combine_first(mdf)
+        #['tokenInfo']
+        #print res2
     if not verbose:
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-            print mdf
-    #['tokenInfo']
-    #print res2
+            print
+            print '==='
+            print ethaddr
+            print mdf0
+            print '---'
+            print mdf0['balance_usd'].sum()
 
 if __name__ == "__main__":
 
@@ -1096,10 +1113,8 @@ if __name__ == "__main__":
         eth2_1 = '0xc978D12413CbC4ec37763944c57EF0100a4c15cf' #eth2 0
         eth2_2 = '0x2c8f659d57971449eb627FB78530Fc61867c4E50' #eth2 1
         #ethaddress1 = '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae'
-        getAdressInfoEthplorer(eth1_1, args.verbose)
-        getAdressInfoEthplorer(eth1_2, args.verbose)
-        getAdressInfoEthplorer(eth2_1, args.verbose)
-        getAdressInfoEthplorer(eth2_2, args.verbose)
+        getAdressInfoEthplorer([eth1_1, eth1_2], args.verbose)
+        getAdressInfoEthplorer([eth2_1, eth2_2], args.verbose)
         #print getTicker('bitcoin')    
 
     if args.research03:
