@@ -973,6 +973,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
     dfp = dfp.set_index('symbolCode')
     mdf0 = mdf0.combine_first(dfp)
     addressInfos = p.DataFrame()
+    dfinfo = p.DataFrame([])
     for ea in ethaddr:
         ethaddrSmall = ea[0:7]
         #res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/')
@@ -1044,6 +1045,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
                 #print df1
                 #print df.loc[:, ['tokenInfo']]
                 #print df1
+                dfinfo = dfinfo.combine_first(df.loc['address decimals symbol'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol'))
                 if verbose:
                     print df.loc[:, 'tokenInfo'.split(' ')]#.transpose()
                 else:
@@ -1070,6 +1072,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
             mdf0['unitsDiff'] = mdf0['portUnits']    - mdf0['balance']
             mdf0['balanceUsdDiff'] = mdf0['portUsd'] - mdf0['balance_usd']
             mdf0['balanceETHDiff'] = mdf0['balanceUsdDiff'] / ethusd
+            print dfinfo
             print mdf0.sort_values(by='allocation', ascending=False)
             print mdf0.sort_values(by='unitsDiff', ascending=False)
             print '---'
