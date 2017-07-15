@@ -1091,11 +1091,12 @@ def genPortfolio(df, balance='balance_usd'):
     df['portWeight'] = n.log(df['allocation']) / n.log(10)
     #df['portWeight'] = (df['allocation']) #/ n.log(10)
     df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
-    df['balance_usd']    = df['balance'] * ethusd * df['avg']
+    side = 'offer'
+    df['balance_usd']    = df['balance'] * ethusd * df[side]
     #df['totalBalanceUsd'] = df[balance].sum()
-    df['totalBalanceUsd'] = (df['balance'] * ethusd * df['avg']).sum()
+    df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
     df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
-    df['portUnits']       = df['portUsd'] / ethusd / df['avg']
+    df['portUnits']       = df['portUsd'] / ethusd / df[side]
     return df
 
 def modelPortfolio(num=5):
