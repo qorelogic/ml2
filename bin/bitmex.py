@@ -982,6 +982,9 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5):
         addressInfos = addressInfos.combine_first(res1)
         #res2 = p.DataFrame(res['tokens'], index=['tokens'])#.transpose()
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            # if tokens continue to next iteration [ie. ethaddr]
+            try: res['tokens']
+            except: continue
             if verbose:
                 print p.DataFrame(res['tokens'][0])
         mdf = p.DataFrame([])
@@ -1121,13 +1124,13 @@ ETH/BTC.DC 	0 	"""
 
         dfst1 = df.sort_values(by='t1', ascending=False).head(num)
         dfst2 = df.sort_values(by='t2', ascending=False).head(num)
-        print dfst1
-        print dfst2
+        #print dfst1
+        #print dfst2
 
-        print '----'
+        #print '----'
         df = df.sort_values(by='allocation', ascending=False).head(num)
         dfst = df
-        print dfst
+        #print dfst
         #df['allocation'] = normalizeme(df['allocation'])
         #df['allocation'] = sigmoidme(df['allocation'])
         plt.plot(dfst['allocation'].get_values())
