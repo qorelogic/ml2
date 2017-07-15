@@ -246,7 +246,7 @@ def apiRequest(baseurl, query, method='GET', noCache=False):
         # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
         requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=expire_after)
     else:
-        requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=1)
+        requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=300)
     #else:
     #    expire_after = 1
 
@@ -949,34 +949,49 @@ def getTicker(symbol):
     df = p.DataFrame(res)
     df = df.loc[:, 'symbol id'.split()].set_index('symbol')
     #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-    #    print df
-    ticker = df.loc[symbol, 'id']
-    res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=True)
-    res = p.DataFrame(res)
-    #print res.transpose()
-    return res
+    #    print df.sort_index()
+    try:
+        ticker = df.loc[symbol, 'id']
+        res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=True)
+        res = p.DataFrame(res)
+        #print res.transpose()
+        return res
+    except:
+        ''
 
 #@profile
-def getAdressInfoEthplorer(ethaddr, verbose=None):
+def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True):
     
     if type(ethaddr) == type(''):
         ethaddr = ethaddr.split(' ')
     
+    eth = getTicker('ETH').set_index('symbol').transpose()
+    ethusd = float(eth.loc['price_usd', 'ETH'])
     mdf0 = p.DataFrame([])
+    dfp = modelPortfolio(num=instruments)
+    dfp['symbolCode'] = map(lambda x: x.split('/')[0], dfp.index)
+    dfp = dfp.set_index('symbolCode')
+    mdf0 = mdf0.combine_first(dfp)
+    addressInfos = p.DataFrame()
     for ea in ethaddr:
+        ethaddrSmall = ea[0:7]
         #res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/')
-        res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=True)
+        res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=noChache)
         #res = apiRequest('https://api.ethplorer.io', '/getTokenInfo/0xff71cb760666ab06aa73f34995b42dd4b85ea07b?apiKey=freekey')
-        res1 = p.DataFrame(res['ETH'], index=['ETH']).transpose()
+        res1 = p.DataFrame(res['ETH'], index=[ethaddrSmall])
+        addressInfos = addressInfos.combine_first(res1)
         #res2 = p.DataFrame(res['tokens'], index=['tokens'])#.transpose()
-        print '============================================================'
-        print ea
-        print '---'
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            # if tokens continue to next iteration [ie. ethaddr]
+            try: res['tokens']
+            except: continue
             if verbose:
                 print p.DataFrame(res['tokens'][0])
-            print res1
         mdf = p.DataFrame([])
+        try:
+            res['tokens']
+        except:
+            break
         for i in res['tokens']:
             #print i
             df = p.DataFrame(i)#.transpose()
@@ -985,15 +1000,40 @@ def getAdressInfoEthplorer(ethaddr, verbose=None):
             df['balance']  = map(lambda x: float(x) / n.power(10, decimals), df['balance'])
             df['totalIn']  = map(lambda x: float(x) / n.power(10, decimals), df['totalIn'])
             df['totalOut'] = map(lambda x: float(x) / n.power(10, decimals), df['totalOut'])
+            df['ethaddr']  = ea
             symbol = df.loc['symbol', 'tokenInfo']
-            df1    = getTicker(symbol).set_index('symbol').transpose()
-            df1['tokenInfo'] = df1[df1.columns[0]]
-            df = df.combine_first(df.loc[:, ['tokenInfo']].combine_first(df1.loc[:, ['tokenInfo']]))
+            try:
+                df1    = getTicker(symbol).set_index('symbol').transpose()
+                df1['tokenInfo'] = df1[df1.columns[0]]
+                df = df.combine_first(df.loc[:, ['tokenInfo']].combine_first(df1.loc[:, ['tokenInfo']]))
+            except:
+                ''
             try:    df.loc['24h_volume_marketcap_ratio', 'tokenInfo'] = float(df.loc['24h_volume_usd', 'tokenInfo']) / float(df.loc['market_cap_usd', 'tokenInfo']) * 100
             except: ''
             df.loc['balance', 'tokenInfo']     = balance
-            df.loc['balance_usd', 'tokenInfo'] = float(df.loc['price_usd', 'tokenInfo']) * balance
+            with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+                try:
+                    dfp1 = dfp.transpose().loc[:, [symbol]]
+                    dff1 =  df.loc[:, ['tokenInfo']].transpose().set_index('symbol').transpose()
+                    dff1 = dff1.combine_first(dfp1)
+                    dff1['tokenInfo'] = dff1[symbol]
+                    df = df.combine_first(dff1)
+                    df = df.drop(symbol, axis=1)
+                    if verbose == True:
+                        print '----'
+                        print dfp1
+                        print
+                        print dff1
+                        print
+                        print df
+                except: ''
+                
+            try:
+                df.loc['balance_usd', 'tokenInfo'] = float(df.loc['price_usd', 'tokenInfo']) * balance
+            except:
+                df.loc['balance_usd', 'tokenInfo'] = float(df.loc['balance', 'tokenInfo']) * float(df.loc['avg', 'tokenInfo']) * ethusd
             df.loc[:, 'balance totalIn totalOut'.split(' ')]  = balance
+            df.loc['ethaddr', 'tokenInfo']  = ethaddrSmall
             with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
                 #print '---'
                 #print df1.columns
@@ -1007,7 +1047,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=None):
                 if verbose:
                     print df.loc[:, 'tokenInfo'.split(' ')]#.transpose()
                 else:
-                    mdf = mdf.combine_first(df.loc['symbol 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol'))
+                    mdf = mdf.combine_first(df.loc['symbol ethaddr 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol'))
                 #print
             #res2 = p.DataFrame(res['tokens'])#.transpose()
         #if not verbose:
@@ -1019,166 +1059,56 @@ def getAdressInfoEthplorer(ethaddr, verbose=None):
     if not verbose:
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
             print
-            print '==='
+            print '============================================================'
             print ethaddr
-            dfp = modelPortfolio()
-            dfp['symbolCode'] = map(lambda x: x.split('/')[0], dfp.index)
-            dfp = dfp.set_index('symbolCode')
-            mdf0 = mdf0.combine_first(dfp)
+            print '---'
+            print addressInfos
+            print '---'
             mdf0 = genPortfolio(mdf0)
             mdf0 = mdf0.fillna(0)
             # rebalance portfolio
-            mdf0['balanceDiff'] = mdf0['portUnits'] - mdf0['balance']
-            print mdf0
+            mdf0['unitsDiff'] = mdf0['portUnits']    - mdf0['balance']
+            mdf0['balanceUsdDiff'] = mdf0['portUsd'] - mdf0['balance_usd']
+            mdf0['balanceETHDiff'] = mdf0['balanceUsdDiff'] / ethusd
+            print mdf0.sort_values(by='allocation', ascending=False)
+            print mdf0.sort_values(by='unitsDiff', ascending=False)
             print '---'
-            print mdf0['balance_usd'].sum()
+            balanceUSDTotal = mdf0['balance_usd'].sum()
+            ethUSDTotal     = addressInfos['balance'].sum() * ethusd
+            print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
+            print '                      portPcnt sum: %s' % mdf0['portPcnt'].sum()
+            print '                balanceUsdDiff sum: %s' % mdf0['balanceUsdDiff'].sum()
+            print '                     portUnits sum: %s' % mdf0['portUnits'].sum()
+            print '---'
 
 def genPortfolio(df, balance='balance_usd'):
-    ethusd  = 198.73
-    df['portWeight'] = n.log(df['t3'])/n.log(2)
+    eth = getTicker('ETH').set_index('symbol').transpose()
+    ethusd = float(eth.loc['price_usd', 'ETH'])
+    gasUSD = 2
+    df['portWeight'] = n.log(df['allocation']) / n.log(10)
+    #df['portWeight'] = (df['allocation']) #/ n.log(10)
     df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
-    df['balance_usd2'] = df[balance].sum()
-    df['portUsd']      = df['balance_usd2'] * df['portPcnt'] / 100
-    df['portUnits']    = df['portUsd'] / ethusd / df['avg']
+    df['balance_usd']    = df['balance'] * ethusd * df['avg']
+    #df['totalBalanceUsd'] = df[balance].sum()
+    df['totalBalanceUsd'] = (df['balance'] * ethusd * df['avg']).sum()
+    df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
+    df['portUnits']       = df['portUsd'] / ethusd / df['avg']
     return df
 
-def modelPortfolio():
-    cv = """PPT/ETH 	777607 	0.01575 	0.01600
-MCAP/ETH 	52915 	0.01450 	0.02100
-VERI/ETH 	3849 	0.64000 	0.64430
-WINGS/ETH 	885 	0.00030 	0.00230
-DICE/ETH 	12970 	0.01911 	0.01990
-PAY/ETH 	65816 	0.00351 	0.00369
-XRL/ETH 	468137 	0.00049 	0.00055
-ADX/ETH 	155769 	0.00091 	0.00105
-FUN/ETH 	1893068 	0.00007 	0.00008
-SNT/ETH 	412285 	0.00013 	0.00014
-MBRS/ETH 	162543 	0.00013 	0.00025
-OMG/ETH 	11059 	0.00230 	0.00350
-EOS/ETH 	2750 	0.00823 	0.00899
-PLU/ETH 	627 	0.03799 	0.04500
-GOOD/ETH 	2286538 	0.00000 	0.00001
-EDG/ETH 	4320 	0.00210 	0.00290
-E4ROW/ETH 	10052 	0.00065 	0.00099
-ICE/ETH 	1743 	0.00480 	0.00480
-HMQ/ETH 	11695 	0.00047 	0.00070
-NET/ETH 	1082 	0.00500 	0.00572
-PLBT/ETH 	296 	0.01510 	0.04300
-BAT/ETH 	5104 	0.00040 	0.00049
-BNT/ETH 	236 	0.00950 	0.01115
-ETB/ETH 	599 	0.00350 	0.00650
-ADT/ETH 	5397 	0.00005 	0.00037
-ANT/ETH 	116 	0.00600 	0.01244
-ICN/ETH 	60 	0.01100 	0.01439
-MGO/ETH 	299 	0.00212 	0.00698
-REP/ETH 	3 	0.01100 	0.19000
-1ST/ETH 	165 	0.00250 	0.00680
-PTOY/ETH 	1000 	0.00051 	0.00199
-NMR/ETH 	2 	0.11000 	0.15750
-GNO/ETH 	1 	0.41007 	1.79000
-BCAP/ETH 	20 	0.00002 	0.04000
-TIME/ETH 	1 	0.00090 	0.40000
-NEWB/ETH 	2166 	0.00002 	0.00003
-MTL/ETH 	1 	0.01500 	0.03200
-STORJ/ETH 	10 	0.00200 	0.00367
-VSM/ETH 	2 	0.00350 	0.00799
-GNTW/ETH 	2 		0.00235
-ARC/ETH 	0 	0.00444 	0.01300
-GNTM/ETH 	0 		
-NXC/ETH 	0 	0.00001 	0.00400
-MLN/ETH 	0 	0.16000 	0.40000
-SNGLS/ETH 	0 	0.00046 	0.00150
-MKR/ETH 	0 	0.30000 	1.19321
-DGD/ETH 	0 	0.00500 	0.49720
-SWT/ETH 	0 	0.00220 	0.01899
-VSL/ETH 	0 	0.00051 	0.08000
-HKG/ETH 	0 	0.00001 	0.00500
-XAUR/ETH 	0 	0.00001 	0.29999
-GUP/ETH 	0 	0.00012 	
-RLC/ETH 	0 	0.00022 	0.00720
-ETB-OLD/ETH 	0 	0.00128 	0.10000
-TRST/ETH 	0 	0.00025 	0.00490
-TAAS/ETH 	0 	0.00800 	0.01500
-LUN/ETH 	0 	0.00120 	0.08500
-TKN/ETH 	0 	0.00300 	0.00780
-MYST/ETH 	0 	0.00222 	0.00800
-CFI/ETH 	0 	0.00041 	0.00062
-QRL/ETH 	0 	0.00030 	
-SONM/ETH 	0 	0.00011 	0.00032
-DRP/ETH 	0 	0.00050 	
-BET/ETH 	0 	0.00002 	
-BNB/ETH 	0 	0.00030 	0.00300
-ETH/USD.DC 	0 		
-ETH/BTC.DC 	0 		"""
-    cv = """PPT/ETH 	917552 	0.01600 	0.01600
+def modelPortfolio(num=5):
+    """
+    cv = "#""PPT/ETH 	917552 	0.01600 	0.01600
 MCAP/ETH 	52178 	0.01205 	0.02100
 VERI/ETH 	4817 	0.60000 	0.61000
 WINGS/ETH 	5661 	0.00031 	0.00160
 XRL/ETH 	575830 	0.00051 	0.00060
 DICE/ETH 	13083 	0.01810 	0.02090
-PAY/ETH 	53709 	0.00333 	0.00350
-ADX/ETH 	158925 	0.00090 	0.00095
-FUN/ETH 	1138648 	0.00007 	0.00007
-SNT/ETH 	418337 	0.00013 	0.00014
-MBRS/ETH 	175021 	0.00014 	0.00028
-OMG/ETH 	11039 	0.00230 	0.00320
-EOS/ETH 	3054 	0.00728 	0.00810
-PLU/ETH 	468 	0.03900 	0.04998
-ICE/ETH 	2431 	0.00480 	0.00550
-GOOD/ETH 	2158022 	0.00000 	0.00001
-HMQ/ETH 	13989 	0.00050 	0.00067
-E4ROW/ETH 	8503 	0.00065 	0.00099
-NET/ETH 	1501 	0.00500 	0.00572
-PLBT/ETH 	364 	0.00800 	0.03999
-ETB/ETH 	679 	0.00350 	0.00949
-BNT/ETH 	195 	0.01010 	0.01115
-BAT/ETH 	2560 	0.00040 	0.00053
-FUCK/ETH 	80469 	0.00001 	0.00002
-ANT/ETH 	148 	0.00510 	0.01244
-MGO/ETH 	299 	0.00211 	0.00693
-STORJ/ETH 	210 	0.00200 	0.00367
-ICN/ETH 	44 	0.00310 	0.01432
-REP/ETH 	3 	0.01100 	0.19000
-1ST/ETH 	165 	0.00670 	0.0067032386945
-CFI/ETH 	1495 	0.00037 	0.00055
-GNO/ETH 	1 	0.41006 	1.79000
-VSM/ETH 	21 	0.00350 	0.00799
-EDG/ETH 	185 	0.00061 	0.00290
-NMR/ETH 	2 	0.15750 	0.15750
-GNTW/ETH 	102 		0.00235
-TIME/ETH 	1 	0.00090 	0.40000
-BTH/ETH 	2 	0.00250 	0.02230
-NEWB/ETH 	2166 	0.00002 	0.00003
-PTOY/ETH 	56 	0.00051 	0.00199
-MTL/ETH 	1 	0.01001 	0.03200
-ARC/ETH 	0 	0.00444 	0.01300
-GNTM/ETH 	0 		
-NXC/ETH 	0 	0.00001 	0.10000
-MLN/ETH 	0 	0.16000 	0.40000
-SNGLS/ETH 	0 	0.00045 	0.00150
-MKR/ETH 	0 	0.30000 	1.19321
-DGD/ETH 	0 	0.00500 	0.49720
-SWT/ETH 	0 	0.00220 	0.01899
-VSL/ETH 	0 	0.00051 	0.08000
-HKG/ETH 	0 	0.00001 	0.00500
-XAUR/ETH 	0 	0.00001 	0.29999
-GUP/ETH 	0 	0.00012 	
-RLC/ETH 	0 	0.00022 	0.00720
-ETB-OLD/ETH 	0 	0.00128 	0.10000
-TRST/ETH 	0 	0.00016 	0.00490
-TAAS/ETH 	0 	0.00160 	0.01500
-LUN/ETH 	0 	0.00120 	0.08500
-TKN/ETH 	0 	0.00012 	0.00780
-BCAP/ETH 	0 	0.00002 	0.04000
-MYST/ETH 	0 	0.00222 	0.00800
-QRL/ETH 	0 	0.00030 	
-SONM/ETH 	0 	0.00011 	0.00032
-ADT/ETH 	0 	0.00005 	0.00037
-DRP/ETH 	0 	0.00050 	
-BET/ETH 	0 	0.00002 	
+...
 BNB/ETH 	0 	0.00001 	0.00300
 ETH/USD.DC 	0 		
 ETH/BTC.DC 	0 	"""
+    fp = open('/tmp/etherdelta.volume.tsv', 'r')
+    cv = fp.read(); fp.close()
     df = cv.split('\n')
     df = map(lambda x: x.split('\t'), df)        
     df = p.DataFrame(df, columns='symbol volume bid offer'.split(' '))
@@ -1186,7 +1116,7 @@ ETH/BTC.DC 	0 	"""
     df['avg'] = (df['bid'] + df['offer']) / 2
     df['t1'] = (df['volume'] / df['avg'])
     df['t2'] = (df['volume'] * df['avg'])
-    df['t3'] = (df['t1'] * df['t2'])
+    df['allocation'] = df['t1']
     
     with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
         import matplotlib.pylab as plt
@@ -1194,21 +1124,22 @@ ETH/BTC.DC 	0 	"""
         df = df.set_index('symbol').fillna(0)
         df = df[df['bid']   > 0.0001]
         df = df[df['offer'] > 0.0001]
-        num = 5
+        df = df[df['allocation'] > 1]
+
         dfst1 = df.sort_values(by='t1', ascending=False).head(num)
-        #dfst1 = genPortfolio(dfst1)
         dfst2 = df.sort_values(by='t2', ascending=False).head(num)
-        #dfst2 = genPortfolio(dfst2)
-        dfst3 = df.sort_values(by='t3', ascending=False).head(num)
-        #dfst3 = genPortfolio(dfst3)
         #print dfst1
         #print dfst2
-        #print dfst3
-        #df['t3'] = normalizeme(df['t3'])
-        #df['t3'] = sigmoidme(df['t3'])
-        plt.plot(dfst3['t3'].get_values())
-        plt.xlabel(dfst3.index)
-        plt.yscale('log')
+
+        #print '----'
+        df = df.sort_values(by='allocation', ascending=False).head(num)
+        dfst = df
+        #print dfst
+        #df['allocation'] = normalizeme(df['allocation'])
+        #df['allocation'] = sigmoidme(df['allocation'])
+        plt.plot(dfst['allocation'].get_values())
+        plt.xlabel(dfst.index)
+        #plt.yscale('log')
         #plt.show()
     #import qgrid
     #qgrid.show_grid(df)
@@ -1218,7 +1149,7 @@ ETH/BTC.DC 	0 	"""
 
     #print df.dtypes
 
-    return dfst3            
+    return dfst            
     
 
 
@@ -1238,6 +1169,7 @@ if __name__ == "__main__":
     parser.add_argument("-r01", '--research01', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r02", '--research02', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r03", '--research03', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
     
@@ -1305,14 +1237,20 @@ if __name__ == "__main__":
         tm.tokenICOsTokenMarket()
         tm.underTheRadarTokens()
     
+    if args.cache:
+        noCache = False
+    else:
+        noCache = True
+        
     if args.research01:
         eth1_1 = '0x38a4Ff00C207cBD78aB34b6dDd1b8754E4498508'
         eth1_2 = '0xc73D7e4a40D4513eC7D114f521eA59DF607a7613'
         eth2_1 = '0xc978D12413CbC4ec37763944c57EF0100a4c15cf' #eth2 0
         eth2_2 = '0x2c8f659d57971449eb627FB78530Fc61867c4E50' #eth2 1
+        
         #ethaddress1 = '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae'
-        getAdressInfoEthplorer([eth1_1, eth1_2], args.verbose)
-        getAdressInfoEthplorer([eth2_1, eth2_2], args.verbose)
+        getAdressInfoEthplorer([eth1_1, eth1_2], args.verbose, instruments=20, noChache=noCache)
+        getAdressInfoEthplorer([eth2_1, eth2_2], args.verbose, instruments=50, noChache=noCache)
         #print getTicker('bitcoin')    
 
     if args.research03:
@@ -1320,4 +1258,9 @@ if __name__ == "__main__":
         print df1
     
     if args.research02:
-        modelPortfolio()
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            dfp = modelPortfolio(num=20)
+            gpdf = genPortfolio(dfp)
+            print dfp
+            print gpdf
+            
