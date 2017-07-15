@@ -960,7 +960,7 @@ def getTicker(symbol):
         ''
 
 #@profile
-def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5):
+def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True):
     
     if type(ethaddr) == type(''):
         ethaddr = ethaddr.split(' ')
@@ -976,7 +976,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5):
     for ea in ethaddr:
         ethaddrSmall = ea[0:7]
         #res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/')
-        res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=True)
+        res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=noChache)
         #res = apiRequest('https://api.ethplorer.io', '/getTokenInfo/0xff71cb760666ab06aa73f34995b42dd4b85ea07b?apiKey=freekey')
         res1 = p.DataFrame(res['ETH'], index=[ethaddrSmall])
         addressInfos = addressInfos.combine_first(res1)
@@ -1075,6 +1075,8 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5):
             ethUSDTotal     = addressInfos['balance'].sum() * ethusd
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
             print '                      portPcnt sum: %s' % mdf0['portPcnt'].sum()
+            print '                balanceUsdDiff sum: %s' % mdf0['balanceUsdDiff'].sum()
+            print '                     portUnits sum: %s' % mdf0['portUnits'].sum()
             print '---'
 
 def genPortfolio(df, balance='balance_usd'):
@@ -1112,7 +1114,7 @@ ETH/BTC.DC 	0 	"""
     df['avg'] = (df['bid'] + df['offer']) / 2
     df['t1'] = (df['volume'] / df['avg'])
     df['t2'] = (df['volume'] * df['avg'])
-    df['allocation'] = df['t2']
+    df['allocation'] = df['t1']
     
     with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
         import matplotlib.pylab as plt
@@ -1165,6 +1167,7 @@ if __name__ == "__main__":
     parser.add_argument("-r01", '--research01', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r02", '--research02', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r03", '--research03', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
     
@@ -1232,14 +1235,20 @@ if __name__ == "__main__":
         tm.tokenICOsTokenMarket()
         tm.underTheRadarTokens()
     
+    if args.cache:
+        noCache = False
+    else:
+        noCache = True
+        
     if args.research01:
         eth1_1 = '0x38a4Ff00C207cBD78aB34b6dDd1b8754E4498508'
         eth1_2 = '0xc73D7e4a40D4513eC7D114f521eA59DF607a7613'
         eth2_1 = '0xc978D12413CbC4ec37763944c57EF0100a4c15cf' #eth2 0
         eth2_2 = '0x2c8f659d57971449eb627FB78530Fc61867c4E50' #eth2 1
+        
         #ethaddress1 = '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae'
-        getAdressInfoEthplorer([eth1_1, eth1_2], args.verbose, instruments=20)
-        getAdressInfoEthplorer([eth2_1, eth2_2], args.verbose, instruments=20)
+        getAdressInfoEthplorer([eth1_1, eth1_2], args.verbose, instruments=20, noChache=noCache)
+        getAdressInfoEthplorer([eth2_1, eth2_2], args.verbose, instruments=50, noChache=noCache)
         #print getTicker('bitcoin')    
 
     if args.research03:
