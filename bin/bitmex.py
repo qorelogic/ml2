@@ -1069,7 +1069,9 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
             # rebalance portfolio
             mdf0['unitsDiff'] = mdf0['portUnits']    - mdf0['balance']
             mdf0['balanceUsdDiff'] = mdf0['portUsd'] - mdf0['balance_usd']
+            mdf0['balanceETHDiff'] = mdf0['balanceUsdDiff'] / ethusd
             print mdf0.sort_values(by='allocation', ascending=False)
+            print mdf0.sort_values(by='unitsDiff', ascending=False)
             print '---'
             balanceUSDTotal = mdf0['balance_usd'].sum()
             ethUSDTotal     = addressInfos['balance'].sum() * ethusd
