@@ -240,13 +240,16 @@ def apiRequest(baseurl, query, method='GET', noCache=False):
     #import drest
     import ujson as uj
     import requests as req, requests_cache
+    
+    backend='sqlite'
+    #backend='memory'
 
     if noCache == False:
         expire_after = 3600 * 24 * 365
         # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
-        requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=expire_after)
+        requests_cache.install_cache('scraper_cache', backend=backend, expire_after=expire_after)
     else:
-        requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=300)
+        requests_cache.install_cache('scraper_cache', backend=backend, expire_after=300)
     #else:
     #    expire_after = 1
 
@@ -974,6 +977,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
     mdf0 = mdf0.combine_first(dfp)
     addressInfos = p.DataFrame()
     dfinfo = p.DataFrame([])
+    mdfs = {}
     for ea in ethaddr:
         ethaddrSmall = ea[0:7]
         #res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/')
@@ -988,13 +992,18 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
             except: continue
             if verbose:
                 print p.DataFrame(res['tokens'][0])
-        mdf = p.DataFrame([])
+            #print '=1=1=1=1=1'
+            #print res['tokens']
+            #for qwe in res['tokens']:
+            #    print p.DataFrame(qwe)
+            #print '=1=1=1=1=1'
+        mdf    = p.DataFrame([])
         try:
             res['tokens']
         except:
             break
         for i in res['tokens']:
-            #print i
+            #print 'tokens: %s' % i
             df = p.DataFrame(i)#.transpose()
             decimals = float(df.loc['decimals', 'tokenInfo'])
             balance  = float(df.loc['address', 'balance']) / n.power(10, decimals)
@@ -1022,17 +1031,29 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
                     df = df.drop(symbol, axis=1)
                     if verbose == True:
                         print '----'
+                        print 'dfp1'
                         print dfp1
                         print
+                        print 'dff1'
                         print dff1
                         print
                         print df
                 except: ''
-                
+                #print '--123--'
+                #print df
+                #print '--123--'
             try:
-                df.loc['balance_usd', 'tokenInfo'] = float(df.loc['price_usd', 'tokenInfo']) * balance
-            except:
+                # some tokens barf as they do not quote a bid or offer
+                #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+                #    print df
+                #    print df.loc['avg', 'tokenInfo']
+                #try: df.loc['avg', 'tokenInfo']
+                #except: continue
                 df.loc['balance_usd', 'tokenInfo'] = float(df.loc['balance', 'tokenInfo']) * float(df.loc['avg', 'tokenInfo']) * ethusd
+            except:
+                try: df.loc['price_usd', 'tokenInfo']
+                except: continue
+                df.loc['balance_usd', 'tokenInfo'] = float(df.loc['price_usd', 'tokenInfo']) * balance
             df.loc[:, 'balance totalIn totalOut'.split(' ')]  = balance
             df.loc['ethaddr', 'tokenInfo']  = ethaddrSmall
             with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1049,15 +1070,34 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
                 if verbose:
                     print df.loc[:, 'tokenInfo'.split(' ')]#.transpose()
                 else:
-                    mdf = mdf.combine_first(df.loc['symbol ethaddr 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol'))
+                    df.loc['id2', 'tokenInfo'] = '%s-%s' % (df.loc['symbol', 'tokenInfo'], df.loc['ethaddr', 'tokenInfo'])
+                    dfpremdf = df.loc['symbol id2 ethaddr 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol')
+                    mdf = mdf.combine_first(dfpremdf)
+                    #mdf = dfpremdf.combine_first(mdf)
+
                 #print
             #res2 = p.DataFrame(res['tokens'])#.transpose()
         #if not verbose:
-        #    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-        #        print mdf
+
         mdf0 = mdf0.combine_first(mdf)
+        mdfs.update({ea:mdf.loc[:, 'balance balance_usd ethaddr'.split(' ')].to_dict()})
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            ''
+            print mdfs
         #['tokenInfo']
         #print res2
+    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        print 'mdfs======'
+        print mdfs.keys()
+        print p.DataFrame(mdfs)
+        mmdfs = p.DataFrame()
+        for kmdfs in mdfs.keys():
+            mmdfs = mmdfs.add(p.DataFrame(mdfs[kmdfs]).loc[:, 'balance balance_usd'.split(' ')], fill_value=0)
+        print mmdfs
+        mdf0 = mmdfs.combine_first(mdf0)
+        #mdf0 = mdf0.combine_first(mmdfs)
+        print 'mdfs======/'
+    
     if not verbose:
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
             print
@@ -1097,6 +1137,7 @@ def genPortfolio(df, balance='balance_usd'):
     df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
     df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
     df['portUnits']       = df['portUsd'] / ethusd / df[side]
+    df = df[df['portUnits'] != n.inf]
     return df
 
 def modelPortfolio(num=5):
@@ -1117,6 +1158,11 @@ ETH/BTC.DC 	0 	"""
     df = map(lambda x: x.split('\t'), df)        
     df = p.DataFrame(df, columns='symbol volume bid offer'.split(' '))
     df = df.convert_objects(convert_numeric=True)
+    #df = df.fillna(0)
+    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        print df
+    #    for i in df.index:
+    #        print 's/bid/offer: %s %s %s' % (df.loc[i, 'symbol'], df.loc[i, 'bid'], df.loc[i, 'offer'])
     df['avg'] = (df['bid'] + df['offer']) / 2
     df['t1'] = (df['volume'] / df['avg'])
     df['t2'] = (df['volume'] * df['avg'])
@@ -1126,8 +1172,9 @@ ETH/BTC.DC 	0 	"""
         import matplotlib.pylab as plt
         from qoreliquid import normalizeme, sigmoidme
         df = df.set_index('symbol').fillna(0)
-        df = df[df['bid']   > 0.0001]
-        df = df[df['offer'] > 0.0001]
+        
+        #df = df[df['bid']   > 0.0001]
+        #df = df[df['offer'] > 0.0001]
         df = df[df['allocation'] > 1]
 
         dfst1 = df.sort_values(by='t1', ascending=False).head(num)
@@ -1135,10 +1182,13 @@ ETH/BTC.DC 	0 	"""
         #print dfst1
         #print dfst2
 
-        #print '----'
+        print '----'
         df = df.sort_values(by='allocation', ascending=False).head(num)
         dfst = df
-        #print dfst
+        
+        print '----'
+        print dfst
+        print '----'
         #df['allocation'] = normalizeme(df['allocation'])
         #df['allocation'] = sigmoidme(df['allocation'])
         plt.plot(dfst['allocation'].get_values())
