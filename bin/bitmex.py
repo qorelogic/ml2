@@ -489,6 +489,25 @@ class CoinMarketCap:
         self.df = df
         return df
 
+    @profile
+    def getTicker(self, symbol):
+        res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker')#, noCache=True)
+        df = p.DataFrame(res)
+        self.symbolMapper = df.loc[:, 'symbol id'.split()].set_index('symbol')
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print self.symbolMapper.sort_index()
+        #return
+        
+        try:
+            ticker = self.symbolMapper.loc[symbol, 'id']
+            res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=True)
+            res = p.DataFrame(res)
+            #print res.transpose()
+            return res
+        except:
+            ''
+
+
 class PortfolioModeler:
     
     def __init__(self):
@@ -947,33 +966,17 @@ class Bittrex(Exchange):
         except:
             ''
 
-def getTicker(symbol):
-    res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker')#, noCache=True)
-    df = p.DataFrame(res)
-    df = df.loc[:, 'symbol id'.split()].set_index('symbol')
-    #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-    #    print df.sort_index()
-    try:
-        ticker = df.loc[symbol, 'id']
-        res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=True)
-        res = p.DataFrame(res)
-        #print res.transpose()
-        return res
-    except:
-        ''
-
-#@profile
+@profile
 def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True):
     
     if type(ethaddr) == type(''):
         ethaddr = ethaddr.split(' ')
     
-    eth = getTicker('ETH').set_index('symbol').transpose()
+    cmc = CoinMarketCap()
+    eth = cmc.getTicker('ETH').set_index('symbol').transpose()
     ethusd = float(eth.loc['price_usd', 'ETH'])
     mdf0 = p.DataFrame([])
     dfp = modelPortfolio(num=instruments)
-    dfp['symbolCode'] = map(lambda x: x.split('/')[0], dfp.index)
-    dfp = dfp.set_index('symbolCode')
     mdf0 = mdf0.combine_first(dfp)
     addressInfos = p.DataFrame()
     dfinfo = p.DataFrame([])
@@ -992,17 +995,25 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
             except: continue
             if verbose:
                 print p.DataFrame(res['tokens'][0])
-            #print '=1=1=1=1=1'
-            #print res['tokens']
-            #for qwe in res['tokens']:
-            #    print p.DataFrame(qwe)
-            #print '=1=1=1=1=1'
+            """
+            print '=1=1=1=1=1'
+            print res['tokens']
+            for qwe in res['tokens']:
+                print '---'
+                df8 = p.DataFrame(qwe)
+                df8.loc['balance123', 'tokenInfo'] = float(df8.loc['address', 'balance']) / pow(10, int(df8.loc['decimals', 'tokenInfo']))
+                print df8
+            print '=1=1=1=1=1'
+            #print cmc.symbolMapper
+            return
+            """
         mdf    = p.DataFrame([])
         try:
             res['tokens']
         except:
             break
         for i in res['tokens']:
+            avg = 0
             #print 'tokens: %s' % i
             df = p.DataFrame(i)#.transpose()
             decimals = float(df.loc['decimals', 'tokenInfo'])
@@ -1027,7 +1038,21 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
                     dff1 =  df.loc[:, ['tokenInfo']].transpose().set_index('symbol').transpose()
                     dff1 = dff1.combine_first(dfp1)
                     dff1['tokenInfo'] = dff1[symbol]
+                    #df22 = p.concat([dff1, df], axis=1)
+                    #combineDF3(df.to_dict(), dff1.to_dict())
                     df = df.combine_first(dff1)
+                    """
+                    print '======4324234===='
+                    print df.dtypes
+                    print dff1.dtypes
+                    print df22.dtypes
+                    print df
+                    print dff1
+                    print df22
+                    print df
+                    print '======4324234====/'
+                    return
+                    """
                     df = df.drop(symbol, axis=1)
                     if verbose == True:
                         print '----'
@@ -1049,11 +1074,35 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
                 #    print df.loc['avg', 'tokenInfo']
                 #try: df.loc['avg', 'tokenInfo']
                 #except: continue
-                df.loc['balance_usd', 'tokenInfo'] = float(df.loc['balance', 'tokenInfo']) * float(df.loc['avg', 'tokenInfo']) * ethusd
-            except:
+                avg = df.loc['avg', 'tokenInfo']
+            except Exception as e:
+                #print e
+                try: 
+                    df.loc['price', 'tokenInfo']
+                    dfPrice = p.DataFrame(df.loc['price', 'tokenInfo'], index=[0]).transpose()
+                    dfPrice.loc['rateETH', 0] = dfPrice.loc['rate', 0] / ethusd
+                    avg = dfPrice.loc['rateETH', 0]
+                    print dfPrice
+                    df.loc['price_usd', 'tokenInfo'] = dfPrice.loc['rate', 0]
+                except Exception as e2:
+                    print e2
+                    #continue
                 try: df.loc['price_usd', 'tokenInfo']
-                except: continue
+                except:
+                    ''
+                    #continue
+                df.loc['price_usd', 'tokenInfo'] = avg #* ethusd
+                #df.loc['price', 'tokenInfo'] = avg
+                dfp = modelPortfolio(num=instruments)
+                #df = df.combine_first(dfp)
+                #df = genPortfolio(df)
+                with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+                    if verbose:
+                        print '---/////6546456///---'
+                        print df
+                        print '---/////6546456///---/'
                 df.loc['balance_usd', 'tokenInfo'] = float(df.loc['price_usd', 'tokenInfo']) * balance
+            df.loc['balance_usd', 'tokenInfo'] = float(df.loc['balance', 'tokenInfo']) * float(avg) * ethusd
             df.loc[:, 'balance totalIn totalOut'.split(' ')]  = balance
             df.loc['ethaddr', 'tokenInfo']  = ethaddrSmall
             with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1071,7 +1120,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
                     print df.loc[:, 'tokenInfo'.split(' ')]#.transpose()
                 else:
                     df.loc['id2', 'tokenInfo'] = '%s-%s' % (df.loc['symbol', 'tokenInfo'], df.loc['ethaddr', 'tokenInfo'])
-                    dfpremdf = df.loc['symbol id2 ethaddr 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol')
+                    dfpremdf = df.loc['symbol id2 id3 ethaddr 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol')
                     mdf = mdf.combine_first(dfpremdf)
                     #mdf = dfpremdf.combine_first(mdf)
 
@@ -1083,20 +1132,32 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
         mdfs.update({ea:mdf.loc[:, 'balance balance_usd ethaddr'.split(' ')].to_dict()})
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
             ''
-            print mdfs
+            symbolMapR = dict(zip(cmc.symbolMap.values(), cmc.symbolMap.keys()))
+            dddf = p.DataFrame(symbolMapR, index=[0]).transpose()            
+            for ix in mdf.index:
+                #try: mdf.loc[ix, 'id3'] = symbolMapR[ix]
+                #except: ''
+                try: mdf.loc[ix, 'id3'] = dddf.loc[ix, 0]
+                except: ''
+            print mdf.sort_values(by='balance_usd', ascending=False)
+            #return
+            #print mdf
+            #print df
+            #return
         #['tokenInfo']
         #print res2
     with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-        print 'mdfs======'
-        print mdfs.keys()
-        print p.DataFrame(mdfs)
         mmdfs = p.DataFrame()
         for kmdfs in mdfs.keys():
             mmdfs = mmdfs.add(p.DataFrame(mdfs[kmdfs]).loc[:, 'balance balance_usd'.split(' ')], fill_value=0)
-        print mmdfs
         mdf0 = mmdfs.combine_first(mdf0)
         #mdf0 = mdf0.combine_first(mmdfs)
-        print 'mdfs======/'
+        if verbose:
+            print 'mdfs======'
+            print mdfs.keys()
+            print p.DataFrame(mdfs)
+            print mmdfs
+            print 'mdfs======/'
     
     if not verbose:
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1113,33 +1174,53 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
             mdf0['balanceUsdDiff'] = mdf0['portUsd'] - mdf0['balance_usd']
             mdf0['balanceETHDiff'] = mdf0['balanceUsdDiff'] / ethusd
             print dfinfo
-            print mdf0.sort_values(by='allocation', ascending=False)
-            print mdf0.sort_values(by='unitsDiff', ascending=False)
+            f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
+            f = '24h_volume_usd allocation allocationBool avg balance balance_usd bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount issuancesCount price_btc price_usd rank volume portPcnt portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
+            print mdf0.loc[:,f].sort_values(by='allocation', ascending=False)
+            print mdf0.loc[:,f].sort_values(by='balance_usd', ascending=False)
+            print mdf0.loc[:,f].sort_values(by='unitsDiff', ascending=False)
+            print mdf0.loc[:,f].sort_values(by='spreadPcnt', ascending=False)
             print '---'
-            balanceUSDTotal = mdf0['balance_usd'].sum()
+            balanceUSDTotal = mdf0['balance_usd'].sum() #+ 89.736
             ethUSDTotal     = addressInfos['balance'].sum() * ethusd
+            usdtwd = 30.41
+            initialInvestment = 40000.0 / usdtwd
+            pc  = ((balanceUSDTotal + ethUSDTotal) / initialInvestment * 100)-100
+            pc2 = (balanceUSDTotal + ethUSDTotal) - initialInvestment
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
+            print '                    initial investment: %s' % (initialInvestment)
+            print '                    initial investment: %s [%s]' % (pc, pc2) #+'%'
             print '                      portPcnt sum: %s' % mdf0['portPcnt'].sum()
             print '                balanceUsdDiff sum: %s' % mdf0['balanceUsdDiff'].sum()
             print '                     portUnits sum: %s' % mdf0['portUnits'].sum()
+            print '                       balance sum: %s' % mdf0['balance'].sum()
             print '---'
 
+@profile
 def genPortfolio(df, balance='balance_usd'):
-    eth = getTicker('ETH').set_index('symbol').transpose()
+    cmc = CoinMarketCap()
+    eth = cmc.getTicker('ETH').set_index('symbol').transpose()
     ethusd = float(eth.loc['price_usd', 'ETH'])
     gasUSD = 2
     df['portWeight'] = n.log(df['allocation']) / n.log(10)
     #df['portWeight'] = (df['allocation']) #/ n.log(10)
     df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
-    side = 'offer'
+    side = 'avg'
     df['balance_usd']    = df['balance'] * ethusd * df[side]
     #df['totalBalanceUsd'] = df[balance].sum()
     df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
     df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
+    df['portUsd']       = df['portUsd'] * df['allocationBool']
     df['portUnits']       = df['portUsd'] / ethusd / df[side]
+    df['portUnits']       = df['portUnits'] * df['allocationBool']
     df = df[df['portUnits'] != n.inf]
     return df
 
+import matplotlib.pylab as plt
+from qoreliquid import normalizeme, sigmoidme
+#import qgrid
+#from IPython.display import display
+@profile
 def modelPortfolio(num=5):
     """
     cv = "#""PPT/ETH 	917552 	0.01600 	0.01600
@@ -1159,51 +1240,57 @@ ETH/BTC.DC 	0 	"""
     df = p.DataFrame(df, columns='symbol volume bid offer'.split(' '))
     df = df.convert_objects(convert_numeric=True)
     #df = df.fillna(0)
-    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-        print df
     #    for i in df.index:
     #        print 's/bid/offer: %s %s %s' % (df.loc[i, 'symbol'], df.loc[i, 'bid'], df.loc[i, 'offer'])
     df['avg'] = (df['bid'] + df['offer']) / 2
+    df['spread'] = df['offer'] - df['bid']
+    df['spreadPcnt'] = df['spread'] / df['avg'] * 100
+    #df['spreadPcntA'] = n.log(df['spreadPcnt'])/-df['spreadPcnt'] #1/n.log(df['spreadPcnt']/100)
+    df['spreadPcntA'] = 1/(df['spreadPcnt']+1)
+    #df['spreadPcntA'] = normalizeme(df['spreadPcntA']) 
     df['t1'] = (df['volume'] / df['avg'])
+    df['t1a'] = df['volume'] / (df['avg'] * n.log(df['spreadPcnt']/100) )
     df['t2'] = (df['volume'] * df['avg'])
-    df['allocation'] = df['t1']
+    df['allocation']     = df['t1']
+    #df['allocationBool'] = df[df['spreadPcntA'] < -0.03].loc[:,'spreadPcntA']
+    df['allocationBool'] = df['spreadPcntA']
     
-    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-        import matplotlib.pylab as plt
-        from qoreliquid import normalizeme, sigmoidme
-        df = df.set_index('symbol').fillna(0)
-        
-        #df = df[df['bid']   > 0.0001]
-        #df = df[df['offer'] > 0.0001]
-        df = df[df['allocation'] > 1]
+    df = df.set_index('symbol').fillna(0)
+    
+    #df = df[df['bid']   > 0.0001]
+    #df = df[df['offer'] > 0.0001]
+    df = df[df['allocation'] > 1]
 
-        dfst1 = df.sort_values(by='t1', ascending=False).head(num)
-        dfst2 = df.sort_values(by='t2', ascending=False).head(num)
+    dfst1 = df.sort_values(by='t1', ascending=False).head(num)
+    dfst2 = df.sort_values(by='t2', ascending=False).head(num)
+
+    df = df.sort_values(by='allocation', ascending=False).head(num)
+    dfst = df
+
+    dfst['symbol'] = dfst.index
+    dfst['symbolCode'] = map(lambda x: x.split('/')[0], dfst.index)
+    dfst = dfst.set_index('symbolCode')
+
+    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
         #print dfst1
         #print dfst2
-
-        print '----'
-        df = df.sort_values(by='allocation', ascending=False).head(num)
-        dfst = df
-        
-        print '----'
-        print dfst
-        print '----'
-        #df['allocation'] = normalizeme(df['allocation'])
-        #df['allocation'] = sigmoidme(df['allocation'])
-        plt.plot(dfst['allocation'].get_values())
-        plt.xlabel(dfst.index)
-        #plt.yscale('log')
-        #plt.show()
-    #import qgrid
+        #print 'modelPortfolio======'
+        #print dfst
+        #print 'modelPortfolio======/'
+        ''
+    #df['allocation'] = normalizeme(df['allocation'])
+    #df['allocation'] = sigmoidme(df['allocation'])
+    plt.plot(dfst['allocation'].get_values())
+    plt.xlabel(dfst.index)
+    #plt.yscale('log')
+    #plt.show()
     #qgrid.show_grid(df)
-    #from IPython.display import display
     #grid = qgrid.QGridWidget(df=df)
     #display(grid)
 
     #print df.dtypes
 
-    return dfst            
+    return dfst
     
 
 
