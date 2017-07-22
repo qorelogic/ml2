@@ -580,6 +580,8 @@ class DataPipeline:
 
         return df
 
+import pandas as p
+import ujson as uj
 import zmq
 class ZZZ:
     
@@ -595,12 +597,12 @@ class ZZZ:
         #except Exception as e:
         #    print e
     
-    def initClient(self):
+    def initClient(self, port=3343, subject='tester'):
         # client
         self.socketClient = self.ctx.socket(zmq.SUB)
-        url = 'tcp://localhost:3343'
+        url = 'tcp://localhost:%s' % port
         self.socketClient.connect(url)
-        self.socketClient.setsockopt(zmq.SUBSCRIBE, 'tester')
+        self.socketClient.setsockopt(zmq.SUBSCRIBE, subject)
 
     def sendm(self):
         for i in range(10000):
@@ -612,6 +614,19 @@ class ZZZ:
     def receive(self):
         while True:
             print self.socketClient.recv(0)
+
+    def receiveJson(self):
+        while True:
+            res = self.socketClient.recv(0)
+            res = uj.loads(res)
+            print '==='
+            #print res.keys()
+            #print res
+            print p.DataFrame(res['Buys'])
+            print '---'
+            print p.DataFrame(res['Sells'])
+            print '---'
+            print p.DataFrame(res['Fills'])
 
     def t3(self, tn):
         import time as tt
