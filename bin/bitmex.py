@@ -1216,6 +1216,17 @@ def genPortfolio(df, balance='balance_usd'):
     df = df[df['portUnits'] != n.inf]
     return df
 
+def parseEtherDeltaDump():
+    import re
+    fp = open('/tmp/etherdelta.volume.tsv', 'r')
+    res = fp.read()
+    fp.close()
+    #print res
+    res = re.sub(re.compile(r'.*?Offer(.*?)Token.*', re.S), '\\1', res)
+    res = res.strip()
+    #print res
+    return res
+
 import matplotlib.pylab as plt
 from qoreliquid import normalizeme, sigmoidme
 #import qgrid
@@ -1233,8 +1244,9 @@ DICE/ETH 	13083 	0.01810 	0.02090
 BNB/ETH 	0 	0.00001 	0.00300
 ETH/USD.DC 	0 		
 ETH/BTC.DC 	0 	"""
-    fp = open('/tmp/etherdelta.volume.tsv', 'r')
-    cv = fp.read(); fp.close()
+    cv = parseEtherDeltaDump()
+    #fp = open('/tmp/etherdelta.volume.tsv', 'r')
+    #cv = fp.read(); fp.close()
     df = cv.split('\n')
     df = map(lambda x: x.split('\t'), df)        
     df = p.DataFrame(df, columns='symbol volume bid offer'.split(' '))
