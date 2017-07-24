@@ -164,6 +164,17 @@ class QoreDebug:
     
     def type(self, v):
         self.log('{0} {1}'.format(v, type(v)))
+
+    # https://stackoverflow.com/questions/37081116/how-to-get-pythons-terminal-error-to-be-in-color
+    def colorStacktraces(self):
+        try:
+            import IPython.core.ultratb
+        except ImportError:
+            # No IPython. Use default exception printing.
+            pass
+        else:
+            import sys
+            sys.excepthook = IPython.core.ultratb.ColorTB()
     
 # source: http://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python
 class switch(object):
