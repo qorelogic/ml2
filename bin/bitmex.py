@@ -971,7 +971,7 @@ class Bittrex(Exchange):
             ''
 
 @profile
-def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True):
+def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True, initialInvestment=0):
     
     if type(ethaddr) == type(''):
         ethaddr = ethaddr.split(' ')
@@ -1171,6 +1171,13 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
             print '---'
             print addressInfos
             print '---'
+            balanceUSDTotal = mdf0['balance_usd'].sum() #+ 89.736
+            ethUSDTotal     = addressInfos['balance'].sum() * ethusd
+            pc  = ((balanceUSDTotal + ethUSDTotal) / initialInvestment * 100)-100
+            pc2 = (balanceUSDTotal + ethUSDTotal) - initialInvestment
+            #for i3 in addressInfos.index:
+            #    print mdf0[mdf0['ethaddr'] == i3]
+            mdf0['ethUSDTotal'] = ethUSDTotal
             mdf0 = genPortfolio(mdf0)
             mdf0 = mdf0.fillna(0)
             # rebalance portfolio
@@ -1179,25 +1186,24 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True)
             mdf0['balanceETHDiff'] = mdf0['balanceUsdDiff'] / ethusd
             print dfinfo
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
-            f = '24h_volume_usd allocation allocationBool avg balance balance_usd bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount issuancesCount price_btc price_usd rank volume portPcnt portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
+            f = '24h_volume_usd allocation allocationBool avg balance balance_usd bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount issuancesCount price_btc price_usd rank volume totalBalanceUsd portPcnt portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             print mdf0.loc[:,f].sort_values(by='allocation', ascending=False)
             print mdf0.loc[:,f].sort_values(by='balance_usd', ascending=False)
             print mdf0.loc[:,f].sort_values(by='unitsDiff', ascending=False)
             print mdf0.loc[:,f].sort_values(by='spreadPcnt', ascending=False)
             print '---'
-            balanceUSDTotal = mdf0['balance_usd'].sum() #+ 89.736
-            ethUSDTotal     = addressInfos['balance'].sum() * ethusd
-            usdtwd = 30.41
-            initialInvestment = 40000.0 / usdtwd
-            pc  = ((balanceUSDTotal + ethUSDTotal) / initialInvestment * 100)-100
-            pc2 = (balanceUSDTotal + ethUSDTotal) - initialInvestment
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
             print '                    initial investment: %s' % (initialInvestment)
             print '                    initial investment: %s [%s]' % (pc, pc2) #+'%'
             print '                      portPcnt sum: %s' % mdf0['portPcnt'].sum()
             print '                balanceUsdDiff sum: %s' % mdf0['balanceUsdDiff'].sum()
+            print '               balanceETHDiff  sum: %s' % mdf0['balanceETHDiff'].sum()
+            print '               balanceETHDiff+ sum: %s' % mdf0[mdf0['balanceETHDiff'] > 0]['balanceETHDiff'].sum()
+            print '               balanceETHDiff- sum: %s' % mdf0[mdf0['balanceETHDiff'] < 0]['balanceETHDiff'].sum()
+
             print '                     portUnits sum: %s' % mdf0['portUnits'].sum()
             print '                       balance sum: %s' % mdf0['balance'].sum()
+            print '                            ethusd: %s' % ethusd
             print '---'
 
 @profile
@@ -1211,8 +1217,11 @@ def genPortfolio(df, balance='balance_usd'):
     df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
     side = 'avg'
     df['balance_usd']    = df['balance'] * ethusd * df[side]
+    
     #df['totalBalanceUsd'] = df[balance].sum()
     df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
+    df['totalBalanceUsd'] = df['totalBalanceUsd'] + df['ethUSDTotal']
+    
     df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
     df['portUsd']       = df['portUsd'] * df['allocationBool']
     df['portUnits']       = df['portUsd'] / ethusd / df[side]
