@@ -1,4 +1,8 @@
 
+from qore import QoreDebug
+qdb = QoreDebug()
+qdb.colorStacktraces()
+
 import sys
 try: sys.path.index('/ml.dev/bin/datafeeds')
 except: sys.path.append('/ml.dev/bin/datafeeds')
