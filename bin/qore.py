@@ -626,28 +626,6 @@ class ZZZ:
         while True:
             print self.socketClient.recv(0)
 
-    def receiveJson(self, mtype='fills'):
-        di = {
-            'buys':'Buys',
-            'sells':'Sells',
-            'fills':'Fills',
-        }
-        print mtype
-        print di[mtype]
-        while True:
-            res = self.socketClient.recv(0)
-            res = uj.loads(res)
-            print '==='
-            #print res.keys()
-            #print res
-            print p.DataFrame(res[di[mtype]])
-            #print di[mtype]
-            #print p.DataFrame(res['Buys'])
-            #print '---'
-            #print p.DataFrame(res['Sells'])
-            #print '---'
-            #print p.DataFrame(res['Fills'])
-
     def t3(self, tn):
         import time as tt
         self.send(tn)
@@ -655,7 +633,6 @@ class ZZZ:
         #print 'p: %s' % tn
         tt.sleep(tn)
         return 'r: %s' % tn
-
 
 
 def babysitTrades2(qq, acc):
