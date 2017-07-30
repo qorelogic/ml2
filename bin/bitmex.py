@@ -923,6 +923,9 @@ class Liqui(Exchange):
         #pf(df)
         return df.transpose()
 
+class OpenLedger:
+    ''
+
 class Bittrex(Exchange):
 
     def __init__(self, key, secret):
