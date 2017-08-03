@@ -1185,15 +1185,33 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True,
             mdf0 = mdf0.fillna(0)
             # rebalance portfolio
             mdf0['unitsDiff'] = mdf0['portUnits']    - mdf0['balance']
+            mdf0['unitsDiffPerBalance'] = n.abs(mdf0['unitsDiff'] / mdf0['balance']) # 1 - (mdf0['portUnits'] / mdf0['balance'])
+            mdf0['balancePerUnitsDiff'] = mdf0['balance'] / mdf0['unitsDiff']
             mdf0['balanceUsdDiff'] = mdf0['portUsd'] - mdf0['balance_usd']
             mdf0['balanceETHDiff'] = mdf0['balanceUsdDiff'] / ethusd
+            mdf0['balanceByUnitsDiff']      = mdf0['balance_usd'] / mdf0['unitsDiff']
+            # used for closing positions, find the largest balanceUsdDiff and the lowest balancePerUnitsDiff
+            mdf0['balanceByUnitsDiff2']     = mdf0['balanceUsdDiff'] / (mdf0['balancePerUnitsDiff'] * n.abs(mdf0['unitsDiff']))
+            mdf0['balanceByBalanceUsdDiff'] = mdf0['balance_usd'] / mdf0['balanceUsdDiff']
+            mdf0['t1'] = mdf0['unitsDiffPerBalance'] * mdf0['balanceUsdDiff']
             print dfinfo
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
-            f = '24h_volume_usd allocation allocationBool avg balance balance_usd bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount issuancesCount price_btc price_usd rank volume totalBalanceUsd portPcnt portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
-            print mdf0.loc[:,f].sort_values(by='allocation', ascending=False)
-            print mdf0.loc[:,f].sort_values(by='balance_usd', ascending=False)
-            print mdf0.loc[:,f].sort_values(by='unitsDiff', ascending=False)
-            print mdf0.loc[:,f].sort_values(by='spreadPcnt', ascending=False)
+            f = '24h_volume_usd allocation avg balance balance_usd bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank volume volumePerHolder holdersPerVolume totalBalanceUsd portPcnt portUsd portUnits balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
+            def printDataFrame(df, field, f, ascending):
+                sortFlag = '^' if ascending == True else 'v'
+                print mdf0.loc[:,f].sort_values(by=field, ascending=False).rename(columns={field:('%s %s' % (field, sortFlag))})
+            printDataFrame(df, 'allocation', f, False)
+            printDataFrame(df, 'balance_usd', f, False)
+            printDataFrame(df, 'balanceETHDiff', f, False)
+            printDataFrame(df, 'unitsDiff', f, False)
+            printDataFrame(df, 'spreadPcnt', f, False)
+            printDataFrame(df, 'volumePerHolder', f, False)
+            printDataFrame(df, 'balanceByUnitsDiff', f, False)
+            # test
+            printDataFrame(df, 'balanceByUnitsDiff2', f, True)
+            printDataFrame(df, 'balanceByBalanceUsdDiff', f, True)
+            printDataFrame(df, 'unitsDiffPerBalance', f, True)
+            printDataFrame(df, 't1', f, True)
             print '---'
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
             print '                    initial investment: %s' % (initialInvestment)
@@ -1215,6 +1233,8 @@ def genPortfolio(df, balance='balance_usd'):
     eth = cmc.getTicker('ETH').set_index('symbol').transpose()
     ethusd = float(eth.loc['price_usd', 'ETH'])
     gasUSD = 2
+    df['volumePerHolder'] = df['volume'] / df['holdersCount']
+    df['holdersPerVolume'] = df['holdersCount'] / df['volume']
     df['portWeight'] = n.log(df['allocation']) / n.log(10)
     #df['portWeight'] = (df['allocation']) #/ n.log(10)
     df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
@@ -1228,7 +1248,6 @@ def genPortfolio(df, balance='balance_usd'):
     df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
     df['portUsd']       = df['portUsd'] * df['allocationBool']
     df['portUnits']       = df['portUsd'] / ethusd / df[side]
-    df['portUnits']       = df['portUnits'] * df['allocationBool']
     df = df[df['portUnits'] != n.inf]
     return df
 
@@ -1281,7 +1300,7 @@ ETH/BTC.DC 	0 	"""
     df['t2'] = (df['volume'] * df['avg'])
     df['allocation']     = df['t1']
     #df['allocationBool'] = df[df['spreadPcntA'] < -0.03].loc[:,'spreadPcntA']
-    df['allocationBool'] = df['spreadPcntA']
+    df['allocationBool'] = 1 #df['spreadPcntA']
     
     df = df.set_index('symbol').fillna(0)
     
