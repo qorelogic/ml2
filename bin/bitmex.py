@@ -291,6 +291,11 @@ class CoinMarketCap:
         }
         self.parseCoinMarketCapSkipTo = 0
         self.portfolioModelSelect = None
+        self.symbolMapper = None
+        self.symbolMap = {
+            'SONM':'SNM',
+            'GOOD':'∞',
+        }
         pass
 
     #@profile
@@ -407,7 +412,7 @@ class CoinMarketCap:
     
         # filter idea sourced from:
         # https://www.youtube.com/watch?v=JF3eXDbzmg0 @ 15:01
-        df = df[df['price_usd'] <= 0.1]
+        #df = df[df['price_usd'] <= 0.1]
         df = df[df['24h_volume_usd'] >= 100000]
         try:
             df = df.drop('FEDS')
@@ -498,7 +503,7 @@ class CoinMarketCap:
         self.df = df
         return df
 
-    @profile
+    #@profile
     def getTicker(self, symbol):
         res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker')#, noCache=True)
         df = p.DataFrame(res)
