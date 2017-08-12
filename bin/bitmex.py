@@ -68,6 +68,13 @@ def makeTimeseriesTimestampRange(timestamp=None, period=14400, bars=50):
 
 class Poloniex:
 
+    def __init__(self):
+        self.btc = 'DASH ETH FCT GNO LTC XMR REP XRP ZEC'.split(' ')
+        self.periods = '1 5 15 30 60 240 14400'.split(' ')
+        self.periods = [300, 900, 1800, 7200, 14400, 86400]
+        #self.periods = [1, 5, 15, 30, 60, 3600, 14400, 86400]
+        print self.periods
+
     def getPoloniexHistorical(self, symbol='BTC_XMR', period=14400, start=1405699200, end=9999999999, bars=15):
         import time,calendar
         ts = time.time()
@@ -87,7 +94,10 @@ class Poloniex:
         res = req.get(url)
         #res.text
         li = js.loads(res.text)
-        df = p.DataFrame(li)
+        try:
+            df = p.DataFrame(li)
+        except:
+            df = p.DataFrame(li, index=[0])
         df['date2'] = oq.timestampToDatetime_S(df['date'], utc=True)
         with p.option_context('display.max_rows', 40, 'display.max_columns', 4000, 'display.width', 1000000):
             #print df.head(5)
@@ -111,11 +121,6 @@ class Poloniex:
         plt.show()
     
     def viewChartsPoloniex(self):
-        btc = 'DASH ETH FCT GNO LTC XMR REP XRP ZEC'.split(' ')
-        periods = '1 5 15 30 60 240 14400'.split(' ')
-        periods = [300, 900, 1800, 7200, 14400, 86400]
-        #periods = [1, 5, 15, 30, 60, 3600, 14400, 86400]
-        print periods
         from matplotlib import pyplot as plt
         from pylab import rcParams
         import seaborn as sns
@@ -123,7 +128,7 @@ class Poloniex:
         #%pylab inline
         rcParams['figure.figsize'] = 30, 5
         btc_usd = 2400
-        for i in btc:
+        for i in self.btc:
             print i
             df = pl.getPoloniexHistorical(symbol='BTC_%s' % i, period=300, bars=300)
             mdfp = df.ix[:, 'open high low close'.split(' ')]
