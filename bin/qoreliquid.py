@@ -92,7 +92,7 @@ class FinancialModel:
       attr3 (int): Description of `attr3`.
 
     """    
-    def getRateFromProjectedAccruedment(from_capital, to_capital, period):
+    def getRateFromProjectedAccruedment(self, from_capital, to_capital, period):
         """Example of docstring on the __init__ method.
 
         The __init__ method may be documented in either the class level
@@ -134,7 +134,7 @@ class FinancialModel:
         return 100 * (pow(pow(1 + float(rate) / 100, period),float(1) / 1) - 1)
         
     def compoundVestedCapital(self, rate, period, initial_capital=100, shift=0):
-        rate   = n.array(rate, dtype=float64)
+        rate   = n.array(rate, dtype=n.float64)
         period = n.array(period)    
         
         if shift < 0:
@@ -148,8 +148,8 @@ class FinancialModel:
         except Exception as e:
             print e
             ''
-        
-        return initial_capital * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
+        sr = rate.shape[0]
+        return initial_capital * n.power(1 + rate.reshape(sr, 1) / 100, period)
         
     def mdrange(self, initial, space, end):
         return n.linspace(initial,end,(1.0/space)*end+1)
