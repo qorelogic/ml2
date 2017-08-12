@@ -240,25 +240,26 @@ def instrumentIndecesBitmex():
     #pf(df)
     return df
 
+#import drest
+import ujson as uj
+import requests as req, requests_cache
+#@profile
 def apiRequest(baseurl, query, method='GET', noCache=False):
-    #import drest
     #api = drest.API(baseurl)
     #response = api.make_request(method, query)
     #res = response.data
-
-    #import drest
-    import ujson as uj
-    import requests as req, requests_cache
     
     backend='sqlite'
     #backend='memory'
 
     if noCache == False:
+        print '[caching] %s: %s %s' % (method, baseurl, query)
         expire_after = 3600 * 24 * 365
         # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
         requests_cache.install_cache('scraper_cache', backend=backend, expire_after=expire_after)
     else:
-        requests_cache.install_cache('scraper_cache', backend=backend, expire_after=300)
+        print '[getting] %s: %s %s' % (method, baseurl, query)
+        requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=300)
     #else:
     #    expire_after = 1
 
@@ -268,8 +269,7 @@ def apiRequest(baseurl, query, method='GET', noCache=False):
     #response = api.make_request(method, query)
     #res = response.data
     resp = req.get('%s%s' % (baseurl, query))
-    res = resp.text
-    res = uj.loads(res)
+    res = uj.loads(resp.text)
     return res
 
 class CoinMarketCap:
