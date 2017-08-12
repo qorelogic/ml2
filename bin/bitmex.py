@@ -627,7 +627,7 @@ class TokenMarket:
         self.dfp = self.allAssetsICOsBlockchain
         nn = 66
         lili = self.dfp.index#[nn:nn+5]
-        for i in lili[0:5]:
+        for i in lili:#[0:5]:
     
             url = '%s' % self.dfp.ix[self.dfp.index[i], 'href'] 
             print '%s %s' % (i, url)
@@ -653,7 +653,7 @@ class TokenMarket:
                 'github-forks'        : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[3]/td/text()',
                 'github-commits'      : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[4]/td/text()',
                 'github-openIssues'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[5]/td/text()',
-            }, expire=1)
+            })#, expire=1)
             #"""
             #print xresd
             xresdlen = {}
@@ -693,6 +693,7 @@ class TokenMarket:
 
     def underTheRadarTokens(self):
         # TokenMarket [UnderTheRadar Tokens]
+        self.allAssetsBlockchainTokenMarket()
         dfp = self.allAssetsICOsBlockchain
         #self.dfp.to_csv('tokenmarket.csv', encoding='utf8')
         fi = 'name symbol trading type backlinks domain-score links-blog links-facebook links-github links-twitter links-website links-whitepaper github-starredby github-commits github-contributors github-forks github-openIssues github-watchings'
@@ -706,7 +707,7 @@ class TokenMarket:
         #print dfp.dtypes
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             dfm = dfp.ix[:, fi.split()].sort_values(by='github-starredby').set_index('symbol')
-            #print dfm
+            print dfm
             ''
             df1 = self.allAssetsICOsBlockchain.set_index('name')
             df1['symbol'] = self.allAssetsICOsBlockchain.index
@@ -745,7 +746,7 @@ class TokenMarket:
             dfr = dfm
             for i in dfr[dfr['github-commits'] == 10].index: dfr = dfr.drop(i)
             dfr = dfr.ix[:,ff.split(' ')].fillna(0).sort_values(by=sortby, ascending=False)
-            #print dfr
+            print dfr
             ff = 'X3 weight' # to publish
             dfr = dfm.ix[:,ff.split(' ')].fillna(0).sort_values(by=sortby, ascending=False)
             for i in dfr[dfr['X3'] == n.inf].index: dfr = dfr.drop(i)
@@ -760,7 +761,7 @@ class TokenMarket:
             print '== OpenSource Token Suggestions:'
             print '== FutureTokens  [Untradable::pre&postICO]'
             print
-            print dfr.ix[:,['potentialPortfolioWeight']].head(20)
+            print dfr.ix[:,['potentialPortfolioWeight']]#.head(20)
             print
             print 'note: Some tokens are pre-ICO, therefore not yet on the market.'
             print '      They are, however, worth looking into.'
