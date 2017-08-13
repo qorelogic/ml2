@@ -1078,10 +1078,11 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             df['ethaddr']  = ea
             symbol = df.loc['symbol', 'tokenInfo']
             try:
-                df1    = getTicker(symbol).set_index('symbol').transpose()
+                df1    = cmc.getTicker(symbol).set_index('symbol').transpose()
                 df1['tokenInfo'] = df1[df1.columns[0]]
                 df = df.combine_first(df.loc[:, ['tokenInfo']].combine_first(df1.loc[:, ['tokenInfo']]))
-            except:
+            except Exception as e:
+                print e
                 ''
             try:    df.loc['24h_volume_marketcap_ratio', 'tokenInfo'] = float(df.loc['24h_volume_usd', 'tokenInfo']) / float(df.loc['market_cap_usd', 'tokenInfo']) * 100
             except: ''
@@ -1182,6 +1183,9 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             #res2 = p.DataFrame(res['tokens'])#.transpose()
         #if not verbose:
 
+        # fill in missing data
+        mdf0 = mdf0.combine_first(ttdf)
+
         mdf0 = mdf0.combine_first(mdf)
         mdfs.update({ea:mdf.loc[:, 'balance balance_usd ethaddr'.split(' ')].to_dict()})
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1238,27 +1242,42 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             mdf0['balanceETHDiff'] = mdf0['balanceUsdDiff'] / ethusd
             mdf0['balanceByUnitsDiff']      = mdf0['balance_usd'] / mdf0['unitsDiff']
             # used for closing positions, find the largest balanceUsdDiff and the lowest balancePerUnitsDiff
-            mdf0['balanceByUnitsDiff2']     = mdf0['balanceUsdDiff'] / (mdf0['balancePerUnitsDiff'] * n.abs(mdf0['unitsDiff']))
-            mdf0['balanceByBalanceUsdDiff'] = mdf0['balance_usd'] / mdf0['balanceUsdDiff']
+            #mdf0['balanceByUnitsDiff2']     = mdf0['balanceUsdDiff'] / (mdf0['balancePerUnitsDiff'] * n.abs(mdf0['unitsDiff']))
+            #mdf0['balanceByBalanceUsdDiff'] = mdf0['balance_usd'] / mdf0['balanceUsdDiff']
             mdf0['t1'] = mdf0['unitsDiffPerBalance'] * mdf0['balanceUsdDiff']
+            mdf0['mname'] = mdf0.index
             print dfinfo
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
-            f = '24h_volume_usd allocation avg balance balance_usd bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank volume volumePerHolder holdersPerVolume totalBalanceUsd portPcnt portUsd portUnits balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            def printDataFrame(df, field, f, ascending):
+            f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
+            def sortDataFrame(df, field, f, ascending):
+                
                 sortFlag = '^' if ascending == True else 'v'
-                print mdf0.loc[:,f].sort_values(by=field, ascending=False).rename(columns={field:('%s %s' % (field, sortFlag))})
-            printDataFrame(df, 'allocation', f, False)
-            printDataFrame(df, 'balance_usd', f, False)
-            printDataFrame(df, 'balanceETHDiff', f, False)
-            printDataFrame(df, 'unitsDiff', f, False)
-            printDataFrame(df, 'spreadPcnt', f, False)
-            printDataFrame(df, 'volumePerHolder', f, False)
-            printDataFrame(df, 'balanceByUnitsDiff', f, False)
+                df = df.loc[:,f]
+                if field == None or field == 'index':
+                    df = df.sort_index()
+                else:
+                    df = df.sort_values(by=field, ascending=False)
+                df = df.rename(columns={field:('%s %s' % (field, sortFlag))})
+                return df
+            print sortDataFrame(mdf0, None, f, False)
+            print sortDataFrame(mdf0, 'allocation', f, False)
+            print 'delever'
+            print sortDataFrame(mdf0, 'balance_usd', f, False)
+            print 'lever'
+            print sortDataFrame(mdf0, 'balanceETHDiff', f, False)
+            print 'lever'
+            print sortDataFrame(mdf0, 'unitsDiff', f, False)
+            print sortDataFrame(mdf0, 'spreadPcnt', f, False)
+            print sortDataFrame(mdf0, 'volumePerHolder', f, False)
+            print 'delever2'
+            print sortDataFrame(mdf0, 'balanceByUnitsDiff', f, False)
             # test
-            printDataFrame(df, 'balanceByUnitsDiff2', f, True)
-            printDataFrame(df, 'balanceByBalanceUsdDiff', f, True)
-            printDataFrame(df, 'unitsDiffPerBalance', f, True)
-            printDataFrame(df, 't1', f, True)
+            #print sortDataFrame(mdf0, 'balanceByUnitsDiff2', f, True)
+            #print sortDataFrame(mdf0, 'balanceByBalanceUsdDiff', f, True)
+            #pdf = mdf0[mdf0['unitsDiffPerBalance'] != n.inf]
+            #f1 = ' '.join(f).replace('unitsDiff ', 'unitsDiff spreadPcnt ').split(' ')
+            #print sortDataFrame(pdf, 'unitsDiffPerBalance', f1, True)
+            print sortDataFrame(mdf0, 't1', f, True)
             print '---'
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
             print '                    initial investment: %s' % (initialInvestment)
@@ -1274,19 +1293,22 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print '                            ethusd: %s' % ethusd
             print '---'
 
-@profile
-def genPortfolio(df, balance='balance_usd'):
+#@profile
+def genPortfolio(df, balance_usd='balance_usd', volume='volume'):
     cmc = CoinMarketCap()
     eth = cmc.getTicker('ETH').set_index('symbol').transpose()
     ethusd = float(eth.loc['price_usd', 'ETH'])
     gasUSD = 2
-    df['volumePerHolder'] = df['volume'] / df['holdersCount']
-    df['holdersPerVolume'] = df['holdersCount'] / df['volume']
+    try:    df['volumePerHolder'] = df[volume] / df['holdersCount']
+    except: ''
+    try:    df['holdersPerVolume'] = df['holdersCount'] / df[volume]
+    except: ''
     df['portWeight'] = n.log(df['allocation']) / n.log(10)
     #df['portWeight'] = (df['allocation']) #/ n.log(10)
+    df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
     df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
     side = 'avg'
-    df['balance_usd']    = df['balance'] * ethusd * df[side]
+    df[balance_usd]    = df['balance'] * ethusd * df[side]
     
     #df['totalBalanceUsd'] = df[balance].sum()
     df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
@@ -1294,7 +1316,9 @@ def genPortfolio(df, balance='balance_usd'):
     
     df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
     df['portUsd']       = df['portUsd'] * df['allocationBool']
+    df['balancePortDiffUSD'] = df['balance_usd'] - df['portUsd']
     df['portUnits']       = df['portUsd'] / ethusd / df[side]
+    df['balancePerPort']  = df[balance_usd] / df['portUsd']
     df = df[df['portUnits'] != n.inf]
     return df
 
@@ -1313,7 +1337,7 @@ import matplotlib.pylab as plt
 from qoreliquid import normalizeme, sigmoidme
 #import qgrid
 #from IPython.display import display
-@profile
+#@profile
 def modelPortfolio(num=5):
     """
     cv = "#""PPT/ETH 	917552 	0.01600 	0.01600
@@ -1355,6 +1379,9 @@ ETH/BTC.DC 	0 	"""
     #df = df[df['offer'] > 0.0001]
     df = df[df['allocation'] > 1]
 
+    #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+    #    print df.dtypes
+    #    print df
     dfst1 = df.sort_values(by='t1', ascending=False).head(num)
     dfst2 = df.sort_values(by='t2', ascending=False).head(num)
 
@@ -1402,8 +1429,10 @@ if __name__ == "__main__":
     parser.add_argument("-b", '--balance', help="parseCoinMrketCap skipTo")
     parser.add_argument("-tm", '--tokenmarket', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r01", '--research01', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-r01b", '--research01bittrex', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r02", '--research02', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r03", '--research03', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-r04", '--research04', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -1498,4 +1527,81 @@ if __name__ == "__main__":
             gpdf = genPortfolio(dfp)
             print dfp
             print gpdf
-            
+    
+    def on_message(ws, message):
+        print message
+    
+    def on_error(ws, error):
+        print error
+    
+    def on_close(ws):
+        print "### closed ###"
+    
+    def on_open(ws):
+        """
+        def run(*args):
+            for i in range(30000):
+                time.sleep(1)
+                ws.send("Hello %d" % i)
+            time.sleep(1)
+            ws.close()
+            print "thread terminating..."
+        thread.start_new_thread(run, ())
+        """
+        ''
+    
+    if args.research01bittrex:
+        from qore import QoreDebug
+        qdb = QoreDebug()
+        qdb.colorStacktraces()
+        #res = apiRequest('https://bittrex.com/api/v1.1/public', '/getcurrencies')
+        #df = p.DataFrame(res['result']).set_index('Currency')
+        
+        #res = apiRequest('https://bittrex.com/api/v1.1/public', '/getmarkets')
+        #df = p.DataFrame(res['result']).set_index('MarketName')
+        
+        res2 = apiRequest('https://bittrex.com/api/v1.1/public', '/getmarketsummaries')
+        df = p.DataFrame(res2['result'])#.set_index('MarketName')
+        df = modelPortfolio(df)
+        df = genPortfolio(df, volume='Volume')
+        #df['VolumeBase'] = df['Volume'] * df['Last']
+        #df.sort_values('VolumeBase', ascending=False)
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print df
+        """
+        res3 = apiRequest('https://bittrex.com/api/v1.1/public', '/getorderbook?market=BTC-LTC&type=both', noCache=True)
+        #df = p.DataFrame(res3['result'])#.set_index('MarketName')
+        #df['VolumeBase'] = df['Volume'] * df['Last']
+        #df#.sort_values('VolumeBase', ascending=False)
+        mdf = p.DataFrame()
+        for i in res['result']:
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                df = p.DataFrame(i, index=[0]).set_index('MarketName')#.transpose()
+                mdf = mdf.combine_first(df)
+                #print df
+        mdf
+        #res3['result']
+        print p.DataFrame(res3['result']['sell']).sort_index(ascending=False).tail(5)
+        print p.DataFrame(res3['result']['buy']).head(5)
+        """
+        #print df
+        #df = df.transpose()
+        #for i in df.index:
+        #    df.loc[i, 'basePair'] = i.split('_')[1]
+        #df[df['basePair'] == 'eth']
+
+    if args.research04:
+
+        #!/usr/bin/python
+        import websocket
+        import thread
+        import time
+        
+        websocket.enableTrace(True)
+        #url = "ws://echo.websocket.org/"
+        url = "wss://socket.bittrex.com/signalr"
+        header = ['apikey: qwe', 'apisecret: 1qwe']
+        ws = websocket.WebSocketApp(url, header=header, on_message = on_message, on_error = on_error, on_close = on_close)
+        ws.on_open = on_open
+    
+        ws.run_forever()        
