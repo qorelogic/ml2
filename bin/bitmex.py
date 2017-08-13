@@ -969,8 +969,8 @@ class Bittrex(Exchange):
         try:
             df = p.DataFrame(data['result'])#.transpose()
             return df
-        except:
-            ''
+        except Exception as e:
+            print e
 
     def getCurrencies(self):
         data = self.requestAuthenticated(url='%s/public/getcurrencies?apikey=%s&nonce=1' % (self.apiMethod, self.key), requestType='GET')
@@ -1317,7 +1317,7 @@ def genPortfolio(df, balance_usd='balance_usd', volume='volume'):
     
     df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
     df['portUsd']       = df['portUsd'] * df['allocationBool']
-    df['balancePortDiffUSD'] = df['balance_usd'] - df['portUsd']
+    df['balancePortDiffUSD'] = df[balance_usd] - df['portUsd']
     df['portUnits']       = df['portUsd'] / ethusd / df[side]
     df['balancePerPort']  = df[balance_usd] / df['portUsd']
     df = df[df['portUnits'] != n.inf]
@@ -1339,8 +1339,10 @@ from qoreliquid import normalizeme, sigmoidme
 #import qgrid
 #from IPython.display import display
 #@profile
-def modelPortfolio(num=5):
-    """
+def modelPortfolio(num=5, df=None):
+    
+    if type(df) == type(None):
+        """
     cv = "#""PPT/ETH 	917552 	0.01600 	0.01600
 MCAP/ETH 	52178 	0.01205 	0.02100
 VERI/ETH 	4817 	0.60000 	0.61000
@@ -1351,13 +1353,16 @@ DICE/ETH 	13083 	0.01810 	0.02090
 BNB/ETH 	0 	0.00001 	0.00300
 ETH/USD.DC 	0 		
 ETH/BTC.DC 	0 	"""
-    cv = parseEtherDeltaDump()
-    #fp = open('/tmp/etherdelta.volume.tsv', 'r')
-    #cv = fp.read(); fp.close()
-    df = cv.split('\n')
-    df = map(lambda x: x.split('\t'), df)        
-    df = p.DataFrame(df, columns='symbol volume bid offer'.split(' '))
-    df = df.convert_objects(convert_numeric=True)
+        cv = parseEtherDeltaDump()
+        #fp = open('/tmp/etherdelta.volume.tsv', 'r')
+        #cv = fp.read(); fp.close()
+        df = cv.split('\n')
+        df = map(lambda x: x.split('\t'), df)        
+        df = p.DataFrame(df, columns='symbol volume bid offer'.split(' '))
+        df = df.convert_objects(convert_numeric=True)
+        
+    print df
+    
     #df = df.fillna(0)
     #    for i in df.index:
     #        print 's/bid/offer: %s %s %s' % (df.loc[i, 'symbol'], df.loc[i, 'bid'], df.loc[i, 'offer'])
@@ -1383,10 +1388,19 @@ ETH/BTC.DC 	0 	"""
     #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
     #    print df.dtypes
     #    print df
-    dfst1 = df.sort_values(by='t1', ascending=False).head(num)
-    dfst2 = df.sort_values(by='t2', ascending=False).head(num)
+    try: dfst1 = df.sort_values(by='t1', ascending=False).head(num)
+    except: ''
+    try: dfst2 = df.sort_values(by='t2', ascending=False).head(num)
+    except: ''
+    print df.index
+    #sys.exit()
 
-    df = df.sort_values(by='allocation', ascending=False).head(num)
+    print '==='
+    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        print df
+    print '==='
+    try:    df = df.sort_values(by='allocation', ascending=False).head(num)
+    except: ''
     dfst = df
 
     dfst['symbol'] = dfst.index
@@ -1562,13 +1576,30 @@ if __name__ == "__main__":
         #df = p.DataFrame(res['result']).set_index('MarketName')
         
         res2 = apiRequest('https://bittrex.com/api/v1.1/public', '/getmarketsummaries')
-        df = p.DataFrame(res2['result'])#.set_index('MarketName')
-        df = modelPortfolio(df)
-        df = genPortfolio(df, volume='Volume')
+        df = p.DataFrame(res2['result'])
+        df['Quote'] = map(lambda x: x.split('-')[1], df['MarketName'])
+        df['Base'] = map(lambda x: x.split('-')[0], df['MarketName'])
+        df = df.set_index('Quote')
+
+        o  = Bittrex('34fa3c1160d246e0a3f968040f4eb999', 'bd443220f548460cb09e6af82f3705b5')
+        df2 = o.getInfo()
+        df2 = df2.set_index('Currency')
+        
+        
         #df['VolumeBase'] = df['Volume'] * df['Last']
         #df.sort_values('VolumeBase', ascending=False)
-        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        #    print df
+        df = df.combine_first(df2)
+        df = df.fillna(0)
+
+        dfp = modelPortfolio(df=df)
+        #df = genPortfolio(df, volume='Volume')
+
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print df[df['Balance'] > 0]#.head(10)
+            print df#.head(10)
+            #print df2
+            
+            print 
         """
         res3 = apiRequest('https://bittrex.com/api/v1.1/public', '/getorderbook?market=BTC-LTC&type=both', noCache=True)
         #df = p.DataFrame(res3['result'])#.set_index('MarketName')
