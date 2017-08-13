@@ -497,6 +497,8 @@ class CoinMarketCap:
             dfv = df.fillna(0).ix[:, c].sort_values(by=sb, ascending=False)
             dfv = dfv[dfv['24h_volume_usd'] > 0]
             print dfv
+            pm.dfv = dfv
+            pm.to_cointracking()
             try:
                 import dfgui # https://github.com/bluenote10/PandasDataFrameGUI
                 dfgui.show(dfv)
@@ -550,6 +552,24 @@ class PortfolioModeler:
                 self.model = self.models[self.model]
             except KeyboardInterrupt as e:
                 sys.exit('')
+    
+    def to_cointracking(self):
+        #df = self.dfv.ix[:,'Type Buy Cur. Sell Cur. Fee Exchange Group Comment Date name symbol price_usd portPcntPinv2 portAmount_usd portAmount_units'.split(' ')]
+        df = self.dfv.ix[:,'Type Buy Cur. Sell Cur. Fee Exchange Group Comment Date symbol portAmount_units'.split(' ')]
+        df['Type']      = '-IN-'
+        df['Buy']       = df['portAmount_units']
+        df['Cur.']      = df['symbol']
+        df['Sell']      = df['symbol']
+        #df['Cur.']      = df['']
+        #df['Fee']       = df['']
+        #df['Cur.']      = df['']
+        #df['Exchange']  = df['']
+        #df['Group']     = df['']
+        #df['Comment']   = df['']
+        #df['Date']      = df['']
+        print df
+        df.to_csv('/tmp/portfolio.cointracking.csv', sep=' ', index=False)
+        
 
     def modelCoinMarketCap(self, df, bal=100):
         ### ----------------------------------------------------------------------------
