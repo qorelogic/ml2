@@ -984,8 +984,8 @@ class Bittrex(Exchange):
         except:
             ''
 
-@profile
-def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True, initialInvestment=0):
+#@profile
+def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, initialInvestment=0):
     
     if type(ethaddr) == type(''):
         ethaddr = ethaddr.split(' ')
@@ -999,10 +999,26 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True,
     addressInfos = p.DataFrame()
     dfinfo = p.DataFrame([])
     mdfs = {}
+    
+    # get all tokens to fill in missing data
+    res = apiRequest('https://api.ethplorer.io', '/getTopTokens?limit=100&apiKey=freekey', noCache=noCache)
+    ttdf = p.DataFrame(res['tokens'])
+    ttdf = ttdf.set_index('symbol')
+    #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+    #    print ttdf
+    """
+    liss = list(ttdf['address'])#.split(' ')
+    for tokenAddress in liss:
+        try:
+            res = apiRequest('https://api.ethplorer.io', '/getTokenInfo/%s?apiKey=freekey' % tokenAddress, noCache=noCache)
+            print res
+        except: ''
+    """
+
     for ea in ethaddr:
         ethaddrSmall = ea[0:7]
         #res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/')
-        res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=noChache)
+        res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=noCache)
         #res = apiRequest('https://api.ethplorer.io', '/getTokenInfo/0xff71cb760666ab06aa73f34995b42dd4b85ea07b?apiKey=freekey')
         res1 = p.DataFrame(res['ETH'], index=[ethaddrSmall])
         addressInfos = addressInfos.combine_first(res1)
