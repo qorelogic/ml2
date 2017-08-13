@@ -296,6 +296,7 @@ class CoinMarketCap:
             'SONM':'SNM',
             'GOOD':'∞',
         }
+        self.resTicker = apiRequest('https://api.coinmarketcap.com', '/v1/ticker')#, noCache=True)
         pass
 
     #@profile
@@ -507,8 +508,7 @@ class CoinMarketCap:
 
     #@profile
     def getTicker(self, symbol):
-        res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker')#, noCache=True)
-        df = p.DataFrame(res)
+        df = p.DataFrame(self.resTicker)
         self.symbolMapper = df.loc[:, 'symbol id'.split()].set_index('symbol')
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         #    print self.symbolMapper.sort_index()
@@ -1287,6 +1287,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print '               balanceETHDiff  sum: %s' % mdf0['balanceETHDiff'].sum()
             print '               balanceETHDiff+ sum: %s' % mdf0[mdf0['balanceETHDiff'] > 0]['balanceETHDiff'].sum()
             print '               balanceETHDiff- sum: %s' % mdf0[mdf0['balanceETHDiff'] < 0]['balanceETHDiff'].sum()
+            print '           balancePortDiffUSD  sum: %s [takingTheWheatFromTheChaff]' % mdf0[mdf0['balancePortDiffUSD'] > 0]['balancePortDiffUSD'].sum()
 
             print '                     portUnits sum: %s' % mdf0['portUnits'].sum()
             print '                       balance sum: %s' % mdf0['balance'].sum()
