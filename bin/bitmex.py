@@ -253,8 +253,8 @@ def apiRequest(baseurl, query, method='GET', noCache=False):
     #backend='memory'
 
     if noCache == False:
-        print '[caching] %s: %s %s' % (method, baseurl, query)
-        expire_after = 3600 * 24 * 365
+        print '[caching] %s: %s %s url: %s' % (method, baseurl, query, baseurl+query)
+        expire_after = 3600 * 24 #* 365
         # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
         requests_cache.install_cache('scraper_cache', backend=backend, expire_after=expire_after)
     else:
@@ -268,8 +268,11 @@ def apiRequest(baseurl, query, method='GET', noCache=False):
     #api = drest.API(baseurl)
     #response = api.make_request(method, query)
     #res = response.data
+    #try: 
     resp = req.get('%s%s' % (baseurl, query))
     res = uj.loads(resp.text)
+    #except ConnectionError as e:
+    #    ''
     return res
 
 class CoinMarketCap:
@@ -984,8 +987,8 @@ class Bittrex(Exchange):
         except:
             ''
 
-@profile
-def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True, initialInvestment=0):
+#@profile
+def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, initialInvestment=0):
     
     if type(ethaddr) == type(''):
         ethaddr = ethaddr.split(' ')
@@ -999,10 +1002,26 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noChache=True,
     addressInfos = p.DataFrame()
     dfinfo = p.DataFrame([])
     mdfs = {}
+    
+    # get all tokens to fill in missing data
+    res = apiRequest('https://api.ethplorer.io', '/getTopTokens?limit=100&apiKey=freekey', noCache=noCache)
+    ttdf = p.DataFrame(res['tokens'])
+    ttdf = ttdf.set_index('symbol')
+    #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+    #    print ttdf
+    """
+    liss = list(ttdf['address'])#.split(' ')
+    for tokenAddress in liss:
+        try:
+            res = apiRequest('https://api.ethplorer.io', '/getTokenInfo/%s?apiKey=freekey' % tokenAddress, noCache=noCache)
+            print res
+        except: ''
+    """
+
     for ea in ethaddr:
         ethaddrSmall = ea[0:7]
         #res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/')
-        res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=noChache)
+        res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=noCache)
         #res = apiRequest('https://api.ethplorer.io', '/getTokenInfo/0xff71cb760666ab06aa73f34995b42dd4b85ea07b?apiKey=freekey')
         res1 = p.DataFrame(res['ETH'], index=[ethaddrSmall])
         addressInfos = addressInfos.combine_first(res1)
@@ -1448,8 +1467,8 @@ if __name__ == "__main__":
         eth2_2 = '0x2c8f659d57971449eb627FB78530Fc61867c4E50' #eth2 1
         
         #ethaddress1 = '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae'
-        getAdressInfoEthplorer([eth1_1, eth1_2], args.verbose, instruments=20, noChache=noCache)
-        getAdressInfoEthplorer([eth2_1, eth2_2], args.verbose, instruments=50, noChache=noCache)
+        getAdressInfoEthplorer([eth1_1, eth1_2], args.verbose, instruments=20, noCache=noCache)
+        getAdressInfoEthplorer([eth2_1, eth2_2], args.verbose, instruments=50, noCache=noCache)
         #print getTicker('bitcoin')    
 
     if args.research03:
