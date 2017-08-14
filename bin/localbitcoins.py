@@ -23,6 +23,10 @@ parser.add_argument("-id", '--require_identification', help="require a feedback 
 parser.add_argument("-noid", '--require_no_identification', help="require a feedback score higher than ...", action="store_true")
 parser.add_argument("-tv", '-vol', '--require_trade_volume', help="require a feedback score higher than ...")
 parser.add_argument("-pm", '--paymentMethod', help="paymentMethod = paypal")
+parser.add_argument("-c2p", "-local", '--crypto2local', help="paymentMethod = paypal", action="store_true")
+parser.add_argument("-ars", '--ars', help="paymentMethod = paypal")
+parser.add_argument("-lbtcprice", '--lbtc_arsbtc', help="paymentMethod = paypal")
+parser.add_argument("-btceth", '--btceth', help="paymentMethod = paypal")
 
 parser.add_argument("-ca", '--createAd', help="go live and turn off dryrun", action="store_true")
 group = parser.add_argument_group('createAd')
@@ -613,3 +617,36 @@ if __name__ == "__main__":
 
     if args.localbitcoinsCurrencies:
         lb.localbitcoinsCurrencies()
+
+    def crypto2local(pesosRequired, lbtc_arsbtc, btceth):
+        transactionFee                = 0.001
+        lbtcIncomingBitcoinNetworkFee = 0
+        #lbtcIncomingBitcoinNetworkFee = 0.00035225
+        fees = transactionFee + lbtcIncomingBitcoinNetworkFee
+        #comission = 1+(5.47/100*2)
+        comission = 1#+(5.47/100*2)
+        btc = (float(pesosRequired)/lbtc_arsbtc*comission)
+        eth = btc/btceth
+        baked = (btc + fees)/btc
+        print
+        print 'pesosRequired: %s' % (pesosRequired)
+        print 'send btc: %s' % (btc)
+        print 'send btc: %s %s' % (btc + fees, baked)
+        print 'send eth: %s' % (eth)
+        print 'send lbtc_arsbtc: %s' % (lbtc_arsbtc)
+        print 'send lbtc_arsbtc: %s' % (lbtc_arsbtc*(baked))
+        print btc * lbtc_arsbtc
+        print (pesosRequired / lbtc_arsbtc + fees) * lbtc_arsbtc
+        print (pesosRequired / lbtc_arsbtc + fees)
+        
+    if args.crypto2local:
+        ars         = float(args.ars)
+        try: lbtc_arsbtc = float(args.lbtc_arsbtc)
+        except:
+            print 'lbtc_arsbtc not set'
+            sys.exit()
+        try: btceth      = float(args.btceth)
+        except:
+            print 'btceth not set'
+            sys.exit()
+        crypto2local(ars, lbtc_arsbtc, btceth)
