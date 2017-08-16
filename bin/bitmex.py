@@ -1328,7 +1328,7 @@ def genPortfolio(df, balance_usd='balance_usd', volume='volume'):
 
 def parseEtherDeltaDump():
     import re
-    fp = open('/tmp/etherdelta.volume.tsv', 'r')
+    fp = open('/mldev/bin/data/cache/coins/etherdelta.volume.tsv', 'r')
     res = fp.read()
     fp.close()
     #print res
@@ -1336,6 +1336,20 @@ def parseEtherDeltaDump():
     res = res.strip()
     #print res
     return res
+
+def toMjson(df, fname):
+    import ujson as uj
+    df = df.fillna(0)
+    try:
+        df = df.set_index('symbol')
+    except:
+        ''
+    tojson = df.transpose().to_dict()
+    tojson = {'timestamp':time.time(), 'data':tojson}
+    tojson = uj.dumps(tojson)
+    fp = open(fname, 'a')
+    fp.write('%s\n' % tojson)
+    fp.close()
 
 import matplotlib.pylab as plt
 from qoreliquid import normalizeme, sigmoidme
@@ -1360,12 +1374,16 @@ ETH/BTC.DC 	0 	"""
         #fp = open('/tmp/etherdelta.volume.tsv', 'r')
         #cv = fp.read(); fp.close()
         df = cv.split('\n')
-        df = map(lambda x: x.split('\t'), df)        
-        df = p.DataFrame(df, columns='symbol volume bid offer'.split(' '))
-        df = df.convert_objects(convert_numeric=True)
+        import re
+        df = map(lambda x: re.sub(re.compile(r'[\s]+'), '\t', x), df)
+        df = map(lambda x: x.split('\t'), df)
+        #print df
+        ffields = 'symbol volume bid offer'.split(' ')
+        df = p.DataFrame(df, columns=ffields)
+        for i in ffields[1:]: df[i] = p.to_numeric(df[i])
         
-    print df
-    
+    toMjson(df, '/mldev/bin/data/cache/coins/etherdelta.mjson')
+
     #df = df.fillna(0)
     #    for i in df.index:
     #        print 's/bid/offer: %s %s %s' % (df.loc[i, 'symbol'], df.loc[i, 'bid'], df.loc[i, 'offer'])
