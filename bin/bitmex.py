@@ -1,3 +1,5 @@
+# coding: utf-8
+
 
 from qore import QoreDebug
 qdb = QoreDebug()
