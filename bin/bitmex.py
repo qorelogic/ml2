@@ -1464,8 +1464,8 @@ if __name__ == "__main__":
         eth2_2 = '0x2c8f659d57971449eb627FB78530Fc61867c4E50' #eth2 1
         
         #ethaddress1 = '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae'
-        getAdressInfoEthplorer([eth1_1, eth1_2], args.verbose, instruments=20, noChache=noCache)
-        getAdressInfoEthplorer([eth2_1, eth2_2], args.verbose, instruments=50, noChache=noCache)
+        getAdressInfoEthplorer([eth1_1, eth1_2], args.verbose, instruments=20, noCache=noCache)
+        getAdressInfoEthplorer([eth2_1, eth2_2], args.verbose, instruments=50, noCache=noCache)
         #print getTicker('bitcoin')    
 
     if args.research03:
