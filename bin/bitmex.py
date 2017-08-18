@@ -1331,9 +1331,8 @@ def parseEtherDeltaDump():
     res = fp.read()
     fp.close()
     #print res
-    res = re.sub(re.compile(r'.*?Offer(.*?)Token.*', re.S), '\\1', res)
+    res = re.sub(re.compile(r'.*?Offer(.*?)(Token|Order).*', re.S), '\\1', res)
     res = res.strip()
-    #print res
     return res
 
 def toMjson(df, fname):
@@ -1376,7 +1375,6 @@ ETH/BTC.DC 	0 	"""
         import re
         df = map(lambda x: re.sub(re.compile(r'[\s]+'), '\t', x), df)
         df = map(lambda x: x.split('\t'), df)
-        #print df
         ffields = 'symbol volume bid offer'.split(' ')
         df = p.DataFrame(df, columns=ffields)
         for i in ffields[1:]: df[i] = p.to_numeric(df[i])
@@ -1415,10 +1413,10 @@ ETH/BTC.DC 	0 	"""
     print df.index
     #sys.exit()
 
-    print '==='
-    with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        print df
-    print '==='
+    #print '==='
+    #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+    #    print df
+    #print '==='
     try:    df = df.sort_values(by='allocation', ascending=False).head(num)
     except: ''
     dfst = df
