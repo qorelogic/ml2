@@ -1390,7 +1390,8 @@ def toMjson(df, fname):
     fp.write('%s\n' % tojson)
     fp.close()
 
-import matplotlib.pylab as plt
+try: import matplotlib.pylab as plt
+except: ''
 from qoreliquid import normalizeme, sigmoidme
 #import qgrid
 #from IPython.display import display
