@@ -1334,7 +1334,7 @@ def parseEtherDeltaDump():
     res = fp.read()
     fp.close()
     #print res
-    res = re.sub(re.compile(r'.*?Offer(.*?)(Token|Order).*', re.S), '\\1', res)
+    res = re.sub(re.compile(r'.*?Offer(.*?)(Token|Order|ORDER).*', re.S), '\\1', res)
     res = res.strip()
     return res
 
