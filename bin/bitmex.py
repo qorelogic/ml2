@@ -658,9 +658,9 @@ class TokenMarket:
             print '%s %s' % (i, url)
             #"""
             xresd = self.xp.xpath2df(url, {
-                'name'       : '//*[@id="page-wrapper"]/main/div[2]/div[3]/div[1]/h1/text()[2]',
-                'symbol'     : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/table[1]//tr[1]/td/text()',
-                'trading'    : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/table[1]//tr[2]/td/span/text()[2]',
+                'name'             : '//*[@id="page-wrapper"]/main/div[2]/div[3]/div[1]/h1/text()[2]',
+                'symbol'           : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/table[1]//tr[1]/td/text()',
+                'trading'          : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/table[1]//tr[2]/td/span/text()[2]',
                 'links-website'    : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[1]/td/a/@href',
                 'links-blog'       : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[2]/td/a/@href',
                 'links-whitepaper' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[3]/td/a/@href',
@@ -670,17 +670,20 @@ class TokenMarket:
                 'links-slack'      : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[7]/td/a/@href',
                 'links-telegram'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[8]/td/a/@href',
                 'links-github'     : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[9]/td/a/@href',
-                'domain-score'     : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/table[2]//tr[1]/td/text()[1]',
-                'backlinks'        : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/table[2]//tr[2]/td/text()[1]',
+                'domain-score'     : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/table[1]//tr[1]/td/text()[1]',
+                #'backlinks'        : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/table[2]//tr[2]/td/text()[1]',
+                'backlinks'        : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/table[1]//tr[2]/td/text()[1]',
                 'github-starredby' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[1]/td/text()',
                 'github-watchings' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[2]/td/text()',
                 'github-contributors' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[2]/td/text()',
                 'github-forks'        : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[3]/td/text()',
                 'github-commits'      : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[4]/td/text()',
                 'github-openIssues'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/div[3]/table//tr[5]/td/text()',
+                'crowdsale-opening-date' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/table[1]//tr[2]/td/p[1]/text()',
+                'crowdsale-closing-date' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/table[1]//tr[3]/td/p[1]/text()',
+
             })#, expire=1)
             #"""
-            #print xresd
             xresdlen = {}
             for j in xresd:
                 xresdlen[j] = len(xresd[j])
@@ -702,12 +705,23 @@ class TokenMarket:
             #print xresdlen
             #print xresd
             dftm = p.DataFrame(xresd, index=[i])
-            li = 'name backlinks domain-score github-starredby github-commits github-contributors github-forks github-openIssues github-watchings'.split()    
+            li = 'name backlinks domain-score github-starredby github-commits github-contributors github-forks github-openIssues github-watchings crowdsale-opening-date crowdsale-closing-date'.split()
             #backlinks domain-score
             #links-blog links-facebook links-github links-twitter links-website links-whitepaper name symbol trading    
             for j in li:
                 try:    dftm[j] = map(lambda x: x.strip(), dftm[j])
                 except: ''
+            # dates
+            for j in dftm.index:
+                try: dftm.loc[j, 'crowdsale-opening-date-ts'] = datetime.datetime.strptime(dftm.loc[j, 'crowdsale-opening-date'], '%d. %b %Y')
+                except Exception as e: ''#print e
+                try: dftm.loc[j, 'crowdsale-closing-date-ts'] = datetime.datetime.strptime(dftm.loc[j, 'crowdsale-closing-date'], '%d. %b %Y')
+                except Exception as e: ''#print e
+                try: dftm.loc[j, 'crowdsale-days'] = (dftm.loc[j, 'crowdsale-closing-date-ts'] - dftm.loc[j, 'crowdsale-opening-date-ts']).days
+                except Exception as e: ''#print e
+                try: dftm.loc[j, 'crowdsale-days-to-close'] = (datetime.datetime.now() - dftm.loc[j, 'crowdsale-closing-date-ts']).days
+                except Exception as e: ''#print e
+
             self.dfp = self.dfp.combine_first(dftm)
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                 #print dftm#.transpose()
@@ -718,11 +732,14 @@ class TokenMarket:
 
     def underTheRadarTokens(self):
         # TokenMarket [UnderTheRadar Tokens]
-        self.allAssetsBlockchainTokenMarket()
-        dfp = self.allAssetsICOsBlockchain
+        #self.allAssetsBlockchainTokenMarket()
+        #dfp = self.allAssetsICOsBlockchain
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print self.dfp
+        dfp = self.dfp
         #self.dfp.to_csv('tokenmarket.csv', encoding='utf8')
-        fi = 'name symbol trading type backlinks domain-score links-blog links-facebook links-github links-twitter links-website links-whitepaper github-starredby github-commits github-contributors github-forks github-openIssues github-watchings'
-        li = 'backlinks domain-score github-starredby github-commits github-contributors github-forks github-openIssues github-watchings'.split(' ')
+        fi = 'name symbol trading type backlinks domain-score links-blog links-facebook links-github links-twitter links-website links-whitepaper github-starredby github-commits github-contributors github-forks github-openIssues github-watchings crowdsale-opening-date-ts crowdsale-closing-date-ts crowdsale-days crowdsale-days-to-close'
+        li = 'backlinks domain-score github-starredby github-commits github-contributors github-forks github-openIssues github-watchings crowdsale-opening-date crowdsale-closing-date'.split(' ')
         dfp = dfp.fillna(0)
         for i in li:
             try: dfp[i] = p.to_numeric(dfp[i])
@@ -731,8 +748,8 @@ class TokenMarket:
                 ''
         #print dfp.dtypes
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            dfm = dfp.ix[:, fi.split()].sort_values(by='github-starredby').set_index('symbol')
-            print dfm
+            dfm = dfp.ix[:, fi.split()].sort_values(by='github-starredby')
+            #print dfm
             ''
             df1 = self.allAssetsICOsBlockchain.set_index('name')
             df1['symbol'] = self.allAssetsICOsBlockchain.index
@@ -740,7 +757,7 @@ class TokenMarket:
             #print ' '.join(list(dfm.columns))
             ff = '24h_volume_usd available_supply backlinks domain-score github-commits github-contributors github-forks github-openIssues github-starredby github-watchings id last_updated links-blog links-facebook links-github links-twitter links-website links-whitepaper market_cap_usd name percent_change_1h percent_change_24h percent_change_7d price_btc price_usd rank total_supply trading type'
             ff = 'symbol 24h_volume_usd available_supply backlinks domain-score github-commits github-contributors github-forks github-openIssues github-starredby github-watchings id last_updated market_cap_usd name percent_change_1h percent_change_24h percent_change_7d price_btc price_usd rank total_supply trading type'
-            ff = 'X3 X X2 symbol backlinks domain-score github-commits github-contributors github-forks github-openIssues github-starredby github-watchings id  links-github type'
+            ff = 'X3 X X2 symbol backlinks domain-score github-commits github-contributors github-forks github-openIssues github-starredby github-watchings id  links-github type crowdsale-opening-date crowdsale-closing-date'
             def numerix(arr):
                 arr = map(lambda x: 0 if x == 'None' else x, arr)
                 arr = p.to_numeric(arr)
@@ -762,20 +779,34 @@ class TokenMarket:
                     return c
             #dfm['X'] = div0(dfm['github-commits'].get_values(), dfm['github-contributors'].get_values())
             #"""
-            dfm['X'] = dfm['github-commits'].get_values() / dfm['github-contributors'].get_values()
-            dfm['X2'] = dfm['github-openIssues'].get_values() / dfm['github-forks'].get_values()
-            dfm['X3'] = dfm['X2'].get_values() / dfm['X'].get_values()    
+            dfm['X']  = dfm['github-commits'].get_values()    / dfm['github-contributors'].get_values()
+            #dfm['X2'] = dfm['domain-score'].get_values()) * dfm['github-openIssues'].get_values() / dfm['github-forks'].get_values()
+            dfm['X2'] = n.log(dfm['backlinks'].get_values() * dfm['domain-score'].get_values()) * dfm['github-openIssues'].get_values() / dfm['github-forks'].get_values()
+            #dfm['X3'] = dfm['X2'].get_values()                / dfm['X'].get_values()
+            dfm['X3'] = dfm['X2'].get_values()                / dfm['X'].get_values()
+            
+            from qoreliquid import normalizeme
+            dfm['X4'] = (n.log(dfm['backlinks'].get_values()))
+            #* dfm['domain-score'].get_values()))
+
+            dfm = dfm[dfm['type'] == 'ethereum']
+            dfm = dfm[dfm['crowdsale-days-to-close'] > 0]
+            
             #sortby='github-commits'
             sortby='X3'
             #print dfm.dtypes
             dfr = dfm
+            print dfr.sort_values(by='X3', ascending=False)
             for i in dfr[dfr['github-commits'] == 10].index: dfr = dfr.drop(i)
             dfr = dfr.ix[:,ff.split(' ')].fillna(0).sort_values(by=sortby, ascending=False)
-            print dfr
-            ff = 'X3 weight' # to publish
+            ff = 'symbol X3 weight crowdsale-days-to-close' # to publish
             dfr = dfm.ix[:,ff.split(' ')].fillna(0).sort_values(by=sortby, ascending=False)
             for i in dfr[dfr['X3'] == n.inf].index: dfr = dfr.drop(i)
-            dfr['potentialPortfolioWeight'] = dfr['X3'] / dfr['X3'].head(20).sum()
+
+            dfr = dfr.head(10)
+
+            dfr['potentialPortfolioWeight'] = dfr['X3'] / dfr['X3'].sum()
+            print dfr
     
             import datetime, time
     
@@ -822,15 +853,19 @@ class TokenMarket:
         #"""
         import re
         xresd = self.xp.xpath2df('https://tokenmarket.net/blockchain/all-assets', {
-            'name'       : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[1]/a/text()',
-            'href'       : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[1]/a/@href',
-            #'status'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[3]/span/text()',
-            'symbol'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[5]/text()',
-            'description': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[6]/text()',
+            'name'       : '//*[@id="table-all-assets-wrapper"]/table//tr/td[4]/div[1]/a/text()',
+            'href'       : '//*[@id="table-all-assets-wrapper"]/table//tr/td[4]/div[1]/a/@href',
+            #'status'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[3]/span/text()',
+            #'status'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[3]/span',
+            #'status'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[3]//text()',
+            'symbol'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[5]/text()',
+            'description': '//*[@id="table-all-assets-wrapper"]/table//tr/td[6]/text()',
             #'hot': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[2]/text()',        
         })
+        for i in xresd.keys(): print '%s' % len(xresd[i])
         #print xresd
         #"""
+        
         df = p.DataFrame(xresd)
         li = 'name href symbol description'.split()
         for i in li:
@@ -1305,6 +1340,12 @@ def genPortfolio(df, balance_usd='balance_usd', volume='volume'):
     eth = cmc.getTicker('ETH').set_index('symbol').transpose()
     ethusd = float(eth.loc['price_usd', 'ETH'])
     gasUSD = 2
+
+    try:    df['balance']
+    except: df['balance']     = 0
+    try:    df['ethUSDTotal']
+    except: df['ethUSDTotal'] = 0
+
     try:    df['volumePerHolder'] = df[volume] / df['holdersCount']
     except: ''
     try:    df['holdersPerVolume'] = df['holdersCount'] / df[volume]
