@@ -342,8 +342,11 @@ def apiRequest(baseurl, query, method='GET', noCache=False):
     #api = drest.API(baseurl)
     #response = api.make_request(method, query)
     #res = response.data
+    #try: 
     resp = req.get('%s%s' % (baseurl, query))
     res = uj.loads(resp.text)
+    #except ConnectionError as e:
+    #    ''
     return res
 
 class CoinMarketCap:
