@@ -10,6 +10,8 @@ class Bittrex(ZZZ):
     def receiveJson(self, mtype='fills', view=None, currency=None):
         import pandas as p
         import ujson as uj
+        import os
+        clear = lambda: os.system('clear') # source: https://stackoverflow.com/questions/517970/how-to-clear-the-interpreter-console
         di = {
             'buys':'Buys',
             'sells':'Sells',
@@ -37,7 +39,7 @@ class Bittrex(ZZZ):
             if mn == currency:
                 #pass
                 ''
-            print mn
+            #print mn
             if view == 'stats':
                 print p.DataFrame(stat, index=['num']).transpose().sort_values(by='num', ascending=False).head(5) #.sort_index()
             else:
@@ -45,11 +47,12 @@ class Bittrex(ZZZ):
                 df = p.DataFrame(res[di[mtype]])
                 try:    df = df.set_index('Rate')
                 except: ''
-                #dfm = dfm.combine_first(df)
-                dfm = df.combine_first(dfm)
+                dfm = dfm.combine_first(df)
+                #dfm = df.combine_first(dfm)
                 cnt = len(df.index)
                 if cnt > 0:
-                    print '==='
+                    #print '==='
+                    clear()
                     #print dfm.sort_values(by='Rate', ascending=ascending).head(10)
                     print dfm[dfm['Quantity'] > 0].sort_index(ascending=ascending).tail(20)
             #print di[mtype]
