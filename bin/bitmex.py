@@ -1508,6 +1508,7 @@ if __name__ == "__main__":
     parser.add_argument("-r02", '--research02', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r03", '--research03', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r04", '--research04', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-r05", '--research05', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -1697,3 +1698,8 @@ if __name__ == "__main__":
         ws.on_open = on_open
     
         ws.run_forever()        
+
+
+    # portfolio tokenization
+    if args.research05:
+        portfolioTokenization()
