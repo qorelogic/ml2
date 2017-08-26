@@ -1,5 +1,50 @@
 # coding: utf-8
 
+"""
+octave:52> a=0.00052; b=0.00048; (a+b)/2
+ans =    5.00000000000000e-04
+octave:53> a=0.00052; b=0.00048; x=(a+b)/2
+x =    5.00000000000000e-04
+octave:54> c=0.643;
+octave:55> c/x
+ans =  1286
+octave:56> c=0.643; c/x
+ans =  1286
+octave:57> a=0.0005187; b=0.00046007; x=(a+b)/2
+x =    4.89385000000000e-04
+octave:58> c=0.643; c/x
+ans =  1313.89396896104
+octave:59> 0.11*300
+ans =  33
+octave:60> a=0.00052; b=0.00048; (a-b)
+ans =    3.99999999999999e-05
+octave:61> w = 280.333; x = 1233.309; x-(w+x)*2/100
+ans =  1203.03616000000
+octave:62> .138*300
+ans =  41.4000000000000
+octave:63> w = 4.607; x = 2.093; x-(w+x)*2/100
+ans =  1.95900000000000
+
+investment pyramid
+model:
+
+peak 150 Billion [retracement 1.0]:
+      cash = 100 %
+M001[-r01] =       age %
+M002[ -tm] = (100-age) %
+
+retracement = .786
+      cash = 100 %
+M001[-r01] =       age %
+M002[ -tm] = (100-age) %
+
+df      = [100:-1:0]';
+df(:,2) = ((100-df(:,1)) * (1/(1-.236)))
+df(:,3) = df(:,1)*70/100
+df(:,4) = df(:,2)*70/100;
+df(:,5) = df(:,1)/100*4452.49
+"""
+
 def portfolioTokenization():
     #import pandas as p
     from pandas import DataFrame, option_context
