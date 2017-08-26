@@ -639,11 +639,11 @@ class CoinMarketCap:
         try:
             ticker = self.symbolMapper.loc[symbol, 'id']
             res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=True)
-            res = p.DataFrame(res)
-            #print res.transpose()
-            return res
-        except:
-            ''
+        except Exception as e:
+            res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=False)
+        res = p.DataFrame(res)
+        #print res.transpose()
+        return res
 
 
 class PortfolioModeler:
@@ -726,6 +726,7 @@ class TokenMarket:
         import pandas as p
         self.xp = XPath()
         self.allAssetsICOsBlockchain = p.DataFrame()
+        self.cmc = CoinMarketCap()
         pass
 
     def allAssetsBlockchainTokenMarket(self):
@@ -734,15 +735,20 @@ class TokenMarket:
         #"""
         import re
         xresd = self.xp.xpath2df('https://tokenmarket.net/blockchain/all-assets', {
-            'name'       : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[1]/a/text()',
-            'href'       : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[1]/a/@href',
-            #'status'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[3]/span/text()',
-            'symbol'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[5]/text()',
-            'description': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[6]/text()',
+            'name'       : '//*[@id="table-all-assets-wrapper"]/table//tr/td[4]/div[1]/a/text()',
+            'href'       : '//*[@id="table-all-assets-wrapper"]/table//tr/td[4]/div[1]/a/@href',
+            #'status'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[3]/span/text()',
+            #'status'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[3]/span',
+            #'status'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[3]//text()',
+            'symbol'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[5]/text()',
+            'description': '//*[@id="table-all-assets-wrapper"]/table//tr/td[6]/text()',
             #'hot': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[2]/text()',        
         })
+        print 
+        for i in xresd.keys(): print '%s' % len(xresd[i])
         #print xresd
         #"""
+        
         df = p.DataFrame(xresd)
         li = 'name href symbol description'.split()
         for i in li:
@@ -766,10 +772,18 @@ class TokenMarket:
     def tokenICOsTokenMarket(self):
         
         import re
+        from qoreliquid import combineDF3
         self.dfp = self.allAssetsICOsBlockchain
+        #print '====='
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print self.dfp
+        #print '====='
+        for ii in 'description links-blog links-facebook links-github links-linkedin links-slack links-telegram links-twitter links-website links-whitepaper'.split():
+            try: self.dfp = self.dfp.drop(ii, 1)
+            except Exception as e: ''#print e
         nn = 66
         lili = self.dfp.index#[nn:nn+5]
-        for i in lili:#[0:5]:
+        for i in lili:#[0:3]:
     
             url = '%s' % self.dfp.ix[self.dfp.index[i], 'href'] 
             print '%s %s' % (i, url)
@@ -778,15 +792,17 @@ class TokenMarket:
                 'name'             : '//*[@id="page-wrapper"]/main/div[2]/div[3]/div[1]/h1/text()[2]',
                 'symbol'           : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/table[1]//tr[1]/td/text()',
                 'trading'          : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[1]/table[1]//tr[2]/td/span/text()[2]',
-                'links-website'    : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[1]/td/a/@href',
-                'links-blog'       : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[2]/td/a/@href',
-                'links-whitepaper' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[3]/td/a/@href',
-                'links-facebook'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[4]/td/a/@href',
-                'links-twitter'    : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[5]/td/a/@href',
-                'links-linkedin'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[6]/td/a/@href',
-                'links-slack'      : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[7]/td/a/@href',
-                'links-telegram'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[8]/td/a/@href',
-                'links-github'     : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[9]/td/a/@href',
+                
+                #'links-website'    : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[1]/td/a/@href',
+                #'links-blog'       : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[2]/td/a/@href',
+                #'links-whitepaper' : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[3]/td/a/@href',
+                #'links-facebook'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[4]/td/a/@href',
+                #'links-twitter'    : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[5]/td/a/@href',
+                #'links-linkedin'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[6]/td/a/@href',
+                #'links-slack'      : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[7]/td/a/@href',
+                #'links-telegram'   : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[8]/td/a/@href',
+                #'links-github'     : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/div[1]/table//tr[9]/td/a/@href',
+                
                 'domain-score'     : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/table[1]//tr[1]/td/text()[1]',
                 #'backlinks'        : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/table[2]//tr[2]/td/text()[1]',
                 'backlinks'        : '//*[@id="page-wrapper"]/main/div[2]/div[4]/div[2]/table[1]//tr[2]/td/text()[1]',
@@ -801,9 +817,11 @@ class TokenMarket:
 
             })#, expire=1)
             #"""
+            #"""
             xresdlen = {}
-            for j in xresd:
-                xresdlen[j] = len(xresd[j])
+            for j in xresd: xresdlen[j] = len(xresd[j])
+            #xresdlen = [len(xresd[j]) for j in xresd]
+            #print xresdlen
             xresdlen = p.DataFrame(xresdlen, index=['len']).transpose()
             xresdlen['max'] = n.max(xresdlen['len'])
             xresdlen['diff'] = xresdlen['max'] - xresdlen['len']
@@ -819,15 +837,10 @@ class TokenMarket:
                         #print p.DataFrame(xresd)
                 except:
                     ''
+            #"""
             #print xresdlen
             #print xresd
             dftm = p.DataFrame(xresd, index=[i])
-            li = 'name backlinks domain-score github-starredby github-commits github-contributors github-forks github-openIssues github-watchings crowdsale-opening-date crowdsale-closing-date'.split()
-            #backlinks domain-score
-            #links-blog links-facebook links-github links-twitter links-website links-whitepaper name symbol trading    
-            for j in li:
-                try:    dftm[j] = map(lambda x: x.strip(), dftm[j])
-                except: ''
             # dates
             for j in dftm.index:
                 try: dftm.loc[j, 'crowdsale-opening-date-ts'] = datetime.datetime.strptime(dftm.loc[j, 'crowdsale-opening-date'], '%d. %b %Y')
@@ -839,13 +852,38 @@ class TokenMarket:
                 try: dftm.loc[j, 'crowdsale-days-to-close'] = (datetime.datetime.now() - dftm.loc[j, 'crowdsale-closing-date-ts']).days
                 except Exception as e: ''#print e
 
+            #self.dfp = self.dfp.fillna(0)
+
+            #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #    print self.dfp
             self.dfp = self.dfp.combine_first(dftm)
+            #print self.dfp.dtypes
+            #print dftm.dtypes
+            #dindx = self.dfp.index
+            #dcols = self.dfp.index
+            #self.dfp = combineDF3(self.dfp.to_dict(), dftm.to_dict())
+            #self.dfp = p.DataFrame(self.dfp)
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                #dff = self.dfp.set_index('symbol').combine_first(self.cmc.tickers())
+                #dff = dftm.set_index('symbol').combine_first(self.cmc.tickers())
+                #dff = dff[dff['type'] == 'ethereum']
+                #dff = dff[dff['available_supply'] > 0]
+                #dff = dff[dff['crowdsale-days'] > 0]
+                #print dff
+                #print self.dfp
+                #print
+                #self.dfp
                 #print dftm#.transpose()
                 #print dftm.transpose()
                 ''
             #break
-
+        #li = 'name backlinks domain-score github-starredby github-commits github-contributors github-forks github-openIssues github-watchings crowdsale-opening-date crowdsale-closing-date available_supply total_supply'.split()
+        li = xresd.keys()
+        #backlinks domain-score
+        #links-blog links-facebook links-github links-twitter links-website links-whitepaper name symbol trading    
+        for j in li:
+            try:    dftm[j] = map(lambda x: x.strip(), dftm[j])
+            except: ''            
 
     def underTheRadarTokens(self):
         # TokenMarket [UnderTheRadar Tokens]
@@ -855,7 +893,7 @@ class TokenMarket:
         #    print self.dfp
         dfp = self.dfp
         #self.dfp.to_csv('tokenmarket.csv', encoding='utf8')
-        fi = 'name symbol trading type backlinks domain-score links-blog links-facebook links-github links-twitter links-website links-whitepaper github-starredby github-commits github-contributors github-forks github-openIssues github-watchings crowdsale-opening-date-ts crowdsale-closing-date-ts crowdsale-days crowdsale-days-to-close'
+        fi = 'name symbol trading type backlinks domain-score links-blog links-facebook links-github links-twitter links-website links-whitepaper github-starredby github-commits github-contributors github-forks github-openIssues github-watchings crowdsale-opening-date-ts crowdsale-closing-date-ts crowdsale-days crowdsale-days-to-close available_supply total_supply'
         li = 'backlinks domain-score github-starredby github-commits github-contributors github-forks github-openIssues github-watchings crowdsale-opening-date crowdsale-closing-date'.split(' ')
         dfp = dfp.fillna(0)
         for i in li:
@@ -934,7 +972,7 @@ class TokenMarket:
             print '== OpenSource Token Suggestions:'
             print '== FutureTokens  [Untradable::pre&postICO]'
             print
-            print dfr.ix[:,['potentialPortfolioWeight']]#.head(20)
+            print dfr.ix[:,'symbol potentialPortfolioWeight'.split(' ')]#.head(20)
             print
             print 'note: Some tokens are pre-ICO, therefore not yet on the market.'
             print '      They are, however, worth looking into.'
@@ -970,19 +1008,15 @@ class TokenMarket:
         #"""
         import re
         xresd = self.xp.xpath2df('https://tokenmarket.net/blockchain/all-assets', {
-            'name'       : '//*[@id="table-all-assets-wrapper"]/table//tr/td[4]/div[1]/a/text()',
-            'href'       : '//*[@id="table-all-assets-wrapper"]/table//tr/td[4]/div[1]/a/@href',
-            #'status'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[3]/span/text()',
-            #'status'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[3]/span',
-            #'status'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[3]//text()',
-            'symbol'     : '//*[@id="table-all-assets-wrapper"]/table//tr/td[5]/text()',
-            'description': '//*[@id="table-all-assets-wrapper"]/table//tr/td[6]/text()',
+            'name'       : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[1]/a/text()',
+            'href'       : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[1]/a/@href',
+            #'status'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[3]/span/text()',
+            'symbol'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[5]/text()',
+            'description': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[6]/text()',
             #'hot': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[2]/text()',        
         })
-        for i in xresd.keys(): print '%s' % len(xresd[i])
         #print xresd
         #"""
-        
         df = p.DataFrame(xresd)
         li = 'name href symbol description'.split()
         for i in li:
