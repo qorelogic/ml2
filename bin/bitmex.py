@@ -1,5 +1,77 @@
 # coding: utf-8
 
+def portfolioTokenization():
+    #import pandas as p
+    from pandas import DataFrame, option_context
+    import sys
+    txs = [
+        {'action':'invest', 'amount':1, 'investorId':1, 'date':1},
+        {'action':'profit', 'amount':2.6, 'date':1},
+        {'action':'invest', 'amount':3, 'investorId':2, 'date':2},
+        {'action':'profit', 'amount':75, 'date':2},
+        {'action':'invest', 'amount':3,  'investorId':1, 'date':2},
+        {'action':'invest', 'amount':23, 'investorId':3, 'date':2},
+        {'action':'invest', 'amount':5,  'investorId':2, 'date':2},
+        {'action':'invest', 'amount':8,  'investorId':2, 'date':2},
+        {'action':'profit', 'amount':1.12, 'date':3},
+        {'action':'profit', 'amount':1.13423, 'date':4},
+        {'action':'invest', 'amount':100,  'investorId':6, 'date':4},
+        {'action':'profit', 'amount':1.32, 'date':5},
+        {'action':'invest', 'amount':1100,  'investorId':7, 'date':5},
+        {'action':'invest', 'amount':3, 'investorId':3, 'date':5},
+        {'action':'profit', 'amount':3.123, 'date':6},
+    ]
+    txs = DataFrame(txs)
+
+
+    dfi = txs[txs['action'] == 'invest']
+    dfi['marketcap']       = dfi['amount'].cumsum()
+    dfi['fundPcntInitial'] = dfi['amount'] / dfi['marketcap']
+    dfi['fundPcnt']        = dfi['amount'] / dfi['amount'].sum()
+
+    txs = txs.combine_first(dfi)
+
+    profits = DataFrame(index=txs['date'].unique(), columns=txs['investorId'].unique())
+
+
+    print txs
+    dfig = dfi.groupby('investorId')
+    print dfi
+    #print dfig.describe()
+    print dfig.sum()['amount']
+    print txs[txs['action'] == 'profit']
+    profits = profits.combine_first(txs[txs['action'] == 'profit'].pivot(index='date', columns='action', values='amount'))
+    print '---'
+    for i in list(dfig.sum().index):
+        print int(i)
+        dfii = dfi[dfi['investorId'] == i]
+        dfii['amountCumsum'] = dfii['amount'].cumsum()
+        with option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            print dfii#.#loc[max(dfii.index), :]
+        for j in dfii.index:
+            #print '%s %s' % (j, i)
+            print 
+            #jj = dfii.index[j]
+            #print jj
+            try:
+                profits.loc[int(j), i] = dfii.loc[int(j), 'amount']
+            except: ''
+        print list(dfii.index)
+    print '---'
+
+    import numpy as n
+    pr = profits.sort_index().fillna(0)
+    capital = DataFrame(n.zeros(pr.shape), index=pr.index, columns=pr.columns)
+    capital = pr.get_values()
+    for i in capital.index:
+        ''
+    print pr
+    print capital
+
+    #print txs.pivot(index='investorId', columns='action', values='amount')
+
+#portfolioTokenization()
+#sys.exit()
 
 from qore import QoreDebug
 qdb = QoreDebug()
