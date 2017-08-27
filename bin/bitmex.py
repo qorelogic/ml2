@@ -724,6 +724,41 @@ class PortfolioModeler:
         #return
 
     #@profile
+    def genPortfolio(self, df, balance_usd='balance_usd', volume='volume'):
+        cmc = CoinMarketCap()
+        eth = cmc.getTicker('ETH').set_index('symbol').transpose()
+        ethusd = float(eth.loc['price_usd', 'ETH'])
+        gasUSD = 2
+    
+        try:    df['balance']
+        except: df['balance']     = 0
+        try:    df['ethUSDTotal']
+        except: df['ethUSDTotal'] = 0
+    
+        try:    df['volumePerHolder'] = df[volume] / df['holdersCount']
+        except: ''
+        try:    df['holdersPerVolume'] = df['holdersCount'] / df[volume]
+        except: ''
+        df['portWeight'] = n.log(df['allocation']) / n.log(10)
+        #df['portWeight'] = (df['allocation']) #/ n.log(10)
+        df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
+        df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
+        side = 'avg'
+        df[balance_usd]    = df['balance'] * ethusd * df[side]
+        
+        #df['totalBalanceUsd'] = df[balance].sum()
+        df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
+        df['totalBalanceUsd'] = df['totalBalanceUsd'] + df['ethUSDTotal']
+        
+        df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
+        df['portUsd']       = df['portUsd'] * df['allocationBool']
+        df['balancePortDiffUSD'] = df[balance_usd] - df['portUsd']
+        df['portUnits']       = df['portUsd'] / ethusd / df[side]
+        df['balancePerPort']  = df[balance_usd] / df['portUsd']
+        df = df[df['portUnits'] != n.inf]
+        return df
+    
+    #@profile
     def modelPortfolio(self, num=5, df=None):
         
         try: import matplotlib.pylab as plt
@@ -1458,7 +1493,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                 #df.loc['price', 'tokenInfo'] = avg
                 dfp = pm.modelPortfolio(num=instruments)
                 #df = df.combine_first(dfp)
-                #df = genPortfolio(df)
+                #df = pm.genPortfolio(df)
                 with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
                     if verbose:
                         print '---/////6546456///---'
@@ -1540,7 +1575,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             #for i3 in addressInfos.index:
             #    print mdf0[mdf0['ethaddr'] == i3]
             mdf0['ethUSDTotal'] = ethUSDTotal
-            mdf0 = genPortfolio(mdf0)
+            mdf0 = pm.genPortfolio(mdf0)
             mdf0 = mdf0.fillna(0)
             # rebalance portfolio
             mdf0['unitsDiff'] = mdf0['portUnits']    - mdf0['balance']
@@ -1601,41 +1636,6 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print '                       balance sum: %s' % mdf0['balance'].sum()
             print '                            ethusd: %s' % ethusd
             print '---'
-
-#@profile
-def genPortfolio(df, balance_usd='balance_usd', volume='volume'):
-    cmc = CoinMarketCap()
-    eth = cmc.getTicker('ETH').set_index('symbol').transpose()
-    ethusd = float(eth.loc['price_usd', 'ETH'])
-    gasUSD = 2
-
-    try:    df['balance']
-    except: df['balance']     = 0
-    try:    df['ethUSDTotal']
-    except: df['ethUSDTotal'] = 0
-
-    try:    df['volumePerHolder'] = df[volume] / df['holdersCount']
-    except: ''
-    try:    df['holdersPerVolume'] = df['holdersCount'] / df[volume]
-    except: ''
-    df['portWeight'] = n.log(df['allocation']) / n.log(10)
-    #df['portWeight'] = (df['allocation']) #/ n.log(10)
-    df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
-    df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
-    side = 'avg'
-    df[balance_usd]    = df['balance'] * ethusd * df[side]
-    
-    #df['totalBalanceUsd'] = df[balance].sum()
-    df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
-    df['totalBalanceUsd'] = df['totalBalanceUsd'] + df['ethUSDTotal']
-    
-    df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
-    df['portUsd']       = df['portUsd'] * df['allocationBool']
-    df['balancePortDiffUSD'] = df[balance_usd] - df['portUsd']
-    df['portUnits']       = df['portUsd'] / ethusd / df[side]
-    df['balancePerPort']  = df[balance_usd] / df['portUsd']
-    df = df[df['portUnits'] != n.inf]
-    return df
 
 def parseEtherDeltaDump():
     import re
@@ -1805,7 +1805,7 @@ if __name__ == "__main__":
     if args.genPortfolio:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             dfp = pm.modelPortfolio(num=instruments)
-            gpdf = genPortfolio(dfp)
+            gpdf = pm.genPortfolio(dfp)
             print dfp
             print gpdf
         #import qgrid
@@ -1862,7 +1862,7 @@ if __name__ == "__main__":
         df = df.fillna(0)
 
         dfp = pm.modelPortfolio(df=df)
-        #df = genPortfolio(df, volume='Volume')
+        #df = pm.genPortfolio(df, volume='Volume')
 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print df[df['Balance'] > 0]#.head(10)
