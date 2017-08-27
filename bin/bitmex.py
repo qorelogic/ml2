@@ -1654,6 +1654,7 @@ if __name__ == "__main__":
     parser.add_argument("-pm", '--setPortfolioModel', help="")
     parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
     parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
+    parser.add_argument("-gp", '--genPortfolio', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-sk", '--parseCoinMarketCapSkipTo', help="parseCoinMrketCap skipTo")
     parser.add_argument("-b", '--balance', help="parseCoinMrketCap skipTo")
     parser.add_argument("-tm", '--tokenmarket', help="parseCoinMrketCap skipTo", action="store_true")
@@ -1662,7 +1663,6 @@ if __name__ == "__main__":
     parser.add_argument("-addr", '--ethAddress', help="parseCoinMrketCap skipTo")
     parser.add_argument("-num", '--instruments', help="parseCoinMrketCap skipTo")
     parser.add_argument("-r01b", '--research01bittrex', help="parseCoinMrketCap skipTo", action="store_true")
-    parser.add_argument("-r02", '--research02', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r03", '--research03', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r04", '--research04', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r05", '--research05', help="parseCoinMrketCap skipTo", action="store_true")
@@ -1705,6 +1705,11 @@ if __name__ == "__main__":
     from bitmex import *
     cmc = CoinMarketCap()
     #cmc.getTradableCoins()
+    pm  = PortfolioModeler()
+
+    try:    instruments = int(args.instruments)
+    except: instruments = 50
+
     if args.listPortfolioModels:
         pm = PortfolioModeler()
         pm.listModels()
@@ -1744,9 +1749,6 @@ if __name__ == "__main__":
         eth1_2 = '0xc73D7e4a40D4513eC7D114f521eA59DF607a7613'
         eth2_1 = '0xc978D12413CbC4ec37763944c57EF0100a4c15cf' #eth2 0
         eth2_2 = '0x2c8f659d57971449eb627FB78530Fc61867c4E50' #eth2 1
-        
-        try:    instruments = int(args.instruments)
-        except: instruments = 50
 
         # other
         initialInvestment = 0
@@ -1781,9 +1783,9 @@ if __name__ == "__main__":
         df1 = getTicker('PPT').set_index('symbol').transpose()
         print df1
     
-    if args.research02:
+    if args.genPortfolio:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            dfp = modelPortfolio(num=20)
+            dfp = modelPortfolio(num=instruments)
             gpdf = genPortfolio(dfp)
             print dfp
             print gpdf
