@@ -1630,8 +1630,8 @@ ETH/BTC.DC 	0 	"""
         ''
     #df['allocation'] = normalizeme(df['allocation'])
     #df['allocation'] = sigmoidme(df['allocation'])
-    plt.plot(dfst['allocation'].get_values())
-    plt.xlabel(dfst.index)
+    #plt.plot(dfst['allocation'].get_values())
+    #plt.xlabel(dfst.index)
     #plt.yscale('log')
     #plt.show()
     #qgrid.show_grid(df)
