@@ -1658,6 +1658,9 @@ if __name__ == "__main__":
     parser.add_argument("-b", '--balance', help="parseCoinMrketCap skipTo")
     parser.add_argument("-tm", '--tokenmarket', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r01", '--research01', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-eth", '--ethAccount', help="parseCoinMrketCap skipTo")
+    parser.add_argument("-addr", '--ethAddress', help="parseCoinMrketCap skipTo")
+    parser.add_argument("-num", '--instruments', help="parseCoinMrketCap skipTo")
     parser.add_argument("-r01b", '--research01bittrex', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r02", '--research02', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r03", '--research03', help="parseCoinMrketCap skipTo", action="store_true")
@@ -1742,10 +1745,37 @@ if __name__ == "__main__":
         eth2_1 = '0xc978D12413CbC4ec37763944c57EF0100a4c15cf' #eth2 0
         eth2_2 = '0x2c8f659d57971449eb627FB78530Fc61867c4E50' #eth2 1
         
+        try:    instruments = int(args.instruments)
+        except: instruments = 50
+
+        # other
+        initialInvestment = 0
+        if args.ethAccount == '0':
+            getAdressInfoEthplorer([args.ethAddress.split(' ')], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+
         #ethaddress1 = '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae'
-        getAdressInfoEthplorer([eth1_1, eth1_2], args.verbose, instruments=20, noCache=noCache)
-        getAdressInfoEthplorer([eth2_1, eth2_2], args.verbose, instruments=50, noCache=noCache)
+        usdars = 16.72
+        initialInvestment = (970.0+850+1800) / usdars
+        otherInvestments = {
+            'genesis': 230,
+            'steemit SP': 25.0/1.3,
+            'steemit SBD': 0,
+            'steemit STEEM': 0,
+        }
+
+        if args.ethAccount == '1':
+            getAdressInfoEthplorer([eth1_2, eth1_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+        
+        usdtwd = 30.41
+        initialInvestment = 40000.0 / usdtwd
+        if args.ethAccount == '2':
+            getAdressInfoEthplorer(['', eth2_2, eth2_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
         #print getTicker('bitcoin')    
+
+        # ??? etherdelta
+        #initialInvestment = 1
+        if args.ethAccount == '3':
+            getAdressInfoEthplorer([''], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
 
     if args.research03:
         df1 = getTicker('PPT').set_index('symbol').transpose()
