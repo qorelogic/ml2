@@ -761,6 +761,8 @@ class PortfolioModeler:
     #@profile
     def modelPortfolio(self, num=5, df=None):
         
+        ed = EtherDelta()
+        
         try: import matplotlib.pylab as plt
         except: ''
         from qoreliquid import normalizeme, sigmoidme
@@ -778,7 +780,7 @@ class PortfolioModeler:
     BNB/ETH 	0 	0.00001 	0.00300
     ETH/USD.DC 	0 		
     ETH/BTC.DC 	0 	"""
-            cv = parseEtherDeltaDump()
+            cv = ed.parseEtherDeltaDump()
             #fp = open('/tmp/etherdelta.volume.tsv', 'r')
             #cv = fp.read(); fp.close()
             df = cv.split('\n')
@@ -789,7 +791,7 @@ class PortfolioModeler:
             df = p.DataFrame(df, columns=ffields)
             for i in ffields[1:]: df[i] = p.to_numeric(df[i])
             
-        toMjson(df, '/mldev/bin/data/cache/coins/etherdelta.mjson')
+        ed.toMjson(df, '/mldev/bin/data/cache/coins/etherdelta.mjson')
     
         #df = df.fillna(0)
         #    for i in df.index:
@@ -866,6 +868,41 @@ class PortfolioModeler:
     
         return dfst
 
+    def sortDataFrame(self, df, field, f, ascending):
+        
+        sortFlag = '^' if ascending == True else 'v'
+        df = df.loc[:,f]
+        if field == None or field == 'index':
+            df = df.sort_index()
+        else:
+            df = df.sort_values(by=field, ascending=False)
+        df = df.rename(columns={field:('%s %s' % (field, sortFlag))})
+        return df
+
+    def printPortfolio(self, mdf0, f=None):
+        if f == None:
+            f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
+            f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
+        
+        print self.sortDataFrame(mdf0, None, f, False)
+        print self.sortDataFrame(mdf0, 'allocation', f, False)
+        print 'delever'
+        print self.sortDataFrame(mdf0, 'balance_usd', f, False)
+        print 'lever'
+        print self.sortDataFrame(mdf0, 'balanceETHDiff', f, False)
+        print 'lever'
+        print self.sortDataFrame(mdf0, 'unitsDiff', f, False)
+        print self.sortDataFrame(mdf0, 'spreadPcnt', f, False)
+        print self.sortDataFrame(mdf0, 'volumePerHolder', f, False)
+        print 'delever2'
+        print self.sortDataFrame(mdf0, 'balanceByUnitsDiff', f, False)
+        # test
+        #print self.sortDataFrame(mdf0, 'balanceByUnitsDiff2', f, True)
+        #print self.sortDataFrame(mdf0, 'balanceByBalanceUsdDiff', f, True)
+        #pdf = mdf0[mdf0['unitsDiffPerBalance'] != n.inf]
+        #f1 = ' '.join(f).replace('unitsDiff ', 'unitsDiff spreadPcnt ').split(' ')
+        #print self.sortDataFrame(pdf, 'unitsDiffPerBalance', f1, True)
+        print self.sortDataFrame(mdf0, 't1', f, True)
 
 class TokenMarket:
     
@@ -1344,6 +1381,32 @@ class Bittrex(Exchange):
             return df
         except:
             ''
+            
+class EtherDelta:
+    
+    def parseEtherDeltaDump(self):
+        import re
+        fp = open('/mldev/bin/data/cache/coins/etherdelta.volume.tsv', 'r')
+        res = fp.read()
+        fp.close()
+        #print res
+        res = re.sub(re.compile(r'.*?Offer(.*?)(Token|Order|ORDER).*', re.S), '\\1', res)
+        res = res.strip()
+        return res
+    
+    def toMjson(self, df, fname):
+        import ujson as uj
+        df = df.fillna(0)
+        try:
+            df = df.set_index('symbol')
+        except:
+            ''
+        tojson = df.transpose().to_dict()
+        tojson = {'timestamp':time.time(), 'data':tojson}
+        tojson = uj.dumps(tojson)
+        fp = open(fname, 'a')
+        fp.write('%s\n' % tojson)
+        fp.close()
 
 #@profile
 def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, initialInvestment=0):
@@ -1592,35 +1655,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print dfinfo
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            def sortDataFrame(df, field, f, ascending):
-                
-                sortFlag = '^' if ascending == True else 'v'
-                if field == None or field == 'index':
-                    df = df.sort_index()
-                else:
-                    df = df.sort_values(by=field, ascending=False)
-                df = df.loc[:,f]
-                df = df.rename(columns={field:('%s %s' % (field, sortFlag))})
-                return df
-            print sortDataFrame(mdf0, None, f, False)
-            print sortDataFrame(mdf0, 'allocation', f, False)
-            print 'delever'
-            print sortDataFrame(mdf0, 'balance_usd', f, False)
-            print 'lever'
-            print sortDataFrame(mdf0, 'balanceETHDiff', f, False)
-            print 'lever'
-            print sortDataFrame(mdf0, 'unitsDiff', f, False)
-            print sortDataFrame(mdf0, 'spreadPcnt', f, False)
-            print sortDataFrame(mdf0, 'volumePerHolder', f, False)
-            print 'delever2'
-            print sortDataFrame(mdf0, 'balanceByUnitsDiff', f, False)
-            # test
-            #print sortDataFrame(mdf0, 'balanceByUnitsDiff2', f, True)
-            #print sortDataFrame(mdf0, 'balanceByBalanceUsdDiff', f, True)
-            #pdf = mdf0[mdf0['unitsDiffPerBalance'] != n.inf]
-            #f1 = ' '.join(f).replace('unitsDiff ', 'unitsDiff spreadPcnt ').split(' ')
-            #print sortDataFrame(pdf, 'unitsDiffPerBalance', f1, True)
-            print sortDataFrame(mdf0, 't1', f, True)
+            pm.printPortfolio(mdf0, f)
             print '---'
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
             print '                    initial investment: %s' % (initialInvestment)
@@ -1636,31 +1671,6 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print '                       balance sum: %s' % mdf0['balance'].sum()
             print '                            ethusd: %s' % ethusd
             print '---'
-
-def parseEtherDeltaDump():
-    import re
-    fp = open('/mldev/bin/data/cache/coins/etherdelta.volume.tsv', 'r')
-    res = fp.read()
-    fp.close()
-    #print res
-    res = re.sub(re.compile(r'.*?Offer(.*?)(Token|Order|ORDER).*', re.S), '\\1', res)
-    res = res.strip()
-    return res
-
-def toMjson(df, fname):
-    import ujson as uj
-    df = df.fillna(0)
-    try:
-        df = df.set_index('symbol')
-    except:
-        ''
-    tojson = df.transpose().to_dict()
-    tojson = {'timestamp':time.time(), 'data':tojson}
-    tojson = uj.dumps(tojson)
-    fp = open(fname, 'a')
-    fp.write('%s\n' % tojson)
-    fp.close()
-
 
 if __name__ == "__main__":
 
