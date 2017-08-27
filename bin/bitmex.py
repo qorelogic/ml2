@@ -723,6 +723,115 @@ class PortfolioModeler:
         df = df.sort_values(by='portPcntPinv2', ascending=False)
         #return
 
+    #@profile
+    def modelPortfolio(self, num=5, df=None):
+        
+        try: import matplotlib.pylab as plt
+        except: ''
+        from qoreliquid import normalizeme, sigmoidme
+        #import qgrid
+        #from IPython.display import display
+        if type(df) == type(None):
+            """
+        cv = "#""PPT/ETH 	917552 	0.01600 	0.01600
+    MCAP/ETH 	52178 	0.01205 	0.02100
+    VERI/ETH 	4817 	0.60000 	0.61000
+    WINGS/ETH 	5661 	0.00031 	0.00160
+    XRL/ETH 	575830 	0.00051 	0.00060
+    DICE/ETH 	13083 	0.01810 	0.02090
+    ...
+    BNB/ETH 	0 	0.00001 	0.00300
+    ETH/USD.DC 	0 		
+    ETH/BTC.DC 	0 	"""
+            cv = parseEtherDeltaDump()
+            #fp = open('/tmp/etherdelta.volume.tsv', 'r')
+            #cv = fp.read(); fp.close()
+            df = cv.split('\n')
+            import re
+            df = map(lambda x: re.sub(re.compile(r'[\s]+'), '\t', x), df)
+            df = map(lambda x: x.split('\t'), df)
+            ffields = 'symbol volume bid offer'.split(' ')
+            df = p.DataFrame(df, columns=ffields)
+            for i in ffields[1:]: df[i] = p.to_numeric(df[i])
+            
+        toMjson(df, '/mldev/bin/data/cache/coins/etherdelta.mjson')
+    
+        #df = df.fillna(0)
+        #    for i in df.index:
+        #        print 's/bid/offer: %s %s %s' % (df.loc[i, 'symbol'], df.loc[i, 'bid'], df.loc[i, 'offer'])
+
+        try:    df['bid']
+        except: df['bid'] = df['Bid']
+        try:    df['offer']
+        except: df['offer'] = df['Ask']
+        try:    df['volume']
+        except: df['volume'] = df['BaseVolume']
+        try:    df['symbol']
+        except: df['symbol'] = df['MarketName']
+
+        df['avg'] = (df['bid'] + df['offer']) / 2
+        df['spread'] = df['offer'] - df['bid']
+        df['spreadPcnt'] = df['spread'] / df['avg'] * 100
+        #df['spreadPcntA'] = n.log(df['spreadPcnt'])/-df['spreadPcnt'] #1/n.log(df['spreadPcnt']/100)
+        df['spreadPcntA'] = 1/(df['spreadPcnt']+1)
+        #df['spreadPcntA'] = normalizeme(df['spreadPcntA']) 
+        df['t1'] = (df['volume'] / df['avg'])
+        df['t1a'] = df['volume'] / (df['avg'] * n.log(df['spreadPcnt']/100) )
+        df['t2'] = (df['volume'] * df['avg'])
+        df['allocation']     = df['t1']
+        #df['allocationBool'] = df[df['spreadPcntA'] < -0.03].loc[:,'spreadPcntA']
+        df['allocationBool'] = 1 #df['spreadPcntA']
+        
+        df = df.set_index('symbol').fillna(0)
+        
+        #df = df[df['bid']   > 0.0001]
+        #df = df[df['offer'] > 0.0001]
+        df = df[df['allocation'] > 1]
+    
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print df.dtypes
+        #    print df
+        try: dfst1 = df.sort_values(by='t1', ascending=False).head(num)
+        except: ''
+        try: dfst2 = df.sort_values(by='t2', ascending=False).head(num)
+        except: ''
+        print df.index
+        #sys.exit()
+    
+        #print '==='
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print df
+        #print '==='
+        try:    df = df.sort_values(by='allocation', ascending=False).head(num)
+        except: ''
+        dfst = df
+    
+        dfst['symbol'] = dfst.index
+        dfst['symbolCode'] = map(lambda x: x.split('/')[0], dfst.index)
+        dfst = dfst.set_index('symbolCode')
+    
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print dfst1
+            #print dfst2
+            #print 'modelPortfolio======'
+            #print dfst
+            #print 'modelPortfolio======/'
+            ''
+        #df['allocation'] = normalizeme(df['allocation'])
+        #df['allocation'] = sigmoidme(df['allocation'])
+        #plt.plot(dfst['allocation'].get_values())
+        #plt.xlabel(dfst.index)
+        #plt.yscale('log')
+        #plt.show()
+        #qgrid.show_grid(df)
+        #grid = qgrid.QGridWidget(df=df)
+        #display(grid)
+    
+        #print df.dtypes
+    
+        return dfst
+
+
 class TokenMarket:
     
     def  __init__(self):
@@ -1208,10 +1317,12 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         ethaddr = ethaddr.split(' ')
     
     cmc = CoinMarketCap()
+    pm = PortfolioModeler()
+    
     eth = cmc.getTicker('ETH').set_index('symbol').transpose()
     ethusd = float(eth.loc['price_usd', 'ETH'])
     mdf0 = p.DataFrame([])
-    dfp = modelPortfolio(num=instruments)
+    dfp = pm.modelPortfolio(num=instruments)
     mdf0 = mdf0.combine_first(dfp)
     addressInfos = p.DataFrame()
     dfinfo = p.DataFrame([])
@@ -1345,7 +1456,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                     #continue
                 df.loc['price_usd', 'tokenInfo'] = avg #* ethusd
                 #df.loc['price', 'tokenInfo'] = avg
-                dfp = modelPortfolio(num=instruments)
+                dfp = pm.modelPortfolio(num=instruments)
                 #df = df.combine_first(dfp)
                 #df = genPortfolio(df)
                 with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1550,105 +1661,6 @@ def toMjson(df, fname):
     fp.write('%s\n' % tojson)
     fp.close()
 
-try: import matplotlib.pylab as plt
-except: ''
-from qoreliquid import normalizeme, sigmoidme
-#import qgrid
-#from IPython.display import display
-#@profile
-def modelPortfolio(num=5, df=None):
-    
-    if type(df) == type(None):
-        """
-    cv = "#""PPT/ETH 	917552 	0.01600 	0.01600
-MCAP/ETH 	52178 	0.01205 	0.02100
-VERI/ETH 	4817 	0.60000 	0.61000
-WINGS/ETH 	5661 	0.00031 	0.00160
-XRL/ETH 	575830 	0.00051 	0.00060
-DICE/ETH 	13083 	0.01810 	0.02090
-...
-BNB/ETH 	0 	0.00001 	0.00300
-ETH/USD.DC 	0 		
-ETH/BTC.DC 	0 	"""
-        cv = parseEtherDeltaDump()
-        #fp = open('/tmp/etherdelta.volume.tsv', 'r')
-        #cv = fp.read(); fp.close()
-        df = cv.split('\n')
-        import re
-        df = map(lambda x: re.sub(re.compile(r'[\s]+'), '\t', x), df)
-        df = map(lambda x: x.split('\t'), df)
-        ffields = 'symbol volume bid offer'.split(' ')
-        df = p.DataFrame(df, columns=ffields)
-        for i in ffields[1:]: df[i] = p.to_numeric(df[i])
-        
-    toMjson(df, '/mldev/bin/data/cache/coins/etherdelta.mjson')
-
-    #df = df.fillna(0)
-    #    for i in df.index:
-    #        print 's/bid/offer: %s %s %s' % (df.loc[i, 'symbol'], df.loc[i, 'bid'], df.loc[i, 'offer'])
-    df['avg'] = (df['bid'] + df['offer']) / 2
-    df['spread'] = df['offer'] - df['bid']
-    df['spreadPcnt'] = df['spread'] / df['avg'] * 100
-    #df['spreadPcntA'] = n.log(df['spreadPcnt'])/-df['spreadPcnt'] #1/n.log(df['spreadPcnt']/100)
-    df['spreadPcntA'] = 1/(df['spreadPcnt']+1)
-    #df['spreadPcntA'] = normalizeme(df['spreadPcntA']) 
-    df['t1'] = (df['volume'] / df['avg'])
-    df['t1a'] = df['volume'] / (df['avg'] * n.log(df['spreadPcnt']/100) )
-    df['t2'] = (df['volume'] * df['avg'])
-    df['allocation']     = df['t1']
-    #df['allocationBool'] = df[df['spreadPcntA'] < -0.03].loc[:,'spreadPcntA']
-    df['allocationBool'] = 1 #df['spreadPcntA']
-    
-    df = df.set_index('symbol').fillna(0)
-    
-    #df = df[df['bid']   > 0.0001]
-    #df = df[df['offer'] > 0.0001]
-    df = df[df['allocation'] > 1]
-
-    #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-    #    print df.dtypes
-    #    print df
-    try: dfst1 = df.sort_values(by='t1', ascending=False).head(num)
-    except: ''
-    try: dfst2 = df.sort_values(by='t2', ascending=False).head(num)
-    except: ''
-    print df.index
-    #sys.exit()
-
-    #print '==='
-    #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-    #    print df
-    #print '==='
-    try:    df = df.sort_values(by='allocation', ascending=False).head(num)
-    except: ''
-    dfst = df
-
-    dfst['symbol'] = dfst.index
-    dfst['symbolCode'] = map(lambda x: x.split('/')[0], dfst.index)
-    dfst = dfst.set_index('symbolCode')
-
-    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-        #print dfst1
-        #print dfst2
-        #print 'modelPortfolio======'
-        #print dfst
-        #print 'modelPortfolio======/'
-        ''
-    #df['allocation'] = normalizeme(df['allocation'])
-    #df['allocation'] = sigmoidme(df['allocation'])
-    #plt.plot(dfst['allocation'].get_values())
-    #plt.xlabel(dfst.index)
-    #plt.yscale('log')
-    #plt.show()
-    #qgrid.show_grid(df)
-    #grid = qgrid.QGridWidget(df=df)
-    #display(grid)
-
-    #print df.dtypes
-
-    return dfst
-    
-
 
 if __name__ == "__main__":
 
@@ -1711,6 +1723,7 @@ if __name__ == "__main__":
     #%autoreload 2
     from bitmex import *
     cmc = CoinMarketCap()
+    pm  = PortfolioModeler()
     #cmc.getTradableCoins()
     pm  = PortfolioModeler()
 
@@ -1718,7 +1731,6 @@ if __name__ == "__main__":
     except: instruments = 50
 
     if args.listPortfolioModels:
-        pm = PortfolioModeler()
         pm.listModels()
         sys.exit()
     if args.setPortfolioModel:
@@ -1792,7 +1804,7 @@ if __name__ == "__main__":
     
     if args.genPortfolio:
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            dfp = modelPortfolio(num=instruments)
+            dfp = pm.modelPortfolio(num=instruments)
             gpdf = genPortfolio(dfp)
             print dfp
             print gpdf
@@ -1849,7 +1861,7 @@ if __name__ == "__main__":
         df = df.combine_first(df2)
         df = df.fillna(0)
 
-        dfp = modelPortfolio(df=df)
+        dfp = pm.modelPortfolio(df=df)
         #df = genPortfolio(df, volume='Volume')
 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
