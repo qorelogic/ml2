@@ -372,7 +372,7 @@ def apiRequest(baseurl, query, method='GET', noCache=False):
     #backend='memory'
 
     if noCache == False:
-        print '[caching] %s: %s %s' % (method, baseurl, query)
+        print '[caching] %s: %s %s url: %s' % (method, baseurl, query, baseurl+query)
         expire_after = 3600 * 24 #* 365
         # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
         requests_cache.install_cache('scraper_cache', backend=backend, expire_after=expire_after)
