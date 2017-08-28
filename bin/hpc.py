@@ -118,7 +118,7 @@ class HPC:
                 if ptype == 'list':
                     df = df.combine_first(dfi)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000, 'display.max_colwidth', 1000):
-            print df.ix[:, ch.split(' ')].sort('date_created')#.transpose()
+            print df.ix[:, ch.split(' ')].sort_values(by='date_created')#.transpose()
 
         return droplets
 
@@ -296,7 +296,7 @@ class HPC:
             df = p.DataFrame(res).transpose()
             df = df.convert_objects(convert_numeric=True)
             df = df.set_index('DCID')
-            return df.sort().ix[:, 'name'.split()]
+            return df.sort_index().ix[:, 'name'.split()]
         
     def plans(self):
             v = Vultr(self.key_vultr)
@@ -304,7 +304,7 @@ class HPC:
             df = p.DataFrame(res).transpose()
             df = df.convert_objects(convert_numeric=True)
             df['price_per_hour'] = df.ix[:, 'price_per_month'] / 24 / 30
-            return df.sort(['ram','vcpu_count'], ascending=False)
+            return df.sort_values(by=['ram','vcpu_count'], ascending=False)
         
     def os(self):
             v = Vultr(self.key_vultr)
@@ -531,7 +531,7 @@ class HPC:
         df = p.DataFrame(res).transpose()
         df = df.convert_objects(convert_numeric=True)
         df['price_per_hour'] = df.ix[:, 'price_per_month'] / 24 / 30
-        res0 = df.sort(['ram','vcpu_count'], ascending=False)
+        res0 = df.sort_values(by=['ram','vcpu_count'], ascending=False)
         
         columns = 'bandwidth bandwidth_gb disk price_per_month ram vcpu_count price_per_hour'
         a = res0.ix[0, columns.split(' ')]
@@ -555,13 +555,13 @@ class HPC:
             b['price_per_hour']        = res0.ix[:, 'price_per_hour']
             #print
             #print title
-            #print b.sort(sortby)            
+            #print b.sort_values(by=sortby)            
             
             res['available_locations']   = res0.ix[:, 'available_locations']
             res['price_per_hour']        = res0.ix[:, 'price_per_hour']
             #print
             #print title
-            #print res.sort(sortby)
+            #print res.sort_values(by=sortby)
             
             c['available_locations']   = res0.ix[:, 'available_locations']
             c['price_per_hour']        = res0.ix[:, 'price_per_hour']
@@ -570,7 +570,7 @@ class HPC:
                 try:    c.ix[i, 'available_locations'] = c['available_locations'][i].index(int(regionid))
                 except: c.ix[i, 'available_locations'] = -2
             c = c[c['available_locations'] > -1]
-            c = c.sort(sortby)
+            c = c.sort_values(by=sortby)
             if silent == False:
                 print
                 print title
