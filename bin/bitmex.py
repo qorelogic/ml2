@@ -1789,6 +1789,10 @@ if __name__ == "__main__":
             gpdf = genPortfolio(dfp)
             print dfp
             print gpdf
+        #import qgrid
+        #qgrid.show_grid()
+        import dfgui
+        dfgui.show(dfp)
     
     def on_message(ws, message):
         print message
