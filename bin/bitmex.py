@@ -451,6 +451,12 @@ class CoinMarketCap:
             'updated'      : '//tbody/tr/td[7]/text()',
         })
         df = p.DataFrame(xresd)
+        df['volume24h'] = map(lambda x: x.replace(',', '').replace('$', '').replace('*', '').strip(), df['volume_24h'])
+        df['volume24h'] = p.to_numeric(df['volume24h'])
+        df = df.sort_values(by='volume24h')
+        #print df['volume24h']
+        #df['volume24h'].plot()
+        #plt.show()
         df = p.DataFrame(df['source'].drop_duplicates())
         df[coin] = 1
         df = df.set_index('source')
@@ -1666,6 +1672,7 @@ if __name__ == "__main__":
     parser.add_argument("-r03", '--research03', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r04", '--research04', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r05", '--research05', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-r06", '--research06', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -1889,6 +1896,11 @@ if __name__ == "__main__":
     
         ws.run_forever()        
 
+    if args.research06:
+        cmc = CoinMarketCap()
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print cmc.getTradableCoins()
+            print cmc.getCoinsExchanges('bitcoin').transpose()
 
     # portfolio tokenization
     if args.research05:
