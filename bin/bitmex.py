@@ -871,11 +871,11 @@ class PortfolioModeler:
     def sortDataFrame(self, df, field, f, ascending):
         
         sortFlag = '^' if ascending == True else 'v'
-        df = df.loc[:,f]
         if field == None or field == 'index':
             df = df.sort_index()
         else:
             df = df.sort_values(by=field, ascending=False)
+        df = df.loc[:,f]
         df = df.rename(columns={field:('%s %s' % (field, sortFlag))})
         return df
 
