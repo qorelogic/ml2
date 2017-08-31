@@ -439,9 +439,9 @@ class CoinMarketCap:
         return dfc
     
     #@profile
-    def getExchanges(self, coin):
+    def getCoinsExchanges(self, coin):
         url = 'http://coinmarketcap.com/currencies/%s/' % coin
-        #print 'getExchanges: %s' % url
+        #print 'getCoinsExchanges: %s' % url
         xresd = self.xp.xpath2df(url, {
             'source'       : '//tbody/tr/td[2]/a/text()',
             'pair'         : '//tbody/tr/td[3]/a/text()',
@@ -491,7 +491,7 @@ class CoinMarketCap:
             for i, v in enumerate(self.dfc['id']):#[0:20]:
                 print '%s: %s' % (i, v);
                 if i >= self.parseCoinMarketCapSkipTo:
-                    dfxs = dfxs.combine_first(self.getExchanges(v))
+                    dfxs = dfxs.combine_first(self.getCoinsExchanges(v))
             dfxs.to_csv(fname)
         #print dfxs.fillna(0)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -521,7 +521,7 @@ class CoinMarketCap:
                 print p.DataFrame(dfxs.fillna(0).transpose().sum()).sort_values(by=0, ascending=False)
                 #print pdfxs#.transpose()
         #df.index
-        #df = df.combine_first(getExchanges('1337'))
+        #df = df.combine_first(getCoinsExchanges('1337'))
         self.tradableCoins = tradableCoins
 
     #@profile
@@ -611,7 +611,7 @@ class CoinMarketCap:
         df = tradableCoins.combine_first(df)
         """
         for i in df.index[0:10]:
-            dfe = self.getExchanges(i)
+            dfe = self.getCoinsExchanges(i)
             print dfe
             df = df.combine_first(dfe)
         """
