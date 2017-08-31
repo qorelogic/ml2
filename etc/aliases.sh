@@ -220,11 +220,14 @@ alias sc='scrapy'
 	fi
 }
 
+alias .gstl="git stash list "
 .gstshow() {
 	for x in `git stash list | cut -d'{' -f2 | cut -d'}' -f1`; do
 		git stash show -p stash@{$x}; echo '';
 	done
 }
+alias gsl='.gstl'
+alias gss='.gstshow'
 
 alias  .sl="svn log -r 1:HEAD"
 alias  .slv="svn log --verbose -r 1:HEAD"
@@ -262,8 +265,8 @@ alias sg2p="grep -v git | perl -pe 's/^.*?:\d+://g'"
 
 alias .gib="git init --bare | sg2p"
 alias .gi="git init | sg2p"
-alias .gs="git status | sg2p"
-alias .gsl="git status | sg2p | less -SR"
+alias .gstat="git status | sg2p"
+alias .gstatl="git status | sg2p | less -SR"
 alias .gd="git diff --color | sg2p"
 alias .gdb="git diff --color "
 alias .gdl="git diff --color | less -SR"
@@ -333,8 +336,7 @@ grin() {
 alias .grin="grin "
 alias .gra="git commit --amend"
 alias .grc="git rebase --continue"
-alias .gstl="git stash list "
-alias .gc="git commit "; alias gc=".gc "
+alias .gc="git commit "
 alias .gca="git commit --amend"
 alias .gcp="git cherry-pick "
 .gcpbatch() {
