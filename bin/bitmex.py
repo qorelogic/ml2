@@ -725,27 +725,34 @@ class PortfolioModeler:
 
     #@profile
     def genPortfolio(self, df, balance_usd='balance_usd', volume='volume'):
+    
         cmc = CoinMarketCap()
         eth = cmc.getTicker('ETH').set_index('symbol').transpose()
         ethusd = float(eth.loc['price_usd', 'ETH'])
         gasUSD = 2
+        side = 'avg'
     
         try:    df['balance']
         except: df['balance']     = 0
         try:    df['ethUSDTotal']
         except: df['ethUSDTotal'] = 0
     
-        try:    df['volumePerHolder'] = df[volume] / df['holdersCount']
+        try:    df['volumeETH'] = df[volume] * df[side]
         except: ''
-        try:    df['holdersPerVolume'] = df['holdersCount'] / df[volume]
+        try:    df['volumeETHPerHolder'] = df['volumeETH'] / df['holdersCount']
+        except: ''
+    
+        try:    df['volumePerHolder'] = df['volumeETH'] / df['holdersCount']
+        except: ''
+        try:    df['holdersPerVolume'] = df['holdersCount'] / df['volumeETH']
         except: ''
         df['portWeight'] = n.log(df['allocation']) / n.log(10)
         #df['portWeight'] = (df['allocation']) #/ n.log(10)
         df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
         df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
-        side = 'avg'
+    
         df[balance_usd]    = df['balance'] * ethusd * df[side]
-        
+    
         #df['totalBalanceUsd'] = df[balance].sum()
         df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
         df['totalBalanceUsd'] = df['totalBalanceUsd'] + df['ethUSDTotal']
@@ -757,29 +764,32 @@ class PortfolioModeler:
         df['balancePerPort']  = df[balance_usd] / df['portUsd']
         df = df[df['portUnits'] != n.inf]
         return df
-    
+
     #@profile
-    def modelPortfolio(self, num=5, df=None):
+    def modelPortfolio(self, num=5, df=None, allocationModel='t1'):
         
         ed = EtherDelta()
-        
+
+        #import qgrid
+        #from IPython.display import display
         try: import matplotlib.pylab as plt
         except: ''
         from qoreliquid import normalizeme, sigmoidme
         #import qgrid
         #from IPython.display import display
+        #@profile
         if type(df) == type(None):
             """
         cv = "#""PPT/ETH 	917552 	0.01600 	0.01600
-    MCAP/ETH 	52178 	0.01205 	0.02100
-    VERI/ETH 	4817 	0.60000 	0.61000
-    WINGS/ETH 	5661 	0.00031 	0.00160
-    XRL/ETH 	575830 	0.00051 	0.00060
-    DICE/ETH 	13083 	0.01810 	0.02090
-    ...
-    BNB/ETH 	0 	0.00001 	0.00300
-    ETH/USD.DC 	0 		
-    ETH/BTC.DC 	0 	"""
+MCAP/ETH 	52178 	0.01205 	0.02100
+VERI/ETH 	4817 	0.60000 	0.61000
+WINGS/ETH 	5661 	0.00031 	0.00160
+XRL/ETH 	575830 	0.00051 	0.00060
+DICE/ETH 	13083 	0.01810 	0.02090
+...
+BNB/ETH 	0 	0.00001 	0.00300
+ETH/USD.DC 	0 		
+ETH/BTC.DC 	0 	"""
             cv = ed.parseEtherDeltaDump()
             #fp = open('/tmp/etherdelta.volume.tsv', 'r')
             #cv = fp.read(); fp.close()
@@ -811,16 +821,26 @@ class PortfolioModeler:
         df['spreadPcnt'] = df['spread'] / df['avg'] * 100
         #df['spreadPcntA'] = n.log(df['spreadPcnt'])/-df['spreadPcnt'] #1/n.log(df['spreadPcnt']/100)
         df['spreadPcntA'] = 1/(df['spreadPcnt']+1)
-        #df['spreadPcntA'] = normalizeme(df['spreadPcntA']) 
+        #df['spreadPcntA'] = normalizeme(df['spreadPcntA'])
         df['t1'] = (df['volume'] / df['avg'])
         df['t1a'] = df['volume'] / (df['avg'] * n.log(df['spreadPcnt']/100) )
+        df['t1b'] = (df['volume'] * df['avg'])
+    
+        try:    df['volumeETH'] = df['volume'] * df['avg']
+        except Exception as e: print e
+        try:    
+            df['volumePerHolder'] = df['volumeETH'] / df['holdersCount']
+            df['t1c'] = (df['volumePerHolder'])
+        except Exception as e: print e
+    
         df['t2'] = (df['volume'] * df['avg'])
-        df['allocation']     = df['t1']
+    
+        df['allocation']     = df[allocationModel]
         #df['allocationBool'] = df[df['spreadPcntA'] < -0.03].loc[:,'spreadPcntA']
         df['allocationBool'] = 1 #df['spreadPcntA']
         
         df = df.set_index('symbol').fillna(0)
-        
+    
         #df = df[df['bid']   > 0.0001]
         #df = df[df['offer'] > 0.0001]
         df = df[df['allocation'] > 1]
@@ -881,18 +901,20 @@ class PortfolioModeler:
 
     def printPortfolio(self, mdf0, f=None):
         if f == None:
-            f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
         
         print self.sortDataFrame(mdf0, None, f, False)
         print self.sortDataFrame(mdf0, 'allocation', f, False)
+        print self.sortDataFrame(mdf0, 'portUsd', f, False)
         print 'delever'
         print self.sortDataFrame(mdf0, 'balance_usd', f, False)
         print 'lever'
         print self.sortDataFrame(mdf0, 'balanceETHDiff', f, False)
-        print 'lever'
+        print 'lever2'
         print self.sortDataFrame(mdf0, 'unitsDiff', f, False)
         print self.sortDataFrame(mdf0, 'spreadPcnt', f, False)
+        print self.sortDataFrame(mdf0, 'volume', f, False)
+        print self.sortDataFrame(mdf0, 'volumeETH', f, False)
         print self.sortDataFrame(mdf0, 'volumePerHolder', f, False)
         print 'delever2'
         print self.sortDataFrame(mdf0, 'balanceByUnitsDiff', f, False)
@@ -1655,6 +1677,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print dfinfo
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
+            f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance balance_usd spreadPcnt balanceETHDiff unitsDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
             pm.printPortfolio(mdf0, f)
             print '---'
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
