@@ -1927,7 +1927,7 @@ if __name__ == "__main__":
             getAdressInfoEthplorer([''], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
 
     if args.research03:
-        df1 = getTicker('PPT').set_index('symbol').transpose()
+        df1 = cmc.getTicker('PPT').set_index('symbol').transpose()
         print df1
     
     if args.genPortfolio:
