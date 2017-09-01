@@ -766,7 +766,7 @@ class PortfolioModeler:
         return df
 
     #@profile
-    def modelPortfolio(self, num=5, df=None, allocationModel='t1'):
+    def modelPortfolio(self, num=5, df=None, allocationModel='t1', ethusd=None):
         
         ed = EtherDelta()
 
@@ -827,6 +827,10 @@ ETH/BTC.DC 	0 	"""
         df['t1b'] = (df['volume'] * df['avg'])
     
         try:    df['volumeETH'] = df['volume'] * df['avg']
+        except Exception as e: print e
+        try:
+            if ethusd:
+                df['volumeUSD'] = df['volumeETH'] * ethusd
         except Exception as e: print e
         try:    
             df['volumePerHolder'] = df['volumeETH'] / df['holdersCount']
@@ -1442,7 +1446,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
     eth = cmc.getTicker('ETH').set_index('symbol').transpose()
     ethusd = float(eth.loc['price_usd', 'ETH'])
     mdf0 = p.DataFrame([])
-    dfp = pm.modelPortfolio(num=instruments)
+    dfp = pm.modelPortfolio(num=instruments, ethusd=ethusd)
     mdf0 = mdf0.combine_first(dfp)
     addressInfos = p.DataFrame()
     dfinfo = p.DataFrame([])
@@ -1576,7 +1580,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                     #continue
                 df.loc['price_usd', 'tokenInfo'] = avg #* ethusd
                 #df.loc['price', 'tokenInfo'] = avg
-                dfp = pm.modelPortfolio(num=instruments)
+                dfp = pm.modelPortfolio(num=instruments, ethusd=ethusd)
                 #df = df.combine_first(dfp)
                 #df = pm.genPortfolio(df)
                 with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1677,7 +1681,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print dfinfo
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance balance_usd spreadPcnt balanceETHDiff unitsDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
+            f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance balance_usd spreadPcnt balanceETHDiff unitsDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
             pm.printPortfolio(mdf0, f)
             print '---'
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
@@ -1703,6 +1707,7 @@ if __name__ == "__main__":
     parser.add_argument("-v", '--verbose', help="turn on verbosity")
     parser.add_argument("-lm", '--listPortfolioModels', help="", action="store_true")
     parser.add_argument("-pm", '--setPortfolioModel', help="")
+    parser.add_argument("-cu", '--currency', help="currency")
     parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
     parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
     parser.add_argument("-gp", '--genPortfolio', help="parseCoinMrketCap skipTo", action="store_true")
@@ -1717,7 +1722,7 @@ if __name__ == "__main__":
     parser.add_argument("-r03", '--research03', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r04", '--research04', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r05", '--research05', help="parseCoinMrketCap skipTo", action="store_true")
-    parser.add_argument("-r06", '--research06', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-r06", '--research06', help="test 06", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -1945,7 +1950,15 @@ if __name__ == "__main__":
         cmc = CoinMarketCap()
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             #print cmc.getTradableCoins()
-            print cmc.getCoinsExchanges('bitcoin').transpose()
+            if args.currency:
+                df = cmc.tickers()
+                df['symbol'] = df.index
+                print df
+                print df[df['symbol'] == args.currency]
+                print cmc.getCoinsExchanges(args.currency).transpose()
+            else:
+                print cmc.getCoinsExchanges('bitcoin').transpose()
+            
 
     # portfolio tokenization
     if args.research05:
