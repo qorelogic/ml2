@@ -651,6 +651,59 @@ class CoinMarketCap:
         #print res.transpose()
         return res
 
+    def getCoinsOnExchange(self, exchange='EtherDelta', cache=True):
+        self.tokensOnOtherExchanges(cache=cache)
+        df = p.read_csv('/mldev/bin/data/cache/coins/coinsExchanges.%s.csv'%exchange, index_col=0)            
+        dff = self.tickers().loc[:,['id']]
+
+        dff['symbol'] = dff.index
+        dff = dff.set_index('id')
+        dff = dff.combine_first(df)
+        dff = dff[dff['EtherDelta'] > 0]
+        dff['id'] = dff.index
+        dff = dff.set_index('symbol')
+        return dff.loc[:, 'sum id'.split(' ')].sort_values(by='sum', ascending=True)
+
+    def tokensOnOtherExchanges(self, cache=False):
+        import pandas as p
+        # tokens on exchanges
+        #from bitmex import *
+        fname = '/mldev/bin/data/cache/coins/coinsExchanges.csv'
+        li = []
+        #di = {}
+        
+        if cache:
+            #import qgrid
+            dff = p.read_csv(fname, index_col=0)
+            #qgrid.show_grid(df)
+        else:
+            dff = p.DataFrame()
+            tc = self.getTradableCoins()
+            for i in list(tc['id']):#[0:5]:
+                print i
+                lii = self.getCoinsExchanges(i).transpose().to_dict()
+                #print lii
+                dff = dff.combine_first(p.DataFrame(lii))
+                #li.append(lii)
+                #di.update(self.getCoinsExchanges(i).transpose().sum().to_dict())
+            #print di
+            #df = p.DataFrame(di, index=[0]).transpose()        
+            dff = cacheTo(dff, fname)
+        #df = p.DataFrame(li).transpose()
+        def filterByExchange(exchange, dff):
+            cc = 'sum %s' % exchange
+            dfe = dff.transpose().loc[:, cc.split(' ')]
+            dfe = dfe[dfe['EtherDelta'] > 0].sort_values(by='sum', ascending=True)#.transpose()
+            dfe.to_csv('/mldev/bin/data/cache/coins/coinsExchanges.%s.csv'%exchange)
+            return dfe
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):                
+            #print cc
+            #print 'coins: %s'     % (len(list(dff.columns))-1)
+            #print 'exchanges: %s' % (len(list(dff.index))-1)
+            #print filterByExchange('EtherDelta', dff)
+            #print dff.transpose()
+            #print df.transpose()
+            ''
 
 class PortfolioModeler:
     
@@ -1973,62 +2026,7 @@ if __name__ == "__main__":
         #    #print cmc.getTradableCoins()
         #    print cmc.getCoinsExchanges('bitcoin').transpose()
             
-        def tokensOnOtherExchanges(cache=False):
-            import pandas as p
-            # tokens on exchanges
-            #from bitmex import *
-            fname = '/mldev/bin/data/cache/coins/coinsExchanges.csv'
-            cmc = CoinMarketCap()
-            li = []
-            #di = {}
-            
-            if cache:
-                #import qgrid
-                dff = p.read_csv(fname, index_col=0)
-                #qgrid.show_grid(df)
-            else:
-                dff = p.DataFrame()
-                tc = cmc.getTradableCoins()
-                for i in list(tc['id']):#[0:5]:
-                    print i
-                    lii = cmc.getCoinsExchanges(i).transpose().to_dict()
-                    #print lii
-                    dff = dff.combine_first(p.DataFrame(lii))
-                    #li.append(lii)
-                    #di.update(cmc.getCoinsExchanges(i).transpose().sum().to_dict())
-                #print di
-                #df = p.DataFrame(di, index=[0]).transpose()        
-                dff = cacheTo(dff, fname)
-            #df = p.DataFrame(li).transpose()
-            def filterByExchange(exchange, dff):
-                cc = 'sum %s' % exchange
-                dfe = dff.transpose().loc[:, cc.split(' ')]
-                dfe = dfe[dfe['EtherDelta'] > 0].sort_values(by='sum', ascending=True)#.transpose()
-                dfe.to_csv('/mldev/bin/data/cache/coins/coinsExchanges.%s.csv'%exchange)
-                return dfe
-            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):                
-                #print cc
-                #print 'coins: %s'     % (len(list(dff.columns))-1)
-                #print 'exchanges: %s' % (len(list(dff.index))-1)
-                #print filterByExchange('EtherDelta', dff)
-                #print dff.transpose()
-                #print df.transpose()
-                ''
-        
-        def getCoinsOnExchange(exchange='EtherDelta'):
-            tokensOnOtherExchanges(cache=args.cache)
-            df = p.read_csv('/mldev/bin/data/cache/coins/coinsExchanges.%s.csv'%exchange, index_col=0)            
-            dff = cmc.tickers().loc[:,['id']]
-
-            dff['symbol'] = dff.index
-            dff = dff.set_index('id')
-            dff = dff.combine_first(df)
-            dff = dff[dff['EtherDelta'] > 0]
-            dff['id'] = dff.index
-            dff = dff.set_index('symbol')
-            return dff.loc[:, 'sum id'.split(' ')].sort_values(by='sum', ascending=True)
-        
-        print getCoinsOnExchange(exchange='EtherDelta')
+        print cmc.getCoinsOnExchange(exchange='EtherDelta', cache=args.cache)
         
     # portfolio tokenization
     if args.research05:
