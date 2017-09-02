@@ -715,6 +715,7 @@ class PortfolioModeler:
             3: 'Q001',
         }
         self.model   = None
+        self.cmc = CoinMarketCap()
     
     def listModels(self):
         for i in self.models.keys():
@@ -805,6 +806,7 @@ class PortfolioModeler:
         df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
     
         df[balance_usd]    = df['balance'] * ethusd * df[side]
+        df['balance_eth']  = df['balance'] * df[side]
     
         #df['totalBalanceUsd'] = df[balance].sum()
         df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
@@ -869,6 +871,14 @@ ETH/BTC.DC 	0 	"""
         try:    df['symbol']
         except: df['symbol'] = df['MarketName']
 
+        df = df.set_index('symbol').fillna(0)
+        df['symbol'] = df.index
+        df['symbolCode'] = map(lambda x: x.split('/')[0], df.index)
+        df = df.set_index('symbolCode')
+    
+        # coins on exchanges ex. etherdelta
+        df = df.combine_first(self.cmc.getCoinsOnExchange(exchange='EtherDelta', cache=True))
+
         df['avg'] = (df['bid'] + df['offer']) / 2
         df['spread'] = df['offer'] - df['bid']
         df['spreadPcnt'] = df['spread'] / df['avg'] * 100
@@ -896,8 +906,6 @@ ETH/BTC.DC 	0 	"""
         #df['allocationBool'] = df[df['spreadPcntA'] < -0.03].loc[:,'spreadPcntA']
         df['allocationBool'] = 1 #df['spreadPcntA']
         
-        df = df.set_index('symbol').fillna(0)
-    
         #df = df[df['bid']   > 0.0001]
         #df = df[df['offer'] > 0.0001]
         df = df[df['allocation'] > 1]
@@ -909,7 +917,7 @@ ETH/BTC.DC 	0 	"""
         except: ''
         try: dfst2 = df.sort_values(by='t2', ascending=False).head(num)
         except: ''
-        print df.index
+        #print df.index
         #sys.exit()
     
         #print '==='
@@ -918,12 +926,9 @@ ETH/BTC.DC 	0 	"""
         #print '==='
         try:    df = df.sort_values(by='allocation', ascending=False).head(num)
         except: ''
+        
         dfst = df
-    
-        dfst['symbol'] = dfst.index
-        dfst['symbolCode'] = map(lambda x: x.split('/')[0], dfst.index)
-        dfst = dfst.set_index('symbolCode')
-    
+        
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
             #print dfst1
             #print dfst2
@@ -1734,7 +1739,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print dfinfo
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance balance_usd spreadPcnt balanceETHDiff unitsDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
+            f = 'id totalBalanceUsd 24h_volume_usd allocation sum avg balance balance_usd balance_eth portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance balance_usd spreadPcnt balanceETHDiff unitsDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
             pm.printPortfolio(mdf0, f)
             print '---'
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
@@ -1776,6 +1781,7 @@ if __name__ == "__main__":
     parser.add_argument("-r04", '--research04', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r05", '--research05', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r06", '--research06', help="test 06", action="store_true")
+    parser.add_argument("-r07", '--research07', help="test 07", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -2008,7 +2014,6 @@ if __name__ == "__main__":
         return dff
 
     if args.research06:
-        """
         cmc = CoinMarketCap()
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             #print cmc.getTradableCoins()
@@ -2020,13 +2025,11 @@ if __name__ == "__main__":
                 print cmc.getCoinsExchanges(args.currency).transpose()
             else:
                 print cmc.getCoinsExchanges('bitcoin').transpose()
-        """
-        #cmc = CoinMarketCap()
-        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        #    #print cmc.getTradableCoins()
-        #    print cmc.getCoinsExchanges('bitcoin').transpose()
-            
-        print cmc.getCoinsOnExchange(exchange='EtherDelta', cache=args.cache)
+
+    if args.research07:
+        df = cmc.getCoinsOnExchange(exchange='EtherDelta', cache=args.cache)
+        print df
+        print df.sort_index() #.sort_values(by='')
         
     # portfolio tokenization
     if args.research05:
