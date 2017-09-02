@@ -821,7 +821,7 @@ class PortfolioModeler:
         return df
 
     #@profile
-    def modelPortfolio(self, num=5, df=None, allocationModel='t1', ethusd=None):
+    def modelPortfolio(self, num=5, df=None, allocationModel='t1e', ethusd=None):
         
         ed = EtherDelta()
 
@@ -897,9 +897,12 @@ ETH/BTC.DC 	0 	"""
         except Exception as e: print e
         try:    
             df['volumePerHolder'] = df['volumeETH'] / df['holdersCount']
+            df['volumeETHPerHolder'] = df['volumeETH'] / df['holdersCount']
             df['t1c'] = (df['volumePerHolder'])
+            df['t1d'] = (df['volumeETHPerHolder'] / (df['avg'] * df['sum']))
         except Exception as e: print e
     
+        df['t1e'] = (df['volumeETH'] / (df['avg'] * n.power(df['sum'], 4)))
         df['t2'] = (df['volume'] * df['avg'])
     
         df['allocation']     = df[allocationModel]
@@ -974,6 +977,8 @@ ETH/BTC.DC 	0 	"""
         print self.sortDataFrame(mdf0, 'balanceETHDiff', f, False)
         print 'lever2'
         print self.sortDataFrame(mdf0, 'unitsDiff', f, False)
+        print 'lever3'
+        print self.sortDataFrame(mdf0, 'sum', f, True)
         print self.sortDataFrame(mdf0, 'spreadPcnt', f, False)
         print self.sortDataFrame(mdf0, 'volume', f, False)
         print self.sortDataFrame(mdf0, 'volumeETH', f, False)
@@ -1739,7 +1744,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print dfinfo
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = 'id totalBalanceUsd 24h_volume_usd allocation sum avg balance balance_usd balance_eth portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance balance_usd spreadPcnt balanceETHDiff unitsDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
+            f = 'id totalBalanceUsd 24h_volume_usd allocation sum avg balance balance_eth balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum avg balance balance_usd spreadPcnt balanceETHDiff unitsDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
             pm.printPortfolio(mdf0, f)
             print '---'
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
