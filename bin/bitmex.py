@@ -659,7 +659,6 @@ class CoinMarketCap:
         dff = dff.set_index('id')
         try:
             df = p.read_csv('/mldev/bin/data/cache/coins/coinsExchanges.%s.csv'%exchange, index_col=0)
-            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             dff = dff.combine_first(df)
             dff = dff[dff[exchange] > 0]
         except: ''
