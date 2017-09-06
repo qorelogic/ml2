@@ -993,6 +993,29 @@ ETH/BTC.DC 	0 	"""
         #print self.sortDataFrame(pdf, 'unitsDiffPerBalance', f1, True)
         print self.sortDataFrame(mdf0, 't1', f, True)
 
+        #import dfgui
+        #dfgui.show(mdf0)
+
+        ev = Eveningstar()
+        """        
+        #df.loc[2, :] = p.Series(se.to_dict())
+        ev.addToPortFolio('tenx', 23.052199999999999, 0)
+        #df.loc[3, :] = p.Series({'Quantity': 23.052199999999999, 'Cost Basis Each (USD)': 0, 'Asset Id': 'tenx'})
+        """
+        for i in mdf0.index:
+            balance = mdf0.loc[i, 'balance']
+            idn = mdf0.loc[i, 'id']
+            try:
+                di = {'Quantity': balance, 'Asset Id':idn, 'Cost Basis Each (USD)':0}
+                if balance > 0 and idn != 0:
+                    #print di
+                    ev.addToPortFolio(di['Asset Id'], di['Quantity'], di['Cost Basis Each (USD)'])
+            except: ''
+        ev.exportPortfolio()
+        df = p.DataFrame(list(mdf0.index))
+        df.to_csv('/tmp/symbols.txt')
+        print ev.df
+
 class TokenMarket:
     
     def  __init__(self):
@@ -1497,6 +1520,22 @@ class EtherDelta:
         fp.write('%s\n' % tojson)
         fp.close()
 
+class Eveningstar:
+    
+    #https://eveningstar.io/my-portfolio/
+    def __init__(self):
+        self.fname = '/tmp/coins-eveningstar-export.csv'
+        try:    self.df = p.read_csv(self.fname)
+        except: self.df = p.DataFrame([])
+    
+    def exportPortfolio(self):
+        try:    self.df.set_index('Asset Id').to_csv(self.fname, doublequote=True, quotechar='"', quoting=True, line_terminator='\r\n')
+        except: ''            
+
+    def addToPortFolio(self, assetId, quantity, costBasis):
+        self.df.loc[len(self.df.index)+1, :] = p.Series({'Quantity': quantity, 'Cost Basis Each (USD)': costBasis, 'Asset Id': assetId})
+        return self.df
+
 #@profile
 def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, initialInvestment=0):
     
@@ -1787,6 +1826,8 @@ if __name__ == "__main__":
     parser.add_argument("-r05", '--research05', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r06", '--research06', help="test 06", action="store_true")
     parser.add_argument("-r07", '--research07', help="test 07", action="store_true")
+    parser.add_argument("-r08", '--research08', help="test 08", action="store_true")
+    parser.add_argument("-r09", '--research09', help="test 09", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -2036,6 +2077,77 @@ if __name__ == "__main__":
         print df
         print df.sort_index() #.sort_values(by='')
         
+    if args.research08:
+        from qore import XPath
+        ethaddr = args.ethAddress
+        url = 'https://etherscan.io/tokentxns?a=%s' % ethaddr
+        #url = 'https://etherscan.io/tokentxns?a=%s&p=3' % ethaddr
+        xp = XPath()
+        xresd = xp.xpath2df(url, {
+            'name' : '/html/body/div[1]/div[4]/div[2]/div/div/div/table//tr/td[7]/a/text()',
+            'bal'  : '/html/body/div[1]/div[4]/div[2]/div/div/div/table//tr/td[6]/text()',
+            #'href'       : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[1]/a/@href',
+            #'status'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[3]/span/text()',
+            #'symbol'     : '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[5]/text()',
+            #'description': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[6]/text()',
+            #'hot': '//*[@id="table-all-assets-wrapper"]/table/tbody/tr/td[4]/div[2]/text()',        
+        })#, verbose=True)
+        #print xresd
+        for i in xresd.keys(): print 'len %s: %s' % (i, len(xresd[i]))
+        #print p.DataFrame(xresd)
+
+        import numba
+        #@profile
+        #@numba.jit(nopython=True)
+        @numba
+        def xresdFix(xresd):
+            xresdlen = {}
+            for j in xresd: xresdlen[j] = len(xresd[j])
+            #xresdlen = [len(xresd[j]) for j in xresd]
+            #print xresdlen
+            xresdlen = p.DataFrame(xresdlen, index=['len'])
+            xresdlen = xresdlen.transpose()
+            xresdlen['max'] = n.max(xresdlen['len'])
+            xresdlen['min'] = n.min(xresdlen['len'])
+            xresdlen['diff'] = xresdlen['max'] - xresdlen['len']
+            xresdlen['diffMin'] = n.abs(xresdlen['min'] - xresdlen['len'])
+            #print xresdlen
+            #print xresd
+            for j in xrange(len(xresdlen['diff'])):
+                try:
+                    #print '%s %s' % (j, xresdlen['diff'][j])
+                    if xresdlen['diff'][j] > 0:
+                        print j
+                        #xresdlen = xresdlen.drop(xresdlen.index[j])
+                        xresd.pop(xresdlen.index[j])
+                        #print p.DataFrame(xresd)
+                except:
+                    ''
+            return xresd
+            
+        xresd = xresdFix(xresd)
+        
+        for i in xresd.keys(): print 'len %s: %s' % (i, len(xresd[i]))
+                
+
+        """
+        Bought MSP at 0.06, sold at 0.25
+        Bought BAT at 0.08, sold at 0.25
+        Bought DNT at 0.017, sold at 0.147
+        """
+
+    if args.research09:
+        
+        ev = Eveningstar()        
+        #df.loc[2, :] = p.Series(se.to_dict())
+        ev.addToPortFolio('tenx', 23.052199999999999, 0)
+        ev.addToPortFolio('tenx', 23.052199999999999, 0)
+        ev.addToPortFolio('tenx', 23.052199999999999, 0)
+        ev.addToPortFolio('tenx', 23.052199999999999, 0)
+        #df.loc[3, :] = p.Series({'Quantity': 23.052199999999999, 'Cost Basis Each (USD)': 0, 'Asset Id': 'tenx'})
+        ev.exportPortfolio()
+        print ev.df
+
     # portfolio tokenization
     if args.research05:
         portfolioTokenization()
