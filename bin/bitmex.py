@@ -993,6 +993,8 @@ ETH/BTC.DC 	0 	"""
         print self.sortDataFrame(mdf0, 'portUsd', f, False)
         print 'delever'
         print self.sortDataFrame(mdf0, 'balance_usd', f, False)
+        print 'delever2'
+        print self.sortDataFrame(mdf0, 'balancePortDiffUSD', f, False)
         print 'lever'
         print self.sortDataFrame(mdf0, 'balanceETHDiff', f, False)
         print 'lever2'
