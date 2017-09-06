@@ -130,6 +130,7 @@ alias sc='scrapy'
 		goption=""
 	fi
 	git push $goption origin $currentBranch:$currentBranch
+	git push $goption --tags origin
 }
 .gpull() {
 	currentBranch="`git branch | grep '\*' | cut -d':' -f3 | cut -c 3-`"                                                       
