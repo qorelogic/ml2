@@ -2160,6 +2160,7 @@ if __name__ == "__main__":
 
     if args.research09:
         
+        """
         ev = Eveningstar()        
         #df.loc[2, :] = p.Series(se.to_dict())
         ev.addToPortFolio('tenx', 23.052199999999999, 0)
@@ -2169,6 +2170,13 @@ if __name__ == "__main__":
         #df.loc[3, :] = p.Series({'Quantity': 23.052199999999999, 'Cost Basis Each (USD)': 0, 'Asset Id': 'tenx'})
         ev.exportPortfolio()
         print ev.df
+        """
+        
+        #df = apiRequest('https://www.coinexchange.io/api/v1', '/getmarkets')
+        df = apiRequest('https://www.coinexchange.io/api/v1', '/getmarketsummaries')
+
+        print p.DataFrame(df)
+        print p.DataFrame(df['result'])
 
     # portfolio tokenization
     if args.research05:
