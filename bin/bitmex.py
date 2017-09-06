@@ -657,8 +657,11 @@ class CoinMarketCap:
         dff = self.tickers().loc[:,['id']]
         dff['symbol'] = dff.index
         dff = dff.set_index('id')
-        dff = dff.combine_first(df)
-        dff = dff[dff['EtherDelta'] > 0]
+        try:
+            df = p.read_csv('/mldev/bin/data/cache/coins/coinsExchanges.%s.csv'%exchange, index_col=0)
+            dff = dff.combine_first(df)
+            dff = dff[dff[exchange] > 0]
+        except: ''
         dff['id'] = dff.index
         dff = dff.set_index('symbol')
         return dff.loc[:, 'sum id'.split(' ')].sort_values(by='sum', ascending=True)
@@ -813,6 +816,7 @@ class PortfolioModeler:
         df['portWeight'] = n.log(df['allocation']) / n.log(10)
         #df['portWeight'] = (df['allocation']) #/ n.log(10)
         df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
+        df['portWeight'] = map(lambda x: 0 if n.abs(x) == n.inf else x, df['portWeight'])
         df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
     
         df[balance_usd]    = df['balance'] * ethusd * df[side]
@@ -831,7 +835,7 @@ class PortfolioModeler:
         return df
 
     #@profile
-    def modelPortfolio(self, num=5, df=None, allocationModel='t1e', ethusd=None):
+    def modelPortfolio(self, num=5, df=None, allocationModel='t1b', ethusd=None):
         
         ed = EtherDelta()
 
@@ -912,7 +916,7 @@ ETH/BTC.DC 	0 	"""
             df['t1d'] = (df['volumeETHPerHolder'] / (df['avg'] * df['sum']))
         except Exception as e: print e
     
-        df['t1e'] = (df['volumeETH'] / (df['avg'] * n.power(df['sum'], 4)))
+        df['t1e'] = (df['volumeETH'] / (df['avg'] * n.power(df['sum'], 4*3)))
         df['t2'] = (df['volume'] * df['avg'])
     
         df['allocation']     = df[allocationModel]
@@ -921,14 +925,14 @@ ETH/BTC.DC 	0 	"""
         
         #df = df[df['bid']   > 0.0001]
         #df = df[df['offer'] > 0.0001]
-        df = df[df['allocation'] > 1]
-    
+        #df = df[df['allocation'] > 1]
+        
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         #    print df.dtypes
         #    print df
-        try: dfst1 = df.sort_values(by='t1', ascending=False).head(num)
+        try: dfst1 = df.sort_values(by='t1', ascending=False)#.head(num)
         except: ''
-        try: dfst2 = df.sort_values(by='t2', ascending=False).head(num)
+        try: dfst2 = df.sort_values(by='t2', ascending=False)#.head(num)
         except: ''
         #print df.index
         #sys.exit()
@@ -937,7 +941,7 @@ ETH/BTC.DC 	0 	"""
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         #    print df
         #print '==='
-        try:    df = df.sort_values(by='allocation', ascending=False).head(num)
+        try:    df = df.sort_values(by='allocation', ascending=False)#.head(num)
         except: ''
         
         dfst = df
@@ -983,6 +987,8 @@ ETH/BTC.DC 	0 	"""
         print self.sortDataFrame(mdf0, 'portUsd', f, False)
         print 'delever'
         print self.sortDataFrame(mdf0, 'balance_usd', f, False)
+        print 'delever2'
+        print self.sortDataFrame(mdf0, 'balancePortDiffUSD', f, False)
         print 'lever'
         print self.sortDataFrame(mdf0, 'balanceETHDiff', f, False)
         print 'lever2'
