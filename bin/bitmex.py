@@ -657,8 +657,12 @@ class CoinMarketCap:
         dff = self.tickers().loc[:,['id']]
         dff['symbol'] = dff.index
         dff = dff.set_index('id')
-        dff = dff.combine_first(df)
-        dff = dff[dff['EtherDelta'] > 0]
+        try:
+            df = p.read_csv('/mldev/bin/data/cache/coins/coinsExchanges.%s.csv'%exchange, index_col=0)
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            dff = dff.combine_first(df)
+            dff = dff[dff[exchange] > 0]
+        except: ''
         dff['id'] = dff.index
         dff = dff.set_index('symbol')
         return dff.loc[:, 'sum id'.split(' ')].sort_values(by='sum', ascending=True)
