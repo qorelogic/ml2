@@ -813,25 +813,43 @@ class PortfolioModeler:
         except: ''
         try:    df['holdersPerVolume'] = df['holdersCount'] / df['volumeETH']
         except: ''
-        df['portWeight'] = n.log(df['allocation']) / n.log(10)
-        #df['portWeight'] = (df['allocation']) #/ n.log(10)
-        df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
-        df['portWeight'] = map(lambda x: 0 if n.abs(x) == n.inf else x, df['portWeight'])
-        df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
-    
+
         df[balance_usd]    = df['balance'] * ethusd * df[side]
         df['balance_eth']  = df['balance'] * df[side]
     
         #df['totalBalanceUsd'] = df[balance].sum()
         df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
         df['totalBalanceUsd'] = df['totalBalanceUsd'] + df['ethUSDTotal']
+        totalBalanceUsd = n.mean(df['totalBalanceUsd'])
         
+        df['portWeight'] = n.log(df['allocation']) / n.log(10)
+        #df['portWeight'] = (df['allocation']) #/ n.log(10)
+        
+        dfp = df
+        dfp = dfp[dfp['balance'] > 0]
+        
+        df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
+        #df['totalBalanceUsd'] = totalBalanceUsd
+        
+        df['portWeight'] = map(lambda x: 0 if n.abs(x) == n.inf else x, df['portWeight'])
+        df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
+
         df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
         df['portUsd']       = df['portUsd'] * df['allocationBool']
         df['balancePortDiffUSD'] = df[balance_usd] - df['portUsd']
         df['portUnits']       = df['portUsd'] / ethusd / df[side]
         df['balancePerPort']  = df[balance_usd] / df['portUsd']
         df = df[df['portUnits'] != n.inf]
+        
+        #df = df[n.abs(df['balance']) != 0]
+
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print df.dtypes
+            #print df
+            #print
+            #print dfp
+            ''
+
         return df
 
     #@profile
@@ -922,9 +940,11 @@ ETH/BTC.DC 	0 	"""
         except Exception as e: print e
     
         df['t1e'] = (df['volumeETH'] / (df['avg'] * n.power(df['sum'], 4*3)))
+        df['t1f'] = ((df['volumeETH'] * df['mvp']) / (df['avg'] * n.power(df['sum'], 4*3)))
         df['t2'] = (df['volume'] * df['avg'])
     
         df['allocation']     = df[allocationModel]
+        df['allocation']     = df['allocation'].fillna(0)
         #df['allocationBool'] = df[df['spreadPcntA'] < -0.03].loc[:,'spreadPcntA']
         df['allocationBool'] = 1 #df['spreadPcntA']
         
@@ -986,6 +1006,8 @@ ETH/BTC.DC 	0 	"""
     def printPortfolio(self, mdf0, f=None):
         if f == None:
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
+        
+        mdf0 = mdf0[n.abs(mdf0['balance']) != 0]
         
         print
         print self.sortDataFrame(mdf0, None, f, False)
