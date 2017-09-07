@@ -940,7 +940,7 @@ ETH/BTC.DC 	0 	"""
         except Exception as e: print e
     
         df['t1e'] = (df['volumeETH'] / (df['avg'] * n.power(df['sum'], 4*3)))
-        df['t1f'] = ((df['volumeETH'] * df['mvp']) / (df['avg'] * n.power(df['sum'], 4*3)))
+        df['t1f'] = ((df['volumeETH'] * df['mvp']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t2'] = (df['volume'] * df['avg'])
     
         df['allocation']     = df[allocationModel]
