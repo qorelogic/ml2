@@ -727,6 +727,8 @@ class PortfolioModeler:
             2: 'Q001a',
             3: 'Q001',
         }
+        li = 't1 t1a t1b t1c t1d t1e t1f t2'.split(' ')
+        self.models.update(dict(zip(range(4,len(li)+4), li)))
         self.model   = None
         self.cmc = CoinMarketCap()
     
@@ -853,10 +855,12 @@ class PortfolioModeler:
         return df
 
     #@profile
-    def modelPortfolio(self, num=5, df=None, allocationModel='t1b', ethusd=None):
+    def modelPortfolio(self, num=5, df=None, allocationModel=None, ethusd=None):
         
         ed = EtherDelta()
 
+        if allocationModel == None:
+            allocationModel='t1b'
         #import qgrid
         #from IPython.display import display
         try: import matplotlib.pylab as plt
@@ -942,6 +946,13 @@ ETH/BTC.DC 	0 	"""
         df['t1e'] = (df['volumeETH'] / (df['avg'] * n.power(df['sum'], 4*3)))
         df['t1f'] = ((df['volumeETH'] * df['mvp']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t2'] = (df['volume'] * df['avg'])
+
+        try:    df[allocationModel]
+        except Exception as e: 
+            print 'No allocationModel[%s] found.' % e
+            print 'Available models:'
+            print self.listModels()
+            sys.exit()
     
         df['allocation']     = df[allocationModel]
         df['allocation']     = df['allocation'].fillna(0)
@@ -1610,7 +1621,7 @@ class Eveningstar:
         return self.df
 
 #@profile
-def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, initialInvestment=0):
+def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, initialInvestment=0, model=None, allocationModel=None):
     
     if type(ethaddr) == type(''):
         ethaddr = ethaddr.split(' ')
@@ -1621,7 +1632,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
     eth = cmc.getTicker('ETH').set_index('symbol').transpose()
     ethusd = float(eth.loc['price_usd', 'ETH'])
     mdf0 = p.DataFrame([])
-    dfp = pm.modelPortfolio(num=instruments, ethusd=ethusd)
+    dfp = pm.modelPortfolio(num=instruments, ethusd=ethusd, allocationModel=allocationModel)
     mdf0 = mdf0.combine_first(dfp)
     addressInfos = p.DataFrame()
     dfinfo = p.DataFrame([])
@@ -1882,6 +1893,7 @@ if __name__ == "__main__":
     parser.add_argument("-v", '--verbose', help="turn on verbosity")
     parser.add_argument("-lm", '--listPortfolioModels', help="", action="store_true")
     parser.add_argument("-pm", '--setPortfolioModel', help="")
+    parser.add_argument("-model", '--allocationModel', help="")
     parser.add_argument("-cu", '--currency', help="currency")
     parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
     parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
@@ -1946,6 +1958,9 @@ if __name__ == "__main__":
     try:    instruments = int(args.instruments)
     except: instruments = 50
 
+    try:    allocationModel = args.allocationModel
+    except: allocationModel = None
+
     if args.listPortfolioModels:
         pm.listModels()
         sys.exit()
@@ -1988,7 +2003,7 @@ if __name__ == "__main__":
         # other
         initialInvestment = 0
         if args.ethAccount == '0':
-            getAdressInfoEthplorer([args.ethAddress.split(' ')], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+            getAdressInfoEthplorer([args.ethAddress.split(' ')], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
 
         #ethaddress1 = '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae'
         usdars = 16.72
@@ -2004,21 +2019,21 @@ if __name__ == "__main__":
         except: ethAccount = args.ethAccount
         
         if type(ethAccount) == type(''):
-            getAdressInfoEthplorer(ethAccount.split(' '), args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+            getAdressInfoEthplorer(ethAccount.split(' '), args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
         else:
             if args.ethAccount == '1':
-                getAdressInfoEthplorer([eth1_2, eth1_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+                getAdressInfoEthplorer([eth1_2, eth1_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
             
             usdtwd = 30.41
             initialInvestment = 40000.0 / usdtwd
             if args.ethAccount == '2':
-                getAdressInfoEthplorer(['', eth2_2, eth2_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+                getAdressInfoEthplorer(['', eth2_2, eth2_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
             #print getTicker('bitcoin')    
     
             # ??? etherdelta
             #initialInvestment = 1
             if args.ethAccount == '3':
-                getAdressInfoEthplorer([''], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+                getAdressInfoEthplorer([''], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
 
     if args.research03:
         df1 = cmc.getTicker('PPT').set_index('symbol').transpose()
