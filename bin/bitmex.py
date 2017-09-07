@@ -894,9 +894,8 @@ ETH/BTC.DC 	0 	"""
         df = df.combine_first(self.cmc.getCoinsOnExchange(exchange='EtherDelta', cache=True))
         
         # minimum viable product
-        sr = p.Series({'CDT':1, 'VERI':1})
         mvp = p.DataFrame()
-        mvp['mvp'] = sr
+        mvp['mvp'] = p.Series({'CDT':1, 'VERI':1})
         df = df.combine_first(mvp)
 
         df['avg'] = (df['bid'] + df['offer']) / 2
