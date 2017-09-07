@@ -1010,42 +1010,60 @@ ETH/BTC.DC 	0 	"""
         mdf0 = mdf0[n.abs(mdf0['balance']) != 0]
         
         print
+        print
         print self.sortDataFrame(mdf0, None, f, False)
+        print
         print
         print self.sortDataFrame(mdf0, 'allocation', f, False)
         print
+        print
         print self.sortDataFrame(mdf0, 'portUsd', f, False)
+        print
         print 'delever'
         print self.sortDataFrame(mdf0, 'balance_usd', f, False)
+        print
         print 'delever2'
         print self.sortDataFrame(mdf0, 'balancePortDiffUSD', f, False)
+        print
         print 'lever'
         print self.sortDataFrame(mdf0, 'balanceETHDiff', f, False)
+        print
         print 'lever2'
         print self.sortDataFrame(mdf0, 'unitsDiff', f, False)
+        print
         print 'lever3'
         print self.sortDataFrame(mdf0, 'sum', f, True)
         print
+        print
         print self.sortDataFrame(mdf0, 'spreadPcnt', f, False)
+        print
         print
         print self.sortDataFrame(mdf0, 'volume', f, False)
         print
+        print
         print self.sortDataFrame(mdf0, 'volumeETH', f, False)
         print
+        print
         print self.sortDataFrame(mdf0, 'volumePerHolder', f, False)
+        print
         print 'delever2'
         print self.sortDataFrame(mdf0, 'balanceByUnitsDiff', f, False)
+        print
         print
         # test
         #print self.sortDataFrame(mdf0, 'balanceByUnitsDiff2', f, True)
         #print
+        #print
         #print self.sortDataFrame(mdf0, 'balanceByBalanceUsdDiff', f, True)
+        #print
         #print
         #pdf = mdf0[mdf0['unitsDiffPerBalance'] != n.inf]
         #f1 = ' '.join(f).replace('unitsDiff ', 'unitsDiff spreadPcnt ').split(' ')
         #print self.sortDataFrame(pdf, 'unitsDiffPerBalance', f1, True)
         #print
+        #print
         print self.sortDataFrame(mdf0, 't1', f, True)
+        print
         print
 
         #import dfgui
@@ -1838,7 +1856,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print dfinfo
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = 'id totalBalanceUsd 24h_volume_usd allocation sum mvp avg balance balance_eth balance_usd portUsd balancePortDiffUSD balanceETHDiff balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum avg balance balance_usd spreadPcnt avg unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
+            f = 'id totalBalanceUsd 24h_volume_usd allocation sum mvp avg balance balance_eth balance_usd portPcnt portUsd balancePortDiffUSD balanceETHDiff balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum avg balance balance_usd spreadPcnt avg unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
             pm.printPortfolio(mdf0, f)
             print '---'
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
