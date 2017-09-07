@@ -2000,19 +2000,25 @@ if __name__ == "__main__":
             'steemit STEEM': 0,
         }
 
-        if args.ethAccount == '1':
-            getAdressInfoEthplorer([eth1_2, eth1_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+        try:    ethAccount = int(args.ethAccount)
+        except: ethAccount = args.ethAccount
         
-        usdtwd = 30.41
-        initialInvestment = 40000.0 / usdtwd
-        if args.ethAccount == '2':
-            getAdressInfoEthplorer(['', eth2_2, eth2_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
-        #print getTicker('bitcoin')    
-
-        # ??? etherdelta
-        #initialInvestment = 1
-        if args.ethAccount == '3':
-            getAdressInfoEthplorer([''], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+        if type(ethAccount) == type(''):
+            getAdressInfoEthplorer(ethAccount.split(' '), args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+        else:
+            if args.ethAccount == '1':
+                getAdressInfoEthplorer([eth1_2, eth1_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+            
+            usdtwd = 30.41
+            initialInvestment = 40000.0 / usdtwd
+            if args.ethAccount == '2':
+                getAdressInfoEthplorer(['', eth2_2, eth2_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
+            #print getTicker('bitcoin')    
+    
+            # ??? etherdelta
+            #initialInvestment = 1
+            if args.ethAccount == '3':
+                getAdressInfoEthplorer([''], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment)
 
     if args.research03:
         df1 = cmc.getTicker('PPT').set_index('symbol').transpose()
