@@ -987,8 +987,11 @@ ETH/BTC.DC 	0 	"""
         if f == None:
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
         
+        print
         print self.sortDataFrame(mdf0, None, f, False)
+        print
         print self.sortDataFrame(mdf0, 'allocation', f, False)
+        print
         print self.sortDataFrame(mdf0, 'portUsd', f, False)
         print 'delever'
         print self.sortDataFrame(mdf0, 'balance_usd', f, False)
@@ -1000,19 +1003,28 @@ ETH/BTC.DC 	0 	"""
         print self.sortDataFrame(mdf0, 'unitsDiff', f, False)
         print 'lever3'
         print self.sortDataFrame(mdf0, 'sum', f, True)
+        print
         print self.sortDataFrame(mdf0, 'spreadPcnt', f, False)
+        print
         print self.sortDataFrame(mdf0, 'volume', f, False)
+        print
         print self.sortDataFrame(mdf0, 'volumeETH', f, False)
+        print
         print self.sortDataFrame(mdf0, 'volumePerHolder', f, False)
         print 'delever2'
         print self.sortDataFrame(mdf0, 'balanceByUnitsDiff', f, False)
+        print
         # test
         #print self.sortDataFrame(mdf0, 'balanceByUnitsDiff2', f, True)
+        #print
         #print self.sortDataFrame(mdf0, 'balanceByBalanceUsdDiff', f, True)
+        #print
         #pdf = mdf0[mdf0['unitsDiffPerBalance'] != n.inf]
         #f1 = ' '.join(f).replace('unitsDiff ', 'unitsDiff spreadPcnt ').split(' ')
         #print self.sortDataFrame(pdf, 'unitsDiffPerBalance', f1, True)
+        #print
         print self.sortDataFrame(mdf0, 't1', f, True)
+        print
 
         #import dfgui
         #dfgui.show(mdf0)
