@@ -18,14 +18,14 @@ from plotly.graph_objs import *
 
 import os, sys, oandapy
 import datetime as dd
-from matplotlib.pyplot import plot, legend, title, show, imshow, tight_layout
-from pylab import rcParams
-from IPython.display import display, clear_output
+#from matplotlib.pyplot import plot, legend, title, show, imshow, tight_layout
+#from pylab import rcParams
+#from IPython.display import display, clear_output
 import ujson as j
 
 from qore import *
 #from qore_qstk import *
-from matplotlib.pylab import *
+#from matplotlib.pylab import *
 
 import numpy as n
 import pandas as p
@@ -189,7 +189,7 @@ class FinancialModel:
         res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
         print res
 
-from IPython.display import display, clear_output
+#from IPython.display import display, clear_output
 import time
 class ml007:
 
