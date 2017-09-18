@@ -21,7 +21,7 @@ import time
 # error classes
 import requests
 import socket
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import zmq, time
 import ujson as j
 import pymongo as mong

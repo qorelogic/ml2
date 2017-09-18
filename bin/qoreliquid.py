@@ -18,18 +18,18 @@ from plotly.graph_objs import *
 
 import os, sys, oandapy
 import datetime as dd
-from matplotlib.pyplot import plot, legend, title, show, imshow, tight_layout
-from pylab import rcParams
-from IPython.display import display, clear_output
+#from matplotlib.pyplot import plot, legend, title, show, imshow, tight_layout
+#from pylab import rcParams
+#from IPython.display import display, clear_output
 import ujson as j
 
 from qore import *
 #from qore_qstk import *
-from matplotlib.pylab import *
+#from matplotlib.pylab import *
 
 import numpy as n
 import pandas as p
-import Quandl as q
+#import Quandl as q
 import datetime as dd
 import urllib2 as u
 import html2text
@@ -189,7 +189,7 @@ class FinancialModel:
         res =  100 * n.power(1 + rate.reshape(size(rate), 1) / 100, period)
         print res
 
-from IPython.display import display, clear_output
+#from IPython.display import display, clear_output
 import time
 class ml007:
 
@@ -2155,10 +2155,10 @@ class ShapeShift(CryptoCoinBaseClass):
 # pip install -U selenium
  
 # Import the Selenium 2 namespace (aka "webdriver")
-from selenium import webdriver
-from selenium.selenium import selenium
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-from selenium.webdriver.common.action_chains import ActionChains
+#from selenium import webdriver
+#from selenium.selenium import selenium
+#from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+#from selenium.webdriver.common.action_chains import ActionChains
 import pandas as p
 
 class Bloomberg():
