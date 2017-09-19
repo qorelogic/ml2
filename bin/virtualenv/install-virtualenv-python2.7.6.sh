@@ -17,12 +17,12 @@ sudo apt-get install zlib1g-dev
 py276="/mldev/bin/virtualenv/opt/python-2.7.6"
 mkdir -p $py276
 
-#cd Python-2.7.6
-#./configure --with-zlib --prefix=$py276
-#make clean
-#make
-#make altinstall
-#cd ../
+cd Python-2.7.6
+./configure --with-zlib --prefix=$py276
+make clean
+make
+make altinstall
+cd ../
 
 virtualenv -p $py276/bin/python2.7 vdir000_2.7.6
 }
@@ -71,5 +71,5 @@ echo 'python not 2.7.6'
 fi
 }
 
-#vinstall
+vinstall
 installMlDev
