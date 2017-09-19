@@ -2155,10 +2155,10 @@ class ShapeShift(CryptoCoinBaseClass):
 # pip install -U selenium
  
 # Import the Selenium 2 namespace (aka "webdriver")
-from selenium import webdriver
-from selenium.selenium import selenium
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-from selenium.webdriver.common.action_chains import ActionChains
+#from selenium import webdriver
+#from selenium.selenium import selenium
+#from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+#from selenium.webdriver.common.action_chains import ActionChains
 import pandas as p
 
 class Bloomberg():
