@@ -54,7 +54,6 @@ plotly==1.6.10
 ptyprocess==0.5.1
 pyasn1==0.1.7
 pyasn1-modules==0.0.5
-pycurl==7.19.5
 Pygments==2.1
 pymongo==3.2.2
 pyOpenSSL==0.13.1
