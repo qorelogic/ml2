@@ -29,7 +29,7 @@ from qore import *
 
 import numpy as n
 import pandas as p
-import Quandl as q
+#import Quandl as q
 import datetime as dd
 import urllib2 as u
 import html2text
