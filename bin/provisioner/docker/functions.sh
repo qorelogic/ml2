@@ -1,7 +1,12 @@
 #!/bin/bash
 
 dockerBuild() {
-  echo 'test'
+  sudo docker build -t feed.01 feed/
 }
 
-dockerBuild
+dockerRun() {
+  sudo docker run -it --rm --name feed.01.01 feed.01
+}
+
+#dockerBuild
+#dockerRun
