@@ -4,9 +4,11 @@
 # source: http://docs.python-guide.org/en/latest/dev/virtualenvs/
 # source: http://stackoverflow.com/questions/32054580/httpshandler-error-while-installing-pip-with-python-2-7-9
 
+vhdir="/mldev/bin/virtualenv"
+
 vinstall() {
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-python-2-7-6-and-3-3-3-on-centos-6-4
-wget -nc http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
+wget -nc --no-check-certificate http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
 tar -Jxf Python-2.7.6.tar.xz
 
 sudo apt-get install virtualenv
@@ -14,7 +16,7 @@ sudo apt-get install virtualenv
 sudo apt-get install libssl-dev
 sudo apt-get install zlib1g-dev
 
-py276="/mldev/bin/virtualenv/opt/python-2.7.6"
+py276="$vhdir/opt/python-2.7.6"
 mkdir -p $py276
 
 cd Python-2.7.6
@@ -24,11 +26,11 @@ make
 make altinstall
 cd ../
 
-virtualenv -p $py276/bin/python2.7 vdir000_2.7.6
+virtualenv -p $py276/bin/python2.7 $vhdir/vdir000_2.7.6
 }
 
 installMlDev() {
-. ./vdir000_2.7.6/bin/activate
+. $vhdir/vdir000_2.7.6/bin/activate
 if [ "`python -V 2>&1`" == "Python 2.7.6" ]; then
 # http://stackoverflow.com/questions/17892071/pip-install-error-setuptools-command-not-found
 pip install -U setuptools
