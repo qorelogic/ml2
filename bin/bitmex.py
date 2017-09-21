@@ -822,11 +822,21 @@ class PortfolioModeler:
         #df['totalBalanceUsd'] = df[balance].sum()
         df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
         df['totalBalanceUsd'] = df['totalBalanceUsd'] + df['ethUSDTotal']
+        df['totalBalanceEth'] = df['totalBalanceUsd'] / ethusd
         totalBalanceUsd = n.mean(df['totalBalanceUsd'])
         
+        print list(df['allocation'])
+        from qoreliquid import normalizeme
+        from qoreliquid import sigmoidme
+        #df['allocation'] = df['allocation'].fillna(0)
+        #df['allocation'] = normalizeme(df['allocation'])
+        #df['allocation'] = sigmoidme(df['allocation'])
+        dfa = ((df.drop(df[df['allocation'] < 0].index)))
+        print dfa #df[df['allocation'] == 0].index
         df['portWeight'] = n.log(df['allocation']) / n.log(10)
         #df['portWeight'] = (df['allocation']) #/ n.log(10)
-        
+        #sys.exit()
+
         dfp = df
         dfp = dfp[dfp['balance'] > 0]
         
@@ -834,6 +844,7 @@ class PortfolioModeler:
         #df['totalBalanceUsd'] = totalBalanceUsd
         
         df['portWeight'] = map(lambda x: 0 if n.abs(x) == n.inf else x, df['portWeight'])
+        df['currentPortPcnt'] = df['balance_eth'] / df['totalBalanceEth'] * 100
         df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
 
         df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
@@ -1011,6 +1022,7 @@ ETH/BTC.DC 	0 	"""
             df = df.sort_index()
         else:
             df = df.sort_values(by=field, ascending=False)
+        df['balanceETHDiffCumsum'] = df['balanceETHDiff'].cumsum()
         df = df.loc[:,f]
         df = df.rename(columns={field:('%s %s' % (field, sortFlag))})
         return df
@@ -1030,6 +1042,9 @@ ETH/BTC.DC 	0 	"""
         print
         print
         print self.sortDataFrame(mdf0, 'portUsd', f, False)
+        print
+        print
+        print self.sortDataFrame(mdf0, 'currentPortPcnt', f, False)
         print
         print 'delever'
         print self.sortDataFrame(mdf0, 'balance_usd', f, False)
@@ -1868,7 +1883,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print dfinfo
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = ('id totalBalanceUsd 24h_volume_usd allocation sum mvp avg balance balance_eth balance_usd portPcnt portUsd balancePortDiffUSD balanceETHDiff balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum avg balance balance_usd spreadPcnt avg unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s' % pm.allocationModels).split()
+            f = ('id totalBalanceUsd 24h_volume_usd allocation sum mvp avg balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum avg balance balance_usd spreadPcnt avg unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s' % pm.allocationModels).split()
             pm.printPortfolio(mdf0, f)
             print '---'
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
