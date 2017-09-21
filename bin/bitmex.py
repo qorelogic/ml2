@@ -440,6 +440,7 @@ class CoinMarketCap:
     
     #@profile
     def getCoinsExchanges(self, coin):
+        coin = self.resolveCoin(coin)
         url = 'http://coinmarketcap.com/currencies/%s/' % coin
         #print 'getCoinsExchanges: %s' % url
         xresd = self.xp.xpath2df(url, {
@@ -461,6 +462,8 @@ class CoinMarketCap:
         df[coin] = 1
         df = df.set_index('source')
         #print df.transpose()
+        #print list(df.index)
+        self.resolvedCoin['exchanges'] = ','.join(list(df.index))
         df = df.transpose()
         return df
 
@@ -717,6 +720,29 @@ class CoinMarketCap:
             #print dff.transpose()
             #print df.transpose()
             ''
+
+    #@profile
+    def resolveCoin(self, nameOrSymbol):
+        self.check()
+        df = self.dfc
+        df['symbol'] = df.index
+        df['iname'] = map(lambda x: x.lower(), df['name'])
+        #print df
+        #print df.loc[:, 'id symbol'.split()]
+        dfres = p.DataFrame()
+        dfres = dfres.combine_first(df[df['id']     == nameOrSymbol.lower()])
+        dfres = dfres.combine_first(df[df['symbol'] == nameOrSymbol.upper()])
+        
+        try:    currency = dfres[dfres['symbol'] == nameOrSymbol.upper()].loc[:,'id'][0]
+        except: 
+            try:
+                currency = dfres[dfres['id']     == nameOrSymbol.lower()].loc[:,'id'][0]
+            except KeyError as e:
+                print 'coin %s not found' % (nameOrSymbol)
+                sys.exit()
+        #print dfres
+        self.resolvedCoin = dfres
+        return currency
 
 class PortfolioModeler:
     
@@ -1948,6 +1974,7 @@ if __name__ == "__main__":
     parser.add_argument("-r04", '--research04', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r05", '--research05', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r06", '--research06', help="test 06", action="store_true")
+    parser.add_argument("-r06a",'--research06a',help="test 06a",action="store_true")
     parser.add_argument("-r07", '--research07', help="test 07", action="store_true")
     parser.add_argument("-r08", '--research08', help="test 08", action="store_true")
     parser.add_argument("-r09", '--research09', help="test 09", action="store_true")
@@ -2188,14 +2215,18 @@ if __name__ == "__main__":
         cmc = CoinMarketCap()
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             #print cmc.getTradableCoins(filterVolume=False)
-            if args.currency:
-                df = cmc.tickers()
-                df['symbol'] = df.index
-                #print df
-                print df[df['symbol'] == args.currency]
+            if args.currency:                
                 print cmc.getCoinsExchanges(args.currency).transpose()
             else:
                 print cmc.getCoinsExchanges('bitcoin').transpose()
+
+    if args.research06a:
+        cmc = CoinMarketCap()
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            for i in 'tnt,adt,ppt'.split(','):
+                cmc.resolveCoin(i)
+                print cmc.resolvedCoin
+            #print cmc.getTradableCoins(filterVolume=False)
 
     if args.research07:
         def tryGetCoinsOnExchange(exchange, args):
