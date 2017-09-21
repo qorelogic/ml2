@@ -1927,6 +1927,7 @@ if __name__ == "__main__":
     parser.add_argument("-sk", '--parseCoinMarketCapSkipTo', help="parseCoinMrketCap skipTo")
     parser.add_argument("-b", '--balance', help="parseCoinMrketCap skipTo")
     parser.add_argument("-tm", '--tokenmarket', help="parseCoinMrketCap skipTo", action="store_true")
+    parser.add_argument("-rad", '--underTheRadarTokens', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r01", '--research01', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-eth", '--ethAccount', help="parseCoinMrketCap skipTo")
     parser.add_argument("-addr", '--ethAddress', help="parseCoinMrketCap skipTo")
@@ -1939,6 +1940,7 @@ if __name__ == "__main__":
     parser.add_argument("-r07", '--research07', help="test 07", action="store_true")
     parser.add_argument("-r08", '--research08', help="test 08", action="store_true")
     parser.add_argument("-r09", '--research09', help="test 09", action="store_true")
+    parser.add_argument("-r10", '--research10', help="test 10 onexchange", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -2002,7 +2004,7 @@ if __name__ == "__main__":
         balance = 230
     if args.portfolio:
         portfolio = cmc.generatePortfolio(bal=balance)
-    if args.tokenmarket:
+    if args.tokenmarket or args.underTheRadarTokens:
         #%reload_ext autoreload
         #%autoreload 2
         from bitmex import TokenMarket
@@ -2275,6 +2277,20 @@ if __name__ == "__main__":
 
         print p.DataFrame(df)
         print p.DataFrame(df['result'])
+
+
+    if args.research10:
+        cmc = CoinMarketCap()
+        cache=False
+        df1 = cmc.getCoinsOnExchange(exchange='EtherDelta', cache=cache)
+        df2 = cmc.getCoinsOnExchange(exchange='Poloniex', cache=cache)
+        print '==='
+        print df1.index
+        print df2.index
+        print '==='
+        df3 = df2.loc[df1.index, :]
+        print df3[df3['sum'] > 0]
+
 
     # portfolio tokenization
     if args.research05:
