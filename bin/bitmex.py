@@ -872,6 +872,7 @@ class PortfolioModeler:
 
         if allocationModel == None:
             allocationModel='t1b'
+        print 'allocationModel[%s]' % allocationModel
         #import qgrid
         #from IPython.display import display
         try: import matplotlib.pylab as plt
@@ -1842,6 +1843,17 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             mmdfs = mmdfs.add(p.DataFrame(mdfs[kmdfs]).loc[:, 'balance balance_usd'.split(' ')], fill_value=0)
         mdf0 = mmdfs.combine_first(mdf0)
         #mdf0 = mdf0.combine_first(mmdfs)
+
+        # filter invalid contracts
+        ic = ['0xb04cfa8a26d602fb50232cee0daf29060264e04b']
+        mdf0 = dfinfo.combine_first(mdf0)
+        for x in mdf0.index:
+            try: mdf0.loc[x, 'id4'] = '%s-%s' % (x, mdf0.loc[x, 'address'][0:8])
+            except: ''
+        for ici in ic:
+            for x in list(mdf0[mdf0['address'] == ici].index):
+                mdf0 = mdf0.drop(x)
+        
         if verbose:
             print 'mdfs======'
             print mdfs.keys()
@@ -1881,7 +1893,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print dfinfo
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = ('id totalBalanceUsd 24h_volume_usd allocation sum mvp avg balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum avg balance balance_usd spreadPcnt avg unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s' % pm.allocationModels).split()
+            f = ('id id2 id4 totalBalanceUsd totalBalanceEth 24h_volume_usd allocation sum mvp avg balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum avg balance balance_usd spreadPcnt avg unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s' % pm.allocationModels).split()
             pm.printPortfolio(mdf0, f)
             print '---'
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
