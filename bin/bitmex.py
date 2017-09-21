@@ -1314,8 +1314,18 @@ class TokenMarket:
             ff = 'symbol 24h_volume_usd available_supply backlinks domain-score github-commits github-contributors github-forks github-openIssues github-starredby github-watchings id last_updated market_cap_usd name percent_change_1h percent_change_24h percent_change_7d price_btc price_usd rank total_supply trading type'
             ff = 'X3 X X2 symbol backlinks domain-score github-commits github-contributors github-forks github-openIssues github-starredby github-watchings id  links-github type crowdsale-opening-date crowdsale-closing-date'
             def numerix(arr):
-                arr = map(lambda x: 0 if x == 'None' else x, arr)
-                arr = p.to_numeric(arr)
+                #arr = map(lambda x: 0 if x == 'None' else x, arr)
+                for x in range(len(arr)):
+                    try:    x = x.strip()
+                    except: ''
+                    if x == 'None':
+                        arr[x] = 0
+                    else:
+                        try:    arr[x] = arr[x].strip()
+                        except: ''
+                print arr
+                print 
+                arr = p.to_numeric(p.Series(arr))
                 return arr    
             dfm['github-commits'] = numerix(dfm['github-commits'])
             dfm['github-contributors'] = numerix(dfm['github-contributors'])
