@@ -926,10 +926,11 @@ ETH/BTC.DC 	0 	"""
     
         # coins on exchanges ex. etherdelta
         df = df.combine_first(self.cmc.getCoinsOnExchange(exchange='EtherDelta', cache=True))
+        df['sum'] = df['sum'].fillna(1)
         
         # minimum viable product
         mvp = p.DataFrame()
-        mvp['mvp'] = p.Series({'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.2, 'MCO':0.7})
+        mvp['mvp'] = p.Series({'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.2, 'MCO':0.7,'ZRX':1})
         df = df.combine_first(mvp)
 
         df['avg'] = (df['bid'] + df['offer']) / 2
