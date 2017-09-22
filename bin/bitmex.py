@@ -872,8 +872,8 @@ class PortfolioModeler:
         totalBalanceUsd = n.mean(df['totalBalanceUsd'])
         
         print list(df['allocation'])
-        from qoreliquid import normalizeme
-        from qoreliquid import sigmoidme
+        #from qoreliquid import normalizeme
+        #from qoreliquid import sigmoidme
         #df['allocation'] = df['allocation'].fillna(0)
         #df['allocation'] = normalizeme(df['allocation'])
         #df['allocation'] = sigmoidme(df['allocation'])
@@ -921,7 +921,7 @@ class PortfolioModeler:
         #from IPython.display import display
         try: import matplotlib.pylab as plt
         except: ''
-        from qoreliquid import normalizeme, sigmoidme
+        #from qoreliquid import normalizeme, sigmoidme
         #import qgrid
         #from IPython.display import display
         #@profile
@@ -1990,8 +1990,12 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print '                            ethusd: %s' % ethusd
             print '---'
 
-if __name__ == "__main__":
+#%reload_ext autoreload
+#%autoreload 2
+from bitmex import *
 
+@profile
+def main():
     import argparse
     # source: https://docs.python.org/2/howto/argparse.html
     parser = argparse.ArgumentParser()
@@ -2057,9 +2061,6 @@ if __name__ == "__main__":
     #print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)['range']
     """
     
-    #%reload_ext autoreload
-    #%autoreload 2
-    from bitmex import *
     if not args.research11:
         cmc = CoinMarketCap()
         pm  = PortfolioModeler()
@@ -2405,3 +2406,6 @@ if __name__ == "__main__":
     # portfolio tokenization
     if args.research05:
         portfolioTokenization()
+
+if __name__ == "__main__":
+    main()
