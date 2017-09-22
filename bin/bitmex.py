@@ -188,6 +188,7 @@ def makeTimeseriesTimestampRange(timestamp=None, period=14400, bars=50):
 class Poloniex:
 
     def __init__(self):
+        self.qd = QoreDebug()
         self.btc = 'DASH ETH FCT GNO LTC XMR REP XRP ZEC'.split(' ')
         self.periods = '1 5 15 30 60 240 14400'.split(' ')
         self.periods = [300, 900, 1800, 7200, 14400, 86400]
@@ -412,6 +413,7 @@ def apiRequest(baseurl, query, method='GET', noCache=False, verbose=False):
 class CoinMarketCap:
     
     def  __init__(self):
+        self.qd = QoreDebug()
         from qore import XPath
         self.xp = XPath()
         # cypto api 
@@ -486,13 +488,13 @@ class CoinMarketCap:
     def check(self, checkTradableCoins=False):
         try: self.dfc
         except Exception as e:
-            #print e
+            #self.qd.exception(e)
             self.tickers()
         
         if checkTradableCoins:
             try: self.tradableCoins
             except Exception as e:
-                #print e
+                #self.qd.exception(e)
                 self.parseCoinMarketCap()
         
     #@profile
@@ -654,7 +656,7 @@ class CoinMarketCap:
         return df
 
     #@profile
-    def getTicker(self, symbol):
+    def getTicker(self, symbol, verbose=False):
         df = p.DataFrame(self.resTicker)
         self.symbolMapper = df.loc[:, 'symbol id'.split()].set_index('symbol')
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -663,9 +665,10 @@ class CoinMarketCap:
         
         try:
             ticker = self.symbolMapper.loc[symbol, 'id']
-            res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=True)
+            res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=True, verbose=verbose)
         except Exception as e:
-            res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=False)
+            #print e
+            res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=False, verbose=verbose)
         res = p.DataFrame(res)
         #print res.transpose()
         return res
@@ -762,6 +765,8 @@ class CoinMarketCap:
 class PortfolioModeler:
     
     def __init__(self):
+        self.qd = QoreDebug()
+
         self.version = 'v0.0.1'
         self.models = {
             1: 'Q001aa',
@@ -1017,17 +1022,18 @@ ETH/BTC.DC 	0 	"""
         df['t1b'] = (df['volume'] * df['avg'])
     
         try:    df['volumeETH'] = df['volume'] * df['avg']
-        except Exception as e: print e
+        except Exception as e: self.qd.exception(e)
+            
         try:
             if ethusd:
                 df['volumeUSD'] = df['volumeETH'] * ethusd
-        except Exception as e: print e
+        except Exception as e: self.qd.exception(e)
         try:    
             df['volumePerHolder'] = df['volumeETH'] / df['holdersCount']
             df['volumeETHPerHolder'] = df['volumeETH'] / df['holdersCount']
             df['t1c'] = (df['volumePerHolder'])
             df['t1d'] = (df['volumeETHPerHolder'] / (df['avg'] * df['sum']))
-        except Exception as e: print e
+        except Exception as e: self.qd.exception(e)
     
         df['t1e'] = (df['volumeETH'] / (df['avg'] * n.power(df['sum'], 4*3)))
         df['t1f'] = ((df['volumeETH'] * df['mvp']) / (df['avg'] * n.power(df['sum'], 3*1)))
@@ -1192,6 +1198,7 @@ ETH/BTC.DC 	0 	"""
 class TokenMarket:
     
     def  __init__(self):
+        self.qd = QoreDebug()
         import pandas as p
         import numpy as n
         from qore import XPath
@@ -1316,13 +1323,13 @@ class TokenMarket:
             # dates
             for j in dftm.index:
                 try: dftm.loc[j, 'crowdsale-opening-date-ts'] = datetime.datetime.strptime(dftm.loc[j, 'crowdsale-opening-date'], '%d. %b %Y')
-                except Exception as e: ''#print e
+                except Exception as e: ''#self.qd.exception(e)
                 try: dftm.loc[j, 'crowdsale-closing-date-ts'] = datetime.datetime.strptime(dftm.loc[j, 'crowdsale-closing-date'], '%d. %b %Y')
-                except Exception as e: ''#print e
+                except Exception as e: ''#self.qd.exception(e)
                 try: dftm.loc[j, 'crowdsale-days'] = (dftm.loc[j, 'crowdsale-closing-date-ts'] - dftm.loc[j, 'crowdsale-opening-date-ts']).days
-                except Exception as e: ''#print e
+                except Exception as e: ''#self.qd.exception(e)
                 try: dftm.loc[j, 'crowdsale-days-to-close'] = (datetime.datetime.now() - dftm.loc[j, 'crowdsale-closing-date-ts']).days
-                except Exception as e: ''#print e
+                except Exception as e: ''#self.qd.exception(e)
 
             #self.dfp = self.dfp.fillna(0)
 
@@ -1517,6 +1524,7 @@ class TokenMarket:
 class Exchange:
 
     def __init__(self, key, secret, exchange):
+        self.qd = QoreDebug()
         self.debug = False
         self.key    = key.strip()
         self.secret = secret.strip()
@@ -1588,7 +1596,7 @@ class Exchange:
         try:
             data = uj.load(response)
         except Exception as e:
-            #print e
+            #self.qd.exception(e)
             data = uj.loads(response.read())
         try:
             if self.debug:
@@ -1596,7 +1604,7 @@ class Exchange:
             return data
         except Exception as e:
             print
-            print e
+            self.qd.exception(e)
 
 class Liqui(Exchange):
     
@@ -1643,7 +1651,7 @@ class Bittrex(Exchange):
             df = p.DataFrame(data['result'])#.transpose()
             return df
         except Exception as e:
-            print e
+            self.qd.exception(e)
 
     def getCurrencies(self):
         data = self.requestAuthenticated(url='%s/public/getcurrencies?apikey=%s&nonce=1' % (self.apiMethod, self.key), requestType='GET')
@@ -1707,6 +1715,7 @@ class Eveningstar:
     
     #https://eveningstar.io/my-portfolio/
     def __init__(self):
+        self.qd = QoreDebug()
         self.fname = '/tmp/coins-eveningstar-export.csv'
         try:    self.df = p.read_csv(self.fname)
         except: self.df = p.DataFrame([])
@@ -1799,7 +1808,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                 df1['tokenInfo'] = df1[df1.columns[0]]
                 df = df.combine_first(df.loc[:, ['tokenInfo']].combine_first(df1.loc[:, ['tokenInfo']]))
             except Exception as e:
-                print e
+                #print e
                 ''
             try:    df.loc['24h_volume_marketcap_ratio', 'tokenInfo'] = float(df.loc['24h_volume_usd', 'tokenInfo']) / float(df.loc['market_cap_usd', 'tokenInfo']) * 100
             except: ''
