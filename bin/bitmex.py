@@ -376,7 +376,7 @@ def instrumentIndecesBitmex():
 import ujson as uj
 import requests as req, requests_cache
 #@profile
-def apiRequest(baseurl, query, method='GET', noCache=False):
+def apiRequest(baseurl, query, method='GET', noCache=False, verbose=False):
     #api = drest.API(baseurl)
     #response = api.make_request(method, query)
     #res = response.data
@@ -385,12 +385,14 @@ def apiRequest(baseurl, query, method='GET', noCache=False):
     #backend='memory'
 
     if noCache == False:
-        print '[caching] %s: %s %s url: %s' % (method, baseurl, query, baseurl+query)
+        if verbose:
+            print '[caching] %s: %s %s url: %s' % (method, baseurl, query, baseurl+query)
         expire_after = 3600 * 24 #* 365
         # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
         requests_cache.install_cache('scraper_cache', backend=backend, expire_after=expire_after)
     else:
-        print '[getting] %s: %s %s' % (method, baseurl, query)
+        if verbose:
+            print '[getting] %s: %s %s' % (method, baseurl, query)
         requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=300)
     #else:
     #    expire_after = 1
@@ -878,7 +880,7 @@ class PortfolioModeler:
         #df['allocation'] = normalizeme(df['allocation'])
         #df['allocation'] = sigmoidme(df['allocation'])
         dfa = ((df.drop(df[df['allocation'] < 0].index)))
-        print dfa #df[df['allocation'] == 0].index
+        #print dfa #df[df['allocation'] == 0].index
         df['portWeight'] = n.log(df['allocation']) / n.log(10)
         #df['portWeight'] = (df['allocation']) #/ n.log(10)
         #sys.exit()
@@ -1909,7 +1911,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                 #except: ''
                 try: mdf.loc[ix, 'id3'] = dddf.loc[ix, 0]
                 except: ''
-            print mdf.sort_values(by='balance_usd', ascending=False)
+            #print mdf.sort_values(by='balance_usd', ascending=False)
             #return
             #print mdf
             #print df
