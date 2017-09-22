@@ -209,10 +209,7 @@ class Poloniex:
         tms = makeTimeseriesTimestampRange(timestamp=int(ts), period=period, bars=bars)
         start = tms['start']
         end = tms['end']
-        url = 'https://poloniex.com/public?command=returnChartData&currencyPair=%s&start=%s&end=%s&period=%s' % (symbol, start, end, period)
-        res = req.get(url)
-        #res.text
-        li = js.loads(res.text)
+        li = apiRequest('https://poloniex.com/public', '?command=returnChartData&currencyPair=%s&start=%s&end=%s&period=%s' % (symbol, start, end, period), noCache=True)
         try:
             df = p.DataFrame(li)
         except:
@@ -256,6 +253,22 @@ class Poloniex:
             mdfp.plot()
             plt.show()
             print '====='
+
+    def getCurrencies(self):
+        #li = apiRequest('https://poloniex.com/public', '?command=returnCurrencies')
+        li = apiRequest('https://poloniex.com/public', '?command=returnTicker')
+        df = p.DataFrame(li)
+        df = df.transpose()
+        df = df.sort_values(by='percentChange', ascending=False)
+        for x in xrange(len(df.index)):
+            sp = df.index[x]
+            quote = sp.split('_')[0]
+            base  = sp.split('_')[1]
+            df.loc[sp, 'quote'] = quote
+            df.loc[sp, 'base']  = base
+            df.loc[sp, 'symbol']  = '%s/%s'%(base, quote)
+        df = df[df['quote'] == 'ETH']
+        return df
 
 def currencyCube(r=None,tf=None, c=None,d=None, index=None, columns=None, rdf=None):
     #r = 550 #rows history
@@ -899,10 +912,8 @@ class PortfolioModeler:
         return df
 
     #@profile
-    def modelPortfolio(self, num=5, df=None, allocationModel=None, ethusd=None):
+    def modelPortfolio(self, num=5, df=None, allocationModel=None, ethusd=None, mode='poloniex'):
         
-        ed = EtherDelta()
-
         if allocationModel == None:
             allocationModel='t1b'
         print 'allocationModel[%s]' % allocationModel
@@ -914,7 +925,8 @@ class PortfolioModeler:
         #import qgrid
         #from IPython.display import display
         #@profile
-        if type(df) == type(None):
+        if type(df) == type(None) and mode == 'etherdelta':
+            ed = EtherDelta()
             """
         cv = "#""PPT/ETH 	917552 	0.01600 	0.01600
 MCAP/ETH 	52178 	0.01205 	0.02100
@@ -939,8 +951,28 @@ ETH/BTC.DC 	0 	"""
                 for i in ffields[1:]: df[i] = p.to_numeric(df[i])
             except:
                 df = p.DataFrame({'volume': 0, 'symbol': 'STUB/ETH', 'bid': 0, 'offer': 0}, index=[0])
-
-        ed.toMjson(df, '/mldev/bin/data/cache/coins/etherdelta.mjson')
+            ed.toMjson(df, '/mldev/bin/data/cache/coins/etherdelta.mjson')
+        
+        if type(df) == type(None) and mode == 'poloniex':
+            # ---
+            pl  = Poloniex()
+            df2 = pl.getCurrencies()
+            #df2['symbol'] = df2.index
+            #df2['bid'] = df2['last']
+            df2['range'] = range(len(df2.index))
+            df2 = df2.set_index('range')
+            df2['offer'] = df2['last']
+            #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #    print df2
+            df2 = df2.loc[:, 'symbol quoteVolume last offer'.split(' ')]
+            df2 = df2.rename_axis({'quoteVolume':'volume', 'last':'bid'}, axis='columns')
+            df2['volume'] = p.to_numeric(df2['volume'])
+            df2['bid']    = p.to_numeric(df2['bid'])
+            df2['offer']  = p.to_numeric(df2['offer'])
+            df = df2
+            #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #    print df2
+            # ---
     
         #df = df.fillna(0)
         #    for i in df.index:
@@ -1981,6 +2013,7 @@ if __name__ == "__main__":
     parser.add_argument("-eth", '--ethAccount', help="parseCoinMrketCap skipTo")
     parser.add_argument("-addr", '--ethAddress', help="parseCoinMrketCap skipTo")
     parser.add_argument("-num", '--instruments', help="parseCoinMrketCap skipTo")
+    parser.add_argument("-bars", '--bars', help="bars")
     parser.add_argument("-r01b", '--research01bittrex', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r03", '--research03', help="parseCoinMrketCap skipTo", action="store_true")
     parser.add_argument("-r04", '--research04', help="parseCoinMrketCap skipTo", action="store_true")
@@ -1991,6 +2024,7 @@ if __name__ == "__main__":
     parser.add_argument("-r08", '--research08', help="test 08", action="store_true")
     parser.add_argument("-r09", '--research09', help="test 09", action="store_true")
     parser.add_argument("-r10", '--research10', help="test 10 onexchange", action="store_true")
+    parser.add_argument("-r11", '--research11', help="test 11 onexchange", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -2028,10 +2062,10 @@ if __name__ == "__main__":
     #%reload_ext autoreload
     #%autoreload 2
     from bitmex import *
-    cmc = CoinMarketCap()
-    pm  = PortfolioModeler()
-    #cmc.getTradableCoins()
-    pm  = PortfolioModeler()
+    if not args.research11:
+        cmc = CoinMarketCap()
+        pm  = PortfolioModeler()
+        #cmc.getTradableCoins()
 
     try:    instruments = int(args.instruments)
     except: instruments = 50
@@ -2345,6 +2379,30 @@ if __name__ == "__main__":
         df3 = df2.loc[df1.index, :]
         print df3[df3['sum'] > 0]
 
+    if args.research11:
+        try:    symbol = args.currency
+        except: symbol = 'BTC_XVC'
+        try:    bars = int(args.bars)
+        except: bars = 10
+        
+        #symbols = map(lambda x: 'BTC_%s'%x, 'XVC GAS EMC2 SBC'.split(' '))
+        #print symbols
+
+        pl = Poloniex()
+
+        df = pl.getCurrencies()
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print df
+        sys.exit()
+        
+        #def getPoloniexHistorical(self, symbol='BTC_XMR', period=14400, start=1405699200, end=9999999999, bars=15):
+        #df = pl.getPoloniexHistorical(symbol=symbol, period=300, bars=bars).set_index('date')
+        df = pl.getPoloniexHistorical(symbol=symbol, period=300, bars=15)#.set_index('date')
+        df['symbol'] = symbol
+        df = df.set_index('symbol')
+        #df = df.tail(1)
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print df
 
     # portfolio tokenization
     if args.research05:
