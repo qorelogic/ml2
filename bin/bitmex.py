@@ -934,9 +934,12 @@ ETH/BTC.DC 	0 	"""
             df = map(lambda x: re.sub(re.compile(r'[\s]+'), '\t', x), df)
             df = map(lambda x: x.split('\t'), df)
             ffields = 'symbol volume bid offer'.split(' ')
-            df = p.DataFrame(df, columns=ffields)
-            for i in ffields[1:]: df[i] = p.to_numeric(df[i])
-            
+            try:
+                df = p.DataFrame(df, columns=ffields)
+                for i in ffields[1:]: df[i] = p.to_numeric(df[i])
+            except:
+                df = p.DataFrame({'volume': 0, 'symbol': 'STUB/ETH', 'bid': 0, 'offer': 0}, index=[0])
+
         ed.toMjson(df, '/mldev/bin/data/cache/coins/etherdelta.mjson')
     
         #df = df.fillna(0)
