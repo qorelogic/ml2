@@ -921,9 +921,7 @@ class PortfolioModeler:
     #@profile
     def modelPortfolio(self, num=5, df=None, allocationModel=None, ethusd=None, mode='etherdelta'):
         
-        print 'modelPortfolio()'
-        print 'allocationModel: %s' % allocationModel
-        
+        self.allocationModel = allocationModel
         if allocationModel == None:
             allocationModel='t1b'
         print 'allocationModel[%s]' % allocationModel
@@ -1096,7 +1094,7 @@ ETH/BTC.DC 	0 	"""
     
         return dfst
 
-    def sortDataFrame(self, df, field, f, ascending):
+    def sortDataFrame(self, df, field, f, ascending, title=None):
         
         sortFlag = '^' if ascending == True else 'v'
         if field == None or field == 'index':
@@ -1105,8 +1103,12 @@ ETH/BTC.DC 	0 	"""
             df = df.sort_values(by=field, ascending=False)
         df['balanceETHDiffCumsum'] = df['balanceETHDiff'].cumsum()
         df = df.loc[:,f]
-        df = df.rename(columns={field:('%s %s' % (field, sortFlag))})
-        return df
+        sf = ('%s %s' % (field, sortFlag))
+        df = df.rename(columns={field:sf})
+        print
+        if title: print ('%s::%s %s [model:%s]' % (title, field, sortFlag, self.allocationModel))
+        else:     print '%s [model:%s]' % (sf, self.allocationModel)
+        print df
 
     def printPortfolio(self, mdf0, f=None):
         if f == None:
@@ -1115,62 +1117,25 @@ ETH/BTC.DC 	0 	"""
         mdf0 = mdf0[n.abs(mdf0['balance']) != 0]
         
         print
-        print
-        print self.sortDataFrame(mdf0, None, f, False)
-        print
-        print
-        print self.sortDataFrame(mdf0, 'allocation', f, False)
-        print
-        print
-        print self.sortDataFrame(mdf0, 'portUsd', f, False)
-        print
-        print
-        print self.sortDataFrame(mdf0, 'currentPortPcnt', f, False)
-        print
-        print 'delever'
-        print self.sortDataFrame(mdf0, 'balance_usd', f, False)
-        print
-        print 'delever2'
-        print self.sortDataFrame(mdf0, 'balancePortDiffUSD', f, False)
-        print
-        print 'lever'
-        print self.sortDataFrame(mdf0, 'balanceETHDiff', f, False)
-        print
-        print 'lever2'
-        print self.sortDataFrame(mdf0, 'unitsDiff', f, False)
-        print
-        print 'lever3'
-        print self.sortDataFrame(mdf0, 'sum', f, True)
-        print
-        print
-        print self.sortDataFrame(mdf0, 'spreadPcnt', f, False)
-        print
-        print
-        print self.sortDataFrame(mdf0, 'volume', f, False)
-        print
-        print
-        print self.sortDataFrame(mdf0, 'volumeETH', f, False)
-        print
-        print
-        print self.sortDataFrame(mdf0, 'volumePerHolder', f, False)
-        print
-        print 'delever2'
-        print self.sortDataFrame(mdf0, 'balanceByUnitsDiff', f, False)
-        print
-        print
+        self.sortDataFrame(mdf0, 'allocation', f, False, title='') # same forting as portUsd
+        self.sortDataFrame(mdf0, 'currentPortPcnt', f, False, title='delever') # same sorting as balance_usd
+        self.sortDataFrame(mdf0, 'balancePortDiffUSD', f, False, title='delever2')
+        self.sortDataFrame(mdf0, 'balanceETHDiff', f, False, title='lever')
+        self.sortDataFrame(mdf0, 'unitsDiff', f, False, title='lever2')
+        self.sortDataFrame(mdf0, 'sum', f, True, title='lever3')
+        self.sortDataFrame(mdf0, 'spreadPcnt', f, False, title='')
+        self.sortDataFrame(mdf0, 'volume', f, False, title='')
+        self.sortDataFrame(mdf0, 'volumeETH', f, False, title='')
+        self.sortDataFrame(mdf0, 'volumePerHolder', f, False, title='')
+        self.sortDataFrame(mdf0, None, f, False, title='A-Z')
+        self.sortDataFrame(mdf0, 'balanceByUnitsDiff', f, False, title='delever3')
         # test
-        #print self.sortDataFrame(mdf0, 'balanceByUnitsDiff2', f, True)
-        #print
-        #print
-        #print self.sortDataFrame(mdf0, 'balanceByBalanceUsdDiff', f, True)
-        #print
-        #print
+        #self.sortDataFrame(mdf0, 'balanceByUnitsDiff2', f, True)
+        #self.sortDataFrame(mdf0, 'balanceByBalanceUsdDiff', f, True)
         #pdf = mdf0[mdf0['unitsDiffPerBalance'] != n.inf]
         #f1 = ' '.join(f).replace('unitsDiff ', 'unitsDiff spreadPcnt ').split(' ')
-        #print self.sortDataFrame(pdf, 'unitsDiffPerBalance', f1, True)
-        #print
-        #print
-        print self.sortDataFrame(mdf0, 't1', f, True)
+        #self.sortDataFrame(pdf, 'unitsDiffPerBalance', f1, True)
+        self.sortDataFrame(mdf0, 't1', f, True)
         print
         print
 
@@ -1985,7 +1950,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             mdf0['mname'] = mdf0.index
             f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = ('id id2 id4 totalBalanceUsd totalBalanceEth allocation sum mvp avg price_eth arb1 price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum avg balance balance_usd spreadPcnt avg unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s' % pm.allocationModels).split()
+            f = ('id id2 id4 totalBalanceUsd totalBalanceEth balance_eth balance_usd currentPortPcnt avg price_eth arb1 mname sum mvp allocation portPcnt price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum avg balance balance_usd spreadPcnt avg unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s' % pm.allocationModels).split()
             pm.printPortfolio(mdf0, f)
             print '---'
             print dfinfo
