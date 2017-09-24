@@ -1478,12 +1478,14 @@ class Exchange:
             params = urllib.urlencode(params).encode('utf-8')
             #params = payload
             #headers = payload
+            """
             print '---'
             print 'url: %s' % url
             print 'headers: %s' % headers
             print 'params: %s' % params
             print 'payload: %s' % payload
             print '---'
+            """
             
         if self.exchange == 'poloniex':
             ret = req.post(**payload)
@@ -1573,6 +1575,17 @@ class Poloniex(Exchange):
         #self.periods = [1, 5, 15, 30, 60, 3600, 14400, 86400]
         print self.periods
 
+    def getInfo(self):
+        params = {}
+        data = self.requestAuthenticated(url='https://poloniex.com/tradingApi', method='returnBalances', params=params)
+        field = 'balance'
+        df = p.DataFrame(data, index=[field]).transpose()
+        df[field] = p.to_numeric(df[field])
+        for i in df[df[field] == 0].index:
+            df = df.drop(i)
+        #pf(df)
+        return df
+
     def getPoloniexHistorical(self, symbol='BTC_XMR', period=14400, start=1405699200, end=9999999999, bars=15, cache=False):
         import time,calendar
         ts = time.time()
@@ -1652,23 +1665,170 @@ class Poloniex(Exchange):
             df.loc[sp, 'quote'] = _quote
             df.loc[sp, 'base']  = _base
             df.loc[sp, 'symbol']  = '%s/%s'%(_base, _quote)
-        df = df[df['quote'] == quote]
+        if quote != None and type(quote) == type(''):
+            df = df[df['quote'] == quote]
+        df['last'] = p.to_numeric(df['last'])
         return df
 
-    def trade(self, pair=None, mtype=None, rate=None, amount=None):
+    def trade(self, pair=None, method='buy', rate=None, amount=None):
         params =   {
                     #'type':mtype,
                     'currencyPair': str(pair).upper(),
                     'rate': str(rate),
                     'amount': str(amount),
                     }
-        data = self.requestAuthenticated(url='https://poloniex.com/tradingApi', method='buy', params=params)        
+        data = self.requestAuthenticated(url='https://poloniex.com/tradingApi', method=method, params=params)
+        print data
         try:
-            df = p.DataFrame(data['return'])#.transpose()
-        except:
+            df = p.DataFrame(data)#.transpose()
+        except Exception as e:
+            print e
             print data['error']
             return
         return df.transpose()
+
+
+    def makeCurrencyTimeseriesTable(self, symbols, bars=15):
+        li = symbols.split(' ')
+        #li = 'BTC ETH EOS OMG'.split(' ')
+        #li = map(lambda x: 'USDT_%s'%x, li)
+        mdf = p.DataFrame()
+        for i in range(len(li)):
+            symbol = li[i]
+            quote = symbol.split('_')[0]
+            try:    base  = symbol.split('_')[1]
+            except: base = ''
+            if base == '':
+                symbol = 'USDT_%s' % symbol
+                li[i]  = symbol
+            #try:    print '%s %s %s' % (quote, base, symbol)
+            #except: print '%s %s' % (quote, symbol)
+            try:
+                df = self.getPoloniexHistorical(symbol=symbol, period=86400, bars=bars, cache=True)#.set_index('date')
+                df = df.set_index('date').loc[:, 'close volume'.split(' ')]
+                df[symbol] = df['close']
+                #plt.plot(df['close'])
+                #plt.show()
+                #print df
+                #print df
+                #print df.shape
+                mdf = mdf.combine_first(df.loc[:, [symbol]])
+            except Exception as e:
+                print '%s: %s' % (li[i], e)
+                #print '%s %s' % (symbol, e)
+                ''
+            if base != '':
+                #print symbol
+                try: mdf[symbol] = mdf[symbol] * mdf['USDT_ETH']
+                except:''
+        """
+        mdf = p.DataFrame()
+        li = symbols.split(' ')
+        #li = 'BTC ETH EOS OMG'.split(' ')
+        #li = map(lambda x: 'USDT_%s'%x, li)
+        for i in range(len(li)):
+            symbol = li[i]
+            quote = symbol.split('_')[0]
+            try:    base  = symbol.split('_')[1]
+            except: base = ''
+            if base == '':
+                symbol = 'USDT_%s' % symbol
+                li[i]  = symbol
+            #try:    print '%s %s %s' % (quote, base, symbol)
+            #except: print '%s %s' % (quote, symbol)
+            try:
+                df = self.getPoloniexHistorical(symbol=symbol, period=86400, bars=bars, cache=True)#.set_index('date')
+                df = df.set_index('date').loc[:, 'close volume'.split(' ')]
+                df[symbol] = df['close']
+                #plt.plot(df['close'])
+                #plt.show()
+                #print df
+                mdf = mdf.combine_first(df.loc[:, [symbol]])
+            except Exception as e:
+                print e
+                #print '%s %s' % (symbol, e)
+                ''
+            if base != '':
+                #print symbol
+                try: mdf[symbol] = mdf[symbol] * mdf['USDT_ETH']
+                except:''
+        """
+        return mdf
+
+    def allocations(self, symbols='BTC ETH LTC XRP DASH XEM XMR MIOTA NEO ETH_OMG', bars=15, cache=True):
+        import matplotlib.pylab as plt
+        from qoreliquid import normalizeme, sigmoidme
+        #import seaborn as sea
+        #sea.set()
+        # equity allocations
+        
+        mdf = self.makeCurrencyTimeseriesTable(symbols, bars=bars)
+        mdf['sum'] = n.sum(mdf.get_values(), 1)
+    
+        # convert weight to percentage
+        """for symbol in li:
+            try:    mdf[symbol] = mdf[symbol] / mdf['sum']
+            except: ''
+        mdf = mdf.loc[:, li]"""
+        
+        mdf = normalizeme(mdf)
+        mdf = sigmoidme(mdf)
+        mdf = mdf.fillna(0)
+        #mdf.loc['sum',:]  = n.sum(mdf.get_values(), 0)
+        mdf.loc[:, 'sum'] = n.sum(mdf.get_values(), 1)
+        for symbol in mdf.columns: mdf[symbol] = mdf[symbol] / mdf['sum']
+        pmdf = mdf.drop('sum', 1)
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print pmdf.tail(10)
+            #print pmdf.dtypes
+            plt.plot(pmdf)
+            plt.legend(pmdf.columns, loc=2)
+            plt.show()
+            ''
+        return pmdf
+    
+    def getBalanceTable(self, live=False, verbose=False):
+        df = self.getCurrencies(quote='ETH')
+        df = setIndex(df, 'base', 'symbol2')
+        #df = self.getCurrencies(quote=None)
+        dfbtc = self.getCurrencies(quote='USDT')
+
+        df['id'] = df.index
+        pdf = p.read_csv('/tmp/allocations.csv', index_col=0)
+        pdf = setIndex(pdf, 'base', 'symbol2')
+        df = df.combine_first(pdf)#.fillna(0)
+        #df = df.set_index('base')
+        bdf = self.getInfo()
+        df = df.combine_first(bdf).fillna(0)
+        df['lastUSDT'] = df['last'] * dfbtc.loc['USDT_ETH', 'last']
+        df.loc['USDT', 'lastUSDT'] = 1
+        df['balanceUSDT'] = df['balance'] * df['lastUSDT']
+        df.loc['sum', 'balanceUSDT'] = n.sum(df['balanceUSDT'])
+        df['diffUSDT'] = df['usd'] - df['balanceUSDT']
+        df['diffETH'] = df['diffUSDT'] / dfbtc.loc['USDT_ETH', 'last']
+        df['diffQuote'] = df['diffETH'] / df['last']
+        mdf = df.loc[:, 'symbol2 last diffQuote'.split(' ')].sort_values(by='diffQuote', ascending=True).set_index('symbol2')
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print bdf
+            #print pdf
+            print df
+            print df.loc[:, 'quote symbol2 balanceUSDT usd diffUSDT diffETH diffQuote'.split(' ')]
+            print mdf
+        for i in mdf.index:
+            diffQuote = mdf.loc[i, 'diffQuote']
+            method = 'buy' if diffQuote > 0 else 'sell'
+            last = mdf.loc[i, 'last']
+            if i != 0 and last != 0:
+                if verbose:
+                    print
+                    print '=== %s' % i
+                    #print mdf.loc[i, :]
+                    print 'pair=%s method=%s rate=%s amount=%s' % (i, method, last, n.abs(diffQuote))
+                if live:
+                    self.trade(pair=i, method=method, rate=last, amount=n.abs(diffQuote))
+                #break
+                #time.sleep(1)
+        return df
 
 class Bittrex(Exchange):
 
@@ -2041,8 +2201,16 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
 #%autoreload 2
 from bitmex import *
 
-@profile
+def setIndex(df, to, oldIndex):
+    df[oldIndex] = df.index
+    df = df.set_index(to)
+    return df
+
+#@profile
 def main():
+    pl = Poloniex('M8YTJIKE-2EIE8VV2-7UP6Z9O0-PJNGRPV4', '')
+    #pl.debugon()
+
     import argparse
     # source: https://docs.python.org/2/howto/argparse.html
     parser = argparse.ArgumentParser()
@@ -2075,6 +2243,8 @@ def main():
     parser.add_argument("-r10", '--research10', help="test 10 onexchange", action="store_true")
     parser.add_argument("-r11", '--research11', help="test 11", action="store_true")
     parser.add_argument("-r12", '--research12', help="test 12", action="store_true")
+    parser.add_argument("-r13", '--research13', help="test 13", action="store_true")
+    parser.add_argument("-r14", '--research14', help="test 14", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -2109,6 +2279,59 @@ def main():
     #print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)['range']
     """
     
+    if args.research13:
+        
+        #print pl.trade(pair='ETH_ZRX', method='sell', rate=0.0006, amount=5)
+        df = pl.getBalanceTable(live=True, verbose=True)
+    
+    if args.research12:
+        """import pkg_resources
+        def ff(name):
+            print '%s: %s' % (name, pkg_resources.get_distribution(name).version)
+        ff('poloniex')
+        ff('urllib3')
+        import poloniex
+        #from urllib import urlencode as _urlencode
+        pl = poloniex.Poloniex('M8YTJIKE-2EIE8VV2-7UP6Z9O0-PJNGRPV4', '')
+        print pl.returnBalances()        
+        """
+        #def main3():
+    
+        #cmc = CoinMarketCap()
+        #df = cmc.tickers()
+    
+        bars = (365*4)
+        #bars = 20
+        #symbols = 'BTC ETH LTC XRP DASH XEM XMR MIOTA NEO'
+        #symbols = 'BTC ETH ETH_OMG ETH_PLR ETH_PPT ETH_CDT ETH_ZRX ETH_PAY'
+        
+        # etherdelta
+        #symbols = 'BTC ETH %s' % ' '.join(map(lambda x: 'ETH_%s'%x, list(p.read_csv('/tmp/symbols.txt', index_col=0)['0'].get_values()) ))
+        
+        try:
+            bdf = pl.getBalanceTable(live=False)
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                print bdf
+            balance = n.sum(bdf['balanceUSDT'].get_values())
+        except Exception as e:
+            print e
+            balance = 100
+
+        # poloniex
+        df = pl.getCurrencies(quote='ETH')
+        symbols = 'BTC ETH %s' % ' '.join(list(df.index))    
+        print symbols
+        df = pl.allocations(symbols=symbols, bars=bars)
+    
+        #print df
+        ts = max(df.index)
+        pdf = df.loc[[ts], :].transpose()
+        pdf['quote'] = map(lambda x: x.split('_')[0], pdf.index)
+        pdf['base']  = map(lambda x: x.split('_')[1], pdf.index)
+        pdf['usd'] = pdf[ts] * balance
+        pdf.to_csv('/tmp/allocations.csv')
+        print pdf
+
     if not args.research11:
         cmc = CoinMarketCap()
         pm  = PortfolioModeler()
@@ -2451,125 +2674,19 @@ def main():
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print df
 
-    if args.research12:
-        #cmc = CoinMarketCap()
-        #df = cmc.tickers()
-        pl = Poloniex('M8YTJIKE-2EIE8VV2-7UP6Z9O0-PJNGRPV4', '7ed5f13cee6469c3790f236c28d9b9dcd3b1714f9b5a310c8f25f221348ec5c2d0149cda35d58f53a34cae20d8e246f8462d7e95abcaa2bac4062ad24fb0034d')
-        pl.trade(pair=None, mtype=None, rate=None, amount=None)
-        sys.exit()
-        
-        import matplotlib.pylab as plt
-        from qoreliquid import normalizeme, sigmoidme
-        #import seaborn as sea
-        #sea.set()
-        
-        def allocations(symbols='BTC ETH LTC XRP DASH XEM XMR MIOTA NEO ETH_OMG', bars=15):
-            # equity allocations
-            mdf = p.DataFrame()
-            li = symbols.split(' ')
-            #li = 'BTC ETH EOS OMG'.split(' ')
-            #li = map(lambda x: 'USDT_%s'%x, li)
-            for i in range(len(li)):
-                symbol = li[i]
-                quote = symbol.split('_')[0]
-                try:    base  = symbol.split('_')[1]
-                except: base = ''
-                if base == '':
-                    symbol = 'USDT_%s' % symbol
-                    li[i]  = symbol
-                #try:    print '%s %s %s' % (quote, base, symbol)
-                #except: print '%s %s' % (quote, symbol)
-                try:
-                    df = pl.getPoloniexHistorical(symbol=symbol, period=86400, bars=bars, cache=True)#.set_index('date')
-                    df = df.set_index('date').loc[:, 'close volume'.split(' ')]
-                    df[symbol] = df['close']
-                    #plt.plot(df['close'])
-                    #plt.show()
-                    #print df
-                    mdf = mdf.combine_first(df.loc[:, [symbol]])
-                except Exception as e:
-                    #print '%s %s' % (symbol, e)
-                    ''
-                if base != '':
-                    #print symbol
-                    try: mdf[symbol] = mdf[symbol] * mdf['USDT_ETH']
-                    except:''
-            
-            mdf['sum'] = n.sum(mdf.get_values(), 1)
-    
-            # convert weight to percentage
-            """for symbol in li:
-                try:    mdf[symbol] = mdf[symbol] / mdf['sum']
-                except: ''
-            mdf = mdf.loc[:, li]"""
-            
-            mdf = normalizeme(mdf)
-            mdf = sigmoidme(mdf)
-            mdf = mdf.fillna(0)
-            #mdf.loc['sum',:]  = n.sum(mdf.get_values(), 0)
-            mdf.loc[:, 'sum'] = n.sum(mdf.get_values(), 1)
-            for symbol in mdf.columns: mdf[symbol] = mdf[symbol] / mdf['sum']
-            pmdf = mdf.drop('sum', 1)
-            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                #print pmdf.tail(10)
-                #print pmdf.dtypes
-                #plt.plot(pmdf)
-                #plt.legend(pmdf.columns, loc=2)
-                #plt.show()
-                #print df
-                #print df.shape
-                ''
-            return pmdf
-        """
-        #bars = (365*4)
+    if args.research14:
+        symbols='BTC ETH BTH XRP LTC DASH XEM MIOTA XMR NEO ETC'
         bars = 20
-        #symbols = 'BTC ETH LTC XRP DASH XEM XMR MIOTA NEO'
-        #symbols = 'BTC ETH ETH_OMG ETH_PLR ETH_PPT ETH_CDT ETH_ZRX ETH_PAY'
-        
-        # etherdelta
-        #symbols = 'BTC ETH %s' % ' '.join(map(lambda x: 'ETH_%s'%x, list(p.read_csv('/tmp/symbols.txt', index_col=0)['0'].get_values()) ))
-        
-        # poloniex
-        df = pl.getCurrencies(quote='BTC')
-        symbols = 'BTC ETH %s' % ' '.join(list(df.index))        
-        
-        print symbols
-        df = allocations(symbols=symbols, bars=bars)
-
-        balance = 230
-        #print df
-        ts = max(df.index)
-        pdf = df.loc[[ts], :].transpose()
-        pdf['usd'] = pdf[ts] * balance
-        print pdf
-        """
-        
-        
-    """if args.research13:
-        res = req.get('https://api.etherscan.io/api?module=logs&action=getLogs&address=0x8d12a197cb00d4747a1fe03395095ce2a5cc6819&topic0=0x6effdda786735d5033bfad5f53e5131abcced9e52be6c507b62d639685fbed6d&fromBlock=4256000&toBlock=4256049&apikey=WK875Y9DFJ42H3Q6ZJ22J4CCWH4HVC9PJH')
-        print res.text"""
+        mdf = pl.makeCurrencyTimeseriesTable(symbols, bars=bars)
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print mdf
+        sys.exit()
 
     # portfolio tokenization
     if args.research05:
         portfolioTokenization()
 
-def main2():
-    import pkg_resources
-    def ff(name):
-        print '%s: %s' % (name, pkg_resources.get_distribution(name).version)
-    ff('poloniex')
-    ff('urllib3')
-    import poloniex
-    #from urllib import urlencode as _urlencode
-    pl = poloniex.Poloniex('M8YTJIKE-2EIE8VV2-7UP6Z9O0-PJNGRPV4', '7ed5f13cee6469c3790f236c28d9b9dcd3b1714f9b5a310c8f25f221348ec5c2d0149cda35d58f53a34cae20d8e246f8462d7e95abcaa2bac4062ad24fb0034d')    
-    print pl.returnBalances()        
-
-    pl = Poloniex('M8YTJIKE-2EIE8VV2-7UP6Z9O0-PJNGRPV4', '7ed5f13cee6469c3790f236c28d9b9dcd3b1714f9b5a310c8f25f221348ec5c2d0149cda35d58f53a34cae20d8e246f8462d7e95abcaa2bac4062ad24fb0034d')
-    pl.debugon()
-    pl.trade(pair='BTC_ETH', mtype=None, rate=0.2, amount=10)
 
 if __name__ == "__main__":
-    #main()
-    main2()
-    ''
+    main()
     
