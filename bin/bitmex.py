@@ -2006,7 +2006,8 @@ def main():
     parser.add_argument("-r08", '--research08', help="test 08", action="store_true")
     parser.add_argument("-r09", '--research09', help="test 09", action="store_true")
     parser.add_argument("-r10", '--research10', help="test 10 onexchange", action="store_true")
-    parser.add_argument("-r11", '--research11', help="test 11 onexchange", action="store_true")
+    parser.add_argument("-r11", '--research11', help="test 11", action="store_true")
+    parser.add_argument("-r12", '--research12', help="test 12", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -2382,6 +2383,104 @@ def main():
         #df = df.tail(1)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print df
+
+    if args.research12:
+        #cmc = CoinMarketCap()
+        #df = cmc.tickers()
+        pl = Poloniex('M8YTJIKE-2EIE8VV2-7UP6Z9O0-PJNGRPV4', '7ed5f13cee6469c3790f236c28d9b9dcd3b1714f9b5a310c8f25f221348ec5c2d0149cda35d58f53a34cae20d8e246f8462d7e95abcaa2bac4062ad24fb0034d')
+        pl.trade(pair=None, mtype=None, rate=None, amount=None)
+        sys.exit()
+        
+        import matplotlib.pylab as plt
+        from qoreliquid import normalizeme, sigmoidme
+        #import seaborn as sea
+        #sea.set()
+        
+        def allocations(symbols='BTC ETH LTC XRP DASH XEM XMR MIOTA NEO ETH_OMG', bars=15):
+            # equity allocations
+            mdf = p.DataFrame()
+            li = symbols.split(' ')
+            #li = 'BTC ETH EOS OMG'.split(' ')
+            #li = map(lambda x: 'USDT_%s'%x, li)
+            for i in range(len(li)):
+                symbol = li[i]
+                quote = symbol.split('_')[0]
+                try:    base  = symbol.split('_')[1]
+                except: base = ''
+                if base == '':
+                    symbol = 'USDT_%s' % symbol
+                    li[i]  = symbol
+                #try:    print '%s %s %s' % (quote, base, symbol)
+                #except: print '%s %s' % (quote, symbol)
+                try:
+                    df = pl.getPoloniexHistorical(symbol=symbol, period=86400, bars=bars, cache=True)#.set_index('date')
+                    df = df.set_index('date').loc[:, 'close volume'.split(' ')]
+                    df[symbol] = df['close']
+                    #plt.plot(df['close'])
+                    #plt.show()
+                    #print df
+                    mdf = mdf.combine_first(df.loc[:, [symbol]])
+                except Exception as e:
+                    #print '%s %s' % (symbol, e)
+                    ''
+                if base != '':
+                    #print symbol
+                    try: mdf[symbol] = mdf[symbol] * mdf['USDT_ETH']
+                    except:''
+            
+            mdf['sum'] = n.sum(mdf.get_values(), 1)
+    
+            # convert weight to percentage
+            """for symbol in li:
+                try:    mdf[symbol] = mdf[symbol] / mdf['sum']
+                except: ''
+            mdf = mdf.loc[:, li]"""
+            
+            mdf = normalizeme(mdf)
+            mdf = sigmoidme(mdf)
+            mdf = mdf.fillna(0)
+            #mdf.loc['sum',:]  = n.sum(mdf.get_values(), 0)
+            mdf.loc[:, 'sum'] = n.sum(mdf.get_values(), 1)
+            for symbol in mdf.columns: mdf[symbol] = mdf[symbol] / mdf['sum']
+            pmdf = mdf.drop('sum', 1)
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                #print pmdf.tail(10)
+                #print pmdf.dtypes
+                #plt.plot(pmdf)
+                #plt.legend(pmdf.columns, loc=2)
+                #plt.show()
+                #print df
+                #print df.shape
+                ''
+            return pmdf
+        """
+        #bars = (365*4)
+        bars = 20
+        #symbols = 'BTC ETH LTC XRP DASH XEM XMR MIOTA NEO'
+        #symbols = 'BTC ETH ETH_OMG ETH_PLR ETH_PPT ETH_CDT ETH_ZRX ETH_PAY'
+        
+        # etherdelta
+        #symbols = 'BTC ETH %s' % ' '.join(map(lambda x: 'ETH_%s'%x, list(p.read_csv('/tmp/symbols.txt', index_col=0)['0'].get_values()) ))
+        
+        # poloniex
+        df = pl.getCurrencies(quote='BTC')
+        symbols = 'BTC ETH %s' % ' '.join(list(df.index))        
+        
+        print symbols
+        df = allocations(symbols=symbols, bars=bars)
+
+        balance = 230
+        #print df
+        ts = max(df.index)
+        pdf = df.loc[[ts], :].transpose()
+        pdf['usd'] = pdf[ts] * balance
+        print pdf
+        """
+        
+        
+    """if args.research13:
+        res = req.get('https://api.etherscan.io/api?module=logs&action=getLogs&address=0x8d12a197cb00d4747a1fe03395095ce2a5cc6819&topic0=0x6effdda786735d5033bfad5f53e5131abcced9e52be6c507b62d639685fbed6d&fromBlock=4256000&toBlock=4256049&apikey=WK875Y9DFJ42H3Q6ZJ22J4CCWH4HVC9PJH')
+        print res.text"""
 
     # portfolio tokenization
     if args.research05:
