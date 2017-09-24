@@ -1158,6 +1158,8 @@ ETH/BTC.DC 	0 	"""
                     ev.addToPortFolio(di['Asset Id'], di['Quantity'], di['Cost Basis Each (USD)'])
             except: ''
         ev.exportPortfolio()
+        df = p.DataFrame(list(mdf0.index))
+        df.to_csv('/tmp/symbols.txt')
         print ev.df
 
 class TokenMarket:
