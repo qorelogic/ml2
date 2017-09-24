@@ -1636,7 +1636,12 @@ class Poloniex(Exchange):
 
     def getCurrencies(self, quote='ETH'):
         #li = apiRequest('https://poloniex.com/public', '?command=returnCurrencies')
-        li = apiRequest('https://poloniex.com/public', '?command=returnTicker')
+        #li = apiRequest('https://poloniex.com/public', '?command=returnTicker')
+        payload = {}
+        payload['url'] = 'https://poloniex.com/public?command=returnTicker'
+        ret = req.get(**payload)
+        li = uj.loads(ret.text)
+
         df = p.DataFrame(li)
         df = df.transpose()
         df = df.sort_values(by='percentChange', ascending=False)
