@@ -185,92 +185,6 @@ def makeTimeseriesTimestampRange(timestamp=None, period=14400, bars=50):
         #print d
         return {'start':d[0], 'end':d[len(d)-1], 'range':d, 'timestamp':timestamp, 'bars':bars, 'period':period}
 
-class Poloniex:
-
-    def __init__(self):
-        self.qd = QoreDebug()
-        self.btc = 'DASH ETH FCT GNO LTC XMR REP XRP ZEC'.split(' ')
-        self.periods = '1 5 15 30 60 240 14400'.split(' ')
-        self.periods = [300, 900, 1800, 7200, 14400, 86400]
-        #self.periods = [1, 5, 15, 30, 60, 3600, 14400, 86400]
-        print self.periods
-
-    def getPoloniexHistorical(self, symbol='BTC_XMR', period=14400, start=1405699200, end=9999999999, bars=15):
-        import time,calendar
-        ts = time.time()
-        #print ts
-        tsd = datetime.datetime.fromtimestamp(ts)
-        #print tsd
-        tss = calendar.timegm([tsd.year,tsd.month,tsd.day,0,0,0,0,0,0])
-        start = tss
-        
-        #start = start - period
-        oq = OandaQ()
-        # doc: https://poloniex.com/support/api/
-        tms = makeTimeseriesTimestampRange(timestamp=int(ts), period=period, bars=bars)
-        start = tms['start']
-        end = tms['end']
-        li = apiRequest('https://poloniex.com/public', '?command=returnChartData&currencyPair=%s&start=%s&end=%s&period=%s' % (symbol, start, end, period), noCache=True)
-        try:
-            df = p.DataFrame(li)
-        except:
-            df = p.DataFrame(li, index=[0])
-        df['date2'] = oq.timestampToDatetime_S(df['date'], utc=True)
-        with p.option_context('display.max_rows', 40, 'display.max_columns', 4000, 'display.width', 1000000):
-            #print df.head(5)
-            #print df.tail(5)
-            #print df
-            #print len(df.index)
-            ''
-        return df
-
-    def viewHistoricalPricePoloniex(self):
-        from matplotlib import pyplot as plt
-        from pylab import rcParams
-        import seaborn as sns
-        sns.set()
-        #%pylab inline
-        rcParams['figure.figsize'] = 30, 5
-        df = pl.getPoloniexHistorical(symbol='BTC_ETC', period=86400, bars=300)
-        df.ix[:, 'open high low close'.split(' ')].plot()
-        #df = pl.getPoloniexHistorical(symbol='BTC_ETC', period=240)
-        #df.ix[:, 'open high low close'.split(' ')].plot()
-        plt.show()
-    
-    def viewChartsPoloniex(self):
-        from matplotlib import pyplot as plt
-        from pylab import rcParams
-        import seaborn as sns
-        sns.set()
-        #%pylab inline
-        rcParams['figure.figsize'] = 30, 5
-        btc_usd = 2400
-        for i in self.btc:
-            print i
-            df = pl.getPoloniexHistorical(symbol='BTC_%s' % i, period=300, bars=300)
-            mdfp = df.ix[:, 'open high low close'.split(' ')]
-            mdfp = mdfp.ix[:, :] * btc_usd
-            print mdfp.head(10)
-            mdfp.plot()
-            plt.show()
-            print '====='
-
-    def getCurrencies(self):
-        #li = apiRequest('https://poloniex.com/public', '?command=returnCurrencies')
-        li = apiRequest('https://poloniex.com/public', '?command=returnTicker')
-        df = p.DataFrame(li)
-        df = df.transpose()
-        df = df.sort_values(by='percentChange', ascending=False)
-        for x in xrange(len(df.index)):
-            sp = df.index[x]
-            quote = sp.split('_')[0]
-            base  = sp.split('_')[1]
-            df.loc[sp, 'quote'] = quote
-            df.loc[sp, 'base']  = base
-            df.loc[sp, 'symbol']  = '%s/%s'%(base, quote)
-        df = df[df['quote'] == 'ETH']
-        return df
-
 def currencyCube(r=None,tf=None, c=None,d=None, index=None, columns=None, rdf=None):
     #r = 550 #rows history
     #c = 40   #columns currencypairs
@@ -1490,12 +1404,12 @@ class TokenMarket:
 
 class Exchange:
 
-    def __init__(self, key, secret, exchange):
+    def __init__(self, key=None, secret=None, exchange=None):
         self.qd = QoreDebug()
         self.debug = False
-        self.key    = key.strip()
-        self.secret = secret.strip()
-        self.exchange = exchange.strip()
+        if key:      self.key      = key.strip()
+        if secret:   self.secret   = secret.strip()
+        if exchange: self.exchange = exchange.strip()
 
     def debugon(self):
         self.debug = True
@@ -1519,52 +1433,93 @@ class Exchange:
             H = hmac.new(self.secret.encode(), msg.encode(), hl.sha512)
             #print 'msg: %s' % msg
             return H.hexdigest()
+        if self.exchange == 'poloniex':
+            #sign = hmac.new(self.secret, digestmod=hl.sha512)
+            #sign = _new(self.secret.encode('utf-8'), _urlencode(args).encode('utf-8'),_sha512)
+            sen = self.secret.encode('utf-8')
+            #print params
+            lasd = urllib.urlencode(params)
+            lasd = lasd.encode('utf-8')
+            sign = hmac.new(sen, lasd, hl.sha512)
+            #params = urllib.urlencode(params)
+            #sign.update(params)
+            return sign.hexdigest()
 
     #def getResponse():
     
     def requestAuthenticated(self, method=None, url=None, params={}, requestType='POST'):
-        if method:
+        if method and self.exchange != 'poloniex':
             params.update({'method':method})
         if self.exchange == 'liqui':
             nonce = str(1)
         if self.exchange == 'bittrex':
             nonce = str(int(time.time() * 1000))
+        if self.exchange == 'poloniex':
+            nonce = str(int(time.time() * 1000000))
         params.update({'nonce':nonce})
-        params = urllib.urlencode(params)
 
         if self.exchange == 'liqui':
+            params = urllib.urlencode(params)
             headers = {'Content-type': 'application/x-www-form-urlencoded',
                       'Key':  self.key,
                       'Sign': self.signHMAC512(params=params)}
         if self.exchange == 'bittrex':
+            params = urllib.urlencode(params)
             headers = {'apisign': self.signHMAC512(msg='https://bittrex.com' + url)}
-
-        conn = httplib.HTTPSConnection(self.apiServer)
-        if url:
-            conn.request(requestType, url, params, headers)
+        if self.exchange == 'poloniex':
+            #'Content-type': 'application/x-www-form-urlencoded',
+            params['command'] = method
+            payload = {}
+            payload['url'] = url
+            payload['data'] = params
+            headers = {'Key':  self.key,
+                       'Sign': self.signHMAC512(params=params)}
+            payload['headers'] = headers
+            params = urllib.urlencode(params).encode('utf-8')
+            #params = payload
+            #headers = payload
+            print '---'
+            print 'url: %s' % url
+            print 'headers: %s' % headers
+            print 'params: %s' % params
+            print 'payload: %s' % payload
+            print '---'
+            
+        if self.exchange == 'poloniex':
+            ret = req.post(**payload)
+            response = ret.text
+            #sys.exit()
         else:
-            conn.request(requestType, self.apiMethod, params, headers)
-        response = conn.getresponse()
+            conn = httplib.HTTPSConnection(self.apiServer)
+            if url:
+                conn.request(requestType, url, params, headers)
+            else:
+                conn.request(requestType, self.apiMethod, params, headers)
+            response = conn.getresponse()
 
-        if self.debug:
-            print response.msg
-            print response.status
-            print response.reason
-            #print res
-
-            #print dir(response)
-
-            print 'params:'
-            print params
-            print
-            print 'headers:'
-            print headers
+            if self.debug:
+                print response.msg
+                print response.status
+                print response.reason
+                
+                #print res
+    
+                #print dir(response)
+    
+                print 'params:'
+                print params
+                print
+                print 'headers:'
+                print headers
 
         try:
             data = uj.load(response)
         except Exception as e:
             #self.qd.exception(e)
-            data = uj.loads(response.read())
+            try:
+                data = uj.loads(response.read())
+            except:
+                data = uj.loads(response)
         try:
             if self.debug:
                 print data
@@ -1604,6 +1559,111 @@ class Liqui(Exchange):
 
 class OpenLedger:
     ''
+
+class Poloniex(Exchange):
+
+    def __init__(self, key=None, secret=None):
+        Exchange.__init__(self, key, secret, exchange='poloniex')
+        self.qd = QoreDebug()
+        self.apiServer = 'poloniex.com'
+        self.apiMethod = '/tradingApi'
+        self.btc = 'DASH ETH FCT GNO LTC XMR REP XRP ZEC'.split(' ')
+        self.periods = '1 5 15 30 60 240 14400'.split(' ')
+        self.periods = [300, 900, 1800, 7200, 14400, 86400]
+        #self.periods = [1, 5, 15, 30, 60, 3600, 14400, 86400]
+        print self.periods
+
+    def getPoloniexHistorical(self, symbol='BTC_XMR', period=14400, start=1405699200, end=9999999999, bars=15, cache=False):
+        import time,calendar
+        ts = time.time()
+        #print ts
+        tsd = datetime.datetime.fromtimestamp(ts)
+        #print tsd
+        tss = calendar.timegm([tsd.year,tsd.month,tsd.day,0,0,0,0,0,0])
+        start = tss
+        
+        #start = start - period
+        oq = OandaQ()
+        # doc: https://poloniex.com/support/api/
+        tms = makeTimeseriesTimestampRange(timestamp=int(ts), period=period, bars=bars)
+        start = tms['start']
+        end = tms['end']
+        noCache = not cache
+        li = apiRequest('https://poloniex.com/public', '?command=returnChartData&currencyPair=%s&start=%s&end=%s&period=%s' % (symbol, start, end, period), noCache=noCache)
+        try:
+            df = p.DataFrame(li)
+        except:
+            df = p.DataFrame(li, index=[0])
+        df['date2'] = oq.timestampToDatetime_S(df['date'], utc=True)
+        with p.option_context('display.max_rows', 40, 'display.max_columns', 4000, 'display.width', 1000000):
+            #print df.head(5)
+            #print df.tail(5)
+            #print df
+            #print len(df.index)
+            ''
+        return df
+
+    def viewHistoricalPricePoloniex(self):
+        from matplotlib import pyplot as plt
+        from pylab import rcParams
+        import seaborn as sns
+        sns.set()
+        #%pylab inline
+        rcParams['figure.figsize'] = 30, 5
+        df = pl.getPoloniexHistorical(symbol='BTC_ETC', period=86400, bars=300)
+        df.ix[:, 'open high low close'.split(' ')].plot()
+        #df = pl.getPoloniexHistorical(symbol='BTC_ETC', period=240)
+        #df.ix[:, 'open high low close'.split(' ')].plot()
+        plt.show()
+    
+    def viewChartsPoloniex(self):
+        from matplotlib import pyplot as plt
+        from pylab import rcParams
+        import seaborn as sns
+        sns.set()
+        #%pylab inline
+        rcParams['figure.figsize'] = 30, 5
+        btc_usd = 2400
+        for i in self.btc:
+            print i
+            df = pl.getPoloniexHistorical(symbol='BTC_%s' % i, period=300, bars=300)
+            mdfp = df.ix[:, 'open high low close'.split(' ')]
+            mdfp = mdfp.ix[:, :] * btc_usd
+            print mdfp.head(10)
+            mdfp.plot()
+            plt.show()
+            print '====='
+
+    def getCurrencies(self, quote='ETH'):
+        #li = apiRequest('https://poloniex.com/public', '?command=returnCurrencies')
+        li = apiRequest('https://poloniex.com/public', '?command=returnTicker')
+        df = p.DataFrame(li)
+        df = df.transpose()
+        df = df.sort_values(by='percentChange', ascending=False)
+        for x in xrange(len(df.index)):
+            sp = df.index[x]
+            _quote = sp.split('_')[0]
+            _base  = sp.split('_')[1]
+            df.loc[sp, 'quote'] = _quote
+            df.loc[sp, 'base']  = _base
+            df.loc[sp, 'symbol']  = '%s/%s'%(_base, _quote)
+        df = df[df['quote'] == quote]
+        return df
+
+    def trade(self, pair=None, mtype=None, rate=None, amount=None):
+        params =   {
+                    #'type':mtype,
+                    'currencyPair': str(pair).upper(),
+                    'rate': str(rate),
+                    'amount': str(amount),
+                    }
+        data = self.requestAuthenticated(url='https://poloniex.com/tradingApi', method='buy', params=params)        
+        try:
+            df = p.DataFrame(data['return'])#.transpose()
+        except:
+            print data['error']
+            return
+        return df.transpose()
 
 class Bittrex(Exchange):
 
@@ -2488,5 +2548,23 @@ def main():
     if args.research05:
         portfolioTokenization()
 
+def main2():
+    import pkg_resources
+    def ff(name):
+        print '%s: %s' % (name, pkg_resources.get_distribution(name).version)
+    ff('poloniex')
+    ff('urllib3')
+    import poloniex
+    #from urllib import urlencode as _urlencode
+    pl = poloniex.Poloniex('M8YTJIKE-2EIE8VV2-7UP6Z9O0-PJNGRPV4', '7ed5f13cee6469c3790f236c28d9b9dcd3b1714f9b5a310c8f25f221348ec5c2d0149cda35d58f53a34cae20d8e246f8462d7e95abcaa2bac4062ad24fb0034d')    
+    print pl.returnBalances()        
+
+    pl = Poloniex('M8YTJIKE-2EIE8VV2-7UP6Z9O0-PJNGRPV4', '7ed5f13cee6469c3790f236c28d9b9dcd3b1714f9b5a310c8f25f221348ec5c2d0149cda35d58f53a34cae20d8e246f8462d7e95abcaa2bac4062ad24fb0034d')
+    pl.debugon()
+    pl.trade(pair='BTC_ETH', mtype=None, rate=0.2, amount=10)
+
 if __name__ == "__main__":
-    main()
+    #main()
+    main2()
+    ''
+    
