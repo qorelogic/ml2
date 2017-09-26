@@ -1760,27 +1760,71 @@ class Poloniex(Exchange):
         from qoreliquid import normalizeme, sigmoidme
         #import seaborn as sea
         #sea.set()
-        # equity allocations
+
+        try:
+            bdf = self.getBalanceTable(live=False)
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                print bdf
+            balance = n.sum(bdf['balanceUSDT'].get_values())
+        except Exception as e:
+            print e
+            balance = 100
+
+        try:
+            # equity allocations
+            mdf = self.makeCurrencyTimeseriesTable(symbols, bars=bars)
+            #mdf['sum'] = n.sum(mdf.get_values(), 1)
         
-        mdf = self.makeCurrencyTimeseriesTable(symbols, bars=bars)
-        mdf['sum'] = n.sum(mdf.get_values(), 1)
+            # convert weight to percentage
+            """for symbol in li:
+                try:    mdf[symbol] = mdf[symbol] / mdf['sum']
+                except: ''
+            mdf = mdf.loc[:, li]"""
+            
+            mdf = normalizeme(mdf)
+            mdf = sigmoidme(mdf)
+            mdf = mdf.fillna(0)
     
-        # convert weight to percentage
-        """for symbol in li:
-            try:    mdf[symbol] = mdf[symbol] / mdf['sum']
-            except: ''
-        mdf = mdf.loc[:, li]"""
-        
-        mdf = normalizeme(mdf)
-        mdf = sigmoidme(mdf)
-        mdf = mdf.fillna(0)
-        #mdf.loc['sum',:]  = n.sum(mdf.get_values(), 0)
-        mdf.loc[:, 'sum'] = n.sum(mdf.get_values(), 1)
-        for symbol in mdf.columns: mdf[symbol] = mdf[symbol] / mdf['sum']
-        pmdf = mdf.drop('sum', 1)
+            #mdf.loc['sum',:]  = n.sum(mdf.get_values(), 0)
+            #mdf.loc[:, 'sum'] = n.sum(mdf.get_values(), 1)
+            psum              = n.sum(mdf.get_values(), 1)
+            for symbol in mdf.columns: mdf[symbol] = mdf[symbol] / psum
+            # fix portfolio dilution on coin addition [for improved visualization in plot]
+            dff = n.sum(n.array(mdf > 0, dtype=int), 1)
+            mdf.loc[:, :] = (mdf.get_values().T * dff).T        
+            #mdf = mdf.drop('sum', 1)
+            pmdf = mdf
+        except:
+            import matplotlib.pylab as plt
+            import seaborn as ss
+            ss.set()    
+            df0 = p.read_csv('/tmp/allocations2.csv', index_col=0)
+            # fix portfolio dilution on coin addition [for improved visualization in plot]
+            dff = n.sum(n.array(df0 > 0, dtype=int), 1)
+            df1 = df0.copy()
+            df0.loc[:, :] = (df0.get_values().T * dff).T
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                print df1.tail(10)
+                print df0.tail(10)
+            plt.plot(df0)
+            plt.legend(df0.columns, loc=2)
+            plt.show()
+            sys.exit()
+                    
+        # save to allocations.csv file
+        ts = max(pmdf.index)
+        pdf = pmdf.loc[[ts], :].transpose()
+        #pdf['portPcnt'] = pdf[ts]
+        pdf['quote'] = map(lambda x: x.split('_')[0], pdf.index)
+        pdf['base']  = map(lambda x: x.split('_')[1], pdf.index)
+        #pdf['usd'] = pdf[ts] * balance
+        pdf = pdf.rename_axis({ts:'portPcnt'}, axis='columns')
+        pdf.to_csv('/tmp/allocations.csv')
+        pmdf.to_csv('/tmp/allocations2.csv')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print pmdf.tail(10)
             #print pmdf.dtypes
+            #for symbol in pmdf.columns: pmdf[symbol] = pmdf[symbol] / psum
             plt.plot(pmdf)
             plt.legend(pmdf.columns, loc=2)
             plt.show()
@@ -1791,29 +1835,54 @@ class Poloniex(Exchange):
         df = self.getCurrencies(quote='ETH')
         df = setIndex(df, 'base', 'symbol2')
         #df = self.getCurrencies(quote=None)
-        dfbtc = self.getCurrencies(quote='USDT')
-
+        dfusdt = self.getCurrencies(quote='USDT')
         df['id'] = df.index
         pdf = p.read_csv('/tmp/allocations.csv', index_col=0)
         pdf = setIndex(pdf, 'base', 'symbol2')
+        print pdf
+        def nom(pmdf):
+            pmdf = pmdf.transpose()
+            ff = pmdf.index[0]
+            psum = n.sum(pmdf, 1)
+            psum = psum[ff]
+            for symbol in pmdf.columns: pmdf.loc[ff,symbol] = pmdf.loc[ff,symbol] / psum
+            pmdf = pmdf.transpose()
+            return pmdf
+        pdf = nom(pdf)
         df = df.combine_first(pdf)#.fillna(0)
         #df = df.set_index('base')
         bdf = self.getInfo()
         df = df.combine_first(bdf).fillna(0)
-        df['lastUSDT'] = df['last'] * dfbtc.loc['USDT_ETH', 'last']
+        df['lastUSDT'] = df['last'] * dfusdt.loc['USDT_ETH', 'last']
+        df.loc['USDT', 'last'] = 1
         df.loc['USDT', 'lastUSDT'] = 1
         df['balanceUSDT'] = df['balance'] * df['lastUSDT']
-        df.loc['sum', 'balanceUSDT'] = n.sum(df['balanceUSDT'])
-        df['diffUSDT'] = df['usd'] - df['balanceUSDT']
-        df['diffETH'] = df['diffUSDT'] / dfbtc.loc['USDT_ETH', 'last']
+
+        # fix balances
+        for i in df[df['quote'] == 'USDT'].index:
+            for j in dfusdt.columns:
+                df.loc[i, j] = dfusdt.loc[df.loc[i, 'symbol2'], j]
+                df.loc[i, 'lastUSDT'] = df.loc[i, 'last']
+                df.loc[i, 'balanceUSDT'] = df.loc[i, 'balance'] * df.loc[i, 'lastUSDT']
+
+        #df.loc['sum', 'balanceUSDT'] = n.sum(df['balanceUSDT'])
+        
+        df['portBalanceUSDT'] = df['portPcnt'] * df['balanceUSDT'].sum()
+        df['diffUSDT'] = df['portBalanceUSDT'] - df['balanceUSDT']
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print df
+        #df['diffUSDT'] = df['usd'] - df['balanceUSDT']
+        df['diffETH'] = df['diffUSDT'] / dfusdt.loc['USDT_ETH', 'last']
         df['diffQuote'] = df['diffETH'] / df['last']
         mdf = df.loc[:, 'symbol2 last diffQuote'.split(' ')].sort_values(by='diffQuote', ascending=True).set_index('symbol2')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             #print bdf
             #print pdf
-            print df
-            print df.loc[:, 'quote symbol2 balanceUSDT usd diffUSDT diffETH diffQuote'.split(' ')]
-            print mdf
+            #print df
+            #print df.loc[:, 'quote symbol2 balanceUSDT usd diffUSDT diffETH diffQuote'.split(' ')]
+            #print mdf
+            ''
+            print 'balance: %s' % n.sum(df['balanceUSDT'])
         for i in mdf.index:
             diffQuote = mdf.loc[i, 'diffQuote']
             method = 'buy' if diffQuote > 0 else 'sell'
@@ -2308,29 +2377,13 @@ def main():
         # etherdelta
         #symbols = 'BTC ETH %s' % ' '.join(map(lambda x: 'ETH_%s'%x, list(p.read_csv('/tmp/symbols.txt', index_col=0)['0'].get_values()) ))
         
-        try:
-            bdf = pl.getBalanceTable(live=False)
-            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                print bdf
-            balance = n.sum(bdf['balanceUSDT'].get_values())
-        except Exception as e:
-            print e
-            balance = 100
-
         # poloniex
         df = pl.getCurrencies(quote='ETH')
         symbols = 'BTC ETH %s' % ' '.join(list(df.index))    
         print symbols
-        df = pl.allocations(symbols=symbols, bars=bars)
-    
-        #print df
-        ts = max(df.index)
-        pdf = df.loc[[ts], :].transpose()
-        pdf['quote'] = map(lambda x: x.split('_')[0], pdf.index)
-        pdf['base']  = map(lambda x: x.split('_')[1], pdf.index)
-        pdf['usd'] = pdf[ts] * balance
-        pdf.to_csv('/tmp/allocations.csv')
-        print pdf
+        pdf = pl.allocations(symbols=symbols, bars=bars)
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print pdf
 
     if not args.research11:
         cmc = CoinMarketCap()
