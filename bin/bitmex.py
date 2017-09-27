@@ -1819,7 +1819,12 @@ class Poloniex(Exchange):
         pdf['base']  = map(lambda x: x.split('_')[1], pdf.index)
         #pdf['usd'] = pdf[ts] * balance
         pdf = pdf.rename_axis({ts:'portPcnt'}, axis='columns')
-        pdf.to_csv('/tmp/allocations.csv')
+        fname = '/tmp/allocations.csv'
+        fname2 = '%s.%s'%(fname, int(time.time()))
+        print '%s %s' % (fname, fname2)
+        pdf.to_csv(fname)
+        rdf = p.read_csv(fname, index_col=0)
+        rdf.to_csv(fname2)
         pmdf.to_csv('/tmp/allocations2.csv')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print pmdf.tail(10)
@@ -1831,8 +1836,8 @@ class Poloniex(Exchange):
             ''
         return pmdf
     
-    def getBalanceTable(self, live=False, verbose=False):
-        df = self.getCurrencies(quote='ETH')
+    def getBalanceTable(self, live=False, verbose=False, quote='ETH'):
+        df = self.getCurrencies(quote=quote)
         df = setIndex(df, 'base', 'symbol2')
         #df = self.getCurrencies(quote=None)
         dfusdt = self.getCurrencies(quote='USDT')
@@ -1873,7 +1878,8 @@ class Poloniex(Exchange):
             print df
         #df['diffUSDT'] = df['usd'] - df['balanceUSDT']
         df['diffETH'] = df['diffUSDT'] / dfusdt.loc['USDT_ETH', 'last']
-        df['diffQuote'] = df['diffETH'] / df['last']
+        df['diffBTC'] = df['diffUSDT'] / dfusdt.loc['USDT_BTC', 'last']
+        df['diffQuote'] = df['diff%s'%quote] / df['last']
         mdf = df.loc[:, 'symbol2 last diffQuote'.split(' ')].sort_values(by='diffQuote', ascending=True).set_index('symbol2')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             #print bdf
@@ -2351,7 +2357,11 @@ def main():
     if args.research13:
         
         #print pl.trade(pair='ETH_ZRX', method='sell', rate=0.0006, amount=5)
-        df = pl.getBalanceTable(live=True, verbose=True)
+        quote=args.currency # ETH or BTC
+        df = pl.getBalanceTable(live=True, verbose=True, quote=quote)
+        #df = pl.getBalanceTable(live=False, verbose=True, quote=quote)
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print df
     
     if args.research12:
         """import pkg_resources
@@ -2378,8 +2388,13 @@ def main():
         #symbols = 'BTC ETH %s' % ' '.join(map(lambda x: 'ETH_%s'%x, list(p.read_csv('/tmp/symbols.txt', index_col=0)['0'].get_values()) ))
         
         # poloniex
-        df = pl.getCurrencies(quote='ETH')
-        symbols = 'BTC ETH %s' % ' '.join(list(df.index))    
+        quote=args.currency # ETH or BTC
+        df = pl.getCurrencies(quote=quote)
+        if quote == 'ETH':
+            symbols = 'BTC ETH %s' 
+        if quote == 'BTC':
+            symbols = 'BTC %s'
+        symbols = symbols % ' '.join(list(df.index))
         print symbols
         pdf = pl.allocations(symbols=symbols, bars=bars)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
