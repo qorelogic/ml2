@@ -2335,6 +2335,7 @@ def main():
     parser.add_argument("-r12", '--research12', help="test 12", action="store_true")
     parser.add_argument("-r13", '--research13', help="test 13", action="store_true")
     parser.add_argument("-r14", '--research14', help="test 14", action="store_true")
+    parser.add_argument("-r15", '--research15', help="test 15", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -2773,12 +2774,83 @@ def main():
         mdf.to_csv('/mldev/bin/data/cache/coins/marketcap.csv')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print mdf
+
+
+    if args.research15:
+        from scipy import signal
+        import matplotlib.pylab as plt
+        def peaks(df, seekWidth):
+            x = df.index
+            y = df['sum'].get_values()
+            #x = n.arange(0, n.pi, 0.05)
+            #y = n.sin(x)
+            peakind = signal.find_peaks_cwt(y, n.arange(1,seekWidth))
+            #print peakind
+            pdf = p.DataFrame()
+            print '---'
+            #print list(x[peakind])
+            pdf['x'] = x[peakind]
+            #print type(y)
+            pdf['y'] = y[peakind]
+            #print list(y[peakind])
+            #print x
+            print pdf
+            df['sum'].plot(logy=True)
+            plt.scatter(x[peakind], y[peakind])
+            #plt.plot(x, y)
+            #plt.legend(mdf.columns, loc=2)
+            plt.show()
+            #([32], array([ 1.6]), array([ 0.9995736]))
+        """x = n.arange(0, n.pi, 0.05)
+        y = n.sin(x)
+        peaks(x, y)
+        sys.exit()"""
+
+        mdf = p.read_csv('/mldev/bin/data/cache/coins/marketcap.csv', index_col=0)
+        try:    num = int(args.instruments)
+        except: num = 10
+        seekWidths = [2,3,5,8,13,21,34,55,89,144,233]
+        """
+        seekWidth = num
+        mdf['sum'] = p.rolling_mean(mdf['sum'], seekWidth)
+        #mdf['sum'].plot(logy=True)
+        #plt.legend(mdf.columns, loc=2)
+        #plt.show()
+        #sys.exit()
+        #peaks(mdf.index, mdf['sum'].get_values())
+        peaks(mdf, seekWidth)
+        #mdf['sum'] = 1/mdf['sum']
+        #peaks(mdf, seekWidth)"""
+        #sys.exit()
+        for i in range(len(seekWidths)-1, -1, -1):
+            print seekWidths[i]
+            seekWidth = seekWidths[i]
+            cmdf = mdf.copy()
+            #cmdf['sum'] = p.rolling_mean(cmdf['sum'], seekWidth)
+            cmdf['sum'] = cmdf['sum'].rolling(window=seekWidth).mean()
+            #cmdf['sum'].plot(logy=True)
+            #plt.legend(cmdf.columns, loc=2)
+            #plt.show()
+            #sys.exit()
+            #peaks(cmdf.index, cmdf['sum'].get_values())
+            peaks(cmdf, seekWidth)
+            #cmdf['sum'] = 1/cmdf['sum']
+            #peaks(cmdf, seekWidth)"""
+        sys.exit()
+
+        peaks(mdf.index, list(mdf['sum']))
+        import matplotlib.pylab as plt
+        plt.plot(mdf['sum'])
+        plt.legend(mdf.columns, loc=2)
+        plt.show()
+        mdf['sum'].plot(logy=True)
+        plt.legend(mdf.columns, loc=2)
+        plt.show()
         sys.exit()
 
     # portfolio tokenization
     if args.research05:
         portfolioTokenization()
-
 
 if __name__ == "__main__":
     main()
