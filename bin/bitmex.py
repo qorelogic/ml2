@@ -1678,12 +1678,13 @@ class Poloniex(Exchange):
                     'amount': str(amount),
                     }
         data = self.requestAuthenticated(url='https://poloniex.com/tradingApi', method=method, params=params)
-        print data
         try:
-            df = p.DataFrame(data)#.transpose()
+            df = p.DataFrame(data, index=[pair])#.transpose()
+            print df
         except Exception as e:
             print e
-            print data['error']
+            try: print data['error']
+            except: ''
             return
         return df.transpose()
 
@@ -1755,14 +1756,14 @@ class Poloniex(Exchange):
         """
         return mdf
 
-    def allocations(self, symbols='BTC ETH LTC XRP DASH XEM XMR MIOTA NEO ETH_OMG', bars=15, cache=True):
+    def allocations(self, quote, symbols='BTC ETH LTC XRP DASH XEM XMR MIOTA NEO ETH_OMG', bars=15, cache=True):
         import matplotlib.pylab as plt
         from qoreliquid import normalizeme, sigmoidme
         #import seaborn as sea
         #sea.set()
 
         try:
-            bdf = self.getBalanceTable(live=False)
+            bdf = self.getBalanceTable(live=False, quote=quote)
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
                 print bdf
             balance = n.sum(bdf['balanceUSDT'].get_values())
@@ -1840,6 +1841,9 @@ class Poloniex(Exchange):
         df = self.getCurrencies(quote=quote)
         df = setIndex(df, 'base', 'symbol2')
         #df = self.getCurrencies(quote=None)
+        dfbtc = self.getCurrencies(quote='BTC')
+        dfbtc = setIndex(dfbtc, 'base', 'symbol2')
+        df = df.combine_first(dfbtc)
         dfusdt = self.getCurrencies(quote='USDT')
         df['id'] = df.index
         pdf = p.read_csv('/tmp/allocations.csv', index_col=0)
@@ -1874,21 +1878,20 @@ class Poloniex(Exchange):
         
         df['portBalanceUSDT'] = df['portPcnt'] * df['balanceUSDT'].sum()
         df['diffUSDT'] = df['portBalanceUSDT'] - df['balanceUSDT']
-        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print df
         #df['diffUSDT'] = df['usd'] - df['balanceUSDT']
         df['diffETH'] = df['diffUSDT'] / dfusdt.loc['USDT_ETH', 'last']
         df['diffBTC'] = df['diffUSDT'] / dfusdt.loc['USDT_BTC', 'last']
         df['diffQuote'] = df['diff%s'%quote] / df['last']
+        df = df.fillna(0)
+        df = df[(df['portPcnt'] > 0.0) | (df['balance'] > 0.0)]
         mdf = df.loc[:, 'symbol2 last diffQuote'.split(' ')].sort_values(by='diffQuote', ascending=True).set_index('symbol2')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             #print bdf
             #print pdf
-            #print df
+            print df
             #print df.loc[:, 'quote symbol2 balanceUSDT usd diffUSDT diffETH diffQuote'.split(' ')]
             #print mdf
             ''
-            print 'balance: %s' % n.sum(df['balanceUSDT'])
         for i in mdf.index:
             diffQuote = mdf.loc[i, 'diffQuote']
             method = 'buy' if diffQuote > 0 else 'sell'
@@ -1903,6 +1906,7 @@ class Poloniex(Exchange):
                     self.trade(pair=i, method=method, rate=last, amount=n.abs(diffQuote))
                 #break
                 #time.sleep(1)
+        print 'balance: %s' % n.sum(df['balanceUSDT'])
         return df
 
 class Bittrex(Exchange):
@@ -2294,6 +2298,7 @@ def main():
     parser.add_argument("-pm", '--setPortfolioModel', help="")
     parser.add_argument("-model", '--allocationModel', help="")
     parser.add_argument("-cu", '--currency', help="currency")
+    parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
     parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
     parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
     parser.add_argument("-gp", '--genPortfolio', help="parseCoinMrketCap skipTo", action="store_true")
@@ -2357,11 +2362,11 @@ def main():
     if args.research13:
         
         #print pl.trade(pair='ETH_ZRX', method='sell', rate=0.0006, amount=5)
-        quote=args.currency # ETH or BTC
-        df = pl.getBalanceTable(live=True, verbose=True, quote=quote)
-        #df = pl.getBalanceTable(live=False, verbose=True, quote=quote)
-        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        #    print df
+        quote = args.currency # ETH or BTC
+        live = args.live
+        df = pl.getBalanceTable(live=live, verbose=True, quote=quote)
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print df
     
     if args.research12:
         """import pkg_resources
@@ -2396,7 +2401,7 @@ def main():
             symbols = 'BTC %s'
         symbols = symbols % ' '.join(list(df.index))
         print symbols
-        pdf = pl.allocations(symbols=symbols, bars=bars)
+        pdf = pl.allocations(quote, symbols=symbols, bars=bars)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print pdf
 
