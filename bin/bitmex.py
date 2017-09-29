@@ -1756,20 +1756,21 @@ class Poloniex(Exchange):
         """
         return mdf
 
-    def allocations(self, quote, symbols='BTC ETH LTC XRP DASH XEM XMR MIOTA NEO ETH_OMG', bars=15, cache=True):
+    def allocations(self, quote, symbols='BTC ETH LTC XRP DASH XEM XMR MIOTA NEO ETH_OMG', bars=15, cache=True, balance=None):
         import matplotlib.pylab as plt
         from qoreliquid import normalizeme, sigmoidme
-        #import seaborn as sea
-        #sea.set()
+        import seaborn as sea
+        sea.set()
 
-        try:
-            bdf = self.getBalanceTable(live=False, quote=quote)
-            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-                print bdf
-            balance = n.sum(bdf['balanceUSDT'].get_values())
-        except Exception as e:
-            print e
-            balance = 100
+        if balance == None:
+            try:
+                bdf = self.getBalanceTable(live=False, quote=quote)
+                with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+                    print bdf
+                balance = n.sum(bdf['balanceUSDT'].get_values())
+            except Exception as e:
+                print e
+                balance = 100
 
         try:
             # equity allocations
@@ -1828,16 +1829,21 @@ class Poloniex(Exchange):
         rdf.to_csv(fname2)
         pmdf.to_csv('/tmp/allocations2.csv')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print pmdf.tail(10)
+            print pmdf#.tail(10)
             #print pmdf.dtypes
             #for symbol in pmdf.columns: pmdf[symbol] = pmdf[symbol] / psum
-            plt.plot(pmdf)
+            plt.plot(pmdf.tail(100))
             plt.legend(pmdf.columns, loc=2)
             plt.show()
             ''
         return pmdf
     
-    def getBalanceTable(self, live=False, verbose=False, quote='ETH'):
+    def _allToCoin(self, df, coin):
+        df['portPcnt'] = 0
+        df.loc[coin, 'portPcnt'] = 1
+        return df
+
+    def getBalanceTable(self, live=False, verbose=False, quote='ETH', allToCoin=None):
         df = self.getCurrencies(quote=quote)
         df = setIndex(df, 'base', 'symbol2')
         #df = self.getCurrencies(quote=None)
@@ -1875,6 +1881,9 @@ class Poloniex(Exchange):
                 df.loc[i, 'balanceUSDT'] = df.loc[i, 'balance'] * df.loc[i, 'lastUSDT']
 
         #df.loc['sum', 'balanceUSDT'] = n.sum(df['balanceUSDT'])
+        
+        if allToCoin != None:
+            df = self._allToCoin(df, allToCoin)
         
         df['portBalanceUSDT'] = df['portPcnt'] * df['balanceUSDT'].sum()
         df['diffUSDT'] = df['portBalanceUSDT'] - df['balanceUSDT']
@@ -2298,6 +2307,7 @@ def main():
     parser.add_argument("-pm", '--setPortfolioModel', help="")
     parser.add_argument("-model", '--allocationModel', help="")
     parser.add_argument("-cu", '--currency', help="currency")
+    parser.add_argument("-all2", '-a2', '--allToCoin', help="convert all coin to..")
     parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
     parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
     parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
@@ -2364,7 +2374,10 @@ def main():
         #print pl.trade(pair='ETH_ZRX', method='sell', rate=0.0006, amount=5)
         quote = args.currency # ETH or BTC
         live = args.live
-        df = pl.getBalanceTable(live=live, verbose=True, quote=quote)
+        try:    allToCoin = args.allToCoin
+        except: allToCoin = None
+        df = pl.getBalanceTable(live=live, verbose=True, quote=quote, allToCoin=allToCoin)
+        print 'allToCoin: %s' % allToCoin
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print df
     
@@ -2393,7 +2406,11 @@ def main():
         #symbols = 'BTC ETH %s' % ' '.join(map(lambda x: 'ETH_%s'%x, list(p.read_csv('/tmp/symbols.txt', index_col=0)['0'].get_values()) ))
         
         # poloniex
-        quote=args.currency # ETH or BTC
+        try:    quote=args.currency # ETH or BTC
+        except: quote = 'ETH'
+        if not quote in 'BTC ETH'.split(' '):
+            print '-cu[currency] should == BTC | ETH'
+            sys.exit()
         df = pl.getCurrencies(quote=quote)
         if quote == 'ETH':
             symbols = 'BTC ETH %s' 
