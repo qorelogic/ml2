@@ -2766,8 +2766,11 @@ def main():
 
     if args.research14:
         symbols='BTC ETH BTH XRP LTC DASH XEM MIOTA XMR NEO ETC'
-        bars = 20
+        bars = 365*(2017-2008)
         mdf = pl.makeCurrencyTimeseriesTable(symbols, bars=bars)
+        mdf.loc[:, mdf.columns] = mdf.get_values() * n.array([16588437,94831556, 38343841883])
+        mdf['sum'] = n.sum(mdf.get_values(), 1)
+        mdf.to_csv('/mldev/bin/data/cache/coins/marketcap.csv')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print mdf
         sys.exit()
