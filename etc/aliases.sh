@@ -294,6 +294,10 @@ alias lo=".glo"
 alias loa="gloa"; alias llo="loa"; 
 alias lo2=".glo2"
 alias lo2a="glo2a"
+alias lor2=".glor2"
+# https://stackoverflow.com/questions/89332/how-to-recover-a-dropped-stash-in-git
+#alias lod="lo $(git fsck --no-reflog | awk '/dangling commit/ {print $3}')"
+
 # list git tag annotation messages
 alias .gt="git tag -ln99"
 # fetch and push remote tags
