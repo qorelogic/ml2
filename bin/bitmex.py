@@ -920,7 +920,7 @@ ETH/BTC.DC 	0 	"""
         
         # minimum viable product
         mvp = p.DataFrame()
-        mvp['mvp'] = p.Series({'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.2, 'MCO':0.7,'ZRX':1})
+        mvp['mvp'] = p.Series({'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.2, 'MCO':0.7,'ZRX':1,'SALT':1, 'KIN':1})
         df = df.combine_first(mvp)
 
         df['avg'] = (df['bid'] + df['offer']) / 2
@@ -2346,6 +2346,7 @@ def main():
     parser.add_argument("-r13", '--research13', help="test 13", action="store_true")
     parser.add_argument("-r14", '--research14', help="test 14", action="store_true")
     parser.add_argument("-r15", '--research15', help="test 15", action="store_true")
+    parser.add_argument("-r16", '--research16', help="test 16", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -2857,6 +2858,17 @@ def main():
         plt.legend(mdf.columns, loc=2)
         plt.show()
         sys.exit()
+
+
+    # portfolio
+    if args.research16:
+        
+        portfolio = {
+        'poloniex': 1,
+        'etherdelta': 1,
+        'bitconnect': 1,
+        'steemit': 1,
+        }
 
     # portfolio tokenization
     if args.research05:
