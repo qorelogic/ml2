@@ -1828,8 +1828,11 @@ class Poloniex(Exchange):
         rdf = p.read_csv(fname, index_col=0)
         rdf.to_csv(fname2)
         pmdf.to_csv('/tmp/allocations2.csv')
+        tpmdf = pmdf.tail(1).transpose()
+        indx = tpmdf.columns[0]
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print pmdf#.tail(10)
+            print tpmdf.sort_values(by=indx, ascending=False)
+            print pmdf.tail(10)
             #print pmdf.dtypes
             #for symbol in pmdf.columns: pmdf[symbol] = pmdf[symbol] / psum
             plt.plot(pmdf.tail(100))
