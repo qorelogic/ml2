@@ -142,7 +142,7 @@ class tensorflow {
 		before  => Exec["git clone tensorflow2"],
 	}
 	exec { "git clone tensorflow2":
-		command => "chown -R qore: /mldev/lib/ml/tensorflow",
+		command => "/bin/chown -R qore: /mldev/lib/ml/tensorflow",
 		timeout => 300,
 		tries   => 3,
 	}
