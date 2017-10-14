@@ -1063,9 +1063,9 @@ ETH/BTC.DC 	0 	"""
         #df.loc[3, :] = p.Series({'Quantity': 23.052199999999999, 'Cost Basis Each (USD)': 0, 'Asset Id': 'tenx'})
         """
         for i in mdf0.index:
-            balance = mdf0.loc[i, 'balance']
-            idn = mdf0.loc[i, 'id']
             try:
+                balance = mdf0.loc[i, 'balance']
+                idn = mdf0.loc[i, 'id']
                 di = {'Quantity': balance, 'Asset Id':idn, 'Cost Basis Each (USD)':0}
                 if balance > 0 and idn != 0:
                     #print di
