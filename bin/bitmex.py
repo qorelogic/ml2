@@ -1014,7 +1014,7 @@ ETH/BTC.DC 	0 	"""
         if field == None or field == 'index':
             df = df.sort_index()
         else:
-            df = df.sort_values(by=field, ascending=False)
+            df = df.sort_values(by=[field,'currentPortPcnt'], ascending=[False,False])
         df['balanceETHDiffCumsum'] = df['balanceETHDiff'].cumsum()
         df = df.loc[:,f]
         sf = ('%s %s' % (field, sortFlag))
@@ -1689,7 +1689,8 @@ class Poloniex(Exchange):
         return df.transpose()
 
 
-    def makeCurrencyTimeseriesTable(self, symbols, bars=15):
+    def makeCurrencyTimeseriesTable(self, symbols, bars=15, period=86400):
+        print 'period: %s' % period
         li = symbols.split(' ')
         #li = 'BTC ETH EOS OMG'.split(' ')
         #li = map(lambda x: 'USDT_%s'%x, li)
@@ -1705,7 +1706,7 @@ class Poloniex(Exchange):
             #try:    print '%s %s %s' % (quote, base, symbol)
             #except: print '%s %s' % (quote, symbol)
             try:
-                df = self.getPoloniexHistorical(symbol=symbol, period=86400, bars=bars, cache=True)#.set_index('date')
+                df = self.getPoloniexHistorical(symbol=symbol, period=period, bars=bars, cache=True)#.set_index('date')
                 df = df.set_index('date').loc[:, 'close volume'.split(' ')]
                 df[symbol] = df['close']
                 #plt.plot(df['close'])
@@ -1756,7 +1757,7 @@ class Poloniex(Exchange):
         """
         return mdf
 
-    def allocations(self, quote, symbols='BTC ETH LTC XRP DASH XEM XMR MIOTA NEO ETH_OMG', bars=15, cache=True, balance=None):
+    def allocations(self, quote, symbols='BTC ETH LTC XRP DASH XEM XMR MIOTA NEO ETH_OMG', bars=15, cache=True, balance=None, period=86400):
         import matplotlib.pylab as plt
         from qoreliquid import normalizeme, sigmoidme
         import seaborn as sea
@@ -1774,7 +1775,7 @@ class Poloniex(Exchange):
 
         try:
             # equity allocations
-            mdf = self.makeCurrencyTimeseriesTable(symbols, bars=bars)
+            mdf = self.makeCurrencyTimeseriesTable(symbols, bars=bars, period=period)
             #mdf['sum'] = n.sum(mdf.get_values(), 1)
         
             # convert weight to percentage
@@ -1835,7 +1836,7 @@ class Poloniex(Exchange):
             print pmdf.tail(10)
             #print pmdf.dtypes
             #for symbol in pmdf.columns: pmdf[symbol] = pmdf[symbol] / psum
-            plt.plot(pmdf.tail(100))
+            plt.plot(pmdf.tail(200))
             plt.legend(pmdf.columns, loc=2)
             plt.show()
             ''
@@ -2320,6 +2321,7 @@ def main():
     parser.add_argument("-pm", '--setPortfolioModel', help="")
     parser.add_argument("-model", '--allocationModel', help="")
     parser.add_argument("-cu", '--currency', help="currency")
+    parser.add_argument("-pe", '--period', help="currency")
     parser.add_argument("-all2", '-a2', '--allToCoin', help="convert all coin to..")
     parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
     parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
@@ -2412,6 +2414,13 @@ def main():
         #cmc = CoinMarketCap()
         #df = cmc.tickers()
     
+        try:    period = int(args.period)
+        except: period = 86400
+        #          5m   15m  30m   2h    4h     1d
+        periods = [300, 900, 1800, 7200, 14400, 86400]
+        if period not in periods:
+            print 'period %s not in periods %s' % (period, periods)
+            sys.exit()
         bars = (365*4)
         #bars = 20
         #symbols = 'BTC ETH LTC XRP DASH XEM XMR MIOTA NEO'
@@ -2433,9 +2442,9 @@ def main():
             symbols = 'BTC %s'
         symbols = symbols % ' '.join(list(df.index))
         print symbols
-        pdf = pl.allocations(quote, symbols=symbols, bars=bars)
+        pdf = pl.allocations(quote, symbols=symbols, bars=bars, period=period)
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print pdf
+            print pdf.tail(10)
 
     if not args.research11:
         cmc = CoinMarketCap()
