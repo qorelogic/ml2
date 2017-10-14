@@ -146,6 +146,12 @@ import httplib
 import ujson as uj
 
 
+def strToTimestamp(ss):
+    #ss = 'Aug-06-2017 07:18:10 AM'
+    ddt = datetime.datetime.strptime(ss[0:23], '%b-%d-%Y %H:%M:%S %p')
+    ttp = time.mktime([ddt.year, ddt.month, ddt.day, ddt.hour, ddt.minute, ddt.second, 0, 0, 0])
+    return ttp
+
 def makeTimeseriesTimestampRange(timestamp=None, period=14400, bars=50):
         #print '---'
         #print 'timestamp:%s' % timestamp
@@ -1997,6 +2003,78 @@ class EtherDelta:
             fp.close()
         except: ''
 
+class Etherscan:
+
+    def getPrice(self, symbol, ts):
+        print symbol
+        print ts
+
+    def getTokens(self, contractAddress=None, address=None, name=None):
+        #url = 'https://etherscan.io/token/0xaa26b73bfdc80b5c7d2cfbfc30930038fb7fa657?a=0x38a4Ff00C207cBD78aB34b6dDd1b8754E4498508'
+        #url = 'https://etherscan.io/token/generic-tokentxns2?contractAddress=0xaa26b73bfdc80b5c7d2cfbfc30930038fb7fa657&a=0x38a4Ff00C207cBD78aB34b6dDd1b8754E4498508&mode='
+        url = 'https://etherscan.io/token/generic-tokentxns2?contractAddress=%s&a=%s&mode=' % (contractAddress, address)
+        from qore import XPath
+        xp = XPath()
+        #print url
+        xresd = xp.xpath2df(url, {
+            'age'          : '/html/body/div[2]/table//tr/td[2]/span/@title',
+            'txHash'       : '/html/body/div[2]/table//tr/td[1]/span/a/text()',
+    
+            'from'         : '/html/body/div[2]/table//tr/td[3]/span/a/text()',
+            'type'         : '/html/body/div[2]/table//tr/td[4]/span/text()',
+            'to'           : '/html/body/div[2]/table//tr/td[5]/span/text()',
+            'quantity'     : '/html/body/div[2]/table//tr/td[6]/text()',
+        })
+        # https://etherdelta.com/trades.html
+        df = p.DataFrame(xresd)
+        #print strToTimestamp('Aug-06-2017 07:18:10 AM')
+        df['ts'] = map(lambda x: strToTimestamp(x), df['age'])
+        if name != None:
+            df['id'] = name
+        return df
+
+    def md(self, dfinfo, ethaddr, mode=1):
+        mdft = p.DataFrame([])
+        for i in dfinfo.index:
+            #if mode == 1:
+            #	print '------'
+            for j in ethaddr:
+                try:
+                    contractAddress = dfinfo.loc[i, 'address']
+                    address = j
+                    url = 'https://etherscan.io/token/%s?a=%s' % (contractAddress, j)
+                    #print '%s: %s' % (i, url)
+                    if mode == 1:
+                        dft = self.getTokens(contractAddress=contractAddress, address=j, name=i).set_index('txHash')
+                        dft['etherscanURL'] = url
+                        dft['blockHeight']  = map(lambda x: self.getBlockHeight(x), dft.index)
+                        #print dft.columns
+                        mdft = mdft.combine_first(dft)
+                except Exception as e:
+                    #print 't343'
+                    print e
+                    ''
+        if mode == 1:
+            print mdft
+            mdft['blockHeight1'] = n.array(mdft['blockHeight'], n.int32) / 100 * 100 - 200
+            mdft['blockHeight2'] = n.array(mdft['blockHeight'], n.int32) / 100 * 100 + 300
+            #pd.set_option('display.max_colwidth', -1)
+            with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000, 'display.max_colwidth', -1):
+                print mdft#.sort_values(by='ts', ascending=False)
+                print
+        if mode == 1:
+            print '---'
+    
+    def getBlockHeight(self, txHash):
+        from qore import XPath
+        xp = XPath()
+        url = 'https://etherscan.io/tx/%s' % txHash
+        #print url
+        xresd = xp.xpath2df(url, {
+            'block' : '//*[@id="ContentPlaceHolder1_maintable"]/div[4]/a/text()',
+        })
+        return xresd['block'][0]
+
 class Eveningstar:
     
     #https://eveningstar.io/my-portfolio/
@@ -2022,6 +2100,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
     
     cmc = CoinMarketCap()
     pm = PortfolioModeler()
+    es = Etherscan()
     
     eth = cmc.getTicker('ETH').set_index('symbol').transpose()
     ethusd = float(eth.loc['price_usd', 'ETH'])
@@ -2281,22 +2360,17 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             #mdf0['balanceByBalanceUsdDiff'] = mdf0['balance_usd'] / mdf0['balanceUsdDiff']
             mdf0['t1'] = mdf0['unitsDiffPerBalance'] * mdf0['balanceUsdDiff']
             mdf0['mname'] = mdf0.index
-            f = '24h_volume_usd allocation avg balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
-            f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = ('id balance balance_usd spreadPcnt id2 id4 totalBalanceUsd totalBalanceEth balance_eth balance_usd currentPortPcnt avg price_eth arb1 mname sum mvp allocation portPcnt price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum avg balance balance_usd spreadPcnt avg unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s' % pm.allocationModels).split()
+            es.md(dfinfo, ethaddr, mode=2)
+            f = '24h_volume_usd allocation sell balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
+            f = 'totalBalanceUsd 24h_volume_usd allocation sell balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sell balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
+            f = ('id balance balance_usd spreadPcnt id2 id4 totalBalanceUsd totalBalanceEth balance_eth balance_usd currentPortPcnt sell price_eth arb1 mname sum mvp allocation portPcnt price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum sell balance balance_usd spreadPcnt sell unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s' % pm.allocationModels).split()
             pm.printPortfolio(mdf0, f)
             print '---'
             for i in range(len(ethaddr)):
                 dfinfo['a%s'%i] = ethaddr[i]
             print dfinfo
             print
-            for i in dfinfo.index:
-                for j in ethaddr:
-                    try:
-                        print '%s: https://etherscan.io/token/%s?a=%s' % (i, dfinfo.loc[i, 'address'], j)
-                    except: ''
-                print
-            print '---'
+            es.md(dfinfo, ethaddr)
             print 'balanceUSDTotal[incl. ethUSDTotal]: %s' % (balanceUSDTotal + ethUSDTotal)
             print '                    initial investment: %s' % (initialInvestment)
             print '                    initial investment: %s [%s]' % (pc, pc2) #+'%'
