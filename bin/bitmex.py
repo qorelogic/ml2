@@ -920,7 +920,7 @@ ETH/BTC.DC 	0 	"""
         
         # minimum viable product
         mvp = p.DataFrame()
-        mvp['mvp'] = p.Series({'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.2, 'MCO':0.7,'ZRX':1,'SALT':1, 'KIN':1})
+        mvp['mvp'] = p.Series({'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.2, 'MCO':0.7,'ZRX':1,'SALT':1, 'KIN':1,'XTZ':1,'CVC':0.7,'DNT':0.3,'QRL':1})
         df = df.combine_first(mvp)
 
         df['avg'] = (df['bid'] + df['offer']) / 2
