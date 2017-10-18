@@ -2332,7 +2332,9 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             for i in ethaddr:
                 print '-'
                 print 'https://etherscan.io/address/%s' % i
+                print 'https://ethplorer.io/address/%s' % i
                 print 'https://deltabalances.github.io/?addr=%s' % i
+                print 'http://etherdelta.com/trades.html'
             print '---'
             print addressInfos
             print '---'
