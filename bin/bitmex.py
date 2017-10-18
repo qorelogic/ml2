@@ -765,7 +765,9 @@ class PortfolioModeler:
         eth = cmc.getTicker('ETH').set_index('symbol').transpose()
         ethusd = float(eth.loc['price_usd', 'ETH'])
         gasUSD = 2
-        side = 'avg'
+        #side = 'avg'
+        side = 'offer'
+        df['sell'] = df[side]
     
         try:    df['balance']
         except: df['balance']     = 0
