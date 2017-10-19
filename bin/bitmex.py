@@ -2226,8 +2226,11 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             try: mdf0.loc[x, 'id4'] = '%s-%s' % (x, mdf0.loc[x, 'address'][0:8])
             except: ''
         for ici in ic:
-            for x in list(mdf0[mdf0['address'] == ici].index):
-                mdf0 = mdf0.drop(x)
+            try:
+                for x in list(mdf0[mdf0['address'] == ici].index):
+                    mdf0 = mdf0.drop(x)
+            except: 
+                ''
         
         if verbose:
             print 'mdfs======'
@@ -2244,6 +2247,11 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print '---'
             print addressInfos
             print '---'
+            try:
+                mdf0['balance_usd']
+            except:
+                print mdf0.fillna(0)
+                return
             balanceUSDTotal = mdf0['balance_usd'].sum() #+ 89.736
             ethUSDTotal     = addressInfos['balance'].sum() * ethusd
             pc  = ((balanceUSDTotal + ethUSDTotal) / initialInvestment * 100)-100
