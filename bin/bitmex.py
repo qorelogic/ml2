@@ -928,8 +928,19 @@ ETH/BTC.DC 	0 	"""
         
         # minimum viable product
         mvp = p.DataFrame()
-        mvp['mvp'] = p.Series({'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.2, 'MCO':0.7,'ZRX':1,'SALT':1, 'KIN':1,'XTZ':1,'CVC':0.7,'DNT':0.3,'QRL':1})
+        #mvp['mvp'] = p.Series({'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.2, 'MCO':0.7,'ZRX':1,'SALT':1, 'KIN':1,'XTZ':1,'CVC':0.7,'DNT':0.3,'QRL':1})
+        di = {'TAAS':1, 'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.2, 'MCO':0.7,'ZRX':1,'SALT':1, 'KIN':1,'XTZ':1,'CVC':0.7,'DNT':0.3,'QRL':1}
+        mvp['mvp'] = p.Series(di)
         df = df.combine_first(mvp)
+        
+        # portfolio mirror
+        ks = 'ETH LINK ENG RHOC DNT CVC'.split() # ib
+        #def p1(ks):
+        #    return port
+        vs = [1]*len(ks)
+        port = p.DataFrame()
+        port['p1ib'] = p.Series(dict(zip(ks, vs)))
+        df = df.combine_first(port)
 
         df['avg'] = (df['bid'] + df['offer']) / 2
         df['spread'] = df['offer'] - df['bid']
@@ -937,6 +948,8 @@ ETH/BTC.DC 	0 	"""
         #df['spreadPcntA'] = n.log(df['spreadPcnt'])/-df['spreadPcnt'] #1/n.log(df['spreadPcnt']/100)
         df['spreadPcntA'] = 1/(df['spreadPcnt']+1)
         #df['spreadPcntA'] = normalizeme(df['spreadPcntA'])
+
+        # allocationModels
         df['t1'] = (df['volume'] / df['avg'])
         df['t1a'] = df['volume'] / (df['avg'] * n.log(df['spreadPcnt']/100) )
         df['t1b'] = (df['volume'] * df['avg'])
@@ -957,6 +970,7 @@ ETH/BTC.DC 	0 	"""
     
         df['t1e'] = (df['volumeETH'] / (df['avg'] * n.power(df['sum'], 4*3)))
         df['t1f'] = ((df['volumeETH'] * df['mvp']) / (df['avg'] * n.power(df['sum'], 3*1)))
+        df['t1ib'] = ((df['volumeETH'] * df['p1ib']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t2'] = (df['volume'] * df['avg'])
 
         try:    df[allocationModel]
@@ -965,7 +979,7 @@ ETH/BTC.DC 	0 	"""
             print 'Available models:'
             print self.listModels()
             sys.exit()
-        self.allocationModels = 't1 t1a t1b t1c t1d t1e t1f t2'
+        self.allocationModels = 't1 t1a t1b t1c t1d t1e t1f t1ib t2'
     
         df['allocation']     = df[allocationModel]
         df['allocation']     = df['allocation'].fillna(0)
