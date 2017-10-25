@@ -2076,6 +2076,9 @@ class Etherscan:
             mdft['blockHeight2'] = n.array(mdft['blockHeight'], n.int32) / 100 * 100 + 300
             #pd.set_option('display.max_colwidth', -1)
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000, 'display.max_colwidth', -1):
+                print '------'
+                print 'http://etherdelta.com/trades.html'
+                print '------'
                 print mdft#.sort_values(by='ts', ascending=False)
                 print
         if mode == 1:
@@ -2986,6 +2989,25 @@ def main():
         'bitconnect': 1,
         'steemit': 1,
         }
+
+        @profile
+        def test16():
+            print
+            print
+            init = n.random.randn(100, 3)
+            #init = [['123', '321'], ['234', '345']]
+            df = p.DataFrame(init, dtype=n.int64);
+
+            df = p.DataFrame(init);
+            print df.dtypes
+            print
+            df = p.DataFrame(init, dtype=n.int64); 
+            print df.dtypes
+            print
+            #print df
+            print
+        test16()
+
 
     # portfolio tokenization
     if args.research05:
