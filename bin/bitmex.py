@@ -1986,10 +1986,12 @@ class EtherDelta:
             ''
         tojson = df.transpose().to_dict()
         tojson = {'timestamp':time.time(), 'data':tojson}
-        tojson = uj.dumps(tojson)
-        fp = open(fname, 'a')
-        fp.write('%s\n' % tojson)
-        fp.close()
+        try:
+            tojson = uj.dumps(tojson)
+            fp = open(fname, 'a')
+            fp.write('%s\n' % tojson)
+            fp.close()
+        except: ''
 
 class Eveningstar:
     
