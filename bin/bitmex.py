@@ -878,11 +878,16 @@ ETH/BTC.DC 	0 	"""
             ffields = 'symbol volume bid offer'.split(' ')
             try:
                 df = p.DataFrame(df, columns=ffields)
-                for i in ffields[1:]: df[i] = p.to_numeric(df[i])
-            except:
+                df['volume'] = map(lambda x: n.float(x), df['volume'].fillna(0))
+                for i in ffields[1:]:
+                    try: df[i] = p.to_numeric(df[i].fillna(0))
+                    except: ''
+            except Exception as e:
+                print e
                 df = p.DataFrame({'volume': 0, 'symbol': 'STUB/ETH', 'bid': 0, 'offer': 0}, index=[0])
+            df = df.fillna(0)
             ed.toMjson(df, '/mldev/bin/data/cache/coins/etherdelta.mjson')
-        
+
         if type(df) == type(None) and mode == 'poloniex':
             # ---
             pl  = Poloniex()
