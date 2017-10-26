@@ -1049,7 +1049,8 @@ ETH/BTC.DC 	0 	"""
         print
         if title: print ('%s::%s %s [model:%s]' % (title, field, sortFlag, self.allocationModel))
         else:     print '%s [model:%s]' % (sf, self.allocationModel)
-        print df
+        try:    print df
+        except: ''
 
     def printPortfolio(self, mdf0, f=None):
         if f == None:
@@ -1058,8 +1059,8 @@ ETH/BTC.DC 	0 	"""
         mdf0 = mdf0[n.abs(mdf0['balance']) != 0]
         
         print
-        self.sortDataFrame(mdf0, 'allocation', f, False, title='') # same forting as portUsd
         self.sortDataFrame(mdf0, 'currentPortPcnt', f, False, title='delever') # same sorting as balance_usd
+        self.sortDataFrame(mdf0, 'allocation', f, False, title='') # same forting as portUsd
         self.sortDataFrame(mdf0, 'balancePortDiffUSD', f, False, title='delever2')
         self.sortDataFrame(mdf0, 'balanceETHDiff', f, False, title='lever')
         self.sortDataFrame(mdf0, 'unitsDiff', f, False, title='lever2')
@@ -2185,6 +2186,8 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             avg = 0
             #print 'tokens: %s' % i
             df = p.DataFrame(i)#.transpose()
+            #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            #    print df; sys.exit()
             decimals = float(df.loc['decimals', 'tokenInfo'])
             balance  = float(df.loc['address', 'balance']) / n.power(10, decimals)
             df['balance']  = map(lambda x: float(x) / n.power(10, decimals), df['balance'])
@@ -2211,18 +2214,16 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                     #df22 = p.concat([dff1, df], axis=1)
                     #combineDF3(df.to_dict(), dff1.to_dict())
                     df = df.combine_first(dff1)
-                    """
-                    print '======4324234===='
-                    print df.dtypes
-                    print dff1.dtypes
-                    print df22.dtypes
-                    print df
-                    print dff1
-                    print df22
-                    print df
-                    print '======4324234====/'
-                    return
-                    """
+                    #print '======4324234===='
+                    #print df.dtypes
+                    #print dff1.dtypes
+                    #print df22.dtypes
+                    #print df
+                    #print dff1
+                    #print df22
+                    #print df
+                    #print '======4324234====/'
+                    #return
                     df = df.drop(symbol, axis=1)
                     if verbose == True:
                         print '----'
@@ -2290,11 +2291,13 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                     print df.loc[:, 'tokenInfo'.split(' ')]#.transpose()
                 else:
                     df.loc['id2', 'tokenInfo'] = '%s-%s' % (df.loc['symbol', 'tokenInfo'], df.loc['ethaddr', 'tokenInfo'])
-                    dfpremdf = df.loc['symbol id2 id3 ethaddr 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol')
+                    dfpremdf = df.loc['symbol id2 id3 ethaddr address 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol')
                     mdf = mdf.combine_first(dfpremdf)
                     #mdf = dfpremdf.combine_first(mdf)
-
                 #print
+        for x in mdf.index:
+            try: mdf.loc[x, 'id4'] = '%s-%s' % (x, mdf.loc[x, 'address'][0:8])
+            except: ''
             #res2 = p.DataFrame(res['tokens'])#.transpose()
         #if not verbose:
 
@@ -2329,9 +2332,6 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         # filter invalid contracts
         ic = ['0xb04cfa8a26d602fb50232cee0daf29060264e04b']
         mdf0 = dfinfo.combine_first(mdf0)
-        for x in mdf0.index:
-            try: mdf0.loc[x, 'id4'] = '%s-%s' % (x, mdf0.loc[x, 'address'][0:8])
-            except: ''
         for ici in ic:
             try:
                 for x in list(mdf0[mdf0['address'] == ici].index):
@@ -2387,9 +2387,10 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             mdf0['t1'] = mdf0['unitsDiffPerBalance'] * mdf0['balanceUsdDiff']
             mdf0['mname'] = mdf0.index
             es.md(dfinfo, ethaddr, mode=2)
+            
             f = '24h_volume_usd allocation sell balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation sell balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sell balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = ('id balance balance_usd spreadPcnt id2 id4 totalBalanceUsd totalBalanceEth balance_eth balance_usd currentPortPcnt sell price_eth arb1 mname sum mvp allocation portPcnt price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum sell balance balance_usd spreadPcnt sell unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s' % pm.allocationModels).split()
+            f = ('totalBalanceUsd totalBalanceEth balance balance_eth balance_usd currentPortPcnt portPcnt spreadPcnt volumeETH id2 id4 sell price_eth arb1 mname sum mvp allocation portPcnt price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sum sell balance balance_usd spreadPcnt sell unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s mname id' % pm.allocationModels).split()
             pm.printPortfolio(mdf0, f)
             print '---'
             for i in range(len(ethaddr)):
