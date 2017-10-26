@@ -589,7 +589,8 @@ class CoinMarketCap:
         except Exception as e:
             #print e
             res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/%s/' % ticker, noCache=False, verbose=verbose)
-        res = p.DataFrame(res)
+        try: res = p.DataFrame(res)
+        except: res = p.DataFrame(res, index=[0])
         #print res.transpose()
         return res
 
@@ -2056,6 +2057,8 @@ class Etherscan:
         return df
 
     def md(self, dfinfo, ethaddr, mode=1):
+        #print 'dfinfo : %s' % dfinfo
+        #print 'ethaddr: %s' % ethaddr
         mdft = p.DataFrame([])
         for i in dfinfo.index:
             #if mode == 1:
@@ -2074,10 +2077,10 @@ class Etherscan:
                         mdft = mdft.combine_first(dft)
                 except Exception as e:
                     #print 't343'
-                    print e
+                    #print e
                     ''
         if mode == 1:
-            print mdft
+            #print mdft
             mdft['blockHeight1'] = n.array(mdft['blockHeight'], n.int32) / 100 * 100 - 200
             mdft['blockHeight2'] = n.array(mdft['blockHeight'], n.int32) / 100 * 100 + 300
             #pd.set_option('display.max_colwidth', -1)
@@ -2099,6 +2102,19 @@ class Etherscan:
             'block' : '//*[@id="ContentPlaceHolder1_maintable"]/div[4]/a/text()',
         })
         return xresd['block'][0]
+
+    def getBalances(self, addr):
+        from qore import XPath
+        xp = XPath()
+        url = 'https://etherscan.io/address/%s' % addr
+        xresd = xp.xpath2df(url, {
+            'asd': '//*[@id="balancelist"]/li/a/text()',
+        })
+        df = p.DataFrame(xresd)
+        df['balance'] = map(lambda x: x.split(' ')[0].replace(',', ''), df['asd'])
+        df['symbol']  = map(lambda x: x.split(' ')[1], df['asd'])
+        df = df.set_index('symbol')
+        return df.loc[:, ['balance']]
 
 class Eveningstar:
     
@@ -2182,6 +2198,52 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             res['tokens']
         except:
             break
+
+        """
+        # vectorized routine
+        mdf = p.DataFrame(res['tokens'])
+        mdf = exposeColumnFromDataframe(mdf, 'tokenInfo', dropfield=True)
+        mdf = exposeColumnFromDataframe(mdf, 'price',     dropfield=True)
+        mdf['balance']  = mdf['balance']  / n.power(10, mdf['decimals'])
+        mdf['totalIn']  = mdf['totalIn']  / n.power(10, mdf['decimals'])
+        mdf['totalOut'] = mdf['totalOut'] / n.power(10, mdf['decimals'])
+        mdf['ethaddr']  = ea
+        mdf = mdf.set_index('symbol')
+        for symbol in mdf.index:
+            try: print symbol
+            except: ''
+            try:
+                df1  = cmc.getTicker(symbol).set_index('symbol').transpose()
+                mdf = mdf.combine_first(df1.transpose().loc[[symbol], :])
+            except Exception as e: ''
+        mdf['24h_volume_marketcap_ratio'] = mdf['24h_volume_usd'] / mdf['market_cap_usd'] * 100
+        mdf['avg']         = mdf['rate'] / ethusd
+        mdf['balance_usd'] = mdf['balance'] * mdf['avg'] * ethusd
+        mdf['ethaddr']     = ethaddrSmall
+        
+        mdf['symbol'] = mdf.index
+        mdf = mdf.set_index('address')
+        for x in mdf.index:
+            try: mdf.loc[x, 'id2'] = '%s-%s' % (mdf.loc[x, 'symbol'], mdf.loc[x, 'ethaddr'])
+            except Exception as e: print e
+            try: mdf.loc[x, 'id4'] = '%s-%s' % (mdf.loc[x, 'symbol'], x[0:8])
+            except Exception as e: print e
+        mdf['address'] = mdf.index
+        mdf = mdf.set_index('symbol')
+        mdf['symbol'] = mdf.index
+        dfinfo = dfinfo.combine_first(mdf.loc[:, 'address decimals symbol'.split(' ')].set_index('symbol'))
+        dfb = es.getBalances(ea)
+        dfb['balance'] = p.to_numeric(dfb['balance'])
+        mdf = dfb.combine_first(mdf) 
+        
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            try: print mdf
+            except: sys.exit()
+            print
+            #sys.exit()
+        # end vectorized routine
+        """
+
         for i in res['tokens']:
             avg = 0
             #print 'tokens: %s' % i
@@ -3018,6 +3080,16 @@ def main():
     # portfolio tokenization
     if args.research05:
         portfolioTokenization()
+
+def exposeColumnFromDataframe(df, field, dropfield=False):
+    # fix non dictionaries
+    df[field] = map(lambda x: {} if type(x) != type({}) else x, df[field])
+    # flip and combine column
+    df2 = p.DataFrame(list(df.loc[:, [field]][field]))#.transpose()
+    df = df.combine_first(df2)
+    if dropfield:
+        df = df.drop(field, axis=1)
+    return df
 
 if __name__ == "__main__":
     main()
