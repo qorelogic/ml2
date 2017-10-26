@@ -2211,18 +2211,16 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                     #df22 = p.concat([dff1, df], axis=1)
                     #combineDF3(df.to_dict(), dff1.to_dict())
                     df = df.combine_first(dff1)
-                    """
-                    print '======4324234===='
-                    print df.dtypes
-                    print dff1.dtypes
-                    print df22.dtypes
-                    print df
-                    print dff1
-                    print df22
-                    print df
-                    print '======4324234====/'
-                    return
-                    """
+                    #print '======4324234===='
+                    #print df.dtypes
+                    #print dff1.dtypes
+                    #print df22.dtypes
+                    #print df
+                    #print dff1
+                    #print df22
+                    #print df
+                    #print '======4324234====/'
+                    #return
                     df = df.drop(symbol, axis=1)
                     if verbose == True:
                         print '----'
@@ -2290,11 +2288,13 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                     print df.loc[:, 'tokenInfo'.split(' ')]#.transpose()
                 else:
                     df.loc['id2', 'tokenInfo'] = '%s-%s' % (df.loc['symbol', 'tokenInfo'], df.loc['ethaddr', 'tokenInfo'])
-                    dfpremdf = df.loc['symbol id2 id3 ethaddr 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol')
+                    dfpremdf = df.loc['symbol id2 id3 ethaddr address 24h_volume_usd holdersCount issuancesCount price_btc price_usd rank balance balance_usd'.split(' '), 'tokenInfo'.split(' ')].transpose().set_index('symbol')
                     mdf = mdf.combine_first(dfpremdf)
                     #mdf = dfpremdf.combine_first(mdf)
-
                 #print
+        for x in mdf.index:
+            try: mdf.loc[x, 'id4'] = '%s-%s' % (x, mdf.loc[x, 'address'][0:8])
+            except: ''
             #res2 = p.DataFrame(res['tokens'])#.transpose()
         #if not verbose:
 
@@ -2329,9 +2329,6 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         # filter invalid contracts
         ic = ['0xb04cfa8a26d602fb50232cee0daf29060264e04b']
         mdf0 = dfinfo.combine_first(mdf0)
-        for x in mdf0.index:
-            try: mdf0.loc[x, 'id4'] = '%s-%s' % (x, mdf0.loc[x, 'address'][0:8])
-            except: ''
         for ici in ic:
             try:
                 for x in list(mdf0[mdf0['address'] == ici].index):
