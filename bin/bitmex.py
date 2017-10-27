@@ -2103,6 +2103,19 @@ class Etherscan:
         })
         return xresd['block'][0]
 
+    def getBalances(self, addr):
+        from qore import XPath
+        xp = XPath()
+        url = 'https://etherscan.io/address/%s' % addr
+        xresd = xp.xpath2df(url, {
+            'asd': '//*[@id="balancelist"]/li/a/text()',
+        })
+        df = p.DataFrame(xresd)
+        df['balance'] = map(lambda x: x.split(' ')[0].replace(',', ''), df['asd'])
+        df['symbol']  = map(lambda x: x.split(' ')[1], df['asd'])
+        df = df.set_index('symbol')
+        return df.loc[:, ['balance']]
+
 class Eveningstar:
     
     #https://eveningstar.io/my-portfolio/
@@ -2218,8 +2231,9 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         mdf['address'] = mdf.index
         mdf = mdf.set_index('symbol')
         mdf['symbol'] = mdf.index
-        
         dfinfo = dfinfo.combine_first(mdf.loc[:, 'address decimals symbol'.split(' ')].set_index('symbol'))
+        dfb = es.getBalances(ea)
+        print dfb
         
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
             print mdf#; sys.exit()
