@@ -2211,8 +2211,8 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         mdf['ethaddr']  = ea
         mdf = mdf.set_index('symbol')
         for symbol in mdf.index:
-            try: print symbol
-            except: ''
+            #try: print symbol
+            #except: ''
             try:
                 df1  = cmc.getTicker(symbol).set_index('symbol').transpose()
                 mdf = mdf.combine_first(df1.transpose().loc[[symbol], :])
@@ -2237,11 +2237,11 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         dfb['balance'] = p.to_numeric(dfb['balance'])
         mdf = dfb.combine_first(mdf) 
         
-        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-            try: print mdf
-            except: sys.exit()
-            print
-            #sys.exit()
+        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    try: print mdf
+        #    except: sys.exit()
+        #    print
+        #    #sys.exit()
         # end vectorized routine
         #"" "
 
