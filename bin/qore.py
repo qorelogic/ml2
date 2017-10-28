@@ -444,11 +444,12 @@ qg.show_grid(df)
         requests.get('http://httpbin.org/delay/1')
     """
     #@profile
-    def xpath2df(self, url, xcols, expire=3600*24):
+    def xpath2df(self, url, xcols, expire=3600*24, cache=True):
         from lxml import html
         # source: https://stackoverflow.com/questions/27118086/maintain-updated-file-cache-of-web-pages-in-python
         import requests as req, requests_cache
-        requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=expire)
+	if cache:
+	    requests_cache.install_cache('scraper_cache', backend='sqlite', expire_after=expire)
         try:
             res = req.get(url)
         except Exception as e:
