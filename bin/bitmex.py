@@ -939,6 +939,21 @@ ETH/BTC.DC 	0 	"""
         mvp['mvp'] = p.Series(di)
         df = df.combine_first(mvp)
         
+        # passive income  2=passive income
+        pin = 2
+        pi = {}
+        pi.update({'TAAS':pin}) # 
+        pi.update({'PAY':pin,'OMG':pin,'PPT':pin}) 
+        pi.update({'PPP':pin,'XBRL':pin}) # source: https://www.youtube.com/watch?v=nOcei-wGqlY
+        pi.update({'PPP':pin,'PPT':pin,'SIFT':pin,'SALT':pin}) # source: https://www.youtube.com/watch?v=VWVfko-jRnM
+        pi.update({'XRL':pin,'STR':pin}) # source: 
+        pi.update({'SNGLS':pin,'DCR':pin, 'ARK':pin, 'NEO':pin, '21CO':pin, 'CENT':pin}) # source: https://medium.com/@cryptoginger/6-ways-you-can-earn-passive-income-with-crypto-right-now-a5116dc709ed
+        pi.update({'DASH':pin}) # source: https://steemit.com/cryptocurrency/@alanfreestone/passive-income-strategies-with-cryptocurrencies-part-a-masternodes
+
+        pidf = p.DataFrame()
+        pidf['p1pi'] = p.Series(pi)
+        df = df.combine_first(pidf)
+        
         # portfolio mirror
         ks = 'ETH LINK ENG RHOC DNT CVC'.split() # ib
         #def p1(ks):
@@ -977,6 +992,7 @@ ETH/BTC.DC 	0 	"""
         df['t1e'] = (df['volumeETH'] / (df['avg'] * n.power(df['sum'], 4*3)))
         df['t1f'] = ((df['volumeETH'] * df['mvp']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1ib'] = ((df['volumeETH'] * df['p1ib']) / (df['avg'] * n.power(df['sum'], 3*1)))
+        df['t1pi'] = ((df['volumeETH'] * df['p1pi']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t2'] = (df['volume'] * df['avg'])
 
         try:    df[allocationModel]
