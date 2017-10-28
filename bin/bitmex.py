@@ -2690,6 +2690,8 @@ def main():
         eth1_2 = '0xc73D7e4a40D4513eC7D114f521eA59DF607a7613'
         eth2_1 = '0xc978D12413CbC4ec37763944c57EF0100a4c15cf' #eth2 0
         eth2_2 = '0x2c8f659d57971449eb627FB78530Fc61867c4E50' #eth2 1
+        p1 = [eth1_2, eth1_1]
+        p2 = [eth2_2, eth2_1]
 
         # other
         initialInvestment = 0
@@ -2709,16 +2711,23 @@ def main():
         try:    ethAccount = int(args.ethAccount)
         except: ethAccount = args.ethAccount
         
-        if type(ethAccount) == type(''):
+        if type(ethAccount) == type('') and ethAccount != 'all':
             getAdressInfoEthplorer(ethAccount.split(' '), args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
         else:
+            # all portfolios etherdelta
+            if args.ethAccount == 'all':
+                pg = []
+                for i in p1: pg.append(i)
+                for i in p2: pg.append(i)
+                getAdressInfoEthplorer(pg, args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
+
             if args.ethAccount == '1':
-                getAdressInfoEthplorer([eth1_2, eth1_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
+                getAdressInfoEthplorer(p1, args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
             
             usdtwd = 30.41
             initialInvestment = 40000.0 / usdtwd
             if args.ethAccount == '2':
-                getAdressInfoEthplorer(['', eth2_2, eth2_1], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
+                getAdressInfoEthplorer(p2, args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
             #print getTicker('bitcoin')    
     
             # ??? etherdelta
