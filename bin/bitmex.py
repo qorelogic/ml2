@@ -2199,7 +2199,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         except:
             break
 
-        """
+        #"" "
         # vectorized routine
         mdf = p.DataFrame(res['tokens'])
         mdf = exposeColumnFromDataframe(mdf, 'tokenInfo', dropfield=True)
@@ -2242,8 +2242,9 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         #    print
         #    #sys.exit()
         # end vectorized routine
-        """
+        #"" "
 
+        """
         for i in res['tokens']:
             avg = 0
             #print 'tokens: %s' % i
@@ -2362,6 +2363,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             except: ''
             #res2 = p.DataFrame(res['tokens'])#.transpose()
         #if not verbose:
+        """
 
         # fill in missing data
         mdf0 = mdf0.combine_first(ttdf)
