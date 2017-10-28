@@ -2099,8 +2099,10 @@ class Etherscan:
                     ''
         if mode == 1:
             #print mdft
-            mdft['blockHeight1'] = n.array(mdft['blockHeight'], n.int32) / 100 * 100 - 200
-            mdft['blockHeight2'] = n.array(mdft['blockHeight'], n.int32) / 100 * 100 + 300
+            try:
+                mdft['blockHeight1'] = n.array(mdft['blockHeight'], n.int32) / 100 * 100 - 200
+                mdft['blockHeight2'] = n.array(mdft['blockHeight'], n.int32) / 100 * 100 + 300
+            except: ''
             #pd.set_option('display.max_colwidth', -1)
             with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000, 'display.max_colwidth', -1):
                 print '------'
