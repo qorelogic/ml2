@@ -2233,10 +2233,8 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         mdf['symbol'] = mdf.index
         dfinfo = dfinfo.combine_first(mdf.loc[:, 'address decimals symbol'.split(' ')].set_index('symbol'))
         dfb = es.getBalances(ea)
-        print dfb
-        
-        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-            print mdf#; sys.exit()
+        dfb['balance'] = p.to_numeric(dfb['balance'])
+        mdf = dfb.combine_first(mdf) 
         
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
             try: print mdf
