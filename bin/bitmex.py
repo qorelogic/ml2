@@ -2109,7 +2109,7 @@ class Etherscan:
         url = 'https://etherscan.io/address/%s' % addr
         xresd = xp.xpath2df(url, {
             'asd': '//*[@id="balancelist"]/li/a/text()',
-        })
+        }, cache=False)
         df = p.DataFrame(xresd)
         df['balance'] = map(lambda x: x.split(' ')[0].replace(',', ''), df['asd'])
         df['symbol']  = map(lambda x: x.split(' ')[1], df['asd'])
