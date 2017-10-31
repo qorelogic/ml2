@@ -946,7 +946,7 @@ ETH/BTC.DC 	0 	"""
         # minimum viable product
         mvp = p.DataFrame()
         #mvp['mvp'] = p.Series({'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.2, 'MCO':0.7,'ZRX':1,'SALT':1, 'KIN':1,'XTZ':1,'CVC':0.7,'DNT':0.3,'QRL':1})
-        di = {'TAAS':1, 'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.6, 'MCO':0.7,'ZRX':1,'SALT':1, 'KIN':1,'XTZ':1,'CVC':0.7,'DNT':0.3,'QRL':1,'XRL':0.5, 'SND':1} 
+        di = {'TAAS':1, 'CDT':1, 'VERI':1, 'PAY':1, 'PLR':0.3, 'PPT':0.6, 'MCO':0.7,'ZRX':1,'SALT':1, 'KIN':1,'XTZ':1,'CVC':0.7,'DNT':0.3,'QRL':1,'XRL':0.5, 'SND':1, 'LINK':0.3, 'ENG':0.3, 'RHOC':0.3}
 
         mvp['mvp'] = p.Series(di)
         df = df.combine_first(mvp)
@@ -955,19 +955,25 @@ ETH/BTC.DC 	0 	"""
         pin = 2
         pi = {}
         pi.update({'TAAS':pin}) # 
-        pi.update({'PAY':pin,'OMG':pin,'PPT':pin}) 
+        pi.update({'PAY':pin,'OMG':pin,'PPT':pin})
+        #pay https://steemit.com/tenx-pay/@p/tenx-pay-tokens-how-to-earn-usd100k-in-passive-income-with-pay-tokens
         pi.update({'PPP':pin,'XBRL':pin}) # source: https://www.youtube.com/watch?v=nOcei-wGqlY
         pi.update({'PPP':pin,'PPT':pin,'SIFT':pin,'SALT':pin}) # source: https://www.youtube.com/watch?v=VWVfko-jRnM
         pi.update({'XRL':pin,'STR':pin}) # source: 
         pi.update({'SNGLS':pin,'DCR':pin, 'ARK':pin, 'NEO':pin, '21CO':pin, 'CENT':pin}) # source: https://medium.com/@cryptoginger/6-ways-you-can-earn-passive-income-with-crypto-right-now-a5116dc709ed
         pi.update({'DASH':pin}) # source: https://steemit.com/cryptocurrency/@alanfreestone/passive-income-strategies-with-cryptocurrencies-part-a-masternodes
+        # Proof of Asset [PoA ]
+        pi.update({'BBT':pin}) # source: https://www.brickblock.io/tokens
+
+        # other non-eth-coins/projects
+        # GNT [golem]
 
         pidf = p.DataFrame()
         pidf['p1pi'] = p.Series(pi)
         df = df.combine_first(pidf)
         
         # portfolio mirror
-        ks = 'ETH LINK ENG RHOC DNT CVC'.split() # ib
+        ks = 'ETH BTC LINK DNT RHOC ENG AVT ZRX CVC SALT KNC CAT PRO KIN AIR EOS ETT CREA MYST HMQ MGO'.split() # ib
         #def p1(ks):
         #    return port
         vs = [1]*len(ks)
