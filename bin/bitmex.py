@@ -1097,8 +1097,8 @@ ETH/BTC.DC 	0 	"""
         mdf0 = mdf0[(n.abs(mdf0['balance']) != 0) | (n.abs(mdf0['portPcnt']) != 0.0)]
         
         print
-        self.sortDataFrame(mdf0, 'currentPortPcnt', f, False, title='delever') # same sorting as balance_usd
         self.sortDataFrame(mdf0, 'allocation', f, False, title='') # same forting as portUsd
+        self.sortDataFrame(mdf0, 'currentPortPcnt', f, False, title='delever') # same sorting as balance_usd
         self.sortDataFrame(mdf0, 'balancePortDiffUSD', f, False, title='delever2')
         self.sortDataFrame(mdf0, 'balanceETHDiff', f, False, title='lever')
         self.sortDataFrame(mdf0, 'unitsDiff', f, False, title='lever2')
