@@ -683,6 +683,16 @@ class CoinMarketCap:
         self.resolvedCoin = dfres
         return currency
 
+def lastGitHash():
+    import subprocess
+    cmd = 'git log --oneline'
+    res = subprocess.check_output(cmd.split(' ')).strip()
+    res = res.split('\n')#[0]
+    res = map(lambda x: x.split(' ')[0], res)
+    return res[0]
+    #df = p.DataFrame(res)
+    #print df
+
 class PortfolioModeler:
     
     def __init__(self):
@@ -698,6 +708,7 @@ class PortfolioModeler:
         self.models.update(dict(zip(range(4,len(li)+4), li)))
         self.model   = None
         self.cmc = CoinMarketCap()
+        self.lastGitHash = lastGitHash()
     
     def listModels(self):
         for i in self.models.keys():
@@ -1065,9 +1076,11 @@ ETH/BTC.DC 	0 	"""
         sf = ('%s %s' % (field, sortFlag))
         df = df.rename(columns={field:sf})
         print
-        if title: print ('%s::%s %s [model:%s]' % (title, field, sortFlag, self.allocationModel))
-        else:     print '%s [model:%s]' % (sf, self.allocationModel)
-        try:    print df
+        if title: print ('%s::%s %s [model:%s commit:%s]' % (title, field, sortFlag, self.allocationModel, self.lastGitHash))
+        else:     print '%s [model:%s commit:%s]' % (sf, self.allocationModel, self.lastGitHash)
+        try:
+            print df.shape
+            print df
         except: ''
 
     def printPortfolio(self, mdf0, f=None):
