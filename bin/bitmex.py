@@ -973,7 +973,7 @@ ETH/BTC.DC 	0 	"""
         df = df.combine_first(pidf)
         
         # portfolio mirror
-        ks = 'ETH BTC LINK DNT RHOC ENG AVT ZRX CVC SALT KNC CAT PRO KIN AIR EOS ETT CREA MYST HMQ MGO'.split() # ib
+        ks = 'ETH BTC LINK DNT RHOC ENG AVT ZRX CVC SALT KNC CAT PRO KIN AIR EOS ETT CREA MYST HMQ MGO RDN DRGN'.split() # ib
         #def p1(ks):
         #    return port
         vs = [1]*len(ks)
