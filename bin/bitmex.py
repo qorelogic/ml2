@@ -1082,6 +1082,9 @@ ETH/BTC.DC 	0 	"""
 
     def sortDataFrame(self, df, field, f, ascending, title=None):
         
+        # filter: removes verbose portfolio rows
+        df = df[(df[field] != 0) | (df['balance'] != 0) | (df['portPcnt'])]
+        
         sortFlag = '^' if ascending == True else 'v'
         if field == None or field == 'index':
             df = df.sort_index()
