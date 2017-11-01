@@ -976,10 +976,16 @@ ETH/BTC.DC 	0 	"""
         ks = 'ETH BTC LINK DNT RHOC ENG AVT ZRX CVC SALT KNC CAT PRO KIN AIR EOS ETT CREA MYST HMQ MGO RDN DRGN'.split() # ib
         #def p1(ks):
         #    return port
-        vs = [1]*len(ks)
+        mvpMin = 0.3
+        vs = [mvpMin]*len(ks)
         port = p.DataFrame()
         port['p1ib'] = p.Series(dict(zip(ks, vs)))
         df = df.combine_first(port)
+        
+        # combine ib portfolio[p1ib] with mvp
+        mvpdf = df.fillna(0)[(df['mvp'] > 0) | (df['p1ib'] > 0)].loc[:,'mvp p1ib'.split(' ')]
+        mvpdf['mvp'] = n.max(mvpdf, 1)
+        df = df.combine_first(mvpdf)
 
         df['avg'] = (df['bid'] + df['offer']) / 2
         df['spread'] = df['offer'] - df['bid']
