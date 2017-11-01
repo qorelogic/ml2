@@ -965,6 +965,10 @@ ETH/BTC.DC 	0 	"""
         # Proof of Asset [PoA ]
         pi.update({'BBT':pin}) # source: https://www.brickblock.io/tokens
 
+        # airdrops
+        pi.update({'MBRS':pin}) # airdropped token:NIO 
+        #pi.update({'??? MBRS':pin}) # airdropped token:KNOW 
+
         # other non-eth-coins/projects
         # GNT [golem]
 
