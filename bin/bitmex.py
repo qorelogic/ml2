@@ -1109,6 +1109,10 @@ ETH/BTC.DC 	0 	"""
         # filter
         mdf0 = mdf0[(n.abs(mdf0['balance']) != 0) | (n.abs(mdf0['portPcnt']) != 0.0)]
         
+        self.printInfo(mdf0)
+        #self.visualize(mdf0)
+        #mdf0.to_csv('/tmp/mdf0.csv')
+        
         print
         self.sortDataFrame(mdf0, 'allocation', f, False, title='') # same forting as portUsd
         self.sortDataFrame(mdf0, 'portPcntDiff', f, False, title='lever0') # 
@@ -1155,6 +1159,27 @@ ETH/BTC.DC 	0 	"""
         df = p.DataFrame(list(mdf0.index))
         df.to_csv('/tmp/symbols.txt')
         print ev.df
+
+    def visualize(self, df, saveTo='../data/pp', size=5):
+        try: import seaborn as sns
+        except: ''
+        sns.set(style="ticks")
+        pp = sns.pairplot(df, size=size)#, hue="species")
+        
+        #df = df.loc[:,'relevance runtime'.split(' ')].tail(10)
+        #pp = sns.heatmap(df)
+        #plt.scatter(df['relevance'], df['runtime'], marker='+', alpha=0.5)
+        #sns.pointplot(df)#, hue="species")
+        
+        if args.visualizeSave: pp.savefig(saveTo)
+        else:                  plt.show()
+    
+    def printInfo(self, df):
+        print (df.dtypes)
+        print ()
+        print (df.describe().shape)
+        print (df.describe())
+
 
 class TokenMarket:
     
