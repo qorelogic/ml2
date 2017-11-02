@@ -997,7 +997,7 @@ ETH/BTC.DC 	0 	"""
         if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         
         # portfolio mirror
-        ks = 'ETH BTC LINK DNT RHOC ENG AVT ZRX CVC SALT KNC CAT PRO KIN AIR EOS ETT CREA MYST HMQ MGO RDN DRGN'.split() # ib
+        ks = 'ETH BTC LINK DNT RHOC ENG AVT ZRX CVC SALT KNC CAT PRO KIN AIR EOS ETT CREA MYST HMQ MGO RDN DRGN POWR'.split() # ib
         #def p1(ks):
         #    return port
         mvpMin = 0.3
