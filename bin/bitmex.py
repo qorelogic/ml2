@@ -911,6 +911,7 @@ ETH/BTC.DC 	0 	"""
                 print e
                 df = p.DataFrame({'volume': 0, 'symbol': 'STUB/ETH', 'bid': 0, 'offer': 0}, index=[0])
             df = df.fillna(0)
+            print 'assets available: %s' % len(df.index)
             if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
             ed.toMjson(df, '/mldev/bin/data/cache/coins/etherdelta.mjson')
 
@@ -1121,6 +1122,7 @@ ETH/BTC.DC 	0 	"""
         sf = ('%s %s' % (field, sortFlag))
         df = df.rename(columns={field:sf})
         print
+        print 'Symbols[A-Z]: %s' % (' '.join(list(df.sort_index().index)).encode('utf-8').strip())
         if title: print ('%s::%s %s [model:%s commit:%s]' % (title, field, sortFlag, self.allocationModel, self.lastGitHash))
         else:     print '%s [model:%s commit:%s]' % (sf, self.allocationModel, self.lastGitHash)
         try:
