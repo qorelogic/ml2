@@ -770,6 +770,13 @@ class PortfolioModeler:
         df = df.sort_values(by='portPcntPinv2', ascending=False)
         #return
 
+    def genPortWeight(self, df, field):
+        df['portWeight'] = n.log(df[field]) / n.log(10)
+        #df['portWeight'] = (df['allocation']) #/ n.log(10)
+        df['portWeight'] = map(lambda x: 0 if n.abs(x) == n.inf else x, df['portWeight'])
+        df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
+        return df
+
     #@profile
     def genPortfolio(self, df, balance_usd='balance_usd', volume='volume'):
     
@@ -828,19 +835,15 @@ class PortfolioModeler:
         #df['allocation'] = sigmoidme(df['allocation'])
         dfa = ((df.drop(df[df['allocation'] < 0].index)))
         #print dfa #df[df['allocation'] == 0].index
-        df['portWeight'] = n.log(df['allocation']) / n.log(10)
-        #df['portWeight'] = (df['allocation']) #/ n.log(10)
-        #sys.exit()
-
         dfp = df
         dfp = dfp[dfp['balance'] > 0]
+        
+        df = self.genPortWeight(df, 'allocation')
         
         df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
         #df['totalBalanceUsd'] = totalBalanceUsd
         
-        df['portWeight'] = map(lambda x: 0 if n.abs(x) == n.inf else x, df['portWeight'])
         df['currentPortPcnt'] = df['balance_eth'] / df['totalBalanceEth'] * 100
-        df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
 
         if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
