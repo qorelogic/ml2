@@ -833,14 +833,14 @@ class PortfolioModeler:
         #df['allocation'] = df['allocation'].fillna(0)
         #df['allocation'] = normalizeme(df['allocation'])
         #df['allocation'] = sigmoidme(df['allocation'])
-        dfa = ((df.drop(df[df['allocation'] < 0].index)))
+        #dfa = ((df.drop(df[df['allocation'] < 0].index)))
         #print dfa #df[df['allocation'] == 0].index
-        dfp = df
-        dfp = dfp[dfp['balance'] > 0]
+        #dfp = df
+        #dfp = dfp[dfp['balance'] > 0]
+        #df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
         
         df = self.genPortWeight(df, 'allocation')
         
-        df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
         #df['totalBalanceUsd'] = totalBalanceUsd
         
         df['currentPortPcnt'] = df['balance_eth'] / df['totalBalanceEth'] * 100
