@@ -777,6 +777,47 @@ class PortfolioModeler:
         df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
         return df
 
+    def genP(self, df, pt):
+        pcntPT = '%sPcnt' % pt
+        dft = self.genPortWeight(df, pt)
+        dft[pcntPT] = dft['portPcnt']#.fillna(0)
+        dft = dft[dft[pcntPT] != 0]
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print dft
+        return [pcntPT, dft]
+
+    def combinePortfolios(self, df, p1, p2):
+
+        pname  = 'portPcnt'
+        modelPcnt = n.array([20, 80])
+
+        [pcntP1, df1] = self.genP(df, p1)
+        [pcntP2, df2] = self.genP(df, p2)
+
+        dfmmm = p.DataFrame([])
+        dfmmm = df1.combine_first(dfmmm)
+        dfmmm = df2.combine_first(dfmmm)
+        dfmmm = dfmmm.loc[:, [pcntP1, pcntP2]]
+
+        dfmmm = dfmmm.fillna(0)
+        dfmmm = dfmmm[(dfmmm[pcntP1] != 0) | (dfmmm[pcntP2] != 0)]
+
+        # apply metamodeling
+        dfmmm = dfmmm * modelPcnt / 100
+        dfmmm['portPcntSum'] = n.sum(dfmmm, 1)
+        dfmmmTotal = n.sum(dfmmm, 0)
+        dfmmm[pname] = dfmmm['portPcntSum'] / (dfmmmTotal['portPcntSum']/100)
+
+        #dfmmm = dfmmm.loc[:, [pname]]
+        dfmmm = dfmmm[dfmmm[pname] != 0].sort_values(by=pname, ascending=False)
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print modelPcnt
+        #    print dfmmm
+        #    print dfmmmTotal
+        #print dfmmm
+        #sys.exit()
+        return dfmmm
+
     #@profile
     def genPortfolio(self, df, balance_usd='balance_usd', volume='volume'):
     
@@ -841,8 +882,19 @@ class PortfolioModeler:
         
         df = self.genPortWeight(df, 'allocation')
         
+        dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
+        dfmmm = dfmmm[dfmmm['portPcnt'] > 0]
+        df['portPcnt'] = 0
+        df = dfmmm.combine_first(df)
+        """
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print dfmmm
+            #print df.sort_values(by='portPcnt', ascending=False)
+            #print n.sum(df, 0)
+        """
+
         #df['totalBalanceUsd'] = totalBalanceUsd
-        
+
         df['currentPortPcnt'] = df['balance_eth'] / df['totalBalanceEth'] * 100
 
         if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
@@ -852,7 +904,7 @@ class PortfolioModeler:
         df['portUnits']       = df['portUsd'] / ethusd / df[side]
         df['balancePerPort']  = df[balance_usd] / df['portUsd']
         df = df[df['portUnits'] != n.inf]
-        
+
         #df = df[n.abs(df['balance']) != 0]
 
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1145,7 +1197,7 @@ ETH/BTC.DC 	0 	"""
         #mdf0.to_csv('/tmp/mdf0.csv')
         
         print
-        self.sortDataFrame(mdf0, 'allocation', f, False, title='') # same forting as portUsd
+        self.sortDataFrame(mdf0, 'portPcnt', f, False, title='') # same forting as portUsd
         self.sortDataFrame(mdf0, 'portPcntDiff', f, False, title='lever0') # 
         self.sortDataFrame(mdf0, 'currentPortPcnt', f, False, title='delever') # same sorting as balance_usd
         self.sortDataFrame(mdf0, 'balancePortDiffUSD', f, False, title='delever2')
