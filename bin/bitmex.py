@@ -1034,6 +1034,7 @@ ETH/BTC.DC 	0 	"""
         #pay https://steemit.com/tenx-pay/@p/tenx-pay-tokens-how-to-earn-usd100k-in-passive-income-with-pay-tokens
         pi.update({'PPP':pin,'XBRL':pin}) # source: https://www.youtube.com/watch?v=nOcei-wGqlY
         pi.update({'PPP':pin,'PPT':pin,'SIFT':pin,'SALT':pin}) # source: https://www.youtube.com/watch?v=VWVfko-jRnM
+        pi.update({'PPP':pin,'PPT':pin,'XRL':pin,'SIFT':pin,'STR':pin}) # source: https://www.youtube.com/watch?v=DcK9gJ5BetY 
         pi.update({'XRL':pin,'STR':pin}) # source: 
         pi.update({'SNGLS':pin,'DCR':pin, 'ARK':pin, 'NEO':pin, '21CO':pin, 'CENT':pin}) # source: https://medium.com/@cryptoginger/6-ways-you-can-earn-passive-income-with-crypto-right-now-a5116dc709ed
         pi.update({'DASH':pin}) # source: https://steemit.com/cryptocurrency/@alanfreestone/passive-income-strategies-with-cryptocurrencies-part-a-masternodes
