@@ -2693,6 +2693,8 @@ def main():
     parser.add_argument("-r14", '--research14', help="test 14", action="store_true")
     parser.add_argument("-r15", '--research15', help="test 15", action="store_true")
     parser.add_argument("-r16", '--research16', help="test 16", action="store_true")
+    parser.add_argument("-r18", '--research18', help="test 18", action="store_true")
+    parser.add_argument("-r19", '--research19', help="test 19", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -2727,6 +2729,44 @@ def main():
     #print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)['range']
     """
     
+    if args.research19:        
+
+        from qore import XPath
+        ethaddr = args.ethAddress
+        url = 'https://coinmarketcap.com/tokens/views/all/#USD'
+        #url = 'https://etherscan.io/tokentxns?a=%s&p=3' % ethaddr
+        xp = XPath()
+        xresd = xp.xpath2df(url, {
+            'name' : '//tr/td[2]/a/text()',
+            'symbol' : '//tr/td[2]/span/a/text()',
+            'token' : '//tr/td[3]/a/text()',
+            'marketCap' : '//tr/td[4]//text()',
+            'price' : '//tr/td[5]/a/text()',
+            #'name6' : '//tr/td[6]/a/text()',
+            'volume' : '//tr/td[7]/a/text()',
+            '%1h' : '//tr/td[8]//text()',
+            '%24h' : '//tr/td[9]//text()',
+            '%7d' : '//tr/td[10]/text()',
+            #'name11' : '//tr/td[11]/a/text()',
+            #'name12' : '//tr/td[12]/a/text()',
+        })#, verbose=True)
+        #print xresd
+        df = p.DataFrame(xresd)
+        df = df[df['token'] == 'Ethereum']
+        df['marketCap'] = map(lambda x: x.replace('\n', '').strip(), df['marketCap']) 
+        for i in '%1h %24h %7d'.split():
+            df[i] = map(lambda x: x.replace(',', '').replace('%','').replace('?','').replace('> 9999','').strip(), df[i])
+            #print df[i]
+            df[i] = p.to_numeric(df[i])
+        for i in 'marketCap price volume'.split():
+            df[i] = map(lambda x: x.replace(',', '').replace('$','').replace('?','').replace('Low Vol','0'), df[i])
+            df[i] = p.to_numeric(df[i])
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            df = df.loc[:,'symbol name token marketCap price volume %1h %24h %7d'.split()]
+            df = df.set_index('symbol')
+            print df.dtypes
+            print df.sort_values(by='%7d', ascending=False)
+
     if args.research13:
         
         #print pl.trade(pair='ETH_ZRX', method='sell', rate=0.0006, amount=5)
