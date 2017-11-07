@@ -404,6 +404,37 @@ class CoinMarketCap:
         df = df.transpose()
         return df
 
+    def getAllTokens(self):
+        from qore import XPath
+        url = 'https://coinmarketcap.com/tokens/views/all/#USD'
+        xp = XPath()
+        xresd = xp.xpath2df(url, {
+            'name' : '//tr/td[2]/a/text()',
+            'symbol' : '//tr/td[2]/span/a/text()',
+            'token' : '//tr/td[3]/a/text()',
+            'marketCap' : '//tr/td[4]//text()',
+            'price' : '//tr/td[5]/a/text()',
+            #'name6' : '//tr/td[6]/a/text()',
+            'volume' : '//tr/td[7]/a/text()',
+            '%1h' : '//tr/td[8]//text()',
+            '%24h' : '//tr/td[9]//text()',
+            '%7d' : '//tr/td[10]/text()',
+            #'name11' : '//tr/td[11]/a/text()',
+            #'name12' : '//tr/td[12]/a/text()',
+        })#, verbose=True)
+        #print xresd
+        df = p.DataFrame(xresd)
+        df = df[df['token'] == 'Ethereum']
+        df['marketCap'] = map(lambda x: x.replace('\n', '').strip(), df['marketCap']) 
+        for i in '%1h %24h %7d'.split():
+            df[i] = map(lambda x: x.replace(',', '').replace('%','').replace('?','').replace('> 9999','').strip(), df[i])
+            #print df[i]
+            df[i] = p.to_numeric(df[i])
+        for i in 'marketCap price volume'.split():
+            df[i] = map(lambda x: x.replace(',', '').replace('$','').replace('?','').replace('Low Vol','0'), df[i])
+            df[i] = p.to_numeric(df[i])
+        return df
+    
     #@profile
     def check(self, checkTradableCoins=False):
         try: self.dfc
@@ -2731,36 +2762,8 @@ def main():
     
     if args.research19:        
 
-        from qore import XPath
-        ethaddr = args.ethAddress
-        url = 'https://coinmarketcap.com/tokens/views/all/#USD'
-        #url = 'https://etherscan.io/tokentxns?a=%s&p=3' % ethaddr
-        xp = XPath()
-        xresd = xp.xpath2df(url, {
-            'name' : '//tr/td[2]/a/text()',
-            'symbol' : '//tr/td[2]/span/a/text()',
-            'token' : '//tr/td[3]/a/text()',
-            'marketCap' : '//tr/td[4]//text()',
-            'price' : '//tr/td[5]/a/text()',
-            #'name6' : '//tr/td[6]/a/text()',
-            'volume' : '//tr/td[7]/a/text()',
-            '%1h' : '//tr/td[8]//text()',
-            '%24h' : '//tr/td[9]//text()',
-            '%7d' : '//tr/td[10]/text()',
-            #'name11' : '//tr/td[11]/a/text()',
-            #'name12' : '//tr/td[12]/a/text()',
-        })#, verbose=True)
-        #print xresd
-        df = p.DataFrame(xresd)
-        df = df[df['token'] == 'Ethereum']
-        df['marketCap'] = map(lambda x: x.replace('\n', '').strip(), df['marketCap']) 
-        for i in '%1h %24h %7d'.split():
-            df[i] = map(lambda x: x.replace(',', '').replace('%','').replace('?','').replace('> 9999','').strip(), df[i])
-            #print df[i]
-            df[i] = p.to_numeric(df[i])
-        for i in 'marketCap price volume'.split():
-            df[i] = map(lambda x: x.replace(',', '').replace('$','').replace('?','').replace('Low Vol','0'), df[i])
-            df[i] = p.to_numeric(df[i])
+        cmc = CoinMarketCap()
+        df = cmc.getAllTokens()
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             df = df.loc[:,'symbol name token marketCap price volume %1h %24h %7d'.split()]
             df = df.set_index('symbol')
