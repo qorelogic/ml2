@@ -1042,7 +1042,7 @@ ETH/BTC.DC 	0 	"""
         pi.update({'BBT':pin}) # source: https://www.brickblock.io/tokens
 
         # airdrops
-        pi.update({'MBRS':pin}) # airdropped token:NIO 
+        #pi.update({'MBRS':pin}) # airdropped token:NIO
         #pi.update({'??? MBRS':pin}) # airdropped token:KNOW 
 
         # other non-eth-coins/projects
