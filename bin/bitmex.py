@@ -1230,7 +1230,7 @@ ETH/BTC.DC 	0 	"""
         # filter
         mdf0 = mdf0[(n.abs(mdf0['balance']) != 0) | (n.abs(mdf0['portPcnt']) != 0.0)]
         
-        self.printInfo(mdf0)
+        self.printInfo(mdf0, f)
         #self.visualize(mdf0)
         #mdf0.to_csv('/tmp/mdf0.csv')
         
@@ -1296,11 +1296,11 @@ ETH/BTC.DC 	0 	"""
         if args.visualizeSave: pp.savefig(saveTo)
         else:                  plt.show()
     
-    def printInfo(self, df):
+    def printInfo(self, df, f=None):
         print (df.dtypes)
         print ()
         print (df.describe().shape)
-        print (df.describe())
+        print (df.describe().loc[:,f])
 
 
 class TokenMarket:
