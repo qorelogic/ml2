@@ -2373,6 +2373,8 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             print res
         except: ''
     """
+    
+    atdf = cmc.getAllTokens(tokenType='ethereum')
 
     for ea in ethaddr:
         ethaddrSmall = ea[0:7]
@@ -2423,7 +2425,9 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                 df1  = cmc.getTicker(symbol).set_index('symbol').transpose()
                 mdf = mdf.combine_first(df1.transpose().loc[[symbol], :])
             except Exception as e: ''
-        mdf['24h_volume_marketcap_ratio'] = mdf['24h_volume_usd'] / mdf['market_cap_usd'] * 100
+        mdf = mdf.combine_first(atdf.set_index('symbol').loc[mdf.index, :])
+        try:  mdf['24h_volume_marketcap_ratio'] = mdf['24h_volume_usd'] / mdf['market_cap_usd'] * 100
+        except: ''
         mdf['avg']         = mdf['rate'] / ethusd
         mdf['balance_usd'] = mdf['balance'] * mdf['avg'] * ethusd
         mdf['ethaddr']     = ethaddrSmall
