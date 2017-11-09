@@ -1075,11 +1075,14 @@ ETH/BTC.DC 	0 	"""
         pi.update({'BBT':pin}) # source: https://www.brickblock.io/tokens
 
         # airdrops
-        #pi.update({'MBRS':pin}) # airdropped token:NIO
+        #pi.update({'MBRS':pin}) # airdropped token:NIO 
         #pi.update({'??? MBRS':pin}) # airdropped token:KNOW 
 
         # other non-eth-coins/projects
         # GNT [golem]
+
+        # interesting 
+        # STY: Styras, Affordable internet anywhere https://themerkle.com/styras-affordable-internet-access-anywhere-on-the-planet/?utm_medium=push&utm_source=onesignal&utm_campaign=traffic%20boost&utm_content=extended%20%traffic%boost
 
         pidf = p.DataFrame()
         pidf['p1pi'] = p.Series(pi)
