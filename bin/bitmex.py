@@ -1764,6 +1764,13 @@ class Liqui(Exchange):
         self.apiServer = 'api.liqui.io'
         self.apiMethod = '/tapi'
 
+    def info(self):
+        data = apiRequest('https://api.liqui.io/api/3', '/info')#, noCache=True)
+        #print data
+        df = p.DataFrame(data['pairs']).transpose()
+        #pf(df)
+        return df
+
     def getInfo(self):
         data = self.requestAuthenticated('getInfo')
         df = p.DataFrame(data['return'])#.transpose()
