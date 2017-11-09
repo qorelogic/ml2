@@ -416,9 +416,9 @@ class CoinMarketCap:
             'price' : '//tr/td[5]/a/text()',
             #'name6' : '//tr/td[6]/a/text()',
             'volume' : '//tr/td[7]/a/text()',
-            '%1h' : '//tr/td[8]//text()',
-            '%24h' : '//tr/td[9]//text()',
-            '%7d' : '//tr/td[10]/text()',
+            'pcnt1h' : '//tr/td[8]//text()',
+            'pcnt24h' : '//tr/td[9]//text()',
+            'pcnt7d' : '//tr/td[10]/text()',
             #'name11' : '//tr/td[11]/a/text()',
             #'name12' : '//tr/td[12]/a/text()',
         })#, verbose=True)
@@ -428,7 +428,7 @@ class CoinMarketCap:
         if tokenType:
             df = df[df['token'] == tokenType]
         df['marketCap'] = map(lambda x: x.replace('\n', '').strip(), df['marketCap']) 
-        for i in '%1h %24h %7d'.split():
+        for i in 'pcnt1h pcnt24h pcnt7d'.split():
             df[i] = map(lambda x: x.replace(',', '').replace('%','').replace('?','').replace('> 9999','').strip(), df[i])
             #print df[i]
             df[i] = p.to_numeric(df[i])
@@ -2666,7 +2666,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             
             f = '24h_volume_usd allocation sell balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation sell balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sell balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = ('totalBalanceUsd totalBalanceEth balance balance_eth balance_usd unitsDiff balanceETHDiff balanceUsdDiff currentPortPcnt portPcnt portPcntDiff spreadPcnt volumeETH spreadVolume id2 id4 sell price_eth arb1 mname sum mvp allocation portPcnt price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume volumeETHperSpreadPcnt portWeight portPcnt portUsd portUnits mname sum sell balance balance_usd spreadPcnt sell unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s mname id' % pm.allocationModels).split()
+            f = ('marketCap volume totalBalanceUsd totalBalanceEth balance balance_eth balance_usd unitsDiff balanceETHDiff balanceUsdDiff currentPortPcnt portPcnt portPcntDiff spreadPcnt volumeETH spreadVolume pcnt1h pcnt24h pcnt7d id2 id4 sell price_eth arb1 mname sum mvp allocation portPcnt price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume volumeETHperSpreadPcnt portWeight portPcnt portUsd portUnits mname sum sell balance balance_usd spreadPcnt sell unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s mname id name' % pm.allocationModels).split()
             pm.printPortfolio(mdf0, f)
             print '---'
             for i in range(len(ethaddr)):
@@ -2783,10 +2783,10 @@ def main():
         cmc = CoinMarketCap()
         df = cmc.getAllTokens(tokenType='ethereum')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            df = df.loc[:,'symbol name token marketCap price volume %1h %24h %7d'.split()]
+            df = df.loc[:,'symbol name token marketCap price volume pcnt1h pcnt24h pcnt7d'.split()]
             df = df.set_index('symbol')
             print df.dtypes
-            print df.sort_values(by='%7d', ascending=False)
+            print df.sort_values(by='pcnt7d', ascending=False)
 
     if args.research13:
         
