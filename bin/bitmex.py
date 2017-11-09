@@ -404,7 +404,7 @@ class CoinMarketCap:
         df = df.transpose()
         return df
 
-    def getAllTokens(self):
+    def getAllTokens(self, tokenType=None):
         from qore import XPath
         url = 'https://coinmarketcap.com/tokens/views/all/#USD'
         xp = XPath()
@@ -424,7 +424,9 @@ class CoinMarketCap:
         })#, verbose=True)
         #print xresd
         df = p.DataFrame(xresd)
-        df = df[df['token'] == 'Ethereum']
+        df['token'] = map(lambda x: x.lower(), df['token'])
+        if tokenType:
+            df = df[df['token'] == tokenType]
         df['marketCap'] = map(lambda x: x.replace('\n', '').strip(), df['marketCap']) 
         for i in '%1h %24h %7d'.split():
             df[i] = map(lambda x: x.replace(',', '').replace('%','').replace('?','').replace('> 9999','').strip(), df[i])
@@ -2763,7 +2765,7 @@ def main():
     if args.research19:        
 
         cmc = CoinMarketCap()
-        df = cmc.getAllTokens()
+        df = cmc.getAllTokens(tokenType='ethereum')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             df = df.loc[:,'symbol name token marketCap price volume %1h %24h %7d'.split()]
             df = df.set_index('symbol')
