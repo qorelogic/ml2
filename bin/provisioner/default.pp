@@ -1,8 +1,13 @@
 
 #Exec { path => [ "/bin/", "/sbin/" , "/usr/bin/", "/usr/sbin/" ] }
 
-
-
+# apt-get install python3-tk
+# apt-get install tk-dev
+# libsqlite3-dev
+# sqlite3
+# python-sqlite
+# sqlite3-dev
+# python-gtk2-dev
 
 ###############################################################################
 ### Start config ##############################################################
