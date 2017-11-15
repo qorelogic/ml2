@@ -894,6 +894,10 @@ class PortfolioModeler:
         df['balance_eth']  = df['balance'] * df[side]
 
         if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
+        # drop duplicate indices
+        # source: https://stackoverflow.com/questions/13035764/remove-rows-with-duplicate-indices-pandas-dataframe-and-timeseries
+        #df = df.reset_index().drop_duplicates(subset='index', keep='last').set_index('index')
+        df = df[~df.index.duplicated(keep='first')]
         #df['totalBalanceUsd'] = df[balance].sum()
         df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
         df['totalBalanceUsd'] = df['totalBalanceUsd'] + df['ethUSDTotal']
