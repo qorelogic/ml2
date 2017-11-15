@@ -803,6 +803,7 @@ class PortfolioModeler:
         df = df.sort_values(by='portPcntPinv2', ascending=False)
         #return
 
+    # metaportfolio methods
     def genPortWeight(self, df, field):
         df['portWeight'] = n.log(df[field]) / n.log(10)
         #df['portWeight'] = (df['allocation']) #/ n.log(10)
@@ -850,6 +851,7 @@ class PortfolioModeler:
         #print dfmmm
         #sys.exit()
         return dfmmm
+    # end metaportfolio methods
 
     #@profile
     def genPortfolio(self, df, balance_usd='balance_usd', volume='volume'):
@@ -917,18 +919,22 @@ class PortfolioModeler:
         #dfp = dfp[dfp['balance'] > 0]
         #df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
         
+        # metaportfolio implementation
         df = self.genPortWeight(df, 'allocation')
         
         dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
         dfmmm = dfmmm[dfmmm['portPcnt'] > 0]
         df['portPcnt'] = 0
         df = dfmmm.combine_first(df)
-        """
+        #"""
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print '=== %s ==========================================================' % 'dfmmm'
             print dfmmm
             #print df.sort_values(by='portPcnt', ascending=False)
             #print n.sum(df, 0)
-        """
+            print '=== %s ==========================================================' % 'dfmmm'
+        #"""
+        # end metaportfolio implementation
 
         #df['totalBalanceUsd'] = totalBalanceUsd
 
