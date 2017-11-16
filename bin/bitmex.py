@@ -1269,6 +1269,18 @@ ETH/BTC.DC 	0 	"""
         # filter
         mdf0 = mdf0[(n.abs(mdf0['balance']) != 0) | (n.abs(mdf0['portPcnt']) != 0.0)]
         
+        def describeDF(mdf0, field):
+            print
+            print '=== %s ==========================================================' % field
+            mdfd = mdf0[mdf0[field] > 0]
+            self.printInfo(mdfd, f)
+            self.sortDataFrame(mdfd, field, f, False, title='')
+            print '=== end %s ======================================================' % field
+            print
+
+        describeDF(mdf0, 'portPcnt')
+        describeDF(mdf0, 'currentPortPcnt')
+
         self.printInfo(mdf0, f)
         #self.visualize(mdf0)
         #mdf0.to_csv('/tmp/mdf0.csv')
