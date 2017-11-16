@@ -409,6 +409,7 @@ class CoinMarketCap:
         url = 'https://coinmarketcap.com/tokens/views/all/#USD'
         xp = XPath()
         xresd = xp.xpath2df(url, {
+            'id' : '//tr/@id',
             'name' : '//tr/td[2]/a/text()',
             'symbol' : '//tr/td[2]/span/a/text()',
             'token' : '//tr/td[3]/a/text()',
@@ -424,6 +425,7 @@ class CoinMarketCap:
         })#, verbose=True)
         #print xresd
         df = p.DataFrame(xresd)
+        df['id'] = map(lambda x: x.replace('id-',''), df['id'])
         df['token'] = map(lambda x: x.lower(), df['token'])
         if tokenType:
             df = df[df['token'] == tokenType]
@@ -436,7 +438,34 @@ class CoinMarketCap:
             df[i] = map(lambda x: x.replace(',', '').replace('$','').replace('?','').replace('Low Vol','0'), df[i])
             df[i] = p.to_numeric(df[i])
         return df
-    
+
+    def getCoinHistory(self, token, normalize=False, sigmoid=False):
+        from qoreliquid import normalizeme, sigmoidme
+        u = 'https://graphs.coinmarketcap.com/currencies'
+        #token = 'kin'
+        res = apiRequest(u,'/%s/'%token)
+        #print res
+        df = p.DataFrame(res)
+        dfm = p.DataFrame()
+        for i in df.columns:
+            #print i
+            #df['market_cap_by_available_supply'] = map(lambda x: n.array(x), df['market_cap_by_available_supply'])
+            dfc = list(df[i].get_values())
+            dfc = p.DataFrame(dfc)
+            dfc = dfc.rename({0:'ts', 1:i}, axis='columns')
+            dfc = dfc.set_index('ts')
+            #print dfc
+            #dfc.plot(logy=True)
+            dfm = dfm.combine_first(dfc)
+        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print dfm
+        #print df
+        if normalize:
+            dfm = normalizeme(dfm)
+        if sigmoid:
+            dfm = sigmoidme(dfm)
+        return dfm
+
     #@profile
     def check(self, checkTradableCoins=False):
         try: self.dfc
