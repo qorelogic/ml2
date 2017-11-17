@@ -1301,6 +1301,7 @@ ETH/BTC.DC 	0 	"""
         df = df.rename(columns={field:sf})
         print
         print 'Symbols[A-Z]: %s' % (' '.join(list(df.sort_index().index)).encode('utf-8').strip())
+        print 'Symbols: %s' % (' '.join(list(df.index)).encode('utf-8').strip())
         if title: print ('%s::%s %s [model:%s commit:%s]' % (title, field, sortFlag, self.allocationModel, self.lastGitHash))
         else:     print '%s [model:%s commit:%s]' % (sf, self.allocationModel, self.lastGitHash)
         try:
