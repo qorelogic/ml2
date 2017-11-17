@@ -2491,7 +2491,10 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                 df1  = cmc.getTicker(symbol).set_index('symbol').transpose()
                 mdf = mdf.combine_first(df1.transpose().loc[[symbol], :])
             except Exception as e: ''
-        mdf = mdf.combine_first(atdf.set_index('symbol').loc[mdf.index, :])
+        try:    mdf = mdf.combine_first(atdf.set_index('symbol').loc[mdf.index, :])
+        except: ''
+        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print mdf
         try:  mdf['24h_volume_marketcap_ratio'] = mdf['24h_volume_usd'] / mdf['market_cap_usd'] * 100
         except: ''
         mdf['avg']         = mdf['rate'] / ethusd
