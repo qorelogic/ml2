@@ -45,6 +45,37 @@ df(:,4) = df(:,2)*70/100;
 df(:,5) = df(:,1)/100*4452.49
 """
 
+def desc(df):
+    el = df.dtypes.get_values()
+    vari = []
+    obji = []
+    print '==='
+    for i in range(len(el)):
+        if el[i] != 'object':
+            vari.append(i)
+        else:
+            obji.append(i)
+            #print 'i:%s, t:%s' % (i, el[i])
+    vari   = list(df.columns[vari])
+    dfVari = df.loc[:, vari]
+    obji   = list(df.columns[obji])
+    dfObji = df.loc[:, obji]
+    with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        print 'objects'
+        print ','.join(obji)
+        try:
+            print dfObji.describe().loc['count unique freq'.split(), :].transpose()
+        except:
+            try: print dfObji.describe().transpose()
+            except: ''
+        print
+        print 'vars'
+        print ','.join(vari)
+        print dfVari.describe().transpose()
+        print
+        #print df
+        return {'vari':vari, 'dfVari':dfVari, 'obji':obji, 'dfObji':dfObji}
+
 def portfolioTokenization():
     #import pandas as p
     from pandas import DataFrame, option_context
