@@ -75,3 +75,5 @@ Plugin 'nvie/vim-flake8'
 let python_highlight_all=1
 syntax on
 
+set autoread
+au FocusGained,BufEnter * :checktime
