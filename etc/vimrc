@@ -65,7 +65,7 @@ Plugin 'scrooloose/nerdtree'
 Plugin 'jistr/vim-nerdtree-tabs'
 let NERDTreeIgnore=['\.pyc$', '\~$'] "ignore files in NERDTree
 " Open NertTree automagically
-autocmd vimenter * NERDTree
+"autocmd vimenter * NERDTree
 " toggle nerdtree
 map <C-n> :NERDTreeToggle<CR>
 
