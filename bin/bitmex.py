@@ -510,7 +510,8 @@ class CoinMarketCap:
         #print list(df.columns)
         df['circulatingSupply'] = df['market_cap_by_available_supply'] / df['price_usd']
         #df.dtypes
-        df.plot(logy=True, title=token)
+        symbol = self.tokens[self.tokens['id'] == token].index[0]
+        df.plot(logy=True, title='%s [%s]' % (token, symbol))
 
     #@profile
     def check(self, checkTradableCoins=False):
