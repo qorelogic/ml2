@@ -1395,7 +1395,53 @@ ETH/BTC.DC 	0 	"""
         
         if args.visualizeSave: pp.savefig(saveTo)
         else:                  plt.show()
-    
+
+    # generate portfolio t1Supply
+    def generatePortfolioT1Supply(self, df):
+        balance    = 1700
+        balanceRisk = float(1700) / 100 * 1
+        #sort = 'marketCap'
+        #sort = 'pcnt1h'
+        sort = 'balanceMarketcapPcnt'
+        sort = 'volumePerMarketCap'
+        sort = 't1Supply'
+        #sort = 'marketCapPcntTo1e6'
+
+        df = df.fillna(0)
+
+        dff = df
+
+        dff[ 'pcnt1hR'] = n.array(n.round(dff[ 'pcnt1h'], 0), dtype=n.int)
+        dff['pcnt24hR'] = n.array(n.round(dff['pcnt24h'], 0), dtype=n.int)
+        dff[ 'pcnt7dR'] = n.array(n.round(dff[ 'pcnt7d'], 0), dtype=n.int)
+
+        dff['marketCapPcntTo1e6'] = dff['marketCap'] * 100 / 1e6
+        dff['marketCapPcntTo1e7'] = dff['marketCap'] * 100 / 1e7
+
+        dff = dff[ dff['marketCap'] >  0.0 ]
+        dff = dff[ dff['volume']    > 10.0 ]
+        dff['circulatingSupply'] = dff['marketCap'] / dff['price']
+        dff['volumePerMarketCap'] = dff['volume'] / dff['marketCap']
+
+        goal = 'marketCapPcntTo1e6'
+        for x in dff.index:
+            try:    dff.loc[x, 'balanceRisk'] = dff.loc[x, 'marketCap'] if (balanceRisk > dff.loc[x, 'marketCap']) else balanceRisk
+            except: ''
+        #dff['balanceRisk'] = map(lambda x: (balanceRisk if (balanceRisk < dff.loc[x, 'marketCap']) else dff.loc[x, 'marketCap']), dff.index)
+        dff['riskOn'] = dff['balanceRisk'] / dff[goal] * 100
+        dff['balanceMarketcapPcnt'] = dff['balanceRisk'] / dff['marketCap'] * 100
+
+        # models
+        #dff['t1Supply'] = dff['balanceMarketcapPcnt']**1 * dff['volumePerMarketCap']**3 / dff[goal]**2
+        dff['t1Supply'] = dff['balanceMarketcapPcnt']**2 * dff['volumePerMarketCap']**3 / dff[goal]**2
+
+        df = dff
+
+        try: df = df[df['token'] == 'ethereum']
+        except Exception as e: ''
+        df = df.sort_values(by=sort, ascending=False)
+        return df
+
     def printInfo(self, df, f=None):
         print (df.dtypes)
         print ()
