@@ -443,11 +443,10 @@ class CoinMarketCap:
             typeP = 'all'
         url = 'https://coinmarketcap.com/%s/views/all/#USD' % typeP
         xp = XPath()
-        xresd = xp.xpath2df(url, {
+        xresd = {
             'id' : '//tr/@id',
             'name' : '//tr/td[2]/a/text()',
             'symbol' : '//tr/td[2]/span/a/text()',
-            #'token' : '//tr/td[3]/a/text()',
             'marketCap' : '//tr/td[4]//text()',
             'price' : '//tr/td[5]/a/text()',
             #'name6' : '//tr/td[6]/a/text()',
@@ -455,9 +454,10 @@ class CoinMarketCap:
             'pcnt1h' : '//tr/td[8]//text()',
             'pcnt24h' : '//tr/td[9]//text()',
             'pcnt7d' : '//tr/td[10]/text()',
-        })#, verbose=True)
+        }
         if tokens:
             xresd.update({'token':'//tr/td[3]/a/text()'})
+        xresd = xp.xpath2df(url, xresd)#, verbose=True)
         #for i in xresd.keys():
         #    print '%s: %s' % (i, len(xresd[i]))
         #print xresd
@@ -476,6 +476,7 @@ class CoinMarketCap:
         for i in 'marketCap price volume'.split():
             df[i] = map(lambda x: x.replace(',', '').replace('$','').replace('?','').replace('Low Vol','0'), df[i])
             df[i] = p.to_numeric(df[i])
+        df = df.set_index('symbol')
         return df
 
     def getCoinHistory(self, token, normalize=False, sigmoid=False):
