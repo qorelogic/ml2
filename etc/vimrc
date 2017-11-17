@@ -77,3 +77,14 @@ syntax on
 
 set autoread
 au FocusGained,BufEnter * :checktime
+
+"""" IDE "
+" sudo apt-get install exuberant-ctags " source: https://stackoverflow.com/questions/7454796/taglist-exuberant-ctags-not-found-in-path
+" source: https://vimawesome.com/plugin/ctags
+" Plugin 'universal-ctags/ctags'
+" source: https://news.ycombinator.com/item?id=11780824
+Plugin 'majutsushi/tagbar'
+" source: https://majutsushi.github.io/tagbar/
+nmap <F8> :TagbarToggle<CR>
+map <C-m> :TagbarToggle<CR>
+"let g:tagbar_ctags_bin='/home/qore/.vim/bundle/ctags'
