@@ -404,15 +404,19 @@ class CoinMarketCap:
         df = df.transpose()
         return df
 
-    def getAllTokens(self, tokenType=None):
+    def getAllTokens(self, tokenType=None, tokens=True):
         from qore import XPath
-        url = 'https://coinmarketcap.com/tokens/views/all/#USD'
+        if tokens:
+            typeP = 'tokens'
+        else:
+            typeP = 'all'
+        url = 'https://coinmarketcap.com/%s/views/all/#USD' % typeP
         xp = XPath()
         xresd = xp.xpath2df(url, {
             'id' : '//tr/@id',
             'name' : '//tr/td[2]/a/text()',
             'symbol' : '//tr/td[2]/span/a/text()',
-            'token' : '//tr/td[3]/a/text()',
+            #'token' : '//tr/td[3]/a/text()',
             'marketCap' : '//tr/td[4]//text()',
             'price' : '//tr/td[5]/a/text()',
             #'name6' : '//tr/td[6]/a/text()',
@@ -420,13 +424,17 @@ class CoinMarketCap:
             'pcnt1h' : '//tr/td[8]//text()',
             'pcnt24h' : '//tr/td[9]//text()',
             'pcnt7d' : '//tr/td[10]/text()',
-            #'name11' : '//tr/td[11]/a/text()',
-            #'name12' : '//tr/td[12]/a/text()',
         })#, verbose=True)
+        if tokens:
+            xresd.update({'token':'//tr/td[3]/a/text()'})
+        #for i in xresd.keys():
+        #    print '%s: %s' % (i, len(xresd[i]))
         #print xresd
+        #https://www.youtube.com/watch?v=A9Gn4P8-Smc
         df = p.DataFrame(xresd)
         df['id'] = map(lambda x: x.replace('id-',''), df['id'])
-        df['token'] = map(lambda x: x.lower(), df['token'])
+        if tokens:
+            df['token'] = map(lambda x: x.lower(), df['token'])
         if tokenType:
             df = df[df['token'] == tokenType]
         df['marketCap'] = map(lambda x: x.replace('\n', '').strip(), df['marketCap']) 
@@ -465,6 +473,13 @@ class CoinMarketCap:
         if sigmoid:
             dfm = sigmoidme(dfm)
         return dfm
+
+    def glo(self, token):
+        df = self.getCoinHistory(token, normalize=True, sigmoid=True)
+        #print list(df.columns)
+        df['circulatingSupply'] = df['market_cap_by_available_supply'] / df['price_usd']
+        #df.dtypes
+        df.plot(logy=True, title=token)
 
     #@profile
     def check(self, checkTradableCoins=False):
