@@ -477,6 +477,7 @@ class CoinMarketCap:
             df[i] = map(lambda x: x.replace(',', '').replace('$','').replace('?','').replace('Low Vol','0'), df[i])
             df[i] = p.to_numeric(df[i])
         df = df.set_index('symbol')
+        self.tokens = df
         return df
 
     def getCoinHistory(self, token, normalize=False, sigmoid=False):
@@ -825,7 +826,8 @@ class PortfolioModeler:
         self.models.update(dict(zip(range(4,len(li)+4), li)))
         self.model   = None
         self.cmc = CoinMarketCap()
-        self.lastGitHash = lastGitHash()
+        try: self.lastGitHash = lastGitHash()
+        except: ''
     
     def listModels(self):
         for i in self.models.keys():
