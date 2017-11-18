@@ -2579,7 +2579,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                 df1  = cmc.getTicker(symbol).set_index('symbol').transpose()
                 mdf = mdf.combine_first(df1.transpose().loc[[symbol], :])
             except Exception as e: ''
-        try:    mdf = mdf.combine_first(atdf.set_index('symbol').loc[mdf.index, :])
+        try:    mdf = mdf.combine_first(atdf.loc[mdf.index, :])
         except: ''
         #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
         #    print mdf
@@ -2941,8 +2941,8 @@ def main():
         df = cmc.getAllTokens(tokenType='ethereum')
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             df = df.loc[:,'symbol name token marketCap price volume pcnt1h pcnt24h pcnt7d'.split()]
-            df = df.set_index('symbol')
-            print df.dtypes
+            #print df.dtypes
+            print df.describe()
             print df.sort_values(by='pcnt7d', ascending=False)
 
     if args.research13:
