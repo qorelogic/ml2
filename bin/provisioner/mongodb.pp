@@ -50,7 +50,7 @@ class mongodb {
     exec { "mongo aptget install":
 	command => "sudo apt-get install -y --force-yes mongodb-org",
 	#command => "sudo apt-get install -y --force-yes mongodb-server",
-        timeout => 60,
+        timeout => 6000,
         tries   => 3,        
         before  => Exec["exportlocale"],
     }
