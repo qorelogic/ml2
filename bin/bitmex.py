@@ -500,6 +500,22 @@ class CoinMarketCap:
             dfm = dfm.combine_first(dfc)
         #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
         #    print dfm
+
+        # insert model to db.models
+        try:
+            import pymongo as mong
+            import ujson as uj
+            mongo = mong.MongoClient()
+            #print dfm.to_dict()
+            dd = dfm.to_dict()
+            #print dd
+            dd = uj.dumps(dd)
+            mongo.ql.timeseries.insert({token:dd})
+            mongo.close()
+            #print 'inserted model to db.timeseries'
+        except Exception as e:
+            print e
+
         #print df
         if normalize:
             dfm = normalizeme(dfm)
