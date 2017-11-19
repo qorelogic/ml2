@@ -21,6 +21,7 @@ mdependencies() {
 minstall() {
 
 	sleep 1
+	
 	if [ "`which puppet`" == "" ]; then
             sudo apt-get update
             sudo apt-get -y install puppet
@@ -57,6 +58,9 @@ minstall() {
 		git clone https://github.com/digithink/py-localbitcoins.git $mldir/lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git
 		echo 'cloned py-localbitcoins.'
 	fi
+
+	return
+
 	if [ "`python -c 'import drest' 2>&1`" != "" ]; then
             sudo pip install drest
 	fi
