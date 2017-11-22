@@ -45,6 +45,44 @@ df(:,4) = df(:,2)*70/100;
 df(:,5) = df(:,1)/100*4452.49
 """
 
+# dfp #########################################################################
+def dataFrameAddMultiIndex(dfm, title):
+    dfi = dfm.transpose()
+    #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+    #    print dfi
+    #    print
+    zi   = zip([title]*len(dfi.index), dfi.index)
+    indx = p.MultiIndex.from_tuples(zi)
+    #print indx
+    dfi = p.DataFrame(dfi.to_dict(orient='list'), index=indx)
+    dfi = dfi.transpose()#.tail(6)
+    #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+    #    print dfi
+    return dfi
+
+def genDFP(port=None):
+    pm = PortfolioModeler()
+    cmc = CoinMarketCap()
+    at = cmc.getAllTokens(tokens=False)
+    if port:
+        if type(port) == type(""):
+            port = port.split(' ')
+    else:
+        port = list(at.loc[:,'id'])
+        #print at.loc[port, 'id']
+    print port
+    dfportfolio = pm.generatePortfolioT1Supply(at, balance=(.12*7800), risk=100)
+    #dfportfolio = pm.generatePortfolioT1Supply(at)
+    if port != None:
+        li = list(dfportfolio.loc[port,['id']]['id'])
+    else:
+        li = list(dfportfolio.loc[:,['id']]['id'])
+    #li = list(dfportfolio['id'].head(30))
+    #li = 'ethereum propy bitcoin-cash ripple dash iota monero neo'.split(' ')
+    dfp = cmc.axs(dfportfolio, li)
+    return dfp
+# end dfp #####################################################################
+
 def desc(df):
     el = df.dtypes.get_values()
     vari = []
@@ -816,6 +854,47 @@ class CoinMarketCap:
         #print dfres
         self.resolvedCoin = dfres
         return currency
+
+    def axs(self, df, li):
+        from qoreliquid import normalizeme
+        from qoreliquid import sigmoidme
+        dfp = p.DataFrame()
+        dfp = dfp.transpose()
+        dfi = self.asd('bitcoin')
+        dfp = dfp.reindex(index=dfi.transpose().index, level=0).transpose()
+        dfp = dfp.combine_first(dfi)
+        #dfp = dfp.combine_first(self.asd('propy'))
+    
+        dfp = p.concat([dfp, self.asd('ethereum')], axis=1)
+    
+        for i in li:
+            try:    dfp = p.concat([dfp, self.asd(i)], axis=1)
+            except Exception as e: print e
+    
+        #dfp = dfi.combine_first(dfp)
+        #self.asd('propy').merge(dfp)
+        #p.merge(dfp, self.asd('propy'), left_index=True, right_index=True)
+        #p.concat([dfp, self.asd('propy')], axis=1, join='outer')
+        #p.concat([dfp.transpose(), self.asd('propy').transpose()], axis=0).sort_index().transpose()
+        #dfp = p.concat([dfp, self.asd('propy')], axis=1).sort_index()
+        #dfp = dfp.combine_first(asd('ethereum'))
+    
+        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print dfp.loc[[1510942454000,1510942451000], :]
+        #    print dfi.tail(10)
+        #    print dfe.tail(10)
+        dfp = dfp.ffill().bfill()
+        dfp = normalizeme(dfp)
+        dfp = sigmoidme(dfp)
+        #dfp.tail(1000).plot()
+        return dfp
+
+    def asd(self, token):
+        dfm = self.glo(token)
+        dfi = dataFrameAddMultiIndex(dfm, token)
+        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print dfi.tail(10)
+        return dfi
 
 def lastGitHash():
     import subprocess
