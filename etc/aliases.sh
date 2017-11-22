@@ -315,7 +315,13 @@ grin() {
 	git rebase -i --stat HEAD~$1
 	fi
 }
+grini() {
+	git stash
+	grin $1
+	git stash pop stash@{0}
+}
 alias .grin="grin "
+alias .grini="grini "
 alias .gra="git commit --amend"
 alias .grc="git rebase --continue"
 alias .gstl="git stash list "
