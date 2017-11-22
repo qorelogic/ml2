@@ -60,7 +60,7 @@ def dataFrameAddMultiIndex(dfm, title):
     #    print dfi
     return dfi
 
-def genDFP(port=None):
+def genDFP(port=None, max=0):
     pm = PortfolioModeler()
     cmc = CoinMarketCap()
     at = cmc.getAllTokens(tokens=False)
@@ -71,6 +71,8 @@ def genDFP(port=None):
         port = list(at.loc[:,'id'])
         #print at.loc[port, 'id']
         
+    port = port[0:max]
+    
     dfportfolio = pm.generatePortfolioT1Supply(at, balance=(.12*7800), risk=100)
     
     if len(port[0]) == 3 and (port[0] == port[0].upper()):
