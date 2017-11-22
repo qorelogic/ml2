@@ -1069,6 +1069,7 @@ class PortfolioModeler:
         
         c = 1
         if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
+        print 'nuuuuuum: %s' % num
         self.allocationModel = allocationModel
         if allocationModel == None:
             allocationModel='t1b'
@@ -1413,6 +1414,8 @@ ETH/BTC.DC 	0 	"""
         #import dfgui
         #dfgui.show(mdf0)
 
+        mdf0.to_csv('/mldev/bin/data/cache/coins/portfolio.tsv')
+
         ev = Eveningstar()
         """        
         #df.loc[2, :] = p.Series(se.to_dict())
@@ -1493,7 +1496,7 @@ ETH/BTC.DC 	0 	"""
         return df
 
     def printInfo(self, df, f=None):
-        print (df.dtypes)
+        #print (df.dtypes)
         print ()
         print (df.describe().shape)
         print (df.describe().loc[:,f])
@@ -2469,7 +2472,7 @@ class Etherscan:
                     contractAddress = dfinfo.loc[i, 'address']
                     address = j
                     url = 'https://etherscan.io/token/%s?a=%s' % (contractAddress, j)
-                    #print '%s: %s' % (i, url)
+                    print '%s: %s' % (i, url)
                     if mode == 1:
                         dft = self.getTokens(contractAddress=contractAddress, address=j, name=i).set_index('txHash')
                         dft['etherscanURL'] = url
@@ -2541,11 +2544,12 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
     
     if type(ethaddr) == type(''):
         ethaddr = ethaddr.split(' ')
-    
+        print 'ethaddr: %s' % ethaddr
+
     cmc = CoinMarketCap()
     pm = PortfolioModeler()
     es = Etherscan()
-    
+
     eth = cmc.getTicker('ETH').set_index('symbol').transpose()
     ethusd = float(eth.loc['price_usd', 'ETH'])
     mdf0 = p.DataFrame([])
@@ -2575,7 +2579,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
     for ea in ethaddr:
         ethaddrSmall = ea[0:7]
         #res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/')
-        res = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=noCache)
+        res  = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=noCache)
         #res = apiRequest('https://api.ethplorer.io', '/getTokenInfo/0xff71cb760666ab06aa73f34995b42dd4b85ea07b?apiKey=freekey')
         res1 = p.DataFrame(res['ETH'], index=[ethaddrSmall])
         addressInfos = addressInfos.combine_first(res1)
@@ -3020,6 +3024,7 @@ def main():
     
         try:    period = int(args.period)
         except: period = 86400
+        #except: period = 86400
         #          5m   15m  30m   2h    4h     1d
         periods = [300, 900, 1800, 7200, 14400, 86400]
         if period not in periods:
