@@ -70,13 +70,19 @@ def genDFP(port=None):
     else:
         port = list(at.loc[:,'id'])
         #print at.loc[port, 'id']
-    print port
+        
     dfportfolio = pm.generatePortfolioT1Supply(at, balance=(.12*7800), risk=100)
-    #dfportfolio = pm.generatePortfolioT1Supply(at)
-    if port != None:
-        li = list(dfportfolio.loc[port,['id']]['id'])
+    
+    if len(port[0]) == 3 and (port[0] == port[0].upper()):
+        if port != None: li = dfportfolio.loc[port,['id']]['id']
+        else:            li = dfportfolio.loc[:,['id']]['id']
+        li = list(li)
     else:
-        li = list(dfportfolio.loc[:,['id']]['id'])
+        li = port
+
+    print
+    print li
+    
     #li = list(dfportfolio['id'].head(30))
     #li = 'ethereum propy bitcoin-cash ripple dash iota monero neo'.split(' ')
     dfp = cmc.axs(dfportfolio, li)
