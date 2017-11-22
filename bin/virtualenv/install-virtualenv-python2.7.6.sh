@@ -6,7 +6,7 @@
 
 vinstall() {
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-python-2-7-6-and-3-3-3-on-centos-6-4
-wget -nc http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
+wget -nc --no-check-certificate http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
 tar -Jxf Python-2.7.6.tar.xz
 
 sudo apt-get install virtualenv
