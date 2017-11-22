@@ -46,6 +46,52 @@ df(:,5) = df(:,1)/100*4452.49
 """
 
 # dfp #########################################################################
+def clustermap(dfp, verbose=False, figsize=25):
+    import matplotlib.pylab as plt
+    import seaborn as sns
+    sns.set()
+    #sns.clustermap(dfp.corr(), center=0, cmap="vlag")#, row_colors=network_colors, col_colors=network_colors, linewidths=.75, figsize=(13, 13))
+    #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+    #dfp.corr()#.loc[ ['bitcoin','ethereum'],:]
+    dfpcl = dfp.columns.levels[1]
+    #corrs = {}
+    corrs = n.array([])
+    print len(dfp.columns)
+    for i in dfpcl:
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    #if verbose:
+        #    #    print i
+        cor = dfp.loc[:,(dfp.columns.levels[0],[i])].corr()        
+        cor = cor.corr() #.loc[:,(dfp.columns.levels[0],[i])].corr()
+        cor = cor.fillna(0)
+        #corrs.update({i: cor})
+        
+        try:
+            sns.clustermap(cor, center=0, cmap="vlag", figsize=(figsize,figsize))#, row_colors=network_colors, col_colors=network_colors, linewidths=.75, figsize=(figsize, figsize))
+            plt.show()
+            corrs = corrs + cor.get_values()
+            ''
+        except Exception as e: print e
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    if verbose:
+        #        print corrs
+        #print
+    print corrs
+    """
+    #print corrs
+    ck = corrs.keys()
+    lis = n.array([0]*ck)
+    
+    for i in range(len(ck)):
+        #print i
+            lis[i] = corrs[ck[i]].get_values()
+    with p.option_context('display.max_rows', 10, 'display.max_columns', 5, 'display.width', 1000000):
+        print lis
+    """
+    #sns.clustermap(cor, center=0, cmap="vlag")#, row_colors=network_colors, col_colors=network_colors, linewidths=.75, figsize=(13, 13))        
+    #plt.show()
+    #return cor
+
 def dataFrameAddMultiIndex(dfm, title):
     dfi = dfm.transpose()
     #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
