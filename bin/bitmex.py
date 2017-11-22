@@ -1626,6 +1626,9 @@ ETH/BTC.DC 	0 	"""
         try: df = df[df['token'] == 'ethereum']
         except Exception as e: ''
         df = df.sort_values(by=sort, ascending=False)
+        
+        df[df['marketCap'] < 1e6].sort_values(by='riskOn', ascending=False)
+        
         return df
 
     def printInfo(self, df, f=None):
