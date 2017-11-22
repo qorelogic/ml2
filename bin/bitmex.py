@@ -512,7 +512,14 @@ class CoinMarketCap:
         df['circulatingSupply'] = df['market_cap_by_available_supply'] / df['price_usd']
         #df.dtypes
         symbol = self.tokens[self.tokens['id'] == token].index[0]
+        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    #df = p.DataFrame(df.tail(10).transpose())
+        #    print df
+        print token
         df.plot(logy=True, title='%s [%s]' % (token, symbol))
+        import matplotlib.pylab as plt
+        plt.show()
+        return df
 
     #@profile
     def check(self, checkTradableCoins=False):
@@ -977,6 +984,8 @@ class PortfolioModeler:
         # source: https://stackoverflow.com/questions/13035764/remove-rows-with-duplicate-indices-pandas-dataframe-and-timeseries
         #df = df.reset_index().drop_duplicates(subset='index', keep='last').set_index('index')
         df = df[~df.index.duplicated(keep='first')]
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print df
         #df['totalBalanceUsd'] = df[balance].sum()
         df['totalBalanceUsd'] = (df['balance'] * ethusd * df[side]).sum()
         df['totalBalanceUsd'] = df['totalBalanceUsd'] + df['ethUSDTotal']
@@ -1397,13 +1406,12 @@ ETH/BTC.DC 	0 	"""
         else:                  plt.show()
 
     # generate portfolio t1Supply
-    def generatePortfolioT1Supply(self, df):
-        balance    = 1700
-        balanceRisk = float(1700) / 100 * 1
+    def generatePortfolioT1Supply(self, df, balance=1700, risk=1):
+        balanceRisk = float(balance) / 100 * risk
         #sort = 'marketCap'
         #sort = 'pcnt1h'
-        sort = 'balanceMarketcapPcnt'
-        sort = 'volumePerMarketCap'
+        #sort = 'balanceMarketcapPcnt'
+        #sort = 'volumePerMarketCap'
         sort = 't1Supply'
         #sort = 'marketCapPcntTo1e6'
 
