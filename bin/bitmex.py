@@ -1509,12 +1509,13 @@ ETH/BTC.DC 	0 	"""
         """
         
         def describeDF(mdf0, field, ascending=False, title='', filterUnderZeros=True):
-            print '--- %s ----------------------------------------------------------' % field
+            dh = 100*15
+            print '------- %s %s' % (field,''.join(['-']*dh))
             if filterUnderZeros:
                 mdf0 = mdf0[mdf0[field] != 0]
             self.printInfo(mdf0, f)
             self.sortDataFrame(mdf0, field, f, ascending, title=title)
-            print '--- end %s ------------------------------------------------------' % field
+            print '--- end %s %s' % (field,''.join(['-']*dh))
             print
 
         #self.sortDataFrame(mdf0, 'portPcntDiff', f, True, title='lever0') # 
@@ -1523,7 +1524,7 @@ ETH/BTC.DC 	0 	"""
         describeDF(mdf0, 'portPcnt', False, filterUnderZeros=True)
         describeDF(mdf0, 'currentPortPcnt', False, filterUnderZeros=True, title='delever') # same sorting as balance_usd
 
-        self.printInfo(mdf0, f)
+        #self.printInfo(mdf0, f)
         #self.visualize(mdf0)
         #mdf0.to_csv('/tmp/mdf0.csv')
         print
