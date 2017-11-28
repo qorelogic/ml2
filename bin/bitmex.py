@@ -251,6 +251,8 @@ except: sys.path.append('/ml.dev/bin/datafeeds')
 #--------------------------
 
 import pandas as p
+p.options.mode.chained_assignment = None  # default='warn'
+
 import numpy as n
 from qoreliquid import pf
 
@@ -1361,7 +1363,8 @@ ETH/BTC.DC 	0 	"""
 
         # allocationModels
         df['t1'] = (df['volume'] / df['avg'])
-        df['t1a'] = df['volume'] / (df['avg'] * n.log(df['spreadPcnt']/100) )
+        spreadPcnt = df['spreadPcnt']
+        df['t1a'] = df['volume'] / (df['avg'] * n.log(spreadPcnt/100) )
         df['t1b'] = (df['volume'] * df['avg'])
     
         if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
@@ -1451,7 +1454,8 @@ ETH/BTC.DC 	0 	"""
     def sortDataFrame(self, df, field, f, ascending, title=None):
         
         # filter: removes verbose portfolio rows
-        df = df[(df[field] != 0) | (df['balance'] != 0) | (df['portPcnt'])]
+        try: df = df[(df[field] != 0) | (df['balance'] != 0) | (df['portPcnt'])]
+        except: ''
         
         sortFlag = '^' if ascending == True else 'v'
         if field == None or field == 'index':
@@ -1464,8 +1468,10 @@ ETH/BTC.DC 	0 	"""
         sf = ('%s %s' % (field, sortFlag))
         df = df.rename(columns={field:sf})
         print
-        print 'Symbols[A-Z]: %s' % (' '.join(list(df.sort_index().index)).encode('utf-8').strip())
-        print 'Symbols: %s' % (' '.join(list(df.index)).encode('utf-8').strip())
+        try: print 'Symbols[A-Z]: %s' % (' '.join(list(df.sort_index().index)).encode('utf-8').strip())
+        except: ''
+        try: print 'Symbols: %s' % (' '.join(list(df.index)).encode('utf-8').strip())
+        except: ''
         if title: print ('%s::%s %s [model:%s commit:%s]' % (title, field, sortFlag, self.allocationModel, self.lastGitHash))
         else:     print '%s [model:%s commit:%s]' % (sf, self.allocationModel, self.lastGitHash)
         try:
@@ -1502,28 +1508,27 @@ ETH/BTC.DC 	0 	"""
         plt.show()
         """
         
-        def describeDF(mdf0, field, ascending=False, filterUnderZeros=True):
-            print '=== %s ==========================================================' % field
+        def describeDF(mdf0, field, ascending=False, title='', filterUnderZeros=True):
+            print '--- %s ----------------------------------------------------------' % field
             if filterUnderZeros:
-                mdf0 = mdf0[mdf0[field] > 0]
+                mdf0 = mdf0[mdf0[field] != 0]
             self.printInfo(mdf0, f)
-            self.sortDataFrame(mdf0, field, f, ascending, title='')
-            print '=== end %s ======================================================' % field
+            self.sortDataFrame(mdf0, field, f, ascending, title=title)
+            print '--- end %s ------------------------------------------------------' % field
             print
 
         #self.sortDataFrame(mdf0, 'portPcntDiff', f, True, title='lever0') # 
-        describeDF(mdf0, 'portPcntDiff', True, filterUnderZeros=False)
-        describeDF(mdf0, 'pcnt7d', False, filterUnderZeros=False)
-        describeDF(mdf0, 'portPcnt', False)
-        describeDF(mdf0, 'currentPortPcnt', False)
+        describeDF(mdf0, 'portPcntDiff', True, filterUnderZeros=True)
+        describeDF(mdf0, 'pcnt7d', False, filterUnderZeros=True, title='delever0')
+        describeDF(mdf0, 'portPcnt', False, filterUnderZeros=True)
+        describeDF(mdf0, 'currentPortPcnt', False, filterUnderZeros=True, title='delever') # same sorting as balance_usd
 
         self.printInfo(mdf0, f)
         #self.visualize(mdf0)
         #mdf0.to_csv('/tmp/mdf0.csv')
         print
         #self.sortDataFrame(mdf0, 'spreadVolume', f, False, title='')
-        self.sortDataFrame(mdf0, 'portPcnt', f, False, title='')
-        self.sortDataFrame(mdf0, 'currentPortPcnt', f, False, title='delever') # same sorting as balance_usd
+        """
         self.sortDataFrame(mdf0, 'balancePortDiffUSD', f, False, title='delever2')
         self.sortDataFrame(mdf0, 'balanceETHDiff', f, False, title='lever')
         self.sortDataFrame(mdf0, 'unitsDiff', f, False, title='lever2')
@@ -1534,20 +1539,22 @@ ETH/BTC.DC 	0 	"""
         self.sortDataFrame(mdf0, 'volumePerHolder', f, False, title='')
         self.sortDataFrame(mdf0, None, f, False, title='A-Z')
         self.sortDataFrame(mdf0, 'balanceByUnitsDiff', f, False, title='delever3')
+        """
         # test
         #self.sortDataFrame(mdf0, 'balanceByUnitsDiff2', f, True)
         #self.sortDataFrame(mdf0, 'balanceByBalanceUsdDiff', f, True)
         #pdf = mdf0[mdf0['unitsDiffPerBalance'] != n.inf]
         #f1 = ' '.join(f).replace('unitsDiff ', 'unitsDiff spreadPcnt ').split(' ')
         #self.sortDataFrame(pdf, 'unitsDiffPerBalance', f1, True)
-        self.sortDataFrame(mdf0, 't1', f, True)
+        #self.sortDataFrame(mdf0, 't1', f, True)
         print
         print
 
         #import dfgui
         #dfgui.show(mdf0)
 
-        mdf0.to_csv('/mldev/bin/data/cache/coins/portfolio.tsv')
+        try: mdf0.to_csv('/mldev/bin/data/cache/coins/portfolio.tsv')
+        except: sys.exit()
 
         ev = Eveningstar()
         """        
@@ -1635,7 +1642,8 @@ ETH/BTC.DC 	0 	"""
         #print (df.dtypes)
         print ()
         print (df.describe().shape)
-        print (df.describe().loc[:,f])
+        try: print (df.describe().loc[:,f])
+        except: '' #sys.exit()
 
 
 class TokenMarket:
