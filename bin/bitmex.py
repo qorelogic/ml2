@@ -3151,6 +3151,7 @@ def main():
     parser.add_argument("-r16", '--research16', help="test 16", action="store_true")
     parser.add_argument("-r18", '--research18', help="test 18", action="store_true")
     parser.add_argument("-r19", '--research19', help="test 19", action="store_true")
+    parser.add_argument("-r20", '--research20', help="test 20", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -3185,6 +3186,15 @@ def main():
     #print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)['range']
     """
     
+    # portfolio
+    if args.research20:
+        b = Binance()
+        b.getCurrencies()
+        df = b.currencies
+        df = df[df['base'] == 'ETH']
+        print list(df['quote'])
+        #print df
+
     if args.research19:        
 
         cmc = CoinMarketCap()
