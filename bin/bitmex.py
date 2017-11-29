@@ -2549,6 +2549,59 @@ class Bittrex(Exchange):
             return df
         except:
             ''
+
+class Binance(Exchange):
+
+    #ef __init__(self, key, secret):
+    def __init__(self):
+        key    = ''
+        secret = ''
+        try: Exchange.__init__(self, key, secret, exchange='binance')
+        except: ''
+        self.apiServer = 'binance.com' # https://api.binance.com/api/v1.1/account/getbalances?apikey=apikey
+        self.apiMethod = '/api/v1'
+        
+        #print self.getTime()
+        
+    def getTime(self):
+        data = apiRequest('https://'+self.apiServer, '%s/time' % (self.apiMethod))
+        try:
+            df = p.DataFrame(data, index=[0])#.transpose()
+            return df
+        except Exception as e:
+            print e
+    
+    def getBaseQuote(self, df, indx):
+        def gw(df, i, w='BTC', tofield='base'):
+            leni = len(i)
+            il = i[leni-len(w):leni]
+            if il == w:
+                ib = i[0:leni-len(w)]
+                df.loc[i, 'quote'] = ib
+                df.loc[i, 'base']  = il
+            return df
+        for i in indx:
+             df = gw(df, i, 'BTC')
+             df = gw(df, i, 'ETH')
+             df = gw(df, i, 'USDT')
+             df = gw(df, i, 'BNB')
+             #df.loc[i, 'leni'] = leni
+        return df
+        
+    def getCurrencies(self):
+        #/api/v1/ticker/allPrices
+        data = apiRequest('https://'+self.apiServer, '%s/ticker/allPrices' % (self.apiMethod))
+        #print data
+        #try:
+        df = p.DataFrame(data).set_index('symbol')#.transpose()
+        df = self.getBaseQuote(df, df.index)
+        self.currencies = df
+        #df = df[df['base'] == 'ETH']
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000, 'display.max_colwidth', -1):
+        #    print df.sort_values(by='base')
+        return df
+        #except Exception as e:
+        #    print e
             
 class EtherDelta:
     
@@ -3098,6 +3151,7 @@ def main():
     parser.add_argument("-r16", '--research16', help="test 16", action="store_true")
     parser.add_argument("-r18", '--research18', help="test 18", action="store_true")
     parser.add_argument("-r19", '--research19', help="test 19", action="store_true")
+    parser.add_argument("-r20", '--research20', help="test 20", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -3132,6 +3186,15 @@ def main():
     #print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)['range']
     """
     
+    # portfolio
+    if args.research20:
+        b = Binance()
+        b.getCurrencies()
+        df = b.currencies
+        df = df[df['base'] == 'ETH']
+        print list(df['quote'])
+        #print df
+
     if args.research19:        
 
         cmc = CoinMarketCap()
