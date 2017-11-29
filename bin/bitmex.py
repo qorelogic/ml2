@@ -571,6 +571,7 @@ class CoinMarketCap:
             df[i] = map(lambda x: x.replace(',', '').replace('$','').replace('?','').replace('Low Vol','0'), df[i])
             df[i] = p.to_numeric(df[i])
         df = df.set_index('symbol')
+        df['volumePerMarketcap'] = df['volume'] / df['marketCap']
         self.tokens = df
         return df
 
@@ -1611,23 +1612,25 @@ ETH/BTC.DC 	0 	"""
 
         dff['marketCapPcntTo1e6'] = dff['marketCap'] * 100 / 1e6
         dff['marketCapPcntTo1e7'] = dff['marketCap'] * 100 / 1e7
+        dff['marketCapPcntTo1e9'] = dff['marketCap'] * 100 / 1e9
 
         dff = dff[ dff['marketCap'] >  0.0 ]
         dff = dff[ dff['volume']    > 10.0 ]
         dff['circulatingSupply'] = dff['marketCap'] / dff['price']
         dff['volumePerMarketCap'] = dff['volume'] / dff['marketCap']
 
-        goal = 'marketCapPcntTo1e6'
+        goal = 'marketCapPcntTo1e9'
         for x in dff.index:
             try:    dff.loc[x, 'balanceRisk'] = dff.loc[x, 'marketCap'] if (balanceRisk > dff.loc[x, 'marketCap']) else balanceRisk
             except: ''
+        dff['balanceRiskETH'] = dff['balanceRisk'] / 368
         #dff['balanceRisk'] = map(lambda x: (balanceRisk if (balanceRisk < dff.loc[x, 'marketCap']) else dff.loc[x, 'marketCap']), dff.index)
         dff['riskOn'] = dff['balanceRisk'] / dff[goal] * 100
         dff['balanceMarketcapPcnt'] = dff['balanceRisk'] / dff['marketCap'] * 100
 
         # models
         #dff['t1Supply'] = dff['balanceMarketcapPcnt']**1 * dff['volumePerMarketCap']**3 / dff[goal]**2
-        dff['t1Supply'] = dff['balanceMarketcapPcnt']**2 * dff['volumePerMarketCap']**3 / dff[goal]**2
+        dff['t1Supply'] = dff['balanceMarketcapPcnt']**2 * dff['volumePerMarketCap']**3 / dff[goal]**2 * dff['volumePerMarketcap']**3
 
         df = dff
 
@@ -1635,7 +1638,7 @@ ETH/BTC.DC 	0 	"""
         except Exception as e: ''
         df = df.sort_values(by=sort, ascending=False)
         
-        df[df['marketCap'] < 1e6].sort_values(by='riskOn', ascending=False)
+        df[(df['marketCap'] > 100e3) & (df['marketCap'] < 1e9)].sort_values(by='riskOn', ascending=False)
         
         return df
 
