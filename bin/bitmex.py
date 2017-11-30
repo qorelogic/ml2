@@ -1509,7 +1509,8 @@ ETH/BTC.DC 	0 	"""
         plt.show()
         """
         
-        def describeDF(mdf0, field, ascending=False, title='', filterUnderZeros=True):
+        def describeDF(mdf0, field, f, ascending=False, title='', filterUnderZeros=True):
+            mdf0 = mdf0.fillna(0)
             dh = 100*15
             print '------- %s %s' % (field,''.join(['-']*dh))
             if filterUnderZeros:
@@ -1519,11 +1520,17 @@ ETH/BTC.DC 	0 	"""
             print '--- end %s %s' % (field,''.join(['-']*dh))
             print
 
-        #self.sortDataFrame(mdf0, 'portPcntDiff', f, True, title='lever0') # 
-        describeDF(mdf0, 'portPcntDiff', True, filterUnderZeros=True)
-        describeDF(mdf0, 'pcnt7d', False, filterUnderZeros=True, title='delever0')
-        describeDF(mdf0, 'portPcnt', False, filterUnderZeros=True)
-        describeDF(mdf0, 'currentPortPcnt', False, filterUnderZeros=True, title='delever') # same sorting as balance_usd
+        #self.sortDataFrame(mdf0, 'portPcntDiff', f, True, title='lever0') #
+        fli = 'totalBalanceUsd balance balance_eth balance_usd unitsDiff balanceETHDiff balanceUsdDiff currentPortPcnt portPcnt portPcntDiff spreadPcnt volumeETH pcnt1h pcnt24h pcnt7d delever01 lever01'.split(' ')
+
+        describeDF(mdf0[ (mdf0['portPcntDiff'] < 0) ].loc[:, fli], 'delever01', fli, False, filterUnderZeros=True)
+        #describeDF(mdf0[ ( n.abs(mdf0['delever01'] ) != n.inf) & (mdf0['portPcntDiff'] < 0) ], 'delever01', False, filterUnderZeros=True)
+        describeDF(mdf0[ (mdf0['portPcntDiff'] > 0) ].loc[:, fli], 'lever01', fli, True, filterUnderZeros=True)
+        #describeDF(mdf0[ ( n.abs(mdf0['lever01']   ) != n.inf) & (mdf0['portPcntDiff'] > 0) ], 'lever01', True, filterUnderZeros=True)
+        describeDF(mdf0, 'portPcntDiff', f, True, filterUnderZeros=True)
+        describeDF(mdf0, 'pcnt7d', f, False, filterUnderZeros=True, title='delever0')
+        describeDF(mdf0, 'portPcnt', f, False, filterUnderZeros=True)
+        describeDF(mdf0, 'currentPortPcnt', f, False, filterUnderZeros=True, title='delever') # same sorting as balance_usd
 
         #self.printInfo(mdf0, f)
         #self.visualize(mdf0)
@@ -3056,6 +3063,8 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             # rebalance portfolio
             mdf0['unitsDiff'] = mdf0['portUnits']    - mdf0['balance']
             mdf0['portPcntDiff'] = mdf0['portPcnt'] - mdf0['currentPortPcnt']
+            mdf0['lever01']   = 1 / (mdf0['pcnt7d'] * mdf0['spreadPcnt'])
+            mdf0['delever01'] = mdf0['pcnt7d'] / mdf0['spreadPcnt']
             mdf0['unitsDiffPerBalance'] = n.abs(mdf0['unitsDiff'] / mdf0['balance']) # 1 - (mdf0['portUnits'] / mdf0['balance'])
             mdf0['balancePerUnitsDiff'] = mdf0['balance'] / mdf0['unitsDiff']
             mdf0['balanceUsdDiff'] = mdf0['portUsd'] - mdf0['balance_usd']
@@ -3073,7 +3082,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
 
             f = '24h_volume_usd allocation sell balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation sell balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sell balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = ('marketCap volume totalBalanceUsd totalBalanceEth balance balance_eth balance_usd unitsDiff balanceETHDiff balanceUsdDiff currentPortPcnt portPcnt portPcntDiff spreadPcnt volumeETH spreadVolume pcnt1h pcnt24h pcnt7d id2 id4 sell offer price_eth arb1 mname sum mvp allocation portPcnt price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume volumeETHperSpreadPcnt portWeight portPcnt portUsd portUnits mname sum sell balance balance_usd spreadPcnt sell unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s mname id name' % pm.allocationModels).split()
+            f = ('marketCap volume totalBalanceUsd totalBalanceEth balance balance_eth balance_usd unitsDiff balanceETHDiff balanceUsdDiff currentPortPcnt portPcnt portPcntDiff lever01 delever01 spreadPcnt volumeETH spreadVolume pcnt1h pcnt24h pcnt7d id2 id4 sell offer price_eth arb1 mname sum mvp allocation portPcnt price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume volumeETHperSpreadPcnt portWeight portPcnt portUsd portUnits mname sum sell balance balance_usd spreadPcnt sell unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s mname id name' % pm.allocationModels).split()
             pm.printPortfolio(mdf0, f)
             print '---'
             for i in range(len(ethaddr)):
