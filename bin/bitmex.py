@@ -3473,6 +3473,11 @@ def main():
     if args.research06:
         cmc = CoinMarketCap()
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            #df = cmc.getTradableCoins()
+            #print df
+            #print df.shape
+            #print cmc.getExchanges('ethereum')
+
             #print cmc.getTradableCoins(filterVolume=False)
             if args.currency:                
                 print cmc.getCoinsExchanges(args.currency).transpose()
