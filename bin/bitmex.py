@@ -1323,7 +1323,12 @@ ETH/BTC.DC 	0 	"""
         pi.update({'SNGLS':pin,'DCR':pin, 'ARK':pin, 'NEO':pin, '21CO':pin, 'CENT':pin}) # source: https://medium.com/@cryptoginger/6-ways-you-can-earn-passive-income-with-crypto-right-now-a5116dc709ed
         pi.update({'DASH':pin}) # source: https://steemit.com/cryptocurrency/@alanfreestone/passive-income-strategies-with-cryptocurrencies-part-a-masternodes
         # Proof of Asset [PoA ]
-        pi.update({'BBT':pin}) # source: https://www.brickblock.io/tokens
+        #pi.update({'BBT':pin}) # source: https://www.brickblock.io/tokens
+
+        # solar / sun / energy
+        pi.update({'SNC':pin, 'SDAO':4}) # source: https://suncontract.org/tokensale/index.html
+
+        pi.update({'AGI':pin}) # source: singularityNET 
 
         # airdrops
         #pi.update({'MBRS':pin}) # airdropped token:NIO 
