@@ -1063,25 +1063,56 @@ class PortfolioModeler:
         dft = self.genPortWeight(df, pt)
         dft[pcntPT] = dft['portPcnt']#.fillna(0)
         dft = dft[dft[pcntPT] != 0]
-        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        #    print dft
+        """
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print '--- %s' % pt
+            #print '---'
+            #print df[df[pt] > 0]
+            print df[df[pt] > 0][pt]
+            #print '---'
+            print dft[dft[pt] > 0].loc[:, ('%s portWeight portPcnt %s' % (pt, pcntPT)).split(' ')]
+            print '--- end %s' % pt
+        """
         return [pcntPT, dft]
 
-    def combinePortfolios(self, df, p1, p2):
-
+    def combinePortfolios(self, df, po):
+        
+        pok = po.keys()
+        pov = po.values()
+        
         pname  = 'portPcnt'
-        modelPcnt = n.array([20, 80])
+        modelPcnt = n.array(pov, n.float)
 
-        [pcntP1, df1] = self.genP(df, p1)
-        [pcntP2, df2] = self.genP(df, p2)
-
+        pol = {}
+        
+        # todo: loopit
+        #pol[pok[0]] = self.genP(df, pok[0])
+        #pol[pok[1]] = self.genP(df, pok[1])
+        # todo: end loopit
+        
         dfmmm = p.DataFrame([])
-        dfmmm = df1.combine_first(dfmmm)
-        dfmmm = df2.combine_first(dfmmm)
-        dfmmm = dfmmm.loc[:, [pcntP1, pcntP2]]
+        li = {}
+        for i in range(len(pok)):
+            poki = pok[i]
+            #print 'i: %s %s' % (i, poki)
+            pol[poki] = self.genP(df, poki)
+            li.update({poki:pol[poki][0]})
+            dfmmm = (pol[poki][1]).combine_first(dfmmm)
 
-        dfmmm = dfmmm.fillna(0)
-        dfmmm = dfmmm[(dfmmm[pcntP1] != 0) | (dfmmm[pcntP2] != 0)]
+        dfp = p.DataFrame(po, index=['weight']).transpose()
+        dfp.loc[li.keys(), 'li'] = li.values()
+
+        # todo: loopit
+        #dfmmm = (pol[pok[0]][1]).combine_first(dfmmm)
+        #dfmmm = (pol[pok[1]][1]).combine_first(dfmmm)
+        # todo: end loopit
+        dfmmm = dfmmm.loc[:, li.values()]
+
+        dfmmm = dfmmm.fillna(0) 
+        # todo: loopit
+        #dfmmm = dfmmm[(dfmmm[li.values()[0]] != 0) | (dfmmm[li.values()[1]] != 0)]
+        #dfmmm = dfmmm[(dfmmm[pol[pok[0]][0]] != 0) | (dfmmm[pol[pok[1]][0]] != 0)]
+        # todo: end loopit
 
         # apply metamodeling
         dfmmm = dfmmm * modelPcnt / 100
@@ -1091,12 +1122,28 @@ class PortfolioModeler:
 
         #dfmmm = dfmmm.loc[:, [pname]]
         dfmmm = dfmmm[dfmmm[pname] != 0].sort_values(by=pname, ascending=False)
-        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        #    print modelPcnt
-        #    print dfmmm
-        #    print dfmmmTotal
-        #print dfmmm
-        #sys.exit()
+        """
+        with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            print ' modelPcnt: %s' % modelPcnt
+            #print '     dfmmm: %s' % dfmmm
+            #print 'dfmmmTotal: %s' % dfmmmTotal
+            #print '-=--=-----=---=-'
+            print '=-=-=-='
+            print pol[pok[0]][0]
+            print pol[pok[1]][0]
+            print ' po: %s' % po
+            print dfp
+            print 'pok: %s' % pok
+            print 'pov: %s' % pov
+            print 
+            print 'li.keys(): %s' % li.keys()
+            print 'li: %s' % li
+            print '----- pol -----'
+            print '----- pol -----'
+            #print pol
+            print '----- pol -----'
+            print '----- pol -----'
+        """
         return dfmmm
     # end metaportfolio methods
 
@@ -1171,15 +1218,17 @@ class PortfolioModeler:
         # metaportfolio implementation
         df = self.genPortWeight(df, 'allocation')
         
-        dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
+        #dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
+        dfmmm = self.combinePortfolios(df, {'t1f':10, 't1pi':70, 't1ib':20})
+        dfmmm = dfmmm[dfmmm['portPcnt'] > 0]
         df['portPcnt'] = 0
         df = dfmmm.combine_first(df)
         #"""
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             print '=== %s ==========================================================' % 'dfmmm'
             print dfmmm
-            #print df.sort_values(by='portPcnt', ascending=False)
-            #print n.sum(df, 0)
+            #print dfmmm.sort_values(by='portPcnt', ascending=False)
+            print n.sum(dfmmm, 0)
             print '=== %s ==========================================================' % 'dfmmm'
         #"""
         # end metaportfolio implementation
