@@ -1043,6 +1043,15 @@ class PortfolioModeler:
 
     # metaportfolio methods
     def genPortWeight(self, df, field):
+        df = df.copy()
+        #print df[df[field] > 0][field]#.fillna(0)
+        try:
+            fmin = n.min(list(df[df[field] < 1][field]))
+            #print 'fmin: %s %s' % (field, fmin)
+            if fmin != 0:
+                df[field] = df[field] / fmin
+            #print df[df[field] > 0]#[field]#.fillna(0)
+        except: ''
         df['portWeight'] = n.log(df[field]) / n.log(10)
         #df['portWeight'] = (df['allocation']) #/ n.log(10)
         df['portWeight'] = map(lambda x: 0 if n.abs(x) == n.inf else x, df['portWeight'])
@@ -1163,7 +1172,6 @@ class PortfolioModeler:
         df = self.genPortWeight(df, 'allocation')
         
         dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
-        dfmmm = dfmmm[dfmmm['portPcnt'] > 0]
         df['portPcnt'] = 0
         df = dfmmm.combine_first(df)
         #"""
