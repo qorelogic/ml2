@@ -548,6 +548,8 @@ class CoinMarketCap:
             'pcnt1h' : '//tr/td[8]//text()',
             'pcnt24h' : '//tr/td[9]//text()',
             'pcnt7d' : '//tr/td[10]/text()',
+            # industry value or vlue of the entire industry
+
         }
         if tokens:
             xresd.update({'token':'//tr/td[3]/a/text()'})
@@ -1585,7 +1587,7 @@ ETH/BTC.DC 	0 	"""
             print
 
         #self.sortDataFrame(mdf0, 'portPcntDiff', f, True, title='lever0') #
-        fli = 'totalBalanceUsd balance balance_eth balance_usd unitsDiff balanceETHDiff balanceUsdDiff currentPortPcnt portPcnt portPcntDiff spreadPcnt volumeETH pcnt1h pcnt24h pcnt7d delever01 lever01'.split(' ')
+        fli = 'totalBalanceUsd balance balance_eth balance_usd unitsDiff balanceETHDiff balanceUsdDiff currentPortPcnt portPcnt portPcntDiff sum spreadPcnt volumeETH pcnt1h pcnt24h pcnt7d delever01 lever01'.split(' ')
 
         describeDF(mdf0[ (mdf0['portPcntDiff'] < 0) ].loc[:, fli], 'delever01', fli, False, filterUnderZeros=True)
         #describeDF(mdf0[ ( n.abs(mdf0['delever01'] ) != n.inf) & (mdf0['portPcntDiff'] < 0) ], 'delever01', False, filterUnderZeros=True)
