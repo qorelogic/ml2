@@ -1,0 +1,19 @@
+source: http://www.nvidia.com/object/deep-learning-system.html
+BIDMach
+Caffe
+Caffe2
+Chainer
+DL4J
+Julia
+Keras
+MatConvNet
+Microsoft CNTK
+Minerva
+mxnet
+OpenDeep
+Purine
+Pylearn2
+Tensorflow
+theano
+torch
+other
