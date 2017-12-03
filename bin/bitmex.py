@@ -1221,7 +1221,7 @@ class PortfolioModeler:
         df = self.genPortWeight(df, 'allocation')
         
         #dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
-        dfmmm = self.combinePortfolios(df, {'t1f':10, 't1pi':70, 't1ib':20})
+        dfmmm = self.combinePortfolios(df, {'t1f':0, 't1pi':80, 't1ib':20, 't1b':0})
         dfmmm = dfmmm[dfmmm['portPcnt'] > 0]
         df['portPcnt'] = 0
         df = dfmmm.combine_first(df)
@@ -1388,6 +1388,7 @@ ETH/BTC.DC 	0 	"""
         pi.update({'SNC':pin, 'SDAO':4}) # source: https://suncontract.org/tokensale/index.html
 
         pi.update({'AGI':pin}) # source: singularityNET 
+        pi.update({'EMC2':pin}) # source: einstinium 
 
         # airdrops
         #pi.update({'MBRS':pin}) # airdropped token:NIO 
