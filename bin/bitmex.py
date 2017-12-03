@@ -54,8 +54,8 @@ def clustermap(dfp, verbose=False, figsize=25):
     #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
     #dfp.corr()#.loc[ ['bitcoin','ethereum'],:]
     dfpcl = dfp.columns.levels[1]
-    #corrs = {}
-    corrs = n.array([])
+    corrs = {}
+    #corrs = n.array([])
     print len(dfp.columns)
     for i in dfpcl:
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -64,19 +64,19 @@ def clustermap(dfp, verbose=False, figsize=25):
         cor = dfp.loc[:,(dfp.columns.levels[0],[i])].corr()        
         cor = cor.corr() #.loc[:,(dfp.columns.levels[0],[i])].corr()
         cor = cor.fillna(0)
-        #corrs.update({i: cor})
+        corrs.update({i: cor})
         
         try:
             sns.clustermap(cor, center=0, cmap="vlag", figsize=(figsize,figsize))#, row_colors=network_colors, col_colors=network_colors, linewidths=.75, figsize=(figsize, figsize))
             plt.show()
-            corrs = corrs + cor.get_values()
+            #corrs = corrs + cor.get_values()
             ''
         except Exception as e: print e
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        #    if verbose:
-        #        print corrs
-        #print
-    print corrs
+        if verbose:
+            print cor#.loc[]
+        print
+    #print corrs
     """
     #print corrs
     ck = corrs.keys()
@@ -90,7 +90,7 @@ def clustermap(dfp, verbose=False, figsize=25):
     """
     #sns.clustermap(cor, center=0, cmap="vlag")#, row_colors=network_colors, col_colors=network_colors, linewidths=.75, figsize=(13, 13))        
     #plt.show()
-    #return cor
+    return corrs
 
 def dataFrameAddMultiIndex(dfm, title):
     dfi = dfm.transpose()
@@ -106,7 +106,7 @@ def dataFrameAddMultiIndex(dfm, title):
     #    print dfi
     return dfi
 
-def genDFP(port=None, max=0):
+def genDFP(port=None, max=0, logy=True, normalize=True, sigmoid=True):
     pm = PortfolioModeler()
     cmc = CoinMarketCap()
     at = cmc.getAllTokens(tokens=False)
@@ -133,7 +133,7 @@ def genDFP(port=None, max=0):
     
     #li = list(dfportfolio['id'].head(30))
     #li = 'ethereum propy bitcoin-cash ripple dash iota monero neo'.split(' ')
-    dfp = cmc.axs(dfportfolio, li)
+    dfp = cmc.axs(dfportfolio, li, logy=logy, normalize=normalize, sigmoid=sigmoid)
     return dfp
 # end dfp #####################################################################
 
@@ -618,8 +618,8 @@ class CoinMarketCap:
             dfm = sigmoidme(dfm)
         return dfm
 
-    def glo(self, token):
-        df = self.getCoinHistory(token, normalize=True, sigmoid=True)
+    def glo(self, token, logy=True, normalize=True, sigmoid=True):
+        df = self.getCoinHistory(token, normalize=normalize, sigmoid=sigmoid)
         #print list(df.columns)
         df['circulatingSupply'] = df['market_cap_by_available_supply'] / df['price_usd']
         #df.dtypes
@@ -912,20 +912,20 @@ class CoinMarketCap:
         self.resolvedCoin = dfres
         return currency
 
-    def axs(self, df, li):
+    def axs(self, df, li, logy=True, normalize=True, sigmoid=True):
         from qoreliquid import normalizeme
         from qoreliquid import sigmoidme
         dfp = p.DataFrame()
         dfp = dfp.transpose()
-        dfi = self.asd('bitcoin')
+        dfi = self.asd('bitcoin', logy=logy, normalize=normalize, sigmoid=sigmoid)
         dfp = dfp.reindex(index=dfi.transpose().index, level=0).transpose()
         dfp = dfp.combine_first(dfi)
         #dfp = dfp.combine_first(self.asd('propy'))
     
-        dfp = p.concat([dfp, self.asd('ethereum')], axis=1)
+        dfp = p.concat([dfp, self.asd('ethereum', logy=logy, normalize=normalize, sigmoid=sigmoid)], axis=1)
     
         for i in li:
-            try:    dfp = p.concat([dfp, self.asd(i)], axis=1)
+            try:    dfp = p.concat([dfp, self.asd(i, logy=logy, normalize=normalize, sigmoid=sigmoid)], axis=1)
             except Exception as e: print e
     
         #dfp = dfi.combine_first(dfp)
@@ -946,8 +946,8 @@ class CoinMarketCap:
         #dfp.tail(1000).plot()
         return dfp
 
-    def asd(self, token):
-        dfm = self.glo(token)
+    def asd(self, token, logy=True, normalize=True, sigmoid=True):
+        dfm = self.glo(token, logy=logy, normalize=normalize, sigmoid=sigmoid)
         dfi = dataFrameAddMultiIndex(dfm, token)
         #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
         #    print dfi.tail(10)
@@ -1571,12 +1571,14 @@ ETH/BTC.DC 	0 	"""
         plt.show()
         """
         
-        def describeDF(mdf0, field, f, ascending=False, title='', filterUnderZeros=True):
+        def describeDF(mdf0, field, f, ascending=False, title='', filterUnderZeros=True, filterInfinity=False):
             mdf0 = mdf0.fillna(0)
             dh = 100*15
             print '------- %s %s' % (field,''.join(['-']*dh))
             if filterUnderZeros:
                 mdf0 = mdf0[mdf0[field] != 0]
+            if filterInfinity:
+                mdf0 = mdf0[mdf0[field] != n.inf]
             self.printInfo(mdf0, f)
             self.sortDataFrame(mdf0, field, f, ascending, title=title)
             print '--- end %s %s' % (field,''.join(['-']*dh))
@@ -1593,12 +1595,13 @@ ETH/BTC.DC 	0 	"""
         describeDF(mdf0, 'pcnt7d', f, False, filterUnderZeros=True, title='delever0')
         describeDF(mdf0, 'portPcnt', f, False, filterUnderZeros=True)
         describeDF(mdf0, 'currentPortPcnt', f, False, filterUnderZeros=True, title='delever') # same sorting as balance_usd
+        describeDF(mdf0, 'spreadVolume', f, False, filterUnderZeros=True, title='spreadVolume') # 
+        describeDF(mdf0, 'volumePerMarketcap', f, False, filterUnderZeros=True, filterInfinity=True, title='volumePerMarketcap') # 
 
         #self.printInfo(mdf0, f)
         #self.visualize(mdf0)
         #mdf0.to_csv('/tmp/mdf0.csv')
         print
-        #self.sortDataFrame(mdf0, 'spreadVolume', f, False, title='')
         """
         self.sortDataFrame(mdf0, 'balancePortDiffUSD', f, False, title='delever2')
         self.sortDataFrame(mdf0, 'balanceETHDiff', f, False, title='lever')
@@ -3126,7 +3129,8 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             mdf0['unitsDiff'] = mdf0['portUnits']    - mdf0['balance']
             mdf0['portPcntDiff'] = mdf0['portPcnt'] - mdf0['currentPortPcnt']
             mdf0['lever01']   = 1 / (mdf0['pcnt7d'] * mdf0['spreadPcnt'])
-            mdf0['delever01'] = mdf0['pcnt7d'] / mdf0['spreadPcnt']
+            #mdf0['delever01'] = mdf0['pcnt7d'] / mdf0['spreadPcnt']
+            mdf0['delever01'] = (mdf0['pcnt7d'] - mdf0['spreadPcnt'])
             mdf0['unitsDiffPerBalance'] = n.abs(mdf0['unitsDiff'] / mdf0['balance']) # 1 - (mdf0['portUnits'] / mdf0['balance'])
             mdf0['balancePerUnitsDiff'] = mdf0['balance'] / mdf0['unitsDiff']
             mdf0['balanceUsdDiff'] = mdf0['portUsd'] - mdf0['balance_usd']
@@ -3135,6 +3139,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             # used for closing positions, find the largest balanceUsdDiff and the lowest balancePerUnitsDiff
             #mdf0['balanceByUnitsDiff2']     = mdf0['balanceUsdDiff'] / (mdf0['balancePerUnitsDiff'] * n.abs(mdf0['unitsDiff']))
             #mdf0['balanceByBalanceUsdDiff'] = mdf0['balance_usd'] / mdf0['balanceUsdDiff']
+            mdf0['volumePerMarketcap'] = mdf0['volumeETH'] / mdf0['marketCap']
             mdf0['t1'] = mdf0['unitsDiffPerBalance'] * mdf0['balanceUsdDiff']
             mdf0['mname'] = mdf0.index
             #es.md(dfinfo, ethaddr, mode=2)
@@ -3144,7 +3149,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
 
             f = '24h_volume_usd allocation sell balance balance_usd bid ethaddr holdersCount id2 id3 issuancesCount offer price_btc price_usd rank symbol t1 t2 volume portWeight portPcnt totalBalanceUsd portUsd portUnits unitsDiff balanceUsdDiff balanceETHDiff'.split()
             f = 'totalBalanceUsd 24h_volume_usd allocation sell balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname sell balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
-            f = ('marketCap volume totalBalanceUsd totalBalanceEth balance balance_eth balance_usd unitsDiff balanceETHDiff balanceUsdDiff currentPortPcnt portPcnt portPcntDiff lever01 delever01 spreadPcnt volumeETH spreadVolume pcnt1h pcnt24h pcnt7d id2 id4 sell offer price_eth arb1 mname sum mvp allocation portPcnt price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume volumeETHperSpreadPcnt portWeight portPcnt portUsd portUnits mname sum sell balance balance_usd spreadPcnt sell unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s mname id name' % pm.allocationModels).split()
+            f = ('marketCap volume totalBalanceUsd totalBalanceEth balance balance_eth balance_usd unitsDiff balanceETHDiff balanceUsdDiff currentPortPcnt portPcnt portPcntDiff lever01 delever01 spreadPcnt volumeETH spreadVolume volumePerMarketcap pcnt1h pcnt24h pcnt7d id2 id4 sell offer price_eth arb1 mname sum mvp allocation portPcnt price_usd balance balance_eth balance_usd currentPortPcnt portPcnt portUsd balancePortDiffUSD balanceETHDiff balanceETHDiffCumsum balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname 24h_volume_usd volume volumeETH volumeUSD volumePerHolder volumeETHPerHolder holdersPerVolume volumeETHperSpreadPcnt portWeight portPcnt portUsd portUnits mname sum sell balance balance_usd spreadPcnt sell unitsDiff balanceETHDiff ethaddr unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff %s mname id name' % pm.allocationModels).split()
             pm.printPortfolio(mdf0, f)
             print '---'
             for i in range(len(ethaddr)):
