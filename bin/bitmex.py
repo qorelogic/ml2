@@ -3236,6 +3236,7 @@ def main():
     parser.add_argument("-r18", '--research18', help="test 18", action="store_true")
     parser.add_argument("-r19", '--research19', help="test 19", action="store_true")
     parser.add_argument("-r20", '--research20', help="test 20", action="store_true")
+    parser.add_argument("-r21", '--research21', help="test 21 insert tokens to mongo ql.coins", action="store_true")
     parser.add_argument("-c", '--cache', help="cache on", action="store_true")
     
     args = parser.parse_args()
@@ -3269,6 +3270,28 @@ def main():
     print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)
     #print makeTimeseriesTimestampRange(timestamp=1495209642, period=300, bars=nu)['range']
     """
+
+
+    if args.research21:
+        import pymongo 
+        import json as j
+        import time, os
+        #pdir = os.getcwd()
+        os.chdir('/mldev/bin/')
+        cmc = CoinMarketCap()
+        dft = cmc.getAllTokens(tokens=False)
+        #print dft.dtypes
+        dft['symbol'] = dft.index
+        dft = dft.set_index('id')
+        #print dft
+        di = dft.transpose().to_dict()
+        di = {'time':time.time(), 'data':di}
+        #di = j.dumps(di)
+        #print di
+        #print di
+        mong = pymongo.MongoClient()
+        res = mong.ql.coins.insert_one(di)
+        mong.close()
     
     # portfolio
     if args.research20:
