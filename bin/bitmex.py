@@ -246,8 +246,13 @@ qdb = QoreDebug()
 qdb.colorStacktraces()
 
 import sys
-try: sys.path.index('/ml.dev/bin/datafeeds')
-except: sys.path.append('/ml.dev/bin/datafeeds')
+def defp(pt):
+    try:    sys.path.index(pt)
+    except: sys.path.append(pt)
+#defp('/ml.dev/bin')
+defp('/ml.dev/bin/datafeeds')
+defp('/mldev/lib/oanda/oandapy/')
+
 #--------------------------
 
 import pandas as p
