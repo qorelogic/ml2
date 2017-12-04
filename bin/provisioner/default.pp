@@ -423,6 +423,9 @@ class crontab {
 	}
 }
 
+import 'crontab.pp'
+include r21
+
 import 'system-update.pp'
 #import 'cassandra.pp'
 import 'javart.pp'
