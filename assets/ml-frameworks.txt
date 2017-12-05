@@ -1,6 +1,21 @@
+steps:
+ - https://github.com/NVIDIA/nvidia-docker
+ install the cuda driver
+inxi -SGx
+ - https://github.com/NVIDIA/nvidia-docker/wiki/Frequently-Asked-Questions#how-do-i-install-the-nvidia-driver
+
+
 source: http://www.nvidia.com/object/deep-learning-system.html
+https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units
+
 BIDMach
+ - wiki: https://github.com/BIDData/BIDMach/wiki
+ - github: https://github.com/BIDData/BIDMach
+ - benchmarks: https://github.com/BIDData/BIDMach/wiki/Benchmarks
+
 Caffe
+ - 
+
 Caffe2
 Chainer
 DL4J
@@ -17,3 +32,6 @@ Tensorflow
 theano
 torch
 other
+
+cuDNN
+source: https://www.youtube.com/watch?v=1cHx1baKqq0
