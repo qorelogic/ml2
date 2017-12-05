@@ -255,21 +255,6 @@ defp('/mldev/lib/oanda/oandapy/')
 
 #--------------------------
 
-"""
-import argparse
-# source: https://docs.python.org/2/howto/argparse.html
-parser = argparse.ArgumentParser()
-parser.add_argument("-v", '--verbose', help="turn on verbosity")
-parser.add_argument("-l", '--live', help="go live and turn off dryrun", action="store_true")
-parser.add_argument("-pa", '--parse', help="go live and turn off dryrun", action="store_true")
-parser.add_argument("-p", '--portfolio', help="go live and turn off dryrun", action="store_true")
-args = parser.parse_args()
-
-import sys
-try: sys.path.index('/ml.dev/bin/datafeeds')
-except: sys.path.append('/ml.dev/bin/datafeeds')
-"""
-
 import pandas as p
 p.options.mode.chained_assignment = None  # default='warn'
 
