@@ -181,7 +181,11 @@ class LocalBitcoins:
         murl = 'https://localbitcoins.com/{1}-bitcoins-online/{0}/{2}.json'.format(currency, adtype, payment_method_txt)
         #murl = 'https://localbitcoins.com/{1}-bitcoins-online/{2}/.json'.format(currency, adtype, payment_method_txt)
         
-        df, nextP = self.getPage(murl, df=p.DataFrame())
+        try:
+            df, nextP = self.getPage(murl, df=p.DataFrame())
+        except UnicodeEncodeError as e:
+            print 'Maybe currency [%s] is not available' % currency
+            sys.exit()
         try: print 'count_df 2:%s' % len(df.index)
         except: ''
         
