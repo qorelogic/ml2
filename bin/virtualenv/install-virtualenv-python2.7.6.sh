@@ -18,7 +18,7 @@ py276="/mldev/bin/virtualenv/opt/python-2.7.6"
 mkdir -p $py276
 
 #cd Python-2.7.6
-#./configure --with-zlib --prefix=$py276
+#./configure --with-zlib --with-bz2 -with-bzip --prefix=$py276
 #make clean
 #make
 #make altinstall
