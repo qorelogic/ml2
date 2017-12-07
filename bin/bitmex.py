@@ -2195,6 +2195,27 @@ class Exchange:
             print
             self.qd.exception(e)
 
+    def getBaseQuote(self, df, indx):
+        def gw(df, i, w='BTC', tofield='base'):
+            io = i
+            i = i.replace('_', '')
+            #print i
+            leni = len(i)            
+            iq = i[leni-len(w):leni]
+            if iq.lower() == w.lower():
+                ib = i[0:leni-len(w)]
+                df.loc[io, 'quote'] = iq.upper()
+                df.loc[io, 'base']  = ib.upper()
+            return df
+        for i in indx:
+             # binance
+             df = gw(df, i, 'BTC')
+             df = gw(df, i, 'ETH')
+             df = gw(df, i, 'USDT')
+             df = gw(df, i, 'BNB')
+             #df.loc[i, 'leni'] = leni
+        return df
+        
 class Liqui(Exchange):
     
     def __init__(self, key, secret):
@@ -2662,23 +2683,6 @@ class Binance(Exchange):
         except Exception as e:
             print e
     
-    def getBaseQuote(self, df, indx):
-        def gw(df, i, w='BTC', tofield='base'):
-            leni = len(i)
-            il = i[leni-len(w):leni]
-            if il == w:
-                ib = i[0:leni-len(w)]
-                df.loc[i, 'quote'] = ib
-                df.loc[i, 'base']  = il
-            return df
-        for i in indx:
-             df = gw(df, i, 'BTC')
-             df = gw(df, i, 'ETH')
-             df = gw(df, i, 'USDT')
-             df = gw(df, i, 'BNB')
-             #df.loc[i, 'leni'] = leni
-        return df
-        
     def getCurrencies(self):
         #/api/v1/ticker/allPrices
         data = apiRequest('https://'+self.apiServer, '%s/ticker/allPrices' % (self.apiMethod))
