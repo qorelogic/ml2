@@ -1237,7 +1237,7 @@ class PortfolioModeler:
         df = self.genPortWeight(df, 'allocation')
         
         #dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
-        dfmmm = self.combinePortfolios(df, {'t1f':0, 't1pi':80, 't1ib':20, 't1b':0})
+        dfmmm = self.combinePortfolios(df, {'t1f':0, 't1pi':100, 't1ib':0, 't1b':0})
         dfmmm = dfmmm[dfmmm['portPcnt'] > 0]
         df['portPcnt'] = 0
         df = dfmmm.combine_first(df)
