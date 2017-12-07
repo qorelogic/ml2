@@ -2213,6 +2213,16 @@ class Exchange:
              df = gw(df, i, 'ETH')
              df = gw(df, i, 'USDT')
              df = gw(df, i, 'BNB')
+             # yobit
+             df = gw(df, i, 'BTC')
+             df = gw(df, i, 'ETH')
+             df = gw(df, i, 'DASH')
+             df = gw(df, i, 'DOGE')
+             df = gw(df, i, 'LTC')
+             df = gw(df, i, 'RUR')
+             df = gw(df, i, 'USD')
+             df = gw(df, i, 'WAVES')
+
              #df.loc[i, 'leni'] = leni
         return df
         
@@ -2698,6 +2708,36 @@ class Binance(Exchange):
         #except Exception as e:
         #    print e
             
+class Yobit(Exchange):
+
+    def __init__(self, key, secret):
+    #def __init__(self):
+        key    = ''
+        secret = ''
+        try: Exchange.__init__(self, key, secret, exchange='yobit')
+        except: ''
+        #https://yobit.net/api/3/info
+        self.apiServer = 'yobit.net' # https://api.binance.com/api/v1.1/account/getbalances?apikey=apikey
+        self.apiMethod = '/api/3'
+        
+        #print self.getTime()
+
+    def getCurrencies(self):
+        #/api/v1/ticker/allPrices
+        data = apiRequest('https://'+self.apiServer, '%s/info' % (self.apiMethod))
+        #print data
+        #return data
+        #try:
+        df = p.DataFrame(data['pairs']).transpose()#.set_index('symbol')
+        df = self.getBaseQuote(df, df.index)
+        self.currencies = df
+        #df = df[df['base'] == 'ETH']
+        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000, 'display.max_colwidth', -1):
+        #    print df.sort_values(by='base')
+        return df
+        #except Exception as e:
+        #    print e
+
 class EtherDelta:
     
     def parseEtherDeltaDump(self):
