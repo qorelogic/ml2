@@ -558,7 +558,7 @@ class CoinMarketCap:
         }
         if tokens:
             xresd.update({'token':'//tr/td[3]/a/text()'})
-        xresd = xp.xpath2df(url, xresd)#, verbose=True)
+        xresd = xp.xpath2df(url, xresd, cache=False)#, verbose=True)
         #for i in xresd.keys():
         #    print '%s: %s' % (i, len(xresd[i]))
         #print xresd
