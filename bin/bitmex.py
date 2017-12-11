@@ -1237,7 +1237,10 @@ class PortfolioModeler:
         df = self.genPortWeight(df, 'allocation')
         
         #dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
-        dfmmm = self.combinePortfolios(df, {'t1f':0, 't1pi':100, 't1ib':0, 't1b':0})
+        
+        #dfmmm = self.combinePortfolios(df, {'t1f':0, 't1pi':100, 't1ib':0, 't1b':0})
+        dfmmm = self.combinePortfolios(df, {'t1pi':80, 't1ib':0, 't1ltt':0, 't1vb':20})
+        
         dfmmm = dfmmm[dfmmm['portPcnt'] > 0]
         df['portPcnt'] = 0
         df = dfmmm.combine_first(df)
@@ -1400,12 +1403,6 @@ ETH/BTC.DC 	0 	"""
         # Proof of Asset [PoA ]
         #pi.update({'BBT':pin}) # source: https://www.brickblock.io/tokens
 
-        # solar / sun / energy
-        pi.update({'SNC':pin, 'SDAO':4}) # source: https://suncontract.org/tokensale/index.html
-
-        pi.update({'AGI':pin}) # source: singularityNET 
-        pi.update({'EMC2':pin}) # source: einstinium 
-
         # airdrops
         #pi.update({'MBRS':pin}) # airdropped token:NIO 
         #pi.update({'??? MBRS':pin}) # airdropped token:KNOW 
@@ -1419,6 +1416,25 @@ ETH/BTC.DC 	0 	"""
         pidf = p.DataFrame()
         pidf['p1pi'] = p.Series(pi)
         df = df.combine_first(pidf)
+
+        # long term trends
+        # solar / sun / energy
+        selectedTickers = {}
+        selectedTickers.update({'SNC':pin, 'SDAO':4}) # source: https://suncontract.org/tokensale/index.html
+        selectedTickers.update({'AGI':pin}) # source: singularityNET 
+        dfst = p.DataFrame()
+        dfst['p1ltt'] = p.Series(selectedTickers)
+        df = df.combine_first(dfst)
+        
+        # vb
+        selectedTickers = {}
+        selectedTickers.update({'CRTM':pin}) # source: vb
+        #selectedTickers.update({'ARN':pin}) # source: volumePerMarketcap
+        selectedTickers.update({'EMC2':pin}) # source: einstinium
+        dfst = p.DataFrame()
+        dfst['p1vb'] = p.Series(selectedTickers)
+        df = df.combine_first(dfst)
+
         if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         
         # portfolio mirror
@@ -1472,15 +1488,19 @@ ETH/BTC.DC 	0 	"""
         df['t1f'] = ((df['volumeETH'] * df['mvp']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1ib'] = ((df['volumeETH'] * df['p1ib']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1pi'] = ((df['volumeETH'] * df['p1pi']) / (df['avg'] * n.power(df['sum'], 3*1)))
-        df['t2'] = (df['volume'] * df['avg'])
 
+        df['t1ltt'] = ((df['volumeETH'] * df['p1ltt']) / (df['avg'] * n.power(df['sum'], 3*1)))
+        df['t1vb'] = ((df['volumeETH'] * df['p1vb']) / (df['avg'] * n.power(df['sum'], 3*1)))
+
+        df['t2'] = (df['volume'] * df['avg'])
+        
         try:    df[allocationModel]
         except Exception as e: 
             print 'No allocationModel[%s] found.' % e
             print 'Available models:'
             print self.listModels()
             sys.exit()
-        self.allocationModels = 't1 t1a t1b t1c t1d t1e t1f t1ib t2'
+        self.allocationModels = 't1 t1a t1b t1c t1d t1e t1f t1ib t1ltt t1vb t2'
     
         if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         df['allocation']     = df[allocationModel]
