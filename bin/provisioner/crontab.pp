@@ -6,7 +6,7 @@ class r21 {
 	    #command => "nice -15 /mldev/bin/go.sh bitmex.py r21 2>&1 >> /tmp/go.log",
 	    command => "nice -15 /mldev/bin/go.sh bitmex.py r21",
 	    user    => "qore",
-	    minute  => ['*/1']
+	    minute  => ['*/5']
 	}
 }
 include r21
