@@ -276,6 +276,112 @@ import httplib
 import ujson as uj
 
 
+###
+
+def rmScraperCache():
+    # ls -l /mldev/bin/scraper_cache.sqlite
+    fname = '/mldev/bin/scraper_cache.sqlite'
+    #print 'removing %s' % fname
+    import sys, os
+    try:    os.unlink(fname)
+    except: ''
+
+class DataViz:
+
+    def __init__(self):
+        import qgrid as qg # https://github.com/quantopian/qgrid#installation
+        cmc = CoinMarketCap()
+        self.pm = PortfolioModeler()
+        self.dft = cmc.getAllTokens(tokens=False)
+        self.df = self.pm.generatePortfolioT1Supply(self.dft, balance=(4129.06), risk=1)
+        self.qg = qg
+    
+    def heatmap(self, maxx, minn, usdt=True, figsize=5, sortby=None):
+        rmScraperCache()
+        dft = self.dft
+        dft1s = self.df[ (maxx > self.df['marketCap']) & (self.df['marketCap'] > minn) ].sort_values(by='marketCap', ascending=False)
+        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000, 'display.max_colwidth', -1):
+        #    print ' '.join(dft1s.columns)
+        #    #print dft1s.loc[:, 'id marketCap name pcnt1h pcnt24h pcnt7d price volume volumePerMarketcap pcnt1hR pcnt24hR pcnt7dR marketCapPcntTo1e6 marketCapPcntTo1e7 marketCapPcntTo1e9 circulatingSupply volumePerMarketCap balanceRisk balanceRiskETH riskOn balanceMarketcapPcnt t1Supply vb'.split()]
+        #    print dft1s.loc[:, 'id marketCap pcnt1h pcnt24h pcnt7d price volume volumePerMarketcap circulatingSupply volumePerMarketCap balanceRisk balanceRiskETH riskOn balanceMarketcapPcnt t1Supply vb'.split()]
+        li = list(dft1s.index)
+        if usdt: li.append('USDT')
+        #dft1s = dft[dft['marketCap'] <= 1e6]
+        #dft = dft[dft['volume'] >= 1e5]
+        if sortby == None:
+            sortby = 'riskOn'
+            sortby = 'vb'
+            #sortby = 'volumePerMarketcap'
+            #sortby = 'balanceMarketcapPcnt'
+            #sortby = 'pcnt7d'
+            #sortby = 'balanceMarketcapPcnt'
+        dft1s = self.pm.generatePortfolioT1Supply(dft, balance=(5148.36), risk=3.32)
+        dft1s = dft1s.sort_values(by=sortby, ascending=False)
+        #viewCharts(li)
+        dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, sortby=sortby)
+        self.qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
+        #qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
+
+    def visualizePortfolio(self, dft1s, li, figsize=20, sortby=None):
+        from qoreliquid import normalizeme
+        from qoreliquid import sigmoidme
+        import matplotlib.pylab as plt
+        import seaborn as sns
+        
+        if sortby == None:
+            sortby = 'riskOn'
+            sortby = 'vb'
+            #sortby = 'volumePerMarketcap'
+            #sortby = 'balanceMarketcapPcnt'
+            #sortby = 'pcnt7d'
+            #sortby = 'balanceMarketcapPcnt'
+        dft1s = dft1s.loc[li,:]
+        if type(sortby) == type([]):
+            ascending = [False] * len(sortby)
+        else:
+            ascending = False        
+        dft1s = dft1s.sort_values(by=sortby, ascending=ascending)
+        #none = desc(dft1s)
+        #qg.show_grid(dft1s)
+        #dft1s.sort_values(by='balanceMarketcapPcnt', ascending=False).loc[:,'pcnt7d'].plot()
+        li = 'pcnt1h pcnt24h pcnt7d riskOn volumePerMarketcap vb'.split(' ')
+        dft1s.loc[:,li] = normalizeme(dft1s.loc[:,li])
+        dft1s.loc[:,li] = sigmoidme(dft1s.loc[:,li])
+        #rcParams['figure.figsize'] = 20, 5
+        fig, ax = plt.subplots(figsize=(30,figsize))         # Sample figsize in inches
+        sns.heatmap(dft1s.loc[:,li], center=0.5, annot=True, linewidths=0, ax=ax, cmap="YlGnBu")
+        plt.show()
+        #qg.show_grid(dft1s.loc[:,li], grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
+        return dft1s
+    
+def viewCharts(lii):
+    cmc = CoinMarketCap()
+    pm = PortfolioModeler()
+    dft = cmc.getAllTokens(tokens=False)
+    df = pm.generatePortfolioT1Supply(dft, balance=(4129.06), risk=1)    
+    if type(lii) == type(''):
+        print lii
+        port = lii
+        lii = list(df.loc[port.split(' '),['id']]['id'])
+        for i in range(len(lii)):
+            try:
+                ind = lii.index(n.nan)
+                lii.remove(ind)
+            except Exception as e:
+                #print e
+                ''
+        #print lii
+        #print ' '.join(lii)
+    print lii
+    #print ' '.join(lii)
+    for i in lii:
+        try:
+            dfm = cmc.glo(i)
+            plt.show()
+        except: ''
+
+###
+
 def strToTimestamp(ss):
     #ss = 'Aug-06-2017 07:18:10 AM'
     ddt = datetime.datetime.strptime(ss[0:23], '%b-%d-%Y %H:%M:%S %p')
