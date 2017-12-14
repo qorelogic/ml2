@@ -322,7 +322,7 @@ class DataViz:
         self.qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
         #qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
 
-    def visualizePortfolio(self, dft1s, li, figsize=20, sortby=None):
+    def visualizePortfolio(self, dft1s, li, figsize=20, sortby=None, show=True):
         from qoreliquid import normalizeme
         from qoreliquid import sigmoidme
         import matplotlib.pylab as plt
@@ -349,8 +349,9 @@ class DataViz:
         dft1s.loc[:,li] = sigmoidme(dft1s.loc[:,li])
         #rcParams['figure.figsize'] = 20, 5
         fig, ax = plt.subplots(figsize=(30,figsize))         # Sample figsize in inches
-        sns.heatmap(dft1s.loc[:,li], center=0.5, annot=True, linewidths=0, ax=ax, cmap="YlGnBu")
-        plt.show()
+        if show:
+            sns.heatmap(dft1s.loc[:,li], center=0.5, annot=True, linewidths=0, ax=ax, cmap="YlGnBu")
+            plt.show()
         #qg.show_grid(dft1s.loc[:,li], grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
         return dft1s
     
@@ -1087,6 +1088,28 @@ def lastGitHash():
     #df = p.DataFrame(res)
     #print df
 
+def portfolioVBEtherdelta(show=True):
+    rmScraperCache()
+    cmc = CoinMarketCap()
+    pm = PortfolioModeler()
+    fp = open('/mldev/lib/crypto/ethereum/etherdelta_etherdelta.github.io.github.py.git/tokenGuides/etherdelta.tokens.txt', 'r')
+    res = fp.read()
+    fp.close()
+    li = res.strip().split('\n')
+    dft = cmc.getAllTokens(tokens=True)
+    #dft1s = dft[dft['marketCap'] <= 1e6]
+    #dft = dft[dft['volume'] >= 1e5]
+    #print dft.sort_values(by='volume', ascending=False)['volume']
+    #sys.exit()
+    dft1s = pm.generatePortfolioT1Supply(dft, balance=(5148.36), risk=3.32)
+    dft1s = dft1s[(1e9 > dft1s['marketCap']) & (dft1s['marketCap'] > 100e6)]
+    #dft1s = dft1s[(10e6 > dft1s['marketCap']) & (dft1s['marketCap'] > 1e6)]
+    #dft1s = dft1s[(1e6 > dft1s['marketCap']) & (dft1s['marketCap'] > 100e3)]
+    #dft1s = dft1s[(300e9 > dft1s['marketCap']) & (dft1s['marketCap'] > 1e9)]
+    v = DataViz()
+    dft1s = v.visualizePortfolio(dft1s, li, figsize=300, show=show)
+    return dft1s
+
 class PortfolioModeler:
     
     def __init__(self):
@@ -1345,7 +1368,7 @@ class PortfolioModeler:
         #dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
         
         #dfmmm = self.combinePortfolios(df, {'t1f':0, 't1pi':100, 't1ib':0, 't1b':0})
-        dfmmm = self.combinePortfolios(df, {'t1pi':80, 't1ib':0, 't1ltt':0, 't1vb':20})
+        dfmmm = self.combinePortfolios(df, {'t1pi':44.4, 't1ib':0, 't1ltt':0, 't1vb':55.6})
         
         dfmmm = dfmmm[dfmmm['portPcnt'] > 0]
         df['portPcnt'] = 0
@@ -1534,9 +1557,22 @@ ETH/BTC.DC 	0 	"""
         
         # vb
         selectedTickers = {}
-        selectedTickers.update({'CRTM':pin}) # source: vb
-        #selectedTickers.update({'ARN':pin}) # source: volumePerMarketcap
-        selectedTickers.update({'EMC2':pin}) # source: einstinium
+        dft1s = portfolioVBEtherdelta(show=False)
+        threshold = 0.6
+        #print dft1s.loc[:, 'vb volumePerMarketcap riskOn'.split(' ')]
+        ddff = dft1s[(dft1s['vb'] > threshold) & (dft1s['volumePerMarketcap'] > threshold) & (dft1s['riskOn'] > threshold)].sort_values(by='vb', ascending=False)
+        #print ddff
+        li = ' '.join(list(ddff.index))
+        print li
+        #sys.exit()
+        for i in li.split(' '):
+            selectedTickers.update({i:pin}) # source: vb
+        #selectedTickers.update({'CRTM':pin}) # source: vb
+        #selectedTickers.update({'NTWK':pin}) # source: vb
+        #selectedTickers.update({'EAGLE':pin}) # source: vb
+        #selectedTickers.update({'SGR':pin}) # source: vb
+        #selectedTickers.update({'ARN':pin}) # source:  vb volumePerMarketcap
+        
         dfst = p.DataFrame()
         dfst['p1vb'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
@@ -1848,6 +1884,7 @@ ETH/BTC.DC 	0 	"""
         # models
         #dff['t1Supply'] = dff['balanceMarketcapPcnt']**1 * dff['volumePerMarketCap']**3 / dff[goal]**2
         dff['t1Supply'] = dff['balanceMarketcapPcnt']**2 * dff['volumePerMarketCap']**3 / dff[goal]**2 * dff['volumePerMarketcap']**3
+        dff['vb']       = dff['volumePerMarketcap'] * dff['riskOn']
 
         df = dff
 
