@@ -31,24 +31,47 @@ if args.project:
 def usage():
     print 'usage: [-on|-off] -p <project name>'
 
+import re
 def developerLogOff():
     # delete crontable
-    cron_job = tab.find_command(cmd)
+    #cron_job = tab.find_command(cmd)
     #print cron_job.next()
     #print 
-    tab.remove_all()
+
+    #tab.remove_all()
+    for i in range(len(tab.crons)):
+        try:
+            manifest = tab.crons[i]
+            groups = re.match(re.compile(r'.*(Developer).*', re.S), str(manifest)).groups()
+            # throws exception if this cron is not of type Developer, otherwise delete this cron.
+            manifest.delete()
+        except Exception as e:
+            #print e
+            ''
     tab.write()
+    
+    #tab.write()
     #print tab.render()
     
 def developerLogOn():
-    # You can even set a comment for this command
-    cron_job = tab.new(cmd, comment='Developer Log')
-    #cron_job.minute().every(5)
-    cron_job.minute.every(1)
-    #cron_job.hour.on(12)
-    #writes content to crontab
-    tab.write()
-    #print tab.render()
+
+    li = []
+    for i in range(len(tab.crons)):
+        try:
+            groups = re.match(re.compile(r'.*(Developer).*', re.S), str(tab.crons[i])).groups()        
+            li.append(1)
+        except Exception as e:
+            #print e
+            ''
+    if len(li) == 0:
+        # You can even set a comment for this command
+        cron_job = tab.new(cmd, comment='Developer Log')
+        #cron_job.minute().every(5)
+        cron_job.minute.every(1)
+        #cron_job.hour.on(12)
+        #writes content to crontab
+        tab.write()
+        #print tab.render()
 
 def viewList():
     cmd = 'ls /mldev/screenshots/developerLogs/screen/%s/qore/' % args.project
@@ -68,13 +91,14 @@ def viewList():
 
 if args.project:
     if args.on:
-        developerLogOff()
+        #developerLogOff()
         developerLogOn()
     
     if args.off:
         developerLogOff()
     
     if args.list:
+        tab = CronTab(user='qore')
         print tab.render()
         
     if args.view:
