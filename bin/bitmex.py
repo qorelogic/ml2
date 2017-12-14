@@ -1364,6 +1364,8 @@ class PortfolioModeler:
         
         # metaportfolio implementation
         df = self.genPortWeight(df, 'allocation')
+        #df = df[df['portWeight'] < n.inf] # todo: get prices below 0.00001
+        #df['totalBalanceUsd'] = totalBalanceUsd
         
         #dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
         
