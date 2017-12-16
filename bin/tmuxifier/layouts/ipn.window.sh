@@ -4,7 +4,7 @@
 
 # Create new window. If no argument is given, window name will be based on
 # layout file name.
-new_window "ipython"
+new_window "ipn[ipy]"
 
 # Split window into panes.
 #split_v 33 0

@@ -1,6 +1,19 @@
 # coding: utf-8
 
-"""
+# geth: https://github.com/ethereum/go-ethereum/wiki/Installation-Instructions-for-Ubuntu
+#sudo apt-get install software-properties-common
+#sudo add-apt-repository -y ppa:ethereum/ethereum
+#sudo apt-get update
+#sudo apt-get install ethereum
+# $ geth
+# var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+
+# npm install -g node-gyp # https://ethereum.stackexchange.com/questions/25668/errors-trying-to-install-zeppelin
+# npm install -g ethereum/web3.js
+# npm install -g ethereumjs-testrpc
+# npm install -g truffle
+
+""" "
 octave:52> a=0.00052; b=0.00048; (a+b)/2
 ans =    5.00000000000000e-04
 octave:53> a=0.00052; b=0.00048; x=(a+b)/2
