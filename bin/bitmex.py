@@ -45,6 +45,45 @@ df(:,4) = df(:,2)*70/100;
 df(:,5) = df(:,1)/100*4452.49
 """
 
+# - mergeFundsToAggregateFund() -> tradeAggregateFund() -> splitToAggredateFundToSegregatedAddresses()
+# mergerTraderSplitter([13.7, 55.3], 0.3347784)
+def mergerTraderSplitter(li, totalUnits):
+    import numpy as n
+    df = li #[13.7, 55.3]
+    # df(:,2) = df / sum(df)*100
+    #df = n.array(df)
+    #df = df.reshape(2,1)
+    #df[:, 1] = 1
+    df = p.DataFrame({'fromUnits':df, 'totalUnits':totalUnits})
+    df['aggregateShare'] = df['fromUnits'] / n.sum(df['fromUnits']) * 100
+    df['toUnits'] = df['totalUnits'] * df['aggregateShare'] / 100
+    df['toUSD']   = df['toUnits'] * 683.25
+    #df['price1'] = 0.00482348
+    #df['price2'] = 0.00483980
+    #df['price3'] = 0.00495000
+    li = 'fromUnits aggregateShare totalUnits price1 price2 price3 units1 tradingComission1 fromUnits1 units2 tradingComission2 fromUnits2 units3 tradingComission3 fromUnits3'.split()
+    li = 'fromUnits aggregateShare totalUnits toUnits toUSD'.split()
+    df2 = p.DataFrame(df.loc[:,'fromUnits aggregateShare toUnits toUSD'.split()].sum(), columns=['sum']).transpose()
+    #df3 = p.DataFrame(df.loc[:,'totalUnits price1 price2 price3'.split()].max(),        columns=['sum']).transpose()
+    #df2 = df2.combine_first(df3)
+    df  = df2.combine_first(df)
+    """
+    df2['units1']            = df2['fromUnits'] * df2['price1']
+    df2['tradingComission1'] = df2['units1']    * 0.1 / 100
+    df2['fromUnits1']        = df2['units1'] - df2['tradingComission1']
+
+    df2['units2']            = df2['fromUnits1']    / df2['price2']
+    df2['tradingComission2'] = df2['units2']    * 0.1 / 100
+    df2['fromUnits2']        = df2['units2'] - df2['tradingComission2']
+
+    df2['units3']            = df2['fromUnits2']    * df2['price3']
+    df2['tradingComission3'] = df2['units3']    * 0.0 / 100
+    df2['fromUnits3']        = df2['units3'] - df2['tradingComission3']
+    """
+    #print df.loc[:,li]#.transpose()
+    #print df2.loc[:,li]#.transpose()
+    return df.loc[:,li]
+
 # dfp #########################################################################
 def clustermap(dfp, verbose=False, figsize=25):
     import matplotlib.pylab as plt
