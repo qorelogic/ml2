@@ -1781,6 +1781,9 @@ ETH/BTC.DC 	0 	"""
         if f == None:
             f = 'totalBalanceUsd 24h_volume_usd allocation avg balance balance_usd portUsd balancePortDiffUSD balancePerPort bid offer spread spreadPcnt spreadPcntA ethaddr holdersCount price_btc price_usd rank mname volume volumePerHolder holdersPerVolume portWeight portPcnt portUsd portUnits mname avg balance unitsDiff unitsDiffPerBalance balancePerUnitsDiff balanceByUnitsDiff balanceByUnitsDiff2 balanceByBalanceUsdDiff balanceUsdDiff balanceETHDiff t1'.split()
         
+        try: mdf0.to_csv('/tmp/mdf0.csv')
+        except: ''
+
         # filter
         #mdf0 = mdf0[(n.abs(mdf0['balance']) != 0) | (n.abs(mdf0['portPcnt']) != 0.0)]
         #mdf0 = mdf0.drop_duplicates()
@@ -1820,7 +1823,7 @@ ETH/BTC.DC 	0 	"""
             print
 
         #self.sortDataFrame(mdf0, 'portPcntDiff', f, True, title='lever0') #
-        fli = 'totalBalanceUsd balance balance_eth balance_usd unitsDiff balanceETHDiff balanceUsdDiff currentPortPcnt portPcnt portPcntDiff sum spreadPcnt volumeETH pcnt1h pcnt24h pcnt7d delever01 lever01'.split(' ')
+        fli = 'totalBalanceUsd balance balance_eth balance_usd unitsDiff balanceETHDiff balanceUsdDiff currentPortPcnt portPcnt portPcntDiff sum spreadPcnt volumeETH pcnt1h pcnt24h pcnt7d delever01 lever01 sell offer'.split(' ')
 
         describeDF(mdf0[ (mdf0['portPcntDiff'] < 0) ].loc[:, fli], 'delever01', fli, False, filterUnderZeros=True)
         #describeDF(mdf0[ ( n.abs(mdf0['delever01'] ) != n.inf) & (mdf0['portPcntDiff'] < 0) ], 'delever01', False, filterUnderZeros=True)
@@ -1835,7 +1838,6 @@ ETH/BTC.DC 	0 	"""
 
         #self.printInfo(mdf0, f)
         #self.visualize(mdf0)
-        #mdf0.to_csv('/tmp/mdf0.csv')
         print
         """
         self.sortDataFrame(mdf0, 'balancePortDiffUSD', f, False, title='delever2')
