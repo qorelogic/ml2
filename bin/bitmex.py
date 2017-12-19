@@ -3463,6 +3463,68 @@ def setIndex(df, to, oldIndex):
     df = df.set_index(to)
     return df
 
+
+# Coins
+class Investor():
+    
+    def __init__(self):
+        ''
+        self.investors = {}
+
+    def addInvestor(self, name, etherAddr):
+
+        self.investors.update({investorId:etherAddr, name:name})
+        
+
+class Accounts:
+    
+    def __init__(self):
+
+        self.p = {}
+        
+        #print self.p
+
+    def addInvestor(self, name, etherAddr):
+        ''
+# end Coins
+
+eth0_0 = '' # pooler
+eth0 = [eth0_0]
+
+eth1_1 = ''
+eth1_2 = ''
+eth1_3 = ''
+eth1 = [eth1_2, eth1_1, eth1_3]
+
+eth2_1 = '' #eth2 0
+eth2_2 = '' #eth2 1
+eth2_3 = '' #eth2 2
+eth2_4 = '' #eth2 3
+eth2 = [eth2_2, eth2_1, eth2_3, eth2_4]
+
+eth3_0 = '' #eth3 0
+eth3_1 = '' #eth3 1
+eth3_2 = '' #eth3 2
+eth3_3 = '' #eth3 3
+eth3 = [eth3_0, eth3_1, eth3_2, eth3_3]
+
+#inv  = Investor()
+accs = Accounts()
+accs.p.update({0:eth0})
+accs.p.update({1:eth1})
+accs.p.update({2:eth2})
+accs.p.update({3:eth3})
+p0 = accs.p[0]
+p1 = accs.p[1]
+p2 = accs.p[2]
+p3 = accs.p[3]
+pg = []
+for i in p1: pg.append(i)
+for i in p2: pg.append(i)
+for i in p3: pg.append(i)
+#print pg
+#sys.exit()
+
 #@profile
 def main():
     pl = Poloniex('M8YTJIKE-2EIE8VV2-7UP6Z9O0-PJNGRPV4', '')
@@ -3692,12 +3754,6 @@ def main():
         noCache = True
         
     if args.research01:
-        eth1_1 = '0x38a4Ff00C207cBD78aB34b6dDd1b8754E4498508'
-        eth1_2 = '0xc73D7e4a40D4513eC7D114f521eA59DF607a7613'
-        eth2_1 = '0xc978D12413CbC4ec37763944c57EF0100a4c15cf' #eth2 0
-        eth2_2 = '0x2c8f659d57971449eb627FB78530Fc61867c4E50' #eth2 1
-        p1 = [eth1_2, eth1_1]
-        p2 = [eth2_2, eth2_1]
 
         # other
         initialInvestment = 0
@@ -3723,8 +3779,10 @@ def main():
             # all portfolios etherdelta
             if args.ethAccount == 'all':
                 pg = []
+                for i in p0: pg.append(i)
                 for i in p1: pg.append(i)
                 for i in p2: pg.append(i)
+                for i in p3: pg.append(i)
                 getAdressInfoEthplorer(pg, args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
 
             if args.ethAccount == '1':
@@ -3736,9 +3794,12 @@ def main():
                 getAdressInfoEthplorer(p2, args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
             #print getTicker('bitcoin')    
     
+            if args.ethAccount == '3':
+                getAdressInfoEthplorer(p3, args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
+
             # ??? etherdelta
             #initialInvestment = 1
-            if args.ethAccount == '3':
+            if args.ethAccount == 'x':
                 getAdressInfoEthplorer([''], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
 
     if args.research03:

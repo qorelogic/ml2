@@ -389,3 +389,27 @@ qnato-phonetic() {
 	#eog /mldev/assets/art/Desktop/350px-FAA_Phonetic_and_Morse_Chart2.svg.png
 	eog /mldev/assets/art/nato-phonetic-hS7467E.jpg
 }
+
+
+qkeystore() {
+
+	qkhDir="/tmp"
+	tmpFname="$qkhDir/qks"
+	ni=20
+	
+	nano $tmpFname
+
+	fname="`cat $tmpFname | grep 'cat UTC' | cut -d' ' -f 2`"
+
+	cat $tmpFname | grep -v 'cat UTC' > $qkhDir/$fname
+	
+	echo "wiping in $ni.."
+	sleep $ni
+	
+	wipe -fqQ7 $qkhDir/$fname
+	echo "file wiped [$qkhDir/$fname]"
+	wipe -fqQ7 $tmpFname	
+	echo "file wiped [$tmpFname]"
+	# todo: create ramdisk implementation
+
+}
