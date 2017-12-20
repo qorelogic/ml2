@@ -1593,18 +1593,23 @@ ETH/BTC.DC 	0 	"""
         # other non-eth-coins/projects
         # GNT [golem]
 
-        # interesting 
-        # STY: Styras, Affordable internet anywhere https://themerkle.com/styras-affordable-internet-access-anywhere-on-the-planet/?utm_medium=push&utm_source=onesignal&utm_campaign=traffic%20boost&utm_content=extended%20%traffic%boost
-
         pidf = p.DataFrame()
         pidf['p1pi'] = p.Series(pi)
         df = df.combine_first(pidf)
 
+        # interesting projects
+        # Cardano [ADA]
+        # QASH: Quoine Quoinex, Jaoanese Fintech
+        #selectedTickers.update({'EMC2':pin}) # source: einstinium
+        # Tezos
+        # STY: Styras, Affordable internet anywhere https://themerkle.com/styras-affordable-internet-access-anywhere-on-the-planet/?utm_medium=push&utm_source=onesignal&utm_campaign=traffic%20boost&utm_content=extended%20%traffic%boost
+        
         # long term trends
         # solar / sun / energy
         selectedTickers = {}
         selectedTickers.update({'SNC':pin, 'SDAO':4}) # source: https://suncontract.org/tokensale/index.html
         selectedTickers.update({'AGI':pin}) # source: singularityNET 
+        # Hashgraph
         dfst = p.DataFrame()
         dfst['p1ltt'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
