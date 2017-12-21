@@ -342,16 +342,24 @@ class DataViz:
 
     def __init__(self):
         import qgrid as qg # https://github.com/quantopian/qgrid#installation
-        cmc = CoinMarketCap()
+        self.cmc = CoinMarketCap()
         self.pm = PortfolioModeler()
-        self.dft = cmc.getAllTokens(tokens=False)
+        self.getAllTokens(tokens=False)
         self.df = self.pm.generatePortfolioT1Supply(self.dft, balance=(4129.06), risk=1)
         self.qg = qg
+        self.threshold = 0
+        #self.threshold = 0.6
+        self.pdf = p.DataFrame()
+        
+    def getAllTokens(self, tokens=False):
+        self.dft = self.cmc.getAllTokens(tokens=tokens)
     
-    def heatmap(self, maxx, minn, usdt=True, figsize=5, sortby=None):
+    def heatmap(self, maxx, minn, usdt=True, figsize=5, sortby=None, threshold=0):
         rmScraperCache()
         dft = self.dft
         dft1s = self.df[ (maxx > self.df['marketCap']) & (self.df['marketCap'] > minn) ].sort_values(by='marketCap', ascending=False)
+        if threshold > 0:
+            self.threshold = threshold
         #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000, 'display.max_colwidth', -1):
         #    print ' '.join(dft1s.columns)
         #    #print dft1s.loc[:, 'id marketCap name pcnt1h pcnt24h pcnt7d price volume volumePerMarketcap pcnt1hR pcnt24hR pcnt7dR marketCapPcntTo1e6 marketCapPcntTo1e7 marketCapPcntTo1e9 circulatingSupply volumePerMarketCap balanceRisk balanceRiskETH riskOn balanceMarketcapPcnt t1Supply vb'.split()]
@@ -370,9 +378,14 @@ class DataViz:
         dft1s = self.pm.generatePortfolioT1Supply(dft, balance=(5148.36), risk=3.32)
         dft1s = dft1s.sort_values(by=sortby, ascending=False)
         #viewCharts(li)
-        dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, sortby=sortby)
+        try:
+            dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, sortby=sortby)
+        except KeyError as e:
+            print e
+            sys.exit()
         self.qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
         #qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
+        self.pdf = dft1s
 
     def visualizePortfolio(self, dft1s, li, figsize=20, sortby=None, show=True):
         from qoreliquid import normalizeme
@@ -400,11 +413,42 @@ class DataViz:
         dft1s.loc[:,li] = normalizeme(dft1s.loc[:,li])
         dft1s.loc[:,li] = sigmoidme(dft1s.loc[:,li])
         #rcParams['figure.figsize'] = 20, 5
-        fig, ax = plt.subplots(figsize=(30,figsize))         # Sample figsize in inches
+
+        if self.threshold > 0:
+            dft1s = dft1s[(dft1s['vb'] > self.threshold) & (dft1s['volumePerMarketcap'] > self.threshold) & (dft1s['riskOn'] > self.threshold)].sort_values(by='vb', ascending=False)
+        
+        lend = len(dft1s.index)
+        figsizeMin = n.ceil( float(min([lend, figsize])) / 2 )
+        print 'lend:%s figsize:%s figsizeMin:%s' %  (lend, figsize, figsizeMin)
+        
+        fig, ax = plt.subplots(figsize=(30, figsizeMin))         # Sample figsize in inches
         if show:
             sns.heatmap(dft1s.loc[:,li], center=0.5, annot=True, linewidths=0, ax=ax, cmap="YlGnBu")
             plt.show()
         #qg.show_grid(dft1s.loc[:,li], grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
+        return dft1s
+
+    def portfolioVBEtherdelta(self, show=True):
+        fp = open('/mldev/lib/crypto/ethereum/etherdelta_etherdelta.github.io.github.py.git/tokenGuides/etherdelta.tokens.txt', 'r')
+        res = fp.read()
+        fp.close()
+        li = res.strip().split('\n')
+        return self.portfolioVB(li, show=show)
+    
+    def portfolioVB(self, li, show=True, figsize=300):
+        rmScraperCache()
+        dft = self.cmc.getAllTokens(tokens=False)
+        #dft1s = dft[dft['marketCap'] <= 1e6]
+        #dft = dft[dft['volume'] >= 1e5]
+        #print dft.sort_values(by='volume', ascending=False)['volume']
+        #sys.exit()
+        dft1s = self.pm.generatePortfolioT1Supply(dft, balance=(5148.36), risk=3.32)
+        dft1s = dft1s[(1e9 > dft1s['marketCap']) & (dft1s['marketCap'] > 100e6)]
+        #dft1s = dft1s[(10e6 > dft1s['marketCap']) & (dft1s['marketCap'] > 1e6)]
+        #dft1s = dft1s[(1e6 > dft1s['marketCap']) & (dft1s['marketCap'] > 100e3)]
+        #dft1s = dft1s[(300e9 > dft1s['marketCap']) & (dft1s['marketCap'] > 1e9)]
+        self.threshold = 0.5
+        dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, show=show)
         return dft1s
     
 def viewCharts(lii):
@@ -1140,28 +1184,6 @@ def lastGitHash():
     #df = p.DataFrame(res)
     #print df
 
-def portfolioVBEtherdelta(show=True):
-    rmScraperCache()
-    cmc = CoinMarketCap()
-    pm = PortfolioModeler()
-    fp = open('/mldev/lib/crypto/ethereum/etherdelta_etherdelta.github.io.github.py.git/tokenGuides/etherdelta.tokens.txt', 'r')
-    res = fp.read()
-    fp.close()
-    li = res.strip().split('\n')
-    dft = cmc.getAllTokens(tokens=True)
-    #dft1s = dft[dft['marketCap'] <= 1e6]
-    #dft = dft[dft['volume'] >= 1e5]
-    #print dft.sort_values(by='volume', ascending=False)['volume']
-    #sys.exit()
-    dft1s = pm.generatePortfolioT1Supply(dft, balance=(5148.36), risk=3.32)
-    dft1s = dft1s[(1e9 > dft1s['marketCap']) & (dft1s['marketCap'] > 100e6)]
-    #dft1s = dft1s[(10e6 > dft1s['marketCap']) & (dft1s['marketCap'] > 1e6)]
-    #dft1s = dft1s[(1e6 > dft1s['marketCap']) & (dft1s['marketCap'] > 100e3)]
-    #dft1s = dft1s[(300e9 > dft1s['marketCap']) & (dft1s['marketCap'] > 1e9)]
-    v = DataViz()
-    dft1s = v.visualizePortfolio(dft1s, li, figsize=300, show=show)
-    return dft1s
-
 class PortfolioModeler:
     
     def __init__(self):
@@ -1616,7 +1638,8 @@ ETH/BTC.DC 	0 	"""
         
         # vb
         selectedTickers = {}
-        dft1s = portfolioVBEtherdelta(show=False)
+        v = DataViz()
+        dft1s = v.portfolioVBEtherdelta(show=False)
         threshold = 0.6
         #print dft1s.loc[:, 'vb volumePerMarketcap riskOn'.split(' ')]
         ddff = dft1s[(dft1s['vb'] > threshold) & (dft1s['volumePerMarketcap'] > threshold) & (dft1s['riskOn'] > threshold)].sort_values(by='vb', ascending=False)
