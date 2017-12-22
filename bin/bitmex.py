@@ -158,9 +158,11 @@ def dataFrameAddMultiIndex(dfm, title):
     #    print dfi
     return dfi
 
-def genDFP(port=None, max=0, logy=True, normalize=True, sigmoid=True):
+def genDFP(port=None, max=0, logy=True, normalize=True, sigmoid=True, showPlot=True):
     pm = PortfolioModeler()
     cmc = CoinMarketCap()
+    if showPlot: cmc.showPlot = True
+    else:        cmc.showPlot = False
     at = cmc.getAllTokens(tokens=False)
     if port:
         if type(port) == type(""):
@@ -187,6 +189,27 @@ def genDFP(port=None, max=0, logy=True, normalize=True, sigmoid=True):
     #li = 'ethereum propy bitcoin-cash ripple dash iota monero neo'.split(' ')
     dfp = cmc.axs(dfportfolio, li, logy=logy, normalize=normalize, sigmoid=sigmoid)
     return dfp
+    
+def genHeatmap(li):
+    pm = PortfolioModeler()
+    cmc = CoinMarketCap()
+    dft = cmc.getAllTokens(tokens=False)
+    dft1s = pm.generatePortfolioT1Supply(dft, balance=(4129.06), risk=1)
+    #dft1s = dft[dft['marketCap'] <= 1e6]
+    print dft1s.shape
+    dft1s = dft1s.loc[li,:]    
+    sortby = 'riskOn'
+    #sortby = 'volumePerMarketcap'
+    #sortby = 'balanceMarketcapPcnt'
+    #sortby = 'pcnt7d'
+    #sortby = 'balanceMarketcapPcnt'
+    dft1s = dft1s.sort_values(by=sortby, ascending=False)
+    #none = desc(dft1s)
+    #qg.show_grid(dft1s)
+    v = DataViz()
+    dft1s = v.visualizePortfolio(dft1s, li, figsize=300)
+    #dft1s.sort_values(by='balanceMarketcapPcnt', ascending=False).loc[:,'pcnt7d'].plot()
+    return dft1s
 # end dfp #####################################################################
 
 def desc(df):
@@ -409,14 +432,14 @@ class DataViz:
         #none = desc(dft1s)
         #qg.show_grid(dft1s)
         #dft1s.sort_values(by='balanceMarketcapPcnt', ascending=False).loc[:,'pcnt7d'].plot()
-        li = 'pcnt1h pcnt24h pcnt7d riskOn volumePerMarketcap vb'.split(' ')
+        li = 'pcnt1h pcnt24h pcnt7d marketCap riskOn volumePerMarketcap vb'.split(' ')
         dft1s.loc[:,li] = normalizeme(dft1s.loc[:,li])
         dft1s.loc[:,li] = sigmoidme(dft1s.loc[:,li])
         #rcParams['figure.figsize'] = 20, 5
 
         if self.threshold > 0:
             dft1s = dft1s[(dft1s['vb'] > self.threshold) & (dft1s['volumePerMarketcap'] > self.threshold) & (dft1s['riskOn'] > self.threshold)].sort_values(by='vb', ascending=False)
-        
+
         lend = len(dft1s.index)
         figsizeMin = n.ceil( float(min([lend, figsize])) / 2 )
         print 'lend:%s figsize:%s figsizeMin:%s' %  (lend, figsize, figsizeMin)
@@ -722,6 +745,7 @@ class CoinMarketCap:
             'GOOD':'∞',
         }
         self.resTicker = apiRequest('https://api.coinmarketcap.com', '/v1/ticker')#, noCache=True)
+        self.showPlot = True
         pass
 
     #@profile
@@ -870,10 +894,11 @@ class CoinMarketCap:
         #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
         #    #df = p.DataFrame(df.tail(10).transpose())
         #    print df
-        print token
-        df.plot(logy=True, title='%s [%s]' % (token, symbol))
-        import matplotlib.pylab as plt
-        plt.show()
+        if self.showPlot:
+            import matplotlib.pylab as plt
+            print token
+            df.plot(logy=True, title='%s [%s]' % (token, symbol))
+            plt.show()
         return df
 
     #@profile
