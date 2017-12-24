@@ -477,7 +477,40 @@ def viewCharts(lii):
             plt.show()
         except: ''
 
+#x = n.array(range(-10,10))
+#y = x**2 #power(x,2)
+def dydx(y,x,returnDataFrame=False, sameShape=True):
+    dy = n.diff(y)
+    dx = n.diff(x)
+    dydx = dy / dx
+    #dydx[len(dydx)+1,0] = 0
+    if sameShape:
+        dydx = n.append(dydx, 0)
+    #print x
+    #print y
+    #print dydx
+    if returnDataFrame:
+        df = n.zeros([len(x), 3])
+        df[:,0] = x
+        df[:,1] = y
+        df[0:len(dydx),2] = dydx
+        return df
+    else: 
+        return dydx
+    #return p.DataFrame([x, y, dydx]).transpose().get_values()
+    #return 
+    #return dydx
+
+def dydxSym(func,x):
+    f = lambda x: eval(func)
+    y = f(x)
+    df = dydx(y,x)
+    return df
+
+
+
 ###
+
 
 def strToTimestamp(ss):
     #ss = 'Aug-06-2017 07:18:10 AM'
