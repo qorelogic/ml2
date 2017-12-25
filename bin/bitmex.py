@@ -460,7 +460,8 @@ class DataViz:
     
     def portfolioVB(self, li, show=True, figsize=300):
         rmScraperCache()
-        dft = self.cmc.getAllTokens(tokens=False)
+        cmc = CoinMarketCap()
+        dft = cmc.getAllTokens(tokens=False)
         #dft1s = dft[dft['marketCap'] <= 1e6]
         #dft = dft[dft['volume'] >= 1e5]
         #print dft.sort_values(by='volume', ascending=False)['volume']
