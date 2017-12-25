@@ -378,15 +378,16 @@ class DataViz:
         dft1s = self.pm.generatePortfolioT1Supply(dft, balance=(5148.36), risk=3.32)
         dft1s = dft1s.sort_values(by=sortby, ascending=False)
         #viewCharts(li)
-        try:
-            dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, sortby=sortby)
-        except KeyError as e:
-            print e
-            sys.exit()
-        self.qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
+        #try:
+        dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, sortby=sortby)
+        #except KeyError as e:
+        #    print e
+        #    #sys.exit()
+        #self.qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
         #qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
         self.pdf = dft1s
 
+    @profile
     def visualizePortfolio(self, dft1s, li, figsize=20, sortby=None, show=True):
         from qoreliquid import normalizeme
         from qoreliquid import sigmoidme
@@ -428,6 +429,7 @@ class DataViz:
         #qg.show_grid(dft1s.loc[:,li], grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
         return dft1s
 
+    @profile
     def portfolioVBEtherdelta(self, show=True):
         fp = open('/mldev/lib/crypto/ethereum/etherdelta_etherdelta.github.io.github.py.git/tokenGuides/etherdelta.tokens.txt', 'r')
         res = fp.read()
@@ -435,9 +437,13 @@ class DataViz:
         li = res.strip().split('\n')
         return self.portfolioVB(li, show=show)
     
+    @profile
     def portfolioVB(self, li, show=True, figsize=300):
         rmScraperCache()
-        dft = self.cmc.getAllTokens(tokens=False)
+        cmc = CoinMarketCap()
+        dft = cmc.getAllTokens(tokens=False)
+        #raise('e2')
+        #print dft
         #dft1s = dft[dft['marketCap'] <= 1e6]
         #dft = dft[dft['volume'] >= 1e5]
         #print dft.sort_values(by='volume', ascending=False)['volume']
@@ -737,6 +743,7 @@ class CoinMarketCap:
         df = df.transpose()
         return df
 
+    @profile
     def getAllTokens(self, tokenType=None, tokens=True):
         from qore import XPath
         if tokens:
@@ -783,6 +790,8 @@ class CoinMarketCap:
         df = df.set_index('symbol')
         df['volumePerMarketcap'] = df['volume'] / df['marketCap']
         self.tokens = df
+        print 'test1 getAllTokens'
+        #print df
         return df
 
     def getCoinHistory(self, token, normalize=False, sigmoid=False):
@@ -1128,7 +1137,7 @@ class CoinMarketCap:
                 currency = dfres[dfres['id']     == nameOrSymbol.lower()].loc[:,'id'][0]
             except KeyError as e:
                 print 'coin %s not found' % (nameOrSymbol)
-                sys.exit()
+                #sys.exit()
         #print dfres
         self.resolvedCoin = dfres
         return currency
@@ -1215,7 +1224,8 @@ class PortfolioModeler:
                 self.model = int(raw_input('model: '))
                 self.model = self.models[self.model]
             except KeyboardInterrupt as e:
-                sys.exit('')
+                print e
+                #sys.exit('')
     
     def to_cointracking(self):
         #df = self.dfv.ix[:,'Type Buy Cur. Sell Cur. Fee Exchange Group Comment Date name symbol price_usd portPcntPinv2 portAmount_usd portAmount_units'.split(' ')]
@@ -1364,15 +1374,13 @@ class PortfolioModeler:
             #print pol
             print '----- pol -----'
             print '----- pol -----'
-        """
+        #"""
         return dfmmm
     # end metaportfolio methods
 
     #@profile
     def genPortfolio(self, df, balance_usd='balance_usd', volume='volume'):
     
-        c = 1
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         cmc = CoinMarketCap()
         eth = cmc.getTicker('ETH').set_index('symbol').transpose()
         ethusd = float(eth.loc['price_usd', 'ETH'])
@@ -1380,14 +1388,12 @@ class PortfolioModeler:
         #side = 'avg'
         side = 'offer'
         df['sell'] = df[side]
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
     
         try:    df['balance']
         except: df['balance']     = 0
         try:    df['ethUSDTotal']
         except: df['ethUSDTotal'] = 0
     
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         try:    df['volumeETH'] = df[volume] * df[side]
         except: ''
         try:    df['volumeETHPerHolder'] = df['volumeETH'] / df['holdersCount']
@@ -1398,7 +1404,6 @@ class PortfolioModeler:
         try:    df['holdersPerVolume'] = df['holdersCount'] / df['volumeETH']
         except: ''
 
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         # set avg to max price between exchanges
         try:
             df['price_eth'] = df['price_usd'] / ethusd
@@ -1406,11 +1411,9 @@ class PortfolioModeler:
             df[side] = n.max(df.loc[:, [side, 'price_eth']].fillna(0).get_values(), 1)
         except: ''
 
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         df[balance_usd]    = df['balance'] * ethusd * df[side]
         df['balance_eth']  = df['balance'] * df[side]
 
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         # drop duplicate indices
         # source: https://stackoverflow.com/questions/13035764/remove-rows-with-duplicate-indices-pandas-dataframe-and-timeseries
         #df = df.reset_index().drop_duplicates(subset='index', keep='last').set_index('index')
@@ -1423,7 +1426,6 @@ class PortfolioModeler:
         df['totalBalanceEth'] = df['totalBalanceUsd'] / ethusd
         totalBalanceUsd = n.mean(df['totalBalanceUsd'])
         
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         print list(df['allocation'])
         #from qoreliquid import normalizeme
         #from qoreliquid import sigmoidme
@@ -1463,7 +1465,6 @@ class PortfolioModeler:
 
         df['currentPortPcnt'] = df['balance_eth'] / df['totalBalanceEth'] * 100
 
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         df['portUsd']         = (df['totalBalanceUsd'] - gasUSD) * df['portPcnt'] / 100
         df['portUsd']       = df['portUsd'] * df['allocationBool']
         df['balancePortDiffUSD'] = df[balance_usd] - df['portUsd']
@@ -1479,15 +1480,12 @@ class PortfolioModeler:
             #print
             #print dfp
             ''
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
 
         return df
 
-    #@profile
+    @profile
     def modelPortfolio(self, num=5, df=None, allocationModel=None, ethusd=None, mode='etherdelta'):
         
-        c = 1
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         print 'nuuuuuum: %s' % num
         self.allocationModel = allocationModel
         if allocationModel == None:
@@ -1501,7 +1499,6 @@ class PortfolioModeler:
         #import qgrid
         #from IPython.display import display
         #@profile
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         if type(df) == type(None) and mode == 'etherdelta':
             ed = EtherDelta()
             """
@@ -1534,10 +1531,8 @@ ETH/BTC.DC 	0 	"""
                 df = p.DataFrame({'volume': 0, 'symbol': 'STUB/ETH', 'bid': 0, 'offer': 0}, index=[0])
             df = df.fillna(0)
             print 'assets available: %s' % len(df.index)
-            #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
             ed.toMjson(df, '/mldev/bin/data/cache/coins/etherdelta.mjson')
 
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         if type(df) == type(None) and mode == 'poloniex':
             # ---
             pl  = Poloniex()
@@ -1559,7 +1554,6 @@ ETH/BTC.DC 	0 	"""
             #    print df2
             # ---
     
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         #df = df.fillna(0)
         #    for i in df.index:
         #        print 's/bid/offer: %s %s %s' % (df.loc[i, 'symbol'], df.loc[i, 'bid'], df.loc[i, 'offer'])
@@ -1573,7 +1567,6 @@ ETH/BTC.DC 	0 	"""
         try:    df['symbol']
         except: df['symbol'] = df['MarketName']
 
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         df = df.set_index('symbol').fillna(0)
         df['symbol'] = df.index
         df['symbolCode'] = map(lambda x: x.split('/')[0], df.index)
@@ -1582,7 +1575,6 @@ ETH/BTC.DC 	0 	"""
         # coins on exchanges ex. etherdelta
         df = df.combine_first(self.cmc.getCoinsOnExchange(exchange='EtherDelta', cache=True))
         df['sum'] = df['sum'].fillna(1)
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         
         # minimum viable product
         mvp = p.DataFrame()
@@ -1592,7 +1584,6 @@ ETH/BTC.DC 	0 	"""
         mvp['mvp'] = p.Series(di)
         df = df.combine_first(mvp)
         
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         # passive income  2=passive income
         pin = 2
         pi = {}
@@ -1659,7 +1650,6 @@ ETH/BTC.DC 	0 	"""
         dfst['p1vb'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
 
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         
         # portfolio mirror
         ks = 'ETH BTC LINK DNT RHOC ENG AVT ZRX CVC SALT KNC CAT PRO KIN AIR EOS ETT CREA MYST HMQ MGO RDN DRGN POWR'.split() # ib
@@ -1689,7 +1679,6 @@ ETH/BTC.DC 	0 	"""
         df['t1a'] = df['volume'] / (df['avg'] * n.log(spreadPcnt/100) )
         df['t1b'] = (df['volume'] * df['avg'])
     
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         try:    df['volumeETH'] = df['volume'] * df['avg']
         except Exception as e: self.qd.exception(e)
         
@@ -1707,7 +1696,6 @@ ETH/BTC.DC 	0 	"""
             df['t1d'] = (df['volumeETHPerHolder'] / (df['avg'] * df['sum']))
         except Exception as e: self.qd.exception(e)
     
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         df['t1e'] = (df['volumeETH'] / (df['avg'] * n.power(df['sum'], 4*3)))
         df['t1f'] = ((df['volumeETH'] * df['mvp']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1ib'] = ((df['volumeETH'] * df['p1ib']) / (df['avg'] * n.power(df['sum'], 3*1)))
@@ -1723,10 +1711,9 @@ ETH/BTC.DC 	0 	"""
             print 'No allocationModel[%s] found.' % e
             print 'Available models:'
             print self.listModels()
-            sys.exit()
+            #sys.exit()
         self.allocationModels = 't1 t1a t1b t1c t1d t1e t1f t1ib t1ltt t1vb t2'
     
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         df['allocation']     = df[allocationModel]
         df['allocation']     = df['allocation'].fillna(0)
         #df['allocationBool'] = df[df['spreadPcntA'] < -0.03].loc[:,'spreadPcntA']
@@ -1756,7 +1743,6 @@ ETH/BTC.DC 	0 	"""
         try:    df = df.sort_values(by='allocation', ascending=False)#.head(num)
         except: ''
         
-        #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         dfst = df
         
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1896,7 +1882,9 @@ ETH/BTC.DC 	0 	"""
         #dfgui.show(mdf0)
 
         try: mdf0.to_csv('/mldev/bin/data/cache/coins/portfolio.tsv')
-        except: sys.exit()
+        except Exception as e: 
+            print e
+            #sys.exit()
 
         ev = Eveningstar()
         """        
@@ -1933,6 +1921,7 @@ ETH/BTC.DC 	0 	"""
         else:                  plt.show()
 
     # generate portfolio t1Supply
+    @profile
     def generatePortfolioT1Supply(self, df, balance=1700, risk=1):
         balanceRisk = float(balance) / 100 * risk
         #sort = 'marketCap'
@@ -2765,7 +2754,7 @@ class Poloniex(Exchange):
             plt.plot(df0)
             plt.legend(df0.columns, loc=2)
             plt.show()
-            sys.exit()
+            #sys.exit()
                     
         # save to allocations.csv file
         ts = max(pmdf.index)
@@ -3217,8 +3206,11 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         #    print mdf
         try:  mdf['24h_volume_marketcap_ratio'] = mdf['24h_volume_usd'] / mdf['market_cap_usd'] * 100
         except: ''
-        mdf['avg']         = mdf['rate'] / ethusd
-        mdf['balance_usd'] = mdf['balance'] * mdf['avg'] * ethusd
+        print mdf
+        try:
+            mdf['avg']         = mdf['rate'] / ethusd
+            mdf['balance_usd'] = mdf['balance'] * mdf['avg'] * ethusd
+        except: ''
         mdf['ethaddr']     = ethaddrSmall
         
         mdf['symbol'] = mdf.index
