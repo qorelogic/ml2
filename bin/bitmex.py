@@ -410,7 +410,7 @@ class DataViz:
             dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, sortby=sortby)
         except KeyError as e:
             print e
-            sys.exit()
+            #sys.exit()
         self.qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
         #qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
         self.pdf = dft1s
@@ -447,7 +447,8 @@ class DataViz:
 
         lend = len(dft1s.index)
         figsizeMin = n.ceil( float(min([lend, figsize])) / 2 )
-        print 'lend:%s figsize:%s figsizeMin:%s' %  (lend, figsize, figsizeMin)
+        #print 'lend:%s figsize:%s figsizeMin:%s' %  (lend, figsize, figsizeMin)
+        print 'symbols: %s' %  (' '.join(dft1s.index))
         
         fig, ax = plt.subplots(figsize=(30, figsizeMin))         # Sample figsize in inches
         if show:
@@ -723,6 +724,8 @@ def apiRequest(baseurl, query, method='GET', noCache=False, verbose=False):
     resp = req.get('%s%s' % (baseurl, query))
     res = uj.loads(resp.text)
     #except ConnectionError as e:
+    #    print e
+    #    sys.exit()
     #    ''
     return res
 
@@ -3239,8 +3242,10 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         #res = apiRequest('https://api.coinmarketcap.com', '/v1/ticker/')
         res  = apiRequest('https://api.ethplorer.io', '/getAddressInfo/%s?apiKey=freekey' % ea, noCache=noCache)
         #res = apiRequest('https://api.ethplorer.io', '/getTokenInfo/0xff71cb760666ab06aa73f34995b42dd4b85ea07b?apiKey=freekey')
-        res1 = p.DataFrame(res['ETH'], index=[ethaddrSmall])
-        addressInfos = addressInfos.combine_first(res1)
+        try:
+            res1 = p.DataFrame(res['ETH'], index=[ethaddrSmall])
+            addressInfos = addressInfos.combine_first(res1)
+        except: ''
         #res2 = p.DataFrame(res['tokens'], index=['tokens'])#.transpose()
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
             # if tokens continue to next iteration [ie. ethaddr]
@@ -3495,6 +3500,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                 print 'http://etherdelta.com/trades.html'
             print '---'
             print addressInfos
+            print 'total eth: %s' % n.sum(addressInfos['balance'])
             print '---'
             try:
                 mdf0['balance_usd']
