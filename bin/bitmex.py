@@ -1512,7 +1512,7 @@ class PortfolioModeler:
         #dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
         
         #dfmmm = self.combinePortfolios(df, {'t1f':0, 't1pi':100, 't1ib':0, 't1b':0})
-        dfmmm = self.combinePortfolios(df, {'t1pi':44.4, 't1ib':0, 't1ltt':0, 't1vb':55.6})
+        dfmmm = self.combinePortfolios(df, {'t1pi':0, 't1ib':0, 't1ltt':0, 't1vb':100})
         
         dfmmm = dfmmm[dfmmm['portPcnt'] > 0]
         df['portPcnt'] = 0
