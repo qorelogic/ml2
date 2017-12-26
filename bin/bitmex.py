@@ -98,7 +98,7 @@ def mergerTraderSplitter(li, totalUnits):
     return df.loc[:,li]
 
 # dfp #########################################################################
-def clustermap(dfp, verbose=False, figsize=25):
+def clustermap(dfp, verbose=False, figsize=25, showClustermap=True):
     import matplotlib.pylab as plt
     import seaborn as sns
     sns.set()
@@ -113,21 +113,21 @@ def clustermap(dfp, verbose=False, figsize=25):
         #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
         #    #if verbose:
         #    #    print i
-        cor = dfp.loc[:,(dfp.columns.levels[0],[i])].corr()        
-        cor = cor.corr() #.loc[:,(dfp.columns.levels[0],[i])].corr()
-        cor = cor.fillna(0)
-        corrs.update({i: cor})
-        
-        try:
-            sns.clustermap(cor, center=0, cmap="vlag", figsize=(figsize,figsize))#, row_colors=network_colors, col_colors=network_colors, linewidths=.75, figsize=(figsize, figsize))
-            plt.show()
-            #corrs = corrs + cor.get_values()
-            ''
-        except Exception as e: print e
-        #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-        if verbose:
-            print cor#.loc[]
-        print
+        if showClustermap:
+            cor = dfp.loc[:,(dfp.columns.levels[0],[i])].corr()
+            cor = cor.corr() #.loc[:,(dfp.columns.levels[0],[i])].corr()
+            cor = cor.fillna(0)
+            corrs.update({i: cor})
+            try:
+                sns.clustermap(cor, center=0, cmap="vlag", figsize=(figsize,figsize))#, row_colors=network_colors, col_colors=network_colors, linewidths=.75, figsize=(figsize, figsize))
+                plt.show()
+                #corrs = corrs + cor.get_values()
+                ''
+            except Exception as e: print e
+            #with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
+            if verbose:
+                print cor#.loc[]
+            print
     #print corrs
     """
     #print corrs
@@ -376,11 +376,16 @@ class DataViz:
         
     def getAllTokens(self, tokens=False):
         self.dft = self.cmc.getAllTokens(tokens=tokens)
+        
+    def filterMarketcap(self, df, maxx, minn):
+        df = df[ (maxx > df['marketCap']) & (df['marketCap'] > minn) ].sort_values(by='marketCap', ascending=False)
+        return df
     
     def heatmap(self, maxx, minn, usdt=True, figsize=5, sortby=None, threshold=0):
         rmScraperCache()
         dft = self.dft
-        dft1s = self.df[ (maxx > self.df['marketCap']) & (self.df['marketCap'] > minn) ].sort_values(by='marketCap', ascending=False)
+        #dft1s = self.df[ (maxx > self.df['marketCap']) & (self.df['marketCap'] > minn) ].sort_values(by='marketCap', ascending=False)
+        dft1s = self.filterMarketcap(self.df, maxx, minn)
         if threshold > 0:
             self.threshold = threshold
         #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000, 'display.max_colwidth', -1):
@@ -461,17 +466,18 @@ class DataViz:
     def portfolioVB(self, li, show=True, figsize=300):
         rmScraperCache()
         cmc = CoinMarketCap()
-        dft = cmc.getAllTokens(tokens=False)
+        dft = cmc.getAllTokens(tokens=True)
         #dft1s = dft[dft['marketCap'] <= 1e6]
         #dft = dft[dft['volume'] >= 1e5]
         #print dft.sort_values(by='volume', ascending=False)['volume']
         #sys.exit()
         dft1s = self.pm.generatePortfolioT1Supply(dft, balance=(5148.36), risk=3.32)
-        dft1s = dft1s[(1e9 > dft1s['marketCap']) & (dft1s['marketCap'] > 100e6)]
+        #dft1s = dft1s[(1e9 > dft1s['marketCap']) & (dft1s['marketCap'] > 100e6)]
+        dft1s = dft1s[(1e9 > dft1s['marketCap']) & (dft1s['marketCap'] > 40e6)]
         #dft1s = dft1s[(10e6 > dft1s['marketCap']) & (dft1s['marketCap'] > 1e6)]
         #dft1s = dft1s[(1e6 > dft1s['marketCap']) & (dft1s['marketCap'] > 100e3)]
         #dft1s = dft1s[(300e9 > dft1s['marketCap']) & (dft1s['marketCap'] > 1e9)]
-        self.threshold = 0.5
+        #self.threshold = 0.5
         dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, show=show)
         return dft1s
     
@@ -1699,10 +1705,15 @@ ETH/BTC.DC 	0 	"""
         selectedTickers = {}
         v = DataViz()
         dft1s = v.portfolioVBEtherdelta(show=False)
-        threshold = 0.6
+        threshold = 0.5
         #print dft1s.loc[:, 'vb volumePerMarketcap riskOn'.split(' ')]
-        ddff = dft1s[(dft1s['vb'] > threshold) & (dft1s['volumePerMarketcap'] > threshold) & (dft1s['riskOn'] > threshold)].sort_values(by='vb', ascending=False)
-        #print ddff
+        #dft1s = v.filterMarketcap(dft1s, 1e9, 40e6)
+        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print dft1s
+        #sys.exit()
+        ddff  = dft1s[(dft1s['vb'] > threshold) & (dft1s['volumePerMarketcap'] > threshold) & (dft1s['riskOn'] > threshold)].sort_values(by='vb', ascending=False)
+        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print ddff
         li = ' '.join(list(ddff.index))
         print li
         #sys.exit()
@@ -1717,6 +1728,7 @@ ETH/BTC.DC 	0 	"""
         dfst = p.DataFrame()
         dfst['p1vb'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
+        df = df.combine_first(ddff)
 
         #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         
@@ -1773,7 +1785,8 @@ ETH/BTC.DC 	0 	"""
         df['t1pi'] = ((df['volumeETH'] * df['p1pi']) / (df['avg'] * n.power(df['sum'], 3*1)))
 
         df['t1ltt'] = ((df['volumeETH'] * df['p1ltt']) / (df['avg'] * n.power(df['sum'], 3*1)))
-        df['t1vb'] = ((df['volumeETH'] * df['p1vb']) / (df['avg'] * n.power(df['sum'], 3*1)))
+        #df['t1vb'] = ((df['volumeETH'] * df['p1vb']) / (df['avg'] * n.power(df['sum'], 3*1)))
+        df['t1vb'] = (df['vb'])
 
         df['t2'] = (df['volume'] * df['avg'])
         
