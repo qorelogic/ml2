@@ -1523,11 +1523,11 @@ class PortfolioModeler:
         df = dfmmm.combine_first(df)
         #"""
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
-            print '=== %s ==========================================================' % 'dfmmm'
+            print '=== %s [metaportfolio] ==========================================' % 'dfmmm'
             print dfmmm
             #print dfmmm.sort_values(by='portPcnt', ascending=False)
             print n.sum(dfmmm, 0)
-            print '=== %s ==========================================================' % 'dfmmm'
+            print '=== end %s ======================================================' % 'dfmmm'
         #"""
         # end metaportfolio implementation
 
@@ -3502,10 +3502,10 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
                 print 'https://ethplorer.io/address/%s' % i
                 print 'https://deltabalances.github.io/?addr=%s' % i
                 print 'http://etherdelta.com/trades.html'
-            print '---'
+            print '=== eth balance [ethbalance]'
             print addressInfos
             print 'total eth: %s' % n.sum(addressInfos['balance'])
-            print '---'
+            print '==='
             try:
                 mdf0['balance_usd']
             except:
