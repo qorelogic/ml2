@@ -8,14 +8,15 @@ new_window "ipn[ipy]"
 
 # Split window into panes.
 #split_v 33 0
-split_v 50 0
+#split_v 50 0
 #split_h 50
 
 # Run commands.
 run_cmd "p" 0
-run_cmd "p" 1
+#run_cmd "p" 1
 run_cmd "cd /ml.dev/bin/" 0
 #run_cmd "cd /sec/assets" 1
+run_cmd "qq" 0
 run_cmd "ipn" 0
 #run_cmd "ipn" 1
 
