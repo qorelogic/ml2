@@ -456,6 +456,7 @@ class DataViz:
         
         fig, ax = plt.subplots(figsize=(30, figsizeMin))         # Sample figsize in inches
         if show:
+            print dft1s.shape
             sns.heatmap(dft1s.loc[:,li], center=0.5, annot=True, linewidths=0, ax=ax, cmap="YlGnBu")
             plt.show()
         #qg.show_grid(dft1s.loc[:,li], grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
@@ -1711,8 +1712,15 @@ ETH/BTC.DC 	0 	"""
         # vb
         selectedTickers = {}
         v = DataViz()
+        v.getAllTokens(tokens=True)
+
+        threshold = 0.4
+        v.heatmap(maxx=1e9, minn=40e6, usdt=False, figsize=15, sortby='vb', threshold=threshold, show=False)
+
+        ddff = v.pdf
+        
+        """
         dft1s = v.portfolioVBEtherdelta(show=False)
-        threshold = 0.5
         #print dft1s.loc[:, 'vb volumePerMarketcap riskOn'.split(' ')]
         #dft1s = v.filterMarketcap(dft1s, 1e9, 40e6)
         #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
@@ -1721,6 +1729,8 @@ ETH/BTC.DC 	0 	"""
         ddff  = dft1s[(dft1s['vb'] > threshold) & (dft1s['volumePerMarketcap'] > threshold) & (dft1s['riskOn'] > threshold)].sort_values(by='vb', ascending=False)
         #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
         #    print ddff
+        """
+
         li = ' '.join(list(ddff.index))
         print li
         #sys.exit()
