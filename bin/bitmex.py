@@ -385,7 +385,7 @@ class DataViz:
         df = df[ (maxx > df['marketCap']) & (df['marketCap'] > minn) ].sort_values(by='marketCap', ascending=False)
         return df
     
-    def heatmap(self, maxx, minn, usdt=True, figsize=5, sortby=None, threshold=0):
+    def heatmap(self, maxx, minn, usdt=True, figsize=5, sortby=None, threshold=0, show=True):
         rmScraperCache()
         dft = self.dft
         #dft1s = self.df[ (maxx > self.df['marketCap']) & (self.df['marketCap'] > minn) ].sort_values(by='marketCap', ascending=False)
@@ -411,7 +411,7 @@ class DataViz:
         dft1s = dft1s.sort_values(by=sortby, ascending=False)
         #viewCharts(li)
         try:
-            dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, sortby=sortby)
+            dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, sortby=sortby, show=show)
         except KeyError as e:
             print e
             #sys.exit()
