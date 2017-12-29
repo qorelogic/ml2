@@ -60,7 +60,7 @@ df(:,5) = df(:,1)/100*4452.49
 
 # - mergeFundsToAggregateFund() -> tradeAggregateFund() -> splitToAggredateFundToSegregatedAddresses()
 # mergerTraderSplitter([13.7, 55.3], 0.3347784)
-def mergerTraderSplitter(li, totalUnits):
+def mergerTraderSplitter(li, ethAddrs, totalUnits, fromSymbol, toSymbol, toEthAddr):
     import numpy as n
     df = li #[13.7, 55.3]
     # df(:,2) = df / sum(df)*100
@@ -68,6 +68,8 @@ def mergerTraderSplitter(li, totalUnits):
     #df = df.reshape(2,1)
     #df[:, 1] = 1
     df = p.DataFrame({'fromUnits':df, 'totalUnits':totalUnits})
+    df['ea'] = ethAddrs
+    df['symbol'] = fromSymbol
     df['aggregateShare'] = df['fromUnits'] / n.sum(df['fromUnits']) * 100
     df['toUnits'] = df['totalUnits'] * df['aggregateShare'] / 100
     df['toUSD']   = df['toUnits'] * 683.25
@@ -75,8 +77,10 @@ def mergerTraderSplitter(li, totalUnits):
     #df['price2'] = 0.00483980
     #df['price3'] = 0.00495000
     li = 'fromUnits aggregateShare totalUnits price1 price2 price3 units1 tradingComission1 fromUnits1 units2 tradingComission2 fromUnits2 units3 tradingComission3 fromUnits3'.split()
-    li = 'fromUnits aggregateShare totalUnits toUnits toUSD'.split()
+    li = 'symbol fromUnits aggregateShare totalUnits toUnits toUSD'.split()
     df2 = p.DataFrame(df.loc[:,'fromUnits aggregateShare toUnits toUSD'.split()].sum(), columns=['sum']).transpose()
+    df2.loc['sum', 'symbol'] = toSymbol
+    df2.loc['sum', 'ea'] = toEthAddr
     #df3 = p.DataFrame(df.loc[:,'totalUnits price1 price2 price3'.split()].max(),        columns=['sum']).transpose()
     #df2 = df2.combine_first(df3)
     df  = df2.combine_first(df)
@@ -95,7 +99,7 @@ def mergerTraderSplitter(li, totalUnits):
     """
     #print df.loc[:,li]#.transpose()
     #print df2.loc[:,li]#.transpose()
-    return df.loc[:,li]
+    return df.set_index('ea').loc[:,li]
 
 # dfp #########################################################################
 def clustermap(dfp, verbose=False, figsize=25, showClustermap=True):
