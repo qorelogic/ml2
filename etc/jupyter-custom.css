@@ -167,6 +167,11 @@ blockquote {
   color: #bbc0c9;
 }
 
+.rendered_html tbody tr:nth-child(2n+1) {
+  /*background: #f5f5f5;*/
+  background: #333;
+}
+
 table.dataframe tr {border: 1px #bbc0c9;}
 
 div.text_cell_render, div.output_html {
