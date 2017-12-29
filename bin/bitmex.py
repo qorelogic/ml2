@@ -59,7 +59,7 @@ df(:,5) = df(:,1)/100*4452.49
 """
 
 # - mergeFundsToAggregateFund() -> tradeAggregateFund() -> splitToAggredateFundToSegregatedAddresses()
-# mergerTraderSplitter([13.7, 55.3], 0.3347784)
+# mergerTraderSplitter([13.7, 55.3], '0x0cee9942a8dc4aa6f594d680f6b9654f02ab62d1 0x38a4ff00c207cbd78ab34b6ddd1b8754e4498508'.split(' '), 0.3347784, 'BNB', 'ETH', '0x0CEE9942A8DC4aa6f594d680f6B9654f02Ab62D1') # BNB -> ETH  
 def mergerTraderSplitter(li, ethAddrs, totalUnits, fromSymbol, toSymbol, toEthAddr):
     import numpy as n
     df = li #[13.7, 55.3]
