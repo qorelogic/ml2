@@ -5,6 +5,8 @@ export XAUTHORITY=/home/$USER/.Xauthority;
 export DISPLAY=:0;
 export USER=qore;
 
+source /mldev/bin/virtualenv/vdir000_2.7.6/bin/activate
+
 if [ "$1" == "" ]; then
 	echo 'usage: <project name>'
 else
