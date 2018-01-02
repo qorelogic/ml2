@@ -47,18 +47,28 @@ defp('../lib/bitcoin/localbitcoins/digithink_py-localbitcoins.github.py.git')
 
 from api import LocalbitcoinsAPI
 
+def strToTimestamp(ss):
+    #ss = '2016-10-26'
+    ddt = datetime.datetime.strptime(ss, '%Y-%m-%d')
+    ttp = time.mktime([ddt.year, ddt.month, ddt.day, ddt.hour, ddt.minute, ddt.second, 0, 0, 0])
+    return ttp
+
 class LocalBitcoins:
 
     def __init__(self):
 
         self.USD_in_ARS = self.getAmbitoUSDARSBlue()
+        print 'USD_in_ARS: %s' % self.USD_in_ARS
         #self.USD_in_ARS = 14.81
         #self.USD_in_ARS = 14.66
 
     def getAmbitoUSDARSBlue(self):
-        blue = p.read_csv('/ml.dev/lib/DataPipeline/ambitoUSDARSblue_numbeo.csv')
-        #print blue
-        return blue.ix[0,'venta']
+        df = p.read_csv('/ml.dev/lib/DataPipeline/ambitoUSDARSblue_numbeo.csv')
+        df['ts'] = map(lambda x: strToTimestamp(x), df['fecha'])
+        df = df.set_index('ts').sort_index(ascending=False)
+        #print 
+        #print df        
+        return df.ix[max(df.index),'venta']
 
     def localbitcoinsOrderbook(self, currency='USD'):
         #from qore import *
