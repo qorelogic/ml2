@@ -413,3 +413,21 @@ qkeystore() {
 	# todo: create ramdisk implementation
 
 }
+
+# https://gist.github.com/alexeds/3641372
+gshdir="git-stash-patches"
+git-stash-patches() {
+	mkdir git-stash-patches;
+	git stash list  > $gshdir/git-stash-list.txt
+	for i in `git stash list | cut -d':' -f1`;
+	do 
+		git stash show stash@{0} -p > $gshdir/stash-$i;
+	done
+}
+
+git-stash-apply-patches() {
+	#cd gshdir
+
+	git apply $gshdir/$i
+	git stash
+}
