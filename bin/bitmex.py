@@ -3308,8 +3308,13 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
         #    print mdf
         try:  mdf['24h_volume_marketcap_ratio'] = mdf['24h_volume_usd'] / mdf['market_cap_usd'] * 100
         except: ''
-        mdf['avg']         = mdf['rate'] / ethusd
-        mdf['balance_usd'] = mdf['balance'] * mdf['avg'] * ethusd
+        try:
+            mdf['avg']         = mdf['rate'] / ethusd
+            mdf['balance_usd'] = mdf['balance'] * mdf['avg'] * ethusd
+        except:
+            # with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            #     print mdf
+            ''
         mdf['ethaddr']     = ethaddrSmall
         
         mdf['symbol'] = mdf.index
@@ -3878,11 +3883,6 @@ def main():
         
     if args.research01:
 
-        # other
-        initialInvestment = 0
-        if args.ethAccount == '0':
-            getAdressInfoEthplorer([args.ethAddress.split(' ')], args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
-
         #ethaddress1 = '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae'
         usdars = 16.72
         initialInvestment = (970.0+850+1800) / usdars
@@ -3908,15 +3908,23 @@ def main():
                 for i in p3: pg.append(i)
                 getAdressInfoEthplorer(pg, args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
 
+            # poolers
+            initialInvestment = 0
+            if args.ethAccount == '0':
+                getAdressInfoEthplorer(p0, args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
+
+            # eth1
             if args.ethAccount == '1':
                 getAdressInfoEthplorer(p1, args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
             
+            # eth2
             usdtwd = 30.41
             initialInvestment = 40000.0 / usdtwd
             if args.ethAccount == '2':
                 getAdressInfoEthplorer(p2, args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
             #print getTicker('bitcoin')    
     
+            # eth3
             if args.ethAccount == '3':
                 getAdressInfoEthplorer(p3, args.verbose, instruments=instruments, noCache=noCache, initialInvestment=initialInvestment, allocationModel=allocationModel)
 
