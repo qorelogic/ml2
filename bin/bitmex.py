@@ -1719,49 +1719,108 @@ ETH/BTC.DC 	0 	"""
         selectedTickers = {}
         selectedTickers.update({'SNC':pin, 'SDAO':4}) # source: https://suncontract.org/tokensale/index.html
         selectedTickers.update({'AGI':pin}) # source: singularityNET 
+        selectedTickers.update({'ELF':pin}) # source: aelf
         # Hashgraph
         dfst = p.DataFrame()
         dfst['p1ltt'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
         
-        # vb
-        selectedTickers = {}
         v = DataViz()
-        v.getAllTokens(tokens=True)
-
-        threshold = 0.4
-        v.heatmap(maxx=1e9, minn=40e6, usdt=False, figsize=15, sortby='vb', threshold=threshold, show=False)
-
+        threshold = 0.3
+        # ---------------------------------------------------------------------
+        # vb00[macrocap] 1e12 - 10e9
+        selectedTickers = {}
+        v.getAllTokens(tokens=False)
+        v.heatmap(maxx=1e12, minn=10e9, usdt=False, figsize=15, sortby='vb', threshold=threshold, show=False)
         ddff = v.pdf
-        
-        """
-        dft1s = v.portfolioVBEtherdelta(show=False)
-        #print dft1s.loc[:, 'vb volumePerMarketcap riskOn'.split(' ')]
-        #dft1s = v.filterMarketcap(dft1s, 1e9, 40e6)
-        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-        #    print dft1s
-        #sys.exit()
-        ddff  = dft1s[(dft1s['vb'] > threshold) & (dft1s['volumePerMarketcap'] > threshold) & (dft1s['riskOn'] > threshold)].sort_values(by='vb', ascending=False)
-        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
-        #    print ddff
-        """
-
         li = ' '.join(list(ddff.index))
-        print li
-        #sys.exit()
+        print 'vb00[macrocap]: %s' % li
         for i in li.split(' '):
             selectedTickers.update({i:pin}) # source: vb
+        dfst = p.DataFrame()
+        dfst['p1vb00'] = p.Series(selectedTickers)
+        df = df.combine_first(dfst)
+        df = df.combine_first(ddff)
+        #with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+        #    print ddff
+        #sys.exit()
+
+        v.getAllTokens(tokens=True)
+        # ---------------------------------------------------------------------
+        # vb01[largecap] 10e9 - 1e9
+        selectedTickers = {}
+        v.heatmap(maxx=10e9, minn=1e9, usdt=False, figsize=15, sortby='vb', threshold=threshold, show=False)
+        ddff = v.pdf
+        li = ' '.join(list(ddff.index))
+        print 'vb01[largecap]: %s' % li
+        for i in li.split(' '):
+            selectedTickers.update({i:pin}) # source: vb
+        dfst = p.DataFrame()
+        dfst['p1vb01'] = p.Series(selectedTickers)
+        df = df.combine_first(dfst)
+        df = df.combine_first(ddff)
+
+        # ---------------------------------------------------------------------
+        # vb02[midcap] 1e9 - 40e6
+        threshold = 0.5
+        selectedTickers = {}
+        v.heatmap(maxx=1e9, minn=40e6, usdt=False, figsize=15, sortby='vb', threshold=threshold, show=False)
+        ddff = v.pdf
+        li = ' '.join(list(ddff.index))
+        print 'vb02[midcap]: %s' % li
+        for i in li.split(' '):
+            selectedTickers.update({i:pin}) # source: vb
+        dfst = p.DataFrame()
+        dfst['p1vb02'] = p.Series(selectedTickers)
+        df = df.combine_first(dfst)
+        df = df.combine_first(ddff)
+
+        # ---------------------------------------------------------------------
+        # vb03[microcap] 40e6 - 1e6
+        threshold = 0.5
+        selectedTickers = {}
+        v.heatmap(maxx=40e6, minn=1e6, usdt=False, figsize=15, sortby='vb', threshold=threshold, show=False)
+        ddff = v.pdf
+        li = ' '.join(list(ddff.index))
+        print 'vb03[microcap]: %s' % li
+        for i in li.split(' '):
+            selectedTickers.update({i:pin}) # source: vb
+        dfst = p.DataFrame()
+        dfst['p1vb03'] = p.Series(selectedTickers)
+        df = df.combine_first(dfst)
+        df = df.combine_first(ddff)
+
+        # ---------------------------------------------------------------------
+        # vb04[nanocap] 1e6 - 0
+        threshold = 0.0
+        selectedTickers = {}
+        v.heatmap(maxx=1e6, minn=0, usdt=False, figsize=15, sortby='vb', threshold=threshold, show=False)
+        ddff = v.pdf
+        li = ' '.join(list(ddff.index))
+        print 'vb04[microcap]: %s' % li
+        for i in li.split(' '):
+            selectedTickers.update({i:pin}) # source: vb
+        dfst = p.DataFrame()
+        dfst['p1vb04'] = p.Series(selectedTickers)
+        df = df.combine_first(dfst)
+        df = df.combine_first(ddff)
+
+        # ---------------------------------------------------------------------
+        """
+        # todo: uncorrelated volume/price
+        selectedTickers.update({'DAT':pin}) # source: uvp
+
         #selectedTickers.update({'CRTM':pin}) # source: vb
         #selectedTickers.update({'NTWK':pin}) # source: vb
         #selectedTickers.update({'EAGLE':pin}) # source: vb
         #selectedTickers.update({'SGR':pin}) # source: vb
         #selectedTickers.update({'ARN':pin}) # source:  vb volumePerMarketcap
-        
         dfst = p.DataFrame()
         dfst['p1vb'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
         df = df.combine_first(ddff)
-
+        """
+        
         #if type(df) != type(None): print '%s: %s' % (c, df.shape); c += 1;
         
         # portfolio mirror
@@ -1787,6 +1846,7 @@ ETH/BTC.DC 	0 	"""
         #df['spreadPcntA'] = normalizeme(df['spreadPcntA'])
 
         # allocationModels
+        portfolioWeights={}
         df['t1'] = (df['volume'] / df['avg'])
         spreadPcnt = df['spreadPcnt']
         df['t1a'] = df['volume'] / (df['avg'] * n.log(spreadPcnt/100) )
@@ -1817,13 +1877,45 @@ ETH/BTC.DC 	0 	"""
         df['t1pi'] = ((df['volumeETH'] * df['p1pi']) / (df['avg'] * n.power(df['sum'], 3*1)))
 
         df['t1ltt'] = ((df['volumeETH'] * df['p1ltt']) / (df['avg'] * n.power(df['sum'], 3*1)))
-        #df['t1vb'] = ((df['volumeETH'] * df['p1vb']) / (df['avg'] * n.power(df['sum'], 3*1)))
-        df['t1vb'] = (df['vb'])
-
         df['t2'] = (df['volume'] * df['avg'])
+
+        #df['t1vb'] = ((df['volumeETH'] * df['p1vb']) / (df['avg'] * n.power(df['sum'], 3*1)))
+        #df['t1vb'] = (df['vb'])
+
+        # ---------------------------------------------------------------------
+        # vb00[macrocap] 1e12 - 10e9
+        # vb01[largecap] 10e9 - 1e9
+        # vb02[  midcap]  1e9 - 40e6
+        # vb03[microcap] 40e6 - 1e6
+        # vb04[ nanocap]  1e6 - 0
+        # ---------------------------------------------------------------------
+        #df['t1vb00'] = ((df['volumeETH'] * df['p1vb00']) / (df['avg'] * n.power(df['sum'], 3*1)))
+        df['t1vb00'] = df['vb'] * df['p1vb00']
+        portfolioWeights.update({'t1vb00':13})
         
+        # ---------------------------------------------------------------------
+        #df['t1vb01'] = ((df['volumeETH'] * df['p1vb01']) / (df['avg'] * n.power(df['sum'], 3*1)))
+        df['t1vb01'] = df['vb'] * df['p1vb01']
+        portfolioWeights.update({'t1vb01':13})
+        
+        # ---------------------------------------------------------------------
+        #df['t1vb02'] = ((df['volumeETH'] * df['p1vb02']) / (df['avg'] * n.power(df['sum'], 3*1)))
+        df['t1vb02'] = df['vb'] * df['p1vb02']
+        portfolioWeights.update({'t1vb02':55})
+        
+        # ---------------------------------------------------------------------
+        #df['t1vb03'] = ((df['volumeETH'] * df['p1vb03']) / (df['avg'] * n.power(df['sum'], 3*1)))
+        df['t1vb03'] = df['vb'] * df['p1vb03']
+        portfolioWeights.update({'t1vb03':21})
+
+        # ---------------------------------------------------------------------
+        #df['t1vb04'] = ((df['volumeETH'] * df['p1vb04']) / (df['avg'] * n.power(df['sum'], 3*1)))
+        df['t1vb04'] = df['vb'] * df['p1vb04']
+        portfolioWeights.update({'t1vb04':5})
+
         # set the portfolio weighting values
-        self.setPortfolioWeights(portfolioWeights={'t1pi':0, 't1ib':0, 't1ltt':40, 't1vb':60})
+        #portfolioWeights={'t1pi':0, 't1ib':0, 't1ltt':40, 't1vb':60}
+        self.setPortfolioWeights(portfolioWeights=portfolioWeights)
         
         try:    df[allocationModel]
         except Exception as e: 
