@@ -412,18 +412,21 @@ class DataViz:
         #viewCharts(li)
         try:
             dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, sortby=sortby, show=show)
+            self.qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
+            #qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
         except KeyError as e:
             print e
             #sys.exit()
-        self.qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
-        #qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
+        except Exception as e:
+            ''
         self.pdf = dft1s
 
     def visualizePortfolio(self, dft1s, li, figsize=20, sortby=None, show=True):
         from qoreliquid import normalizeme
         from qoreliquid import sigmoidme
         import matplotlib.pylab as plt
-        import seaborn as sns
+        try: import seaborn as sns
+        except: ''
         
         if sortby == None:
             sortby = 'riskOn'
@@ -1156,7 +1159,10 @@ class CoinMarketCap:
         
         if cache:
             #import qgrid
-            dff = p.read_csv(fname, index_col=0)
+            try:
+                dff = p.read_csv(fname, index_col=0)
+            except:
+                return
             #qgrid.show_grid(df)
         else:
             dff = p.DataFrame()
@@ -1918,8 +1924,10 @@ ETH/BTC.DC 	0 	"""
         #mdf0 = mdf0.drop_duplicates()
 
         import matplotlib.pylab as plt
-        import seaborn as sns
-        sns.set()
+        try:
+            import seaborn as sns
+            sns.set()
+        except: ''
         #mdf0.sort_values(by='allocation', ascending=False).loc[:,'currentPortPcnt portPcnt'.split(' ')].plot()
 
         """
