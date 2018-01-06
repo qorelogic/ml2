@@ -2085,8 +2085,10 @@ ETH/BTC.DC 	0 	"""
 
         # models
         #dff['t1Supply'] = dff['balanceMarketcapPcnt']**1 * dff['volumePerMarketCap']**3 / dff[goal]**2
-        dff['t1Supply'] = dff['balanceMarketcapPcnt']**2 * dff['volumePerMarketCap']**3 / dff[goal]**2 * dff['volumePerMarketcap']**3
-        dff['vb']       = dff['volumePerMarketcap'] * dff['riskOn']
+        dff['t1Supply'] = dff['balanceMarketcapPcnt']**2 * dff['volumePerMarketCap']**3 / dff[goal]**2 * dff['volumePerMarketCap']**3
+        dff = dff.fillna(0)
+        #dff['vb']       = dff['volumePerMarketCap']**5 * dff['riskOn']**3 / dff['marketCap']**4
+        dff['vb']       = dff['volumePerMarketCap']**5 * dff['riskOn']**3 / dff['marketCap']**0 / (dff['pcnt1h']**1 * dff['pcnt24h']**2 * dff['pcnt7d']**0)
 
         df = dff
 
