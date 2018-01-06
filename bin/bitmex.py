@@ -1274,6 +1274,7 @@ class PortfolioModeler:
         self.cmc = CoinMarketCap()
         try: self.lastGitHash = lastGitHash()
         except: ''
+        self._portfolioWeights = {}
     
     def listModels(self):
         for i in self.models.keys():
@@ -1515,9 +1516,8 @@ class PortfolioModeler:
         #df['totalBalanceUsd'] = totalBalanceUsd
         
         #dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
-        
         #dfmmm = self.combinePortfolios(df, {'t1f':0, 't1pi':100, 't1ib':0, 't1b':0})
-        dfmmm = self.combinePortfolios(df, {'t1pi':0, 't1ib':0, 't1ltt':0, 't1vb':100})
+        dfmmm = self.combinePortfolios(df, self.getPortfolioWeights())
         
         dfmmm = dfmmm[dfmmm['portPcnt'] > 0]
         df['portPcnt'] = 0
@@ -1807,6 +1807,9 @@ ETH/BTC.DC 	0 	"""
 
         df['t2'] = (df['volume'] * df['avg'])
         
+        # set the portfolio weighting values
+        self.setPortfolioWeights(portfolioWeights={'t1pi':0, 't1ib':0, 't1ltt':40, 't1vb':60})
+        
         try:    df[allocationModel]
         except Exception as e: 
             print 'No allocationModel[%s] found.' % e
@@ -1869,6 +1872,12 @@ ETH/BTC.DC 	0 	"""
     
         return dfst
 
+    def setPortfolioWeights(self, portfolioWeights={'t1pi':0, 't1ib':0, 't1ltt':0, 't1vb':100}):
+        self._portfolioWeights = portfolioWeights
+
+    def getPortfolioWeights(self):
+        return self._portfolioWeights
+    
     def sortDataFrame(self, df, field, f, ascending, title=None):
         
         # filter: removes verbose portfolio rows
