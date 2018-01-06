@@ -1755,8 +1755,11 @@ ETH/BTC.DC 	0 	"""
         li = ' '.join(list(ddff.index))
         print 'vb01[largecap]: %s' % li
         for i in li.split(' '):
-            ipin = v.pdf.loc[i, 'vb']
-            selectedTickers.update({i:ipin})
+            try:
+                ipin = v.pdf.loc[i, 'vb']
+                selectedTickers.update({i:ipin})
+            except:
+                ''
         dfst = p.DataFrame()
         dfst['p1vb01'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
@@ -1771,8 +1774,11 @@ ETH/BTC.DC 	0 	"""
         li = ' '.join(list(ddff.index))
         print 'vb02[midcap]: %s' % li
         for i in li.split(' '):
-            ipin = v.pdf.loc[i, 'vb']
-            selectedTickers.update({i:ipin})
+            try:
+                ipin = v.pdf.loc[i, 'vb']
+                selectedTickers.update({i:ipin})
+            except:
+                ''
         dfst = p.DataFrame()
         dfst['p1vb02'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
@@ -1787,8 +1793,11 @@ ETH/BTC.DC 	0 	"""
         li = ' '.join(list(ddff.index))
         print 'vb03[microcap]: %s' % li
         for i in li.split(' '):
-            ipin = v.pdf.loc[i, 'vb']
-            selectedTickers.update({i:ipin})
+            try:
+                ipin = v.pdf.loc[i, 'vb']
+                selectedTickers.update({i:ipin})
+            except:
+                ''
         dfst = p.DataFrame()
         dfst['p1vb03'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
@@ -1803,8 +1812,11 @@ ETH/BTC.DC 	0 	"""
         li = ' '.join(list(ddff.index))
         print 'vb04[microcap]: %s' % li
         for i in li.split(' '):
-            ipin = v.pdf.loc[i, 'vb']
-            selectedTickers.update({i:ipin})
+            try:
+                ipin = v.pdf.loc[i, 'vb']
+                selectedTickers.update({i:ipin})
+            except:
+                ''
         dfst = p.DataFrame()
         dfst['p1vb04'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
