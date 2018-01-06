@@ -1979,6 +1979,11 @@ ETH/BTC.DC 	0 	"""
         describeDF(mdf0, 'pcnt7d', f, False, filterUnderZeros=True, title='delever0')
         describeDF(mdf0, 'portPcnt', f, False, filterUnderZeros=True)
         describeDF(mdf0, 'currentPortPcnt', f, False, filterUnderZeros=True, title='delever') # same sorting as balance_usd
+        dfCurrentPortPcnt = mdf0[mdf0['currentPortPcnt'] > 0].sort_values(by='currentPortPcnt', ascending=False).loc[:, 'currentPortPcnt']
+        print 'currentPortPcnt[dictionary]:'
+        #print dfCurrentPortPcnt
+        print dfCurrentPortPcnt.to_dict()
+        print
         describeDF(mdf0, 'spreadVolume', f, False, filterUnderZeros=True, title='spreadVolume') # 
         describeDF(mdf0, 'volumePerMarketcap', f, False, filterUnderZeros=True, filterInfinity=True, title='volumePerMarketcap') # 
 
