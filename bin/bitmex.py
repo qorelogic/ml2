@@ -1736,7 +1736,8 @@ ETH/BTC.DC 	0 	"""
         li = ' '.join(list(ddff.index))
         print 'vb00[macrocap]: %s' % li
         for i in li.split(' '):
-            selectedTickers.update({i:pin}) # source: vb
+            ipin = v.pdf.loc[i, 'vb']
+            selectedTickers.update({i:ipin})
         dfst = p.DataFrame()
         dfst['p1vb00'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
@@ -1754,7 +1755,8 @@ ETH/BTC.DC 	0 	"""
         li = ' '.join(list(ddff.index))
         print 'vb01[largecap]: %s' % li
         for i in li.split(' '):
-            selectedTickers.update({i:pin}) # source: vb
+            ipin = v.pdf.loc[i, 'vb']
+            selectedTickers.update({i:ipin})
         dfst = p.DataFrame()
         dfst['p1vb01'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
@@ -1769,7 +1771,8 @@ ETH/BTC.DC 	0 	"""
         li = ' '.join(list(ddff.index))
         print 'vb02[midcap]: %s' % li
         for i in li.split(' '):
-            selectedTickers.update({i:pin}) # source: vb
+            ipin = v.pdf.loc[i, 'vb']
+            selectedTickers.update({i:ipin})
         dfst = p.DataFrame()
         dfst['p1vb02'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
@@ -1784,7 +1787,8 @@ ETH/BTC.DC 	0 	"""
         li = ' '.join(list(ddff.index))
         print 'vb03[microcap]: %s' % li
         for i in li.split(' '):
-            selectedTickers.update({i:pin}) # source: vb
+            ipin = v.pdf.loc[i, 'vb']
+            selectedTickers.update({i:ipin})
         dfst = p.DataFrame()
         dfst['p1vb03'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
@@ -1799,7 +1803,8 @@ ETH/BTC.DC 	0 	"""
         li = ' '.join(list(ddff.index))
         print 'vb04[microcap]: %s' % li
         for i in li.split(' '):
-            selectedTickers.update({i:pin}) # source: vb
+            ipin = v.pdf.loc[i, 'vb']
+            selectedTickers.update({i:ipin})
         dfst = p.DataFrame()
         dfst['p1vb04'] = p.Series(selectedTickers)
         df = df.combine_first(dfst)
