@@ -385,7 +385,8 @@ class DataViz:
         df = df[ (maxx > df['marketCap']) & (df['marketCap'] > minn) ].sort_values(by='marketCap', ascending=False)
         return df
     
-    def heatmap(self, maxx, minn, usdt=True, figsize=5, sortby=None, threshold=0, show=True):
+    def heatmap(self, maxx, minn, usdt=True, figsize=5, sortby=None, threshold=0, show=True, ascending=False):
+        print 'marketcap: %s - %s' % (maxx, minn)
         rmScraperCache()
         dft = self.dft
         #dft1s = self.df[ (maxx > self.df['marketCap']) & (self.df['marketCap'] > minn) ].sort_values(by='marketCap', ascending=False)
@@ -408,7 +409,7 @@ class DataViz:
             #sortby = 'pcnt7d'
             #sortby = 'balanceMarketcapPcnt'
         dft1s = self.pm.generatePortfolioT1Supply(dft, balance=(5148.36), risk=3.32)
-        dft1s = dft1s.sort_values(by=sortby, ascending=False)
+        dft1s = dft1s.sort_values(by=sortby, ascending=ascending)
         #viewCharts(li)
         try:
             dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, sortby=sortby, show=show)
@@ -460,8 +461,9 @@ class DataViz:
         fig, ax = plt.subplots(figsize=(30, figsizeMin))         # Sample figsize in inches
         if show:
             print dft1s.shape
-            sns.heatmap(dft1s.loc[:,li], center=0.5, annot=True, linewidths=0, ax=ax, cmap="YlGnBu")
-            plt.show()
+            if dft1s.shape[0] > 0:
+                sns.heatmap(dft1s.loc[:,li], center=0.5, annot=True, linewidths=0, ax=ax, cmap="YlGnBu")
+                plt.show()
         #qg.show_grid(dft1s.loc[:,li], grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
         return dft1s
 
@@ -490,7 +492,9 @@ class DataViz:
         dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, show=show)
         return dft1s
     
-def viewCharts(lii):
+def viewCharts(lii, showPlot=True):
+    if showPlot == False:
+        return
     cmc = CoinMarketCap()
     pm = PortfolioModeler()
     dft = cmc.getAllTokens(tokens=False)
