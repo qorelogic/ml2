@@ -733,7 +733,12 @@ def apiRequest(baseurl, query, method='GET', noCache=False, verbose=False):
     #response = api.make_request(method, query)
     #res = response.data
     #try: 
-    resp = req.get('%s%s' % (baseurl, query))
+    try:
+        resp = req.get('%s%s' % (baseurl, query))
+    except Exception as e:
+        print '%s%s' % (baseurl, query)
+        print e
+        sys.exit()
     res = uj.loads(resp.text)
     #except ConnectionError as e:
     #    print e
