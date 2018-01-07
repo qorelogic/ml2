@@ -4083,8 +4083,8 @@ def main():
         with p.option_context('display.max_rows', 4000, 'display.max_columns', 4000, 'display.width', 1000000):
             dfp = pm.modelPortfolio(num=instruments)
             gpdf = pm.genPortfolio(dfp)
-            print dfp
-            print gpdf
+            #print dfp
+            #print gpdf
         #import qgrid
         #qgrid.show_grid()
         import dfgui
