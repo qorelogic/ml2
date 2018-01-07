@@ -4087,8 +4087,10 @@ def main():
             #print gpdf
         #import qgrid
         #qgrid.show_grid()
-        import dfgui
-        dfgui.show(dfp)
+        try:
+            import dfgui
+            dfgui.show(dfp)
+        except: ''
     
     def on_message(ws, message):
         print message
