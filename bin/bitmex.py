@@ -1930,6 +1930,11 @@ ETH/BTC.DC 	0 	"""
         df['t1vb04'] = df['vb'] * df['p1vb04']
         portfolioWeights.update({'t1vb04':5})
 
+        # set the passive income weight in relatation to the entire portfolio
+        ppc = 4e3 / 19551.176311 * 100
+        a = (n.sum(portfolioWeights.values(), dtype=n.float)) / (100-ppc) * ppc #* ppc / (100)
+        portfolioWeights.update({'t1pi': a})
+
         # set the portfolio weighting values
         #portfolioWeights={'t1pi':0, 't1ib':0, 't1ltt':40, 't1vb':60}
         self.setPortfolioWeights(portfolioWeights=portfolioWeights)
