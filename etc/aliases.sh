@@ -39,7 +39,8 @@ alias re='route del -net 169.254.0.0 netmask 255.255.0.0'
 alias txpower='iwlist txpower'
 alias sq='sudo su qore'
 #alias ipn='ipython notebook --pylab=inline' # deprecated
-alias ipn='ipython notebook'
+#alias ipn='export XDG_RUNTIME_DIR=""; ipython notebook'
+alias ipn='unset XDG_RUNTIME_DIR; ipython notebook'
 
 # enlightenment aliases
 alias eff="enlightenment_filemanager "
