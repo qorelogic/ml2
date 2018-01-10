@@ -413,7 +413,7 @@ class DataViz:
         #viewCharts(li)
         try:
             dft1s = self.visualizePortfolio(dft1s, li, figsize=figsize, sortby=sortby, show=show)
-            self.qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
+            #self.qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
             #qg.show_grid(dft1s, grid_options={'forceFitColumns': False, 'defaultColumnWidth': 100})
         except KeyError as e:
             print e
@@ -461,6 +461,7 @@ class DataViz:
         fig, ax = plt.subplots(figsize=(30, figsizeMin))         # Sample figsize in inches
         if show:
             print dft1s.shape
+            print dft1s.shape[0]
             if dft1s.shape[0] > 0:
                 sns.heatmap(dft1s.loc[:,li], center=0.5, annot=True, linewidths=0, ax=ax, cmap="YlGnBu")
                 plt.show()
@@ -1442,7 +1443,7 @@ class PortfolioModeler:
             print pol[pok[0]][0]
             print pol[pok[1]][0]
             print ' po: %s' % po
-            print dfp
+            #print dfp
             print 'pok: %s' % pok
             print 'pov: %s' % pov
             print 
@@ -1533,7 +1534,6 @@ class PortfolioModeler:
         #dfmmm = self.combinePortfolios(df, 't1f', 't1pi')
         #dfmmm = self.combinePortfolios(df, {'t1f':0, 't1pi':100, 't1ib':0, 't1b':0})
         dfmmm = self.combinePortfolios(df, self.getPortfolioWeights())
-        
         dfmmm = dfmmm[dfmmm['portPcnt'] > 0]
         df['portPcnt'] = 0
         df = dfmmm.combine_first(df)
