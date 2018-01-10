@@ -1735,7 +1735,8 @@ ETH/BTC.DC 	0 	"""
         ddff = v.pdf
         li = ' '.join(list(ddff.index))
         print 'vb00[macrocap]: %s' % li
-        print v.pdf.loc[:, 'pcnt1h pcnt24h pcnt7h marketCap riskOn volumePerMarketcap vb'.split(' ')]
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            print v.pdf.loc[:, 'pcnt1h pcnt24h pcnt7h marketCap riskOn volumePerMarketcap vb'.split(' ')]
         print 
         for i in li.split(' '):
             ipin = v.pdf.loc[i, 'vb']
@@ -1756,7 +1757,8 @@ ETH/BTC.DC 	0 	"""
         ddff = v.pdf
         li = ' '.join(list(ddff.index))
         print 'vb01[largecap]: %s' % li
-        print v.pdf.loc[:, 'pcnt1h pcnt24h pcnt7h marketCap riskOn volumePerMarketcap vb'.split(' ')]
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            print v.pdf.loc[:, 'pcnt1h pcnt24h pcnt7h marketCap riskOn volumePerMarketcap vb'.split(' ')]
         print 
         for i in li.split(' '):
             try:
@@ -1777,7 +1779,8 @@ ETH/BTC.DC 	0 	"""
         ddff = v.pdf
         li = ' '.join(list(ddff.index))
         print 'vb02[midcap]: %s' % li
-        print v.pdf.loc[:, 'pcnt1h pcnt24h pcnt7h marketCap riskOn volumePerMarketcap vb'.split(' ')]
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            print v.pdf.loc[:, 'pcnt1h pcnt24h pcnt7h marketCap riskOn volumePerMarketcap vb'.split(' ')]
         print 
         for i in li.split(' '):
             try:
@@ -1798,7 +1801,8 @@ ETH/BTC.DC 	0 	"""
         ddff = v.pdf
         li = ' '.join(list(ddff.index))
         print 'vb03[microcap]: %s' % li
-        print v.pdf.loc[:, 'pcnt1h pcnt24h pcnt7h marketCap riskOn volumePerMarketcap vb'.split(' ')]
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            print v.pdf.loc[:, 'pcnt1h pcnt24h pcnt7h marketCap riskOn volumePerMarketcap vb'.split(' ')]
         print 
         for i in li.split(' '):
             try:
@@ -1819,7 +1823,8 @@ ETH/BTC.DC 	0 	"""
         ddff = v.pdf
         li = ' '.join(list(ddff.index))
         print 'vb04[microcap]: %s' % li
-        print v.pdf.loc[:, 'pcnt1h pcnt24h pcnt7h marketCap riskOn volumePerMarketcap vb'.split(' ')]
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            print v.pdf.loc[:, 'pcnt1h pcnt24h pcnt7h marketCap riskOn volumePerMarketcap vb'.split(' ')]
         print 
         for i in li.split(' '):
             try:
