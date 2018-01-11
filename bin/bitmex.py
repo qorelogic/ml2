@@ -879,7 +879,10 @@ class CoinMarketCap:
         
         if token == 'total' or token == 'altcoin' or token == 'dominance':
             u = 'https://graphs.coinmarketcap.com/global'
-            token = '/marketcap-%s/' % token
+            if token == 'dominance':
+                token = '/%s/' % token
+            else:
+                token = '/marketcap-%s/' % token
         else:
             u = 'https://graphs.coinmarketcap.com/currencies'
         
