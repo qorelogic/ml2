@@ -102,6 +102,9 @@ def mergerTraderSplitter(li, ethAddrs, totalUnits, fromSymbol, toSymbol, toEthAd
     return df.set_index('ea').loc[:,li]
 
 # dfp #########################################################################
+# example:
+#dfs = genDFP(list(v.pdf['id']), max=7, logy=yy, normalize=yy, sigmoid=yy, showPlot=False)
+#cm = clustermap(dfs, verbose=False, figsize=10, showClustermap=showClustermap)
 def clustermap(dfp, verbose=False, figsize=25, showClustermap=True):
     import matplotlib.pylab as plt
     import seaborn as sns
@@ -870,12 +873,20 @@ class CoinMarketCap:
         self.tokens = df
         return df
 
+    # token reserved keywords: total, altcoin, dominance
     def getCoinHistory(self, token, normalize=False, sigmoid=False):
         from qoreliquid import normalizeme, sigmoidme
-        u = 'https://graphs.coinmarketcap.com/currencies'
+        
+        if token == 'total' or token == 'altcoin' or token == 'dominance':
+            u = 'https://graphs.coinmarketcap.com/global'
+            token = '/marketcap-%s/' % token
+        else:
+            u = 'https://graphs.coinmarketcap.com/currencies'
+        
         #token = 'kin'
         res = apiRequest(u,'/%s/'%token)
         #print res
+
         df = p.DataFrame(res)
         dfm = p.DataFrame()
         for i in df.columns:
