@@ -390,6 +390,7 @@ class DataViz:
     
     def heatmap(self, maxx, minn, usdt=True, figsize=5, sortby=None, threshold=0, show=True, ascending=False):
         print 'marketcap: %s - %s' % (maxx, minn)
+        print 'threshold: %s' % (threshold)
         rmScraperCache()
         dft = self.dft
         #dft1s = self.df[ (maxx > self.df['marketCap']) & (self.df['marketCap'] > minn) ].sort_values(by='marketCap', ascending=False)
@@ -1379,6 +1380,10 @@ class PortfolioModeler:
                 df[field] = df[field] / fmin
             #print df[df[field] > 0]#[field]#.fillna(0)
         except: ''
+        #n.log(12)
+        #print df[field]
+        #n.log(df[field])/n.log(10)
+        #sys.exit()
         df['portWeight'] = n.log(df[field]) / n.log(10)
         #df['portWeight'] = (df['allocation']) #/ n.log(10)
         df['portWeight'] = map(lambda x: 0 if n.abs(x) == n.inf else x, df['portWeight'])
@@ -1742,7 +1747,7 @@ ETH/BTC.DC 	0 	"""
         df = df.combine_first(dfst)
         
         v = DataViz()
-        threshold = 0.3
+        threshold = 0.1
         # ---------------------------------------------------------------------
         # vb00[macrocap] 1e12 - 10e9
         selectedTickers = {}
@@ -1766,6 +1771,7 @@ ETH/BTC.DC 	0 	"""
         #sys.exit()
 
         v.getAllTokens(tokens=True)
+        #v.getAllTokens(tokens=False)
         # ---------------------------------------------------------------------
         # vb01[largecap] 10e9 - 1e9
         selectedTickers = {}
@@ -1811,7 +1817,7 @@ ETH/BTC.DC 	0 	"""
 
         # ---------------------------------------------------------------------
         # vb03[microcap] 40e6 - 1e6
-        threshold = 0.5
+        threshold = 0.6
         selectedTickers = {}
         v.heatmap(maxx=40e6, minn=1e6, usdt=False, figsize=15, sortby='vb', threshold=threshold, show=False)
         ddff = v.pdf
@@ -1833,7 +1839,7 @@ ETH/BTC.DC 	0 	"""
 
         # ---------------------------------------------------------------------
         # vb04[nanocap] 1e6 - 0
-        threshold = 0.0
+        threshold = 0.01
         selectedTickers = {}
         v.heatmap(maxx=1e6, minn=0, usdt=False, figsize=15, sortby='vb', threshold=threshold, show=False)
         ddff = v.pdf
@@ -1939,30 +1945,30 @@ ETH/BTC.DC 	0 	"""
         # ---------------------------------------------------------------------
         #df['t1vb00'] = ((df['volumeETH'] * df['p1vb00']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1vb00'] = df['vb'] * df['p1vb00']
-        portfolioWeights.update({'t1vb00':13})
+        portfolioWeights.update({'t1vb00':00})
         
         # ---------------------------------------------------------------------
         #df['t1vb01'] = ((df['volumeETH'] * df['p1vb01']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1vb01'] = df['vb'] * df['p1vb01']
-        portfolioWeights.update({'t1vb01':13})
+        portfolioWeights.update({'t1vb01':00})
         
         # ---------------------------------------------------------------------
         #df['t1vb02'] = ((df['volumeETH'] * df['p1vb02']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1vb02'] = df['vb'] * df['p1vb02']
-        portfolioWeights.update({'t1vb02':55})
+        portfolioWeights.update({'t1vb02':99})
         
         # ---------------------------------------------------------------------
         #df['t1vb03'] = ((df['volumeETH'] * df['p1vb03']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1vb03'] = df['vb'] * df['p1vb03']
-        portfolioWeights.update({'t1vb03':21})
+        portfolioWeights.update({'t1vb03':0})
 
         # ---------------------------------------------------------------------
         #df['t1vb04'] = ((df['volumeETH'] * df['p1vb04']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1vb04'] = df['vb'] * df['p1vb04']
-        portfolioWeights.update({'t1vb04':5})
+        portfolioWeights.update({'t1vb04':0})
 
         # set the passive income weight in relatation to the entire portfolio
-        ppc = 4e3 / 19551.176311 * 100
+        ppc = 4e3 / 22269.556126 * 100
         a = (n.sum(portfolioWeights.values(), dtype=n.float)) / (100-ppc) * ppc #* ppc / (100)
         portfolioWeights.update({'t1pi': a})
 
@@ -2238,7 +2244,8 @@ ETH/BTC.DC 	0 	"""
         dff['t1Supply'] = dff['balanceMarketcapPcnt']**2 * dff['volumePerMarketCap']**3 / dff[goal]**2 * dff['volumePerMarketCap']**3
         dff = dff.fillna(0)
         #dff['vb']       = dff['volumePerMarketCap']**5 * dff['riskOn']**3 / dff['marketCap']**4
-        dff['vb']       = dff['volumePerMarketCap']**5 * dff['riskOn']**3 / dff['marketCap']**0 / (dff['pcnt1h']**1 * dff['pcnt24h']**2 * dff['pcnt7d']**0)
+        dff['vb']       = dff['volumePerMarketCap']**5 * dff['riskOn']**3 / dff['marketCap']**0 #/ (dff['pcnt1h']**1 * dff['pcnt24h']**2 * dff['pcnt7d']**0)
+        dff['vb']       = dff['volumePerMarketCap']**1 * dff['riskOn']**1 / dff['marketCap']**0 #/ (dff['pcnt1h']**1 * dff['pcnt24h']**2 * dff['pcnt7d']**0)
 
         df = dff
 
