@@ -2245,7 +2245,7 @@ ETH/BTC.DC 	0 	"""
         dff = dff.fillna(0)
         #dff['vb']       = dff['volumePerMarketCap']**5 * dff['riskOn']**3 / dff['marketCap']**4
         dff['vb']       = dff['volumePerMarketCap']**5 * dff['riskOn']**3 / dff['marketCap']**0 #/ (dff['pcnt1h']**1 * dff['pcnt24h']**2 * dff['pcnt7d']**0)
-        dff['vb']       = dff['volumePerMarketCap']**1 * dff['riskOn']**1 / dff['marketCap']**0 #/ (dff['pcnt1h']**1 * dff['pcnt24h']**2 * dff['pcnt7d']**0)
+        dff['vb']       = dff['volumePerMarketCap']**1 * dff['riskOn']**3 / dff['marketCap']**0 #/ (dff['pcnt1h']**1 * dff['pcnt24h']**2 * dff['pcnt7d']**0)
 
         df = dff
 
