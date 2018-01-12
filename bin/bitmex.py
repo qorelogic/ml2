@@ -554,8 +554,10 @@ def dydxSym(func,x):
     df = dydx(y,x)
     return df
 
-
-
+def dydxDF(df):
+    for i in df.columns:
+        df[i] = dydx(df.index, df[i])
+    return df
 ###
 
 
