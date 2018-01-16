@@ -432,3 +432,18 @@ git-stash-apply-patches() {
 	git apply $gshdir/$i
 	git stash
 }
+
+vpn-client-enable() {
+	pppd call pptpserver
+	sleep 5
+	route del default gw 192.168.1.1
+	route add default gw 104.207.135.67
+	watch -n1 route -n
+}
+
+vpn-client-disable() {
+	route del default gw 104.207.135.67
+	route add default gw 192.168.1.1
+	watch -n1 route -n
+}
+

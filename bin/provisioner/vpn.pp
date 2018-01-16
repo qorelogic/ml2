@@ -22,6 +22,10 @@ class vpn-server {
     	command => "sudo perl -pi -we 's/^(#)?remoteip (.*)/remoteip 192.168.0.234-238,192.168.0.245/g' /etc/pptpd.conf",
         before  => Exec["chap-secrets"],
     }
+    exec { "pptpd.conf localip":
+    	command => "sudo perl -pi -we 's/^(#)?logwtmp (.*)/#logwtmp/g' /etc/pptpd.conf",
+       #before  => Exec["pptpd.conf remoteip"],
+    }
     exec { "chap-secrets":
     	command => "sudo perl -pi -we 's/^box1 (.*)/box1 pptpd qweqwe */g' /etc/ppp/chap-secrets",
         before  => Exec["ms-dns"],
