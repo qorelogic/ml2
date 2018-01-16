@@ -1749,6 +1749,7 @@ ETH/BTC.DC 	0 	"""
         v = DataViz()
         threshold = 0.1
         # ---------------------------------------------------------------------
+        print ('---------------------------------------------------------------------')
         # vb00[macrocap] 1e12 - 10e9
         selectedTickers = {}
         v.getAllTokens(tokens=False)
@@ -1773,6 +1774,7 @@ ETH/BTC.DC 	0 	"""
         v.getAllTokens(tokens=True)
         #v.getAllTokens(tokens=False)
         # ---------------------------------------------------------------------
+        print ('---------------------------------------------------------------------')
         # vb01[largecap] 10e9 - 1e9
         selectedTickers = {}
         v.heatmap(maxx=10e9, minn=1e9, usdt=False, figsize=15, sortby='vb', threshold=threshold, show=False)
@@ -1794,6 +1796,7 @@ ETH/BTC.DC 	0 	"""
         df = df.combine_first(ddff)
 
         # ---------------------------------------------------------------------
+        print ('---------------------------------------------------------------------')
         # vb02[midcap] 1e9 - 40e6
         threshold = 0.5
         selectedTickers = {}
@@ -1816,6 +1819,7 @@ ETH/BTC.DC 	0 	"""
         df = df.combine_first(ddff)
 
         # ---------------------------------------------------------------------
+        print ('---------------------------------------------------------------------')
         # vb03[microcap] 40e6 - 1e6
         threshold = 0.6
         selectedTickers = {}
@@ -1838,6 +1842,7 @@ ETH/BTC.DC 	0 	"""
         df = df.combine_first(ddff)
 
         # ---------------------------------------------------------------------
+        print ('---------------------------------------------------------------------')
         # vb04[nanocap] 1e6 - 0
         threshold = 0.01
         selectedTickers = {}
@@ -1860,6 +1865,7 @@ ETH/BTC.DC 	0 	"""
         df = df.combine_first(ddff)
 
         # ---------------------------------------------------------------------
+        print ('---------------------------------------------------------------------')
         """
         # todo: uncorrelated volume/price
         selectedTickers.update({'DAT':pin}) # source: uvp
