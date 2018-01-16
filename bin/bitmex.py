@@ -1384,7 +1384,11 @@ class PortfolioModeler:
         #print df[field]
         #n.log(df[field])/n.log(10)
         #sys.exit()
-        df['portWeight'] = n.log(df[field]) / n.log(10)
+        try:
+            df['portWeight'] = n.log(df[field]) / n.log(10)
+        except:
+            df['portWeight'] = 0
+
         #df['portWeight'] = (df['allocation']) #/ n.log(10)
         df['portWeight'] = map(lambda x: 0 if n.abs(x) == n.inf else x, df['portWeight'])
         df['portPcnt']   = df['portWeight'] / df['portWeight'].sum() * 100
