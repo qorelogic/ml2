@@ -1955,7 +1955,7 @@ ETH/BTC.DC 	0 	"""
         # ---------------------------------------------------------------------
         #df['t1vb00'] = ((df['volumeETH'] * df['p1vb00']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1vb00'] = df['vb'] * df['p1vb00']
-        portfolioWeights.update({'t1vb00':00})
+        portfolioWeights.update({'t1vb00':20})
         
         # ---------------------------------------------------------------------
         #df['t1vb01'] = ((df['volumeETH'] * df['p1vb01']) / (df['avg'] * n.power(df['sum'], 3*1)))
@@ -1965,7 +1965,7 @@ ETH/BTC.DC 	0 	"""
         # ---------------------------------------------------------------------
         #df['t1vb02'] = ((df['volumeETH'] * df['p1vb02']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1vb02'] = df['vb'] * df['p1vb02']
-        portfolioWeights.update({'t1vb02':99})
+        portfolioWeights.update({'t1vb02': 70})
         
         # ---------------------------------------------------------------------
         #df['t1vb03'] = ((df['volumeETH'] * df['p1vb03']) / (df['avg'] * n.power(df['sum'], 3*1)))
@@ -1975,12 +1975,14 @@ ETH/BTC.DC 	0 	"""
         # ---------------------------------------------------------------------
         #df['t1vb04'] = ((df['volumeETH'] * df['p1vb04']) / (df['avg'] * n.power(df['sum'], 3*1)))
         df['t1vb04'] = df['vb'] * df['p1vb04']
-        portfolioWeights.update({'t1vb04':0})
+        portfolioWeights.update({'t1vb04':5})
+
 
         # set the passive income weight in relatation to the entire portfolio
         ppc = 4e3 / 22269.556126 * 100
         a = (n.sum(portfolioWeights.values(), dtype=n.float)) / (100-ppc) * ppc #* ppc / (100)
-        portfolioWeights.update({'t1pi': a})
+        #portfolioWeights.update({'t1pi': 5})
+
 
         # set the portfolio weighting values
         #portfolioWeights={'t1pi':0, 't1ib':0, 't1ltt':40, 't1vb':60}
@@ -2255,7 +2257,7 @@ ETH/BTC.DC 	0 	"""
         dff = dff.fillna(0)
         #dff['vb']       = dff['volumePerMarketCap']**5 * dff['riskOn']**3 / dff['marketCap']**4
         dff['vb']       = dff['volumePerMarketCap']**5 * dff['riskOn']**3 / dff['marketCap']**0 #/ (dff['pcnt1h']**1 * dff['pcnt24h']**2 * dff['pcnt7d']**0)
-        dff['vb']       = dff['volumePerMarketCap']**1 * dff['riskOn']**3 / dff['marketCap']**0 #/ (dff['pcnt1h']**1 * dff['pcnt24h']**2 * dff['pcnt7d']**0)
+        dff['vb']       = dff['volumePerMarketCap']**3 * dff['riskOn']**4 / dff['marketCap']**0 #/ (dff['pcnt1h']**1 * dff['pcnt24h']**2 * dff['pcnt7d']**0)
 
         df = dff
 
@@ -3811,24 +3813,24 @@ class Accounts:
         ''
 # end Coins
 
-eth0_0 = '' # pooler
+eth0_0 = '0x3be05ad5b2ae103016e7e14001ae37406da56111' # pooler
 eth0 = [eth0_0]
 
-eth1_1 = ''
-eth1_2 = ''
-eth1_3 = ''
+eth1_1 = '0x38a4Ff00C207cBD78aB34b6dDd1b8754E4498508'
+eth1_2 = '0xc73D7e4a40D4513eC7D114f521eA59DF607a7613'
+eth1_3 = '0xdd4fa0bd3fb7587d6d1af4d4f6270dc2bb85e045'
 eth1 = [eth1_2, eth1_1, eth1_3]
 
-eth2_1 = '' #eth2 0
-eth2_2 = '' #eth2 1
-eth2_3 = '' #eth2 2
-eth2_4 = '' #eth2 3
+eth2_1 = '0xc978D12413CbC4ec37763944c57EF0100a4c15cf' #eth2 0
+eth2_2 = '0x2c8f659d57971449eb627FB78530Fc61867c4E50' #eth2 1
+eth2_3 = '0x0CEE9942A8DC4aa6f594d680f6B9654f02Ab62D1' #eth2 2
+eth2_4 = '0xcDECcAa65FDDfA861D322d430A84609213e58678' #eth2 3
 eth2 = [eth2_2, eth2_1, eth2_3, eth2_4]
 
-eth3_0 = '' #eth3 0
-eth3_1 = '' #eth3 1
-eth3_2 = '' #eth3 2
-eth3_3 = '' #eth3 3
+eth3_0 = '0x04286965eaef74fe9f6ac9b6549a8a1fc8ed25c1' #eth3 0
+eth3_1 = '0xf336149b2cd886cf9b99a4efaeb66235d518c4ed' #eth3 1
+eth3_2 = '0x60188f10fe490f6eafe23d86e75573067f674a37' #eth3 2
+eth3_3 = '0x7983822bf412a3c67bfc11af61f30533588e5ca0' #eth3 3
 eth3 = [eth3_0, eth3_1, eth3_2, eth3_3]
 
 #inv  = Investor()
