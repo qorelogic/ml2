@@ -3441,6 +3441,7 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
     eth = cmc.getTicker('ETH').set_index('symbol').transpose()
     ethusd = float(eth.loc['price_usd', 'ETH'])
     mdf0 = p.DataFrame([])
+    mdf1 = p.DataFrame([])
     dfp = pm.modelPortfolio(num=instruments, ethusd=ethusd, allocationModel=allocationModel)
     mdf0 = mdf0.combine_first(dfp)
     addressInfos = p.DataFrame()
@@ -3528,12 +3529,15 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
             # with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
             #     print mdf
             ''
-        mdf['ethaddr']     = ethaddrSmall
+        mdf['ethaddrLarge'] = ea
+        mdf['ethaddrSmall'] = ethaddrSmall
+        mdf['ethaddr']      = ethaddrSmall
+        #mdf['ethaddr']     = '-'.join(ethaddr)
         
         mdf['symbol'] = mdf.index
         mdf = mdf.set_index('address')
         for x in mdf.index:
-            try: mdf.loc[x, 'id2'] = '%s-%s' % (mdf.loc[x, 'symbol'], mdf.loc[x, 'ethaddr'])
+            try: mdf.loc[x, 'id2'] = '%s-%s' % (mdf.loc[x, 'symbol'], mdf.loc[x, 'ethaddrSmall'])
             except Exception as e: print e
             try: mdf.loc[x, 'id4'] = '%s-%s' % (mdf.loc[x, 'symbol'], x[0:8])
             except Exception as e: print e
@@ -3676,8 +3680,22 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
 
         # fill in missing data
         mdf0 = mdf0.combine_first(ttdf)
-
-        mdf0 = mdf0.combine_first(mdf)
+        mdf['id0'] = mdf.index
+        #mdf = mdf.set_index('id2')
+        #mdf0 = mdf0.combine_first(mdf)
+        #mi = p.MultiIndex.from_tuples(zip([ea]*len(mdf.index), mdf.index))
+        mi = p.MultiIndex.from_tuples(zip(mdf.index, [ea]*len(mdf.index)))
+        #mdf = p.DataFrame(mdf.to_dict(), index=mi)
+        mdf = p.DataFrame(mdf.get_values(), columns=mdf.columns, index=mi)
+        #mdf1 = mdf1.combine_first(mdf)
+        try:
+            mdf1 = mdf1.reindex(index=mdf.index).combine_first(mdf)
+        except Exception as e:
+            print e
+            mdf1 = mdf1.reindex(index=mdf.index, level=0).combine_first(mdf)
+        with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
+            print mdf1
+            #sys.exit()
         mdfs.update({ea:mdf.loc[:, 'balance balance_usd ethaddr'.split(' ')].to_dict()})
         with p.option_context('display.max_rows', 400, 'display.max_columns', 4000, 'display.width', 1000000):
             ''
