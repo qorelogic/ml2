@@ -382,7 +382,10 @@ class DataViz:
         self.pdf = p.DataFrame()
         
     def getAllTokens(self, tokens=False):
-        self.dft = self.cmc.getAllTokens(tokens=tokens)
+        try:
+            self.dft = self.cmc.getAllTokens(tokens=tokens)
+        except Exception as e:
+            print e
         
     def filterMarketcap(self, df, maxx, minn):
         df = df[ (maxx > df['marketCap']) & (df['marketCap'] > minn) ].sort_values(by='marketCap', ascending=False)
@@ -853,8 +856,15 @@ class CoinMarketCap:
         if tokens:
             xresd.update({'token':'//tr/td[3]/a/text()'})
         xresd = xp.xpath2df(url, xresd, cache=False)#, verbose=True)
-        #for i in xresd.keys():
-        #    print '%s: %s' % (i, len(xresd[i]))
+        li = []
+        for i in xresd.keys():
+            li.append(len(xresd[i]))
+        lli = int(n.round(n.array(li).mean(), 0))
+        print lli
+        for i in xresd.keys():
+            for j in range(lli-len(xresd[i])):
+                xresd[i].append('')
+            #print '%s: %s' % (i, len(xresd[i]))
         #print xresd
         #https://www.youtube.com/watch?v=A9Gn4P8-Smc
         df = p.DataFrame(xresd)
