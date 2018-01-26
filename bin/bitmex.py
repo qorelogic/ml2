@@ -3431,6 +3431,8 @@ def getAdressInfoEthplorer(ethaddr, verbose=False, instruments=5, noCache=True, 
     if type(ethaddr) == type(''):
         ethaddr = ethaddr.split(' ')
         print 'ethaddr: %s' % ethaddr
+        
+    initialInvestment = float(initialInvestment)
 
     cmc = CoinMarketCap()
     pm = PortfolioModeler()
