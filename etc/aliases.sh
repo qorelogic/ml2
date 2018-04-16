@@ -387,6 +387,14 @@ alias ruby="ruby -Ku"
 alias .ghml='cd /mldev/bin'
 alias .ghmllive='cd /mllive/bin'
 
+# benchmarks
+benchmark() {
+	sudo lshw
+	sysbench --test=cpu --cpu-max-prime=10000 --num-threads=2 run
+	mdisk="`df -h / | grep -v File | cut -d' ' -f1`"
+	sudo hdparm -Tt $mdisk
+}
+
 # https://help.ubuntu.com/community/IptablesHowTo
 qiptables-list() {
 	fname="/tmp/iptables"
