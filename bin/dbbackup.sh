@@ -54,3 +54,7 @@ else
 	#rm -rf $scrdir
 	rsync -avP data/db-archive/ /mnt/$ipaddr/data/db-archive/
 fi
+
+#sudo rsync -zavP qore@104.207.135.67:/usr/lib/mongodb.ql002-1.tar.xz /usr/lib/mongodb.ql002-1.tar.xz  
+#sha1sum /usr/lib/mongodb.ql001-3.tar.xz > /usr/lib/mongodb.ql001-3.tar.xz.sha1sum
+
